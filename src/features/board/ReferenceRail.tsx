@@ -6,6 +6,7 @@ import type { CharacterId, NightMarker, Team } from '../../content'
 import { character, gameText, scriptName, scriptRules } from '../../content'
 import { useStore } from '../../store'
 import { jinxesAmong, listed, nightOrders, sheetTeams, teamLabels } from '../../store/scriptSheet'
+import { AbilityText } from '../../ui/AbilityText'
 import { focusStyle, isFocused, isHovered } from '../../ui/Button'
 import { CharacterIcon } from '../../ui/CharacterIcon'
 import { referenceCompactWidth, referenceTabWidth } from './boardLayout'
@@ -96,7 +97,7 @@ const CharacterRow = memo(function CharacterRow({ id, team, name, ability, phone
       </View>
     </View>
     <ReferenceDescription expansion={expansion} width={descriptionWidth}>
-      <Text style={[type.text.body, styles.ink]}>{ability}</Text>
+      <Text style={[type.text.body, styles.ink]}><AbilityText text={ability} /></Text>
     </ReferenceDescription>
   </View>
 })

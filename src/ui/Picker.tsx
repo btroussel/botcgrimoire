@@ -8,6 +8,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { teams } from '../content'
+import { AbilityText } from './AbilityText'
 import { CharacterIcon } from './CharacterIcon'
 
 import { Button, IconButton, focusStyle, isFocused } from './Button'
@@ -172,7 +173,7 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
                 </View>
                 <View style={styles.rowText}>
                   <Text style={[type.text.strong, styles.referenceName, { color: p.ink }]}>{row.name}</Text>
-                  {row.detail ? <Text style={[type.text.body, styles.referenceAbility, { color: p.ink }]}>{row.detail}</Text> : null}
+                  {row.detail ? <Text style={[type.text.body, styles.referenceAbility, { color: p.ink }]}><AbilityText text={row.detail} /></Text> : null}
                 </View>
               </Pressable>
             })}

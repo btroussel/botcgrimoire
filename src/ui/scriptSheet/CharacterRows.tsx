@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { Pressable, Text, View } from 'react-native'
+import { AbilityText } from '../AbilityText'
 import { IconButton, focusStyle, isFocused } from '../Button'
 import { CharacterIcon } from '../CharacterIcon'
 import { useFocusVisible } from '../focus'
@@ -87,7 +88,7 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
   const details = (
     <View style={{ opacity: dim ? 0.8 : 1 }}>
       {name}
-      <Text id={`script-sheet-ability-${row.id}`} style={[type.text.small, { color: p.ink }]}>{row.ability}</Text>
+      <Text id={`script-sheet-ability-${row.id}`} style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
     </View>
   )
   // Keep the icon, character selection and any setup choices outside each other's buttons.
