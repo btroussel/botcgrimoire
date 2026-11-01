@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Uoffisiell Grimoire for Blood on the Clocktower rundt bordet",
+  "seoDescription": "Led Blood on the Clocktower rundt bordet med en uoffisiell Grimoire for fortelleren, laget av fellesskapet. Hold styr på roller, påminnelser og nattrekkefølge uten nett, på ni språk.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Uoffisiell hjelpeapp for Blood on the Clocktower, laget av fellesskapet. Ikke tilknyttet The Pandemonium Institute.",
+  "ownership": "Blood on the Clocktower, rollene, illustrasjonene og evnetekstene tilhører Steven Medway og The Pandemonium Institute.",
+  "contact": "Spørsmål om appen? {link}",
+  "cancel": "Avbryt",
+  "more": "Mer",
+  "done": "Ferdig",
+  "back": "Tilbake",
+  "loading": "Laster",
+  "language": "Språk",
+  "grimoireStyle": "Grimoire-stil",
+  "velvet_burgundy": "Burgunder",
+  "velvet_forest": "Skog",
+  "velvet_midnight": "Midnatt",
+  "velvet_plum": "Plomme",
+  "settings": "Innstillinger",
+  "players": {
+    "one": "{count} spiller",
+    "other": "{count} spillere"
+  },
+  "close": "Lukk",
+  "save": "Lagre",
+  "unknown": "Ukjent",
+  "home": "Hjem",
+  "scripts": "Manuskript",
+  "history": "Historikk",
+  "resumeGame": "Fortsett spillet",
+  "newGame": "Nytt spill",
+  "noGames": "Ingen spill ennå. Start et, så lagres det her.",
+  "deleteGame": "Slett {name}",
+  "deleteGameTitle": "Slette dette spillet?",
+  "deleteGameMessage": "Spillet og loggen slettes for godt. Dette kan ikke angres.",
+  "deleteGameConfirm": "Slett spillet",
+  "justNow": "Akkurat nå",
+  "minutesAgo": {
+    "one": "{count} minutt siden",
+    "other": "{count} minutter siden"
+  },
+  "hoursAgo": {
+    "one": "{count} time siden",
+    "other": "{count} timer siden"
+  },
+  "daysAgo": {
+    "one": "I går",
+    "other": "{count} dager siden"
+  },
+  "scriptsHint": "Utgavene og dine egne",
+  "localeName": "Norsk bokmål",
+  "about": "Om",
+  "supportCreators": "Liker du Blood on the Clocktower? {link} for å støtte The Pandemonium Institute, som har laget spillet.",
+  "buyGrimoire": "Kjøp gjerne din egen fysiske Grimoire",
+  "settingsHint": "Språk, Grimoire-stil og om appen",
+  "historyHint": "Tidligere spill, avspillinger og importer"
+}

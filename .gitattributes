@@ -1,0 +1,7 @@
+# Every text file is stored and checked out with LF, whatever the machine.
+* text=auto eol=lf
+
+# Binary art and icons are never touched.
+*.webp binary
+*.png binary
+*.ico binary

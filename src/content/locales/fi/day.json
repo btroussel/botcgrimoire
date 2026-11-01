@@ -1,0 +1,36 @@
+{
+  "cancelNomination": "Peru nimitys: {by} → {of}",
+  "mostVotes": "Eniten ääniä",
+  "votesLabel": {
+    "one": "ääni",
+    "other": "ääntä"
+  },
+  "noVoters": "Ei kirjattuja käsiä.",
+  "voted": "Ääni kirjattu",
+  "nominationArrow": "{by} nimittää pelaajan {of}",
+  "manualNight": "Aloita seuraava yö",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} ääni",
+    "other": "{by} → {of}: {count} ääntä"
+  },
+  "timerAdd": "Lisää keskusteluajastin",
+  "timerAddThirtySeconds": "Lisää 30 sekuntia",
+  "timerFinished": "Aika loppui",
+  "timerPause": "Tauko",
+  "timerRemove": "Poista ajastin",
+  "timerReset": "Nollaa",
+  "timerResume": "Jatka",
+  "timerStart": "Aloita",
+  "timerSubtractThirtySeconds": "Vähennä 30 sekuntia",
+  "timerSummary": "Keskustelu: {time}",
+  "voteReset": "Nollaa",
+  "mark": "Merkitse",
+  "votesToExecute": {
+    "one": "{count} ääni teloitukseen",
+    "other": "{count} ääntä teloitukseen"
+  },
+  "votesToTieExecute": {
+    "one": "{count} ääni tasapeliin, {execute} teloitukseen",
+    "other": "{count} ääntä tasapeliin, {execute} teloitukseen"
+  }
+}

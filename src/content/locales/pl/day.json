@@ -1,0 +1,44 @@
+{
+  "cancelNomination": "Anuluj nominację: {by} → {of}",
+  "mostVotes": "Najwięcej głosów",
+  "votesLabel": {
+    "one": "głos",
+    "few": "głosy",
+    "many": "głosów",
+    "other": "głosu"
+  },
+  "noVoters": "Brak podniesionych rąk.",
+  "voted": "Głos zapisany",
+  "nominationArrow": "{by} nominuje: {of}",
+  "manualNight": "Rozpocznij kolejną noc",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} głos",
+    "few": "{by} → {of}: {count} głosy",
+    "many": "{by} → {of}: {count} głosów",
+    "other": "{by} → {of}: {count} głosu"
+  },
+  "timerAdd": "Dodaj licznik dyskusji",
+  "timerAddThirtySeconds": "Dodaj 30 sekund",
+  "timerFinished": "Czas minął",
+  "timerPause": "Pauza",
+  "timerRemove": "Usuń licznik",
+  "timerReset": "Resetuj",
+  "timerResume": "Wznów",
+  "timerStart": "Start",
+  "timerSubtractThirtySeconds": "Odejmij 30 sekund",
+  "timerSummary": "Dyskusja: {time}",
+  "voteReset": "Resetuj",
+  "mark": "Oznacz",
+  "votesToExecute": {
+    "one": "{count} głos do egzekucji",
+    "few": "{count} głosy do egzekucji",
+    "many": "{count} głosów do egzekucji",
+    "other": "{count} głosu do egzekucji"
+  },
+  "votesToTieExecute": {
+    "one": "{count} głos do remisu, {execute} do egzekucji",
+    "few": "{count} głosy do remisu, {execute} do egzekucji",
+    "many": "{count} głosów do remisu, {execute} do egzekucji",
+    "other": "{count} głosu do remisu, {execute} do egzekucji"
+  }
+}

@@ -1,0 +1,11 @@
+# Normalize dynamic routes before rewriting them, including bookmarked replay URLs.
+/game/:id/history/ /game/:id/history 301
+/game/:id/ /game/:id 301
+/history/:id/ /history/:id 301
+
+# Game IDs exist only on the device, so a deep link or reload on a game page serves the
+# exported route template, renamed `_` by tools/build-pwa.mjs and the file the service worker
+# picks offline. A 200 keeps the URL; no extension, or the host would redirect to strip it.
+/game/:id/history /game/_/history 200
+/game/:id /game/_ 200
+/history/:id /history/_ 200

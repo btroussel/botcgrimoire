@@ -1,0 +1,9 @@
+# Blank issues stay open for anything that fits neither form, such as the docs or tools.
+blank_issues_enabled: true
+contact_links:
+  - name: A wrong character name or ability in a translation
+    url: https://translation.botc.app
+    about: Character text in other languages comes from The Pandemonium Institute's translation project, so fix it there. Buttons and menus are ours, so report those here as a bug.
+  - name: A rules question
+    url: https://wiki.bloodontheclocktower.com
+    about: The official wiki is the reference for abilities, jinxes and rulings.

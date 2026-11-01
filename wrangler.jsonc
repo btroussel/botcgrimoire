@@ -1,0 +1,13 @@
+{
+  // The static export in dist/ (npm run build), served by Cloudflare Workers with no Worker
+  // script: the Worker named here carries the botcgrimoire.com custom domain.
+  "name": "botc-grimoire",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // /settings serves settings.html; a dynamic game route is rewritten in public/_redirects,
+    // and an unknown route gets the exported not-found page, 404.html.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "cancelNomination": "Avbryt nomineringen: {by} → {of}",
+  "mostVotes": "Flest röster",
+  "votesLabel": {
+    "one": "röst",
+    "other": "röster"
+  },
+  "noVoters": "Inga händer noterade.",
+  "voted": "Röstningen sparad",
+  "nominationArrow": "{by} nominerar {of}",
+  "manualNight": "Starta nästa natt",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} röst",
+    "other": "{by} → {of}: {count} röster"
+  },
+  "timerAdd": "Lägg till diskussionstimer",
+  "timerAddThirtySeconds": "Lägg till 30 sekunder",
+  "timerFinished": "Tiden är ute",
+  "timerPause": "Pausa",
+  "timerRemove": "Ta bort timern",
+  "timerReset": "Återställ",
+  "timerResume": "Fortsätt",
+  "timerStart": "Starta",
+  "timerSubtractThirtySeconds": "Dra av 30 sekunder",
+  "timerSummary": "Diskussion: {time}",
+  "voteReset": "Återställ",
+  "mark": "Döm",
+  "votesToExecute": {
+    "one": "{count} röst för att avrätta",
+    "other": "{count} röster för att avrätta"
+  },
+  "votesToTieExecute": {
+    "one": "{count} röst för oavgjort, {execute} för att avrätta",
+    "other": "{count} röster för oavgjort, {execute} för att avrätta"
+  }
+}

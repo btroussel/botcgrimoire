@@ -1,0 +1,35 @@
+name: Bug report
+description: Something in the app doesn't work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps, in order. Mention the script and number of seats if they matter.
+      placeholder: |
+        1. New game with Trouble Brewing and 8 seats
+        2. Let players draw
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened, and what you expected
+      description: A screenshot or screen recording helps a lot.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: Say whether you use the installed app or a browser tab.
+      placeholder: iPhone 15, Safari, installed app
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: App language
+      placeholder: Français

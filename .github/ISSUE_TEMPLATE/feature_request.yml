@@ -1,0 +1,34 @@
+name: Feature request
+description: An idea that makes the board faster, clearer or more reliable to run.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The app keeps the board and the Storyteller makes every call, so these are out of scope ([why](https://github.com/btroussel/botcgrimoire/blob/main/CONTRIBUTING.md#what-fits)):
+
+        - Automating characters: resolving abilities, filtering targets, working out information, automatic deaths, expiring reminders or detecting a winner.
+        - Ads, payments, donations or sponsorship.
+        - An app store version. The app installs from the browser.
+        - Anything that could pass for an official product of The Pandemonium Institute.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's slow, unclear or unreliable at the table today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Idea
+      description: What would you like the app to do?
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: My idea isn't one of the above.
+          required: true

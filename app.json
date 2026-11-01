@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "BotC Grimoire",
+    "slug": "botc-grimoire",
+    "version": "0.1.0",
+    "platforms": [
+      "web"
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./public/icons/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "asyncRoutes": {
+            "web": false
+          }
+        }
+      ]
+    ]
+  }
+}

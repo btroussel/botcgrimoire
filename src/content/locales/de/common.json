@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Inoffizielles Blood on the Clocktower Grimoire für Spiele am Tisch",
+  "seoDescription": "Leite Blood on the Clocktower am Tisch mit einem inoffiziellen Erzähler-Grimoire aus der Community. Verwalte Charaktere, Erinnerungen und Nachtreihenfolge offline, in neun Sprachen.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Inoffizieller Begleiter für Blood on the Clocktower, von der Community erstellt. Nicht mit The Pandemonium Institute verbunden.",
+  "ownership": "Blood on the Clocktower, seine Charaktere, Illustrationen und Fähigkeitstexte sind Eigentum von Steven Medway und The Pandemonium Institute.",
+  "contact": "Fragen zur App? {link}",
+  "cancel": "Abbrechen",
+  "more": "Mehr",
+  "done": "Fertig",
+  "back": "Zurück",
+  "loading": "Wird geladen",
+  "language": "Sprache",
+  "grimoireStyle": "Grimoire-Stil",
+  "velvet_burgundy": "Bordeaux",
+  "velvet_forest": "Waldgrün",
+  "velvet_midnight": "Nachtblau",
+  "velvet_plum": "Pflaume",
+  "settings": "Einstellungen",
+  "players": {
+    "one": "{count} Spieler",
+    "other": "{count} Spieler"
+  },
+  "close": "Schließen",
+  "save": "Speichern",
+  "unknown": "Unbekannt",
+  "home": "Startseite",
+  "scripts": "Skripte",
+  "history": "Verlauf",
+  "resumeGame": "Spiel fortsetzen",
+  "newGame": "Neues Spiel",
+  "noGames": "Noch keine Spiele. Starte eins, es wird hier gespeichert.",
+  "deleteGame": "{name} löschen",
+  "deleteGameTitle": "Dieses Spiel löschen?",
+  "deleteGameMessage": "Das Spiel und sein Protokoll werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
+  "deleteGameConfirm": "Spiel löschen",
+  "justNow": "Gerade eben",
+  "minutesAgo": {
+    "one": "Vor {count} Minute",
+    "other": "Vor {count} Minuten"
+  },
+  "hoursAgo": {
+    "one": "Vor {count} Stunde",
+    "other": "Vor {count} Stunden"
+  },
+  "daysAgo": {
+    "one": "Gestern",
+    "other": "Vor {count} Tagen"
+  },
+  "scriptsHint": "Die Szenarien und deine eigenen",
+  "localeName": "Deutsch",
+  "about": "Info",
+  "supportCreators": "Gefällt dir Blood on the Clocktower? {link} und unterstütze damit The Pandemonium Institute, die Macher des Spiels.",
+  "buyGrimoire": "Kauf dir ein echtes Grimoire",
+  "settingsHint": "Sprache, Grimoire-Stil und Info",
+  "historyHint": "Frühere Spiele, Replays und Importe"
+}

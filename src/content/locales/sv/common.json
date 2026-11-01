@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Inofficiell grimoar för Blood on the Clocktower runt bordet",
+  "seoDescription": "Led Blood on the Clocktower runt bordet med en inofficiell grimoar för berättaren, skapad av communityn. Håll koll på roller, påminnelser och nattordning offline, på nio språk.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Inofficiellt hjälpmedel för Blood on the Clocktower, skapat av communityn. Inte knutet till The Pandemonium Institute.",
+  "ownership": "Blood on the Clocktower, dess roller, illustrationer och förmågetexter tillhör Steven Medway och The Pandemonium Institute.",
+  "contact": "Frågor om appen? {link}",
+  "cancel": "Avbryt",
+  "more": "Mer",
+  "done": "Klar",
+  "back": "Tillbaka",
+  "loading": "Laddar",
+  "language": "Språk",
+  "grimoireStyle": "Grimoarstil",
+  "velvet_burgundy": "Vinröd",
+  "velvet_forest": "Skog",
+  "velvet_midnight": "Midnatt",
+  "velvet_plum": "Plommon",
+  "settings": "Inställningar",
+  "players": {
+    "one": "{count} spelare",
+    "other": "{count} spelare"
+  },
+  "close": "Stäng",
+  "save": "Spara",
+  "unknown": "Okänd",
+  "home": "Hem",
+  "scripts": "Manus",
+  "history": "Historik",
+  "resumeGame": "Fortsätt spelet",
+  "newGame": "Nytt spel",
+  "noGames": "Inga spel än. Starta ett så sparas det här.",
+  "deleteGame": "Radera {name}",
+  "deleteGameTitle": "Radera spelet?",
+  "deleteGameMessage": "Spelet och dess logg raderas för gott. Det går inte att ångra.",
+  "deleteGameConfirm": "Radera spelet",
+  "justNow": "Nyss",
+  "minutesAgo": {
+    "one": "För {count} minut sedan",
+    "other": "För {count} minuter sedan"
+  },
+  "hoursAgo": {
+    "one": "För {count} timme sedan",
+    "other": "För {count} timmar sedan"
+  },
+  "daysAgo": {
+    "one": "Igår",
+    "other": "För {count} dagar sedan"
+  },
+  "scriptsHint": "Utgåvorna och dina egna",
+  "localeName": "Svenska",
+  "about": "Om appen",
+  "supportCreators": "Gillar du Blood on the Clocktower? {link} för att stödja The Pandemonium Institute, som har skapat spelet.",
+  "buyGrimoire": "Köp gärna en egen fysisk grimoar",
+  "settingsHint": "Språk, grimoarstil och om appen",
+  "historyHint": "Tidigare spel, repriser och importer"
+}

@@ -1,0 +1,36 @@
+{
+  "cancelNomination": "Gyanúsítás törlése: {by} → {of}",
+  "mostVotes": "Legtöbb szavazat",
+  "votesLabel": {
+    "one": "szavazat",
+    "other": "szavazat"
+  },
+  "noVoters": "Nincs rögzített szavazat.",
+  "voted": "Szavazat rögzítve",
+  "nominationArrow": "{by} gyanúsít: {of}",
+  "manualNight": "Következő éjszaka",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} szavazat",
+    "other": "{by} → {of}: {count} szavazat"
+  },
+  "timerAdd": "Vitaidőzítő hozzáadása",
+  "timerAddThirtySeconds": "30 másodperc hozzáadása",
+  "timerFinished": "Lejárt az idő",
+  "timerPause": "Szünet",
+  "timerRemove": "Időzítő eltávolítása",
+  "timerReset": "Visszaállítás",
+  "timerResume": "Folytatás",
+  "timerStart": "Indítás",
+  "timerSubtractThirtySeconds": "30 másodperc levonása",
+  "timerSummary": "Vita: {time}",
+  "voteReset": "Újra",
+  "mark": "Megjelölés",
+  "votesToExecute": {
+    "one": "Kivégzéshez {count} szavazat kell",
+    "other": "Kivégzéshez {count} szavazat kell"
+  },
+  "votesToTieExecute": {
+    "one": "Döntetlenhez {count}, kivégzéshez {execute} szavazat kell",
+    "other": "Döntetlenhez {count}, kivégzéshez {execute} szavazat kell"
+  }
+}

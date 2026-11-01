@@ -1,0 +1,36 @@
+{
+  "cancelNomination": "Cancelar nominación: {by} → {of}",
+  "mostVotes": "Más votos",
+  "votesLabel": {
+    "one": "voto",
+    "other": "votos"
+  },
+  "noVoters": "Ninguna mano anotada.",
+  "voted": "Voto anotado",
+  "nominationArrow": "{by} nomina a {of}",
+  "manualNight": "Empezar la noche siguiente",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} voto",
+    "other": "{by} → {of}: {count} votos"
+  },
+  "timerAdd": "Añadir temporizador de debate",
+  "timerAddThirtySeconds": "Añadir 30 segundos",
+  "timerFinished": "Se acabó el tiempo",
+  "timerPause": "Pausa",
+  "timerRemove": "Quitar temporizador",
+  "timerReset": "Reiniciar",
+  "timerResume": "Reanudar",
+  "timerStart": "Iniciar",
+  "timerSubtractThirtySeconds": "Quitar 30 segundos",
+  "timerSummary": "Debate: {time}",
+  "voteReset": "Reiniciar",
+  "mark": "Marcar",
+  "votesToExecute": {
+    "one": "{count} voto para ejecutar",
+    "other": "{count} votos para ejecutar"
+  },
+  "votesToTieExecute": {
+    "one": "{count} voto para empatar, {execute} para ejecutar",
+    "other": "{count} votos para empatar, {execute} para ejecutar"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Nem hivatalos Blood on the Clocktower grimoár élő játékokhoz",
+  "seoDescription": "Vezess élő Blood on the Clocktower játékokat egy nem hivatalos, a közösség által készített mesélői grimoárral. Kövesd a karaktereket, az emlékeztetőket és az éjszakai sorrendet offline, kilenc nyelven.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Nem hivatalos, a közösség által készített segédeszköz a Blood on the Clocktowerhez. Nem kapcsolódik a The Pandemonium Institute céghez.",
+  "ownership": "A Blood on the Clocktower, a karakterei, illusztrációi és képességszövegei Steven Medway és a The Pandemonium Institute tulajdonát képezik.",
+  "contact": "Kérdésed van az appról? {link}",
+  "cancel": "Mégse",
+  "more": "Továbbiak",
+  "done": "Kész",
+  "back": "Vissza",
+  "loading": "Betöltés",
+  "language": "Nyelv",
+  "grimoireStyle": "Grimoár stílusa",
+  "velvet_burgundy": "Bordó",
+  "velvet_forest": "Erdő",
+  "velvet_midnight": "Éjfél",
+  "velvet_plum": "Szilva",
+  "settings": "Beállítások",
+  "players": {
+    "one": "{count} játékos",
+    "other": "{count} játékos"
+  },
+  "close": "Bezárás",
+  "save": "Mentés",
+  "unknown": "Ismeretlen",
+  "home": "Kezdőlap",
+  "scripts": "Szkriptek",
+  "history": "Előzmények",
+  "resumeGame": "Játék folytatása",
+  "newGame": "Új játék",
+  "noGames": "Még nincs játék. Indíts egyet, és itt lesz elmentve.",
+  "deleteGame": "{name} törlése",
+  "deleteGameTitle": "Törlöd ezt a játékot?",
+  "deleteGameMessage": "A játék és a naplója végleg törlődik. Ez nem vonható vissza.",
+  "deleteGameConfirm": "Játék törlése",
+  "justNow": "Az imént",
+  "minutesAgo": {
+    "one": "{count} perce",
+    "other": "{count} perce"
+  },
+  "hoursAgo": {
+    "one": "{count} órája",
+    "other": "{count} órája"
+  },
+  "daysAgo": {
+    "one": "Tegnap",
+    "other": "{count} napja"
+  },
+  "scriptsHint": "A kiadások és a saját szkriptjeid",
+  "localeName": "Magyar",
+  "about": "Névjegy",
+  "supportCreators": "Tetszik a Blood on the Clocktower? {link}, és támogasd vele a játék alkotóit, a The Pandemonium Institute csapatát.",
+  "buyGrimoire": "Vegyél egy saját, fizikai grimoárt",
+  "settingsHint": "Nyelv, grimoár stílusa és névjegy",
+  "historyHint": "Korábbi játékok, visszajátszás és importálás"
+}

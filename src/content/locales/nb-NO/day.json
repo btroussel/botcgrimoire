@@ -1,0 +1,36 @@
+{
+  "cancelNomination": "Avbryt nominasjonen: {by} → {of}",
+  "mostVotes": "Flest stemmer",
+  "votesLabel": {
+    "one": "stemme",
+    "other": "stemmer"
+  },
+  "noVoters": "Ingen hender registrert.",
+  "voted": "Stemmen er registrert",
+  "nominationArrow": "{by} nominerer {of}",
+  "manualNight": "Start neste natt",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} stemme",
+    "other": "{by} → {of}: {count} stemmer"
+  },
+  "timerAdd": "Legg til nedtelling",
+  "timerAddThirtySeconds": "Legg til 30 sekunder",
+  "timerFinished": "Tiden er ute",
+  "timerPause": "Pause",
+  "timerRemove": "Fjern nedtellingen",
+  "timerReset": "Nullstill",
+  "timerResume": "Fortsett",
+  "timerStart": "Start",
+  "timerSubtractThirtySeconds": "Trekk fra 30 sekunder",
+  "timerSummary": "Diskusjon: {time}",
+  "voteReset": "Nullstill",
+  "mark": "Merk",
+  "votesToExecute": {
+    "one": "{count} stemme for å henrette",
+    "other": "{count} stemmer for å henrette"
+  },
+  "votesToTieExecute": {
+    "one": "{count} stemme for uavgjort, {execute} for å henrette",
+    "other": "{count} stemmer for uavgjort, {execute} for å henrette"
+  }
+}

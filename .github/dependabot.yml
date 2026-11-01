@@ -1,0 +1,11 @@
+# Proposes each new major of the actions the workflow uses. npm packages are upgraded by hand:
+# the Expo SDK pins its packages to versions that move together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # Pull request titles follow the repository's conventional commits.
+    commit-message:
+      prefix: ci

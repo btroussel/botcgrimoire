@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Epävirallinen Loitsukirja Blood on the Clocktower -pöytäpeleihin",
+  "seoDescription": "Vedä Blood on the Clocktower -pelejä kasvokkain epävirallisella, yhteisön tekemällä Tarinankertojan Loitsukirjalla. Seuraa hahmoja, muistutuksia ja yöjärjestystä offline-tilassa yhdeksällä kielellä.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Epävirallinen, yhteisön tekemä apuväline Blood on the Clocktower -peliin. Ei sidoksissa The Pandemonium Institute -yhtiöön.",
+  "ownership": "Blood on the Clocktower, sen hahmot, kuvitus ja kykytekstit ovat Steven Medwayn ja The Pandemonium Institute -yhtiön omaisuutta.",
+  "contact": "Kysyttävää sovelluksesta? {link}",
+  "cancel": "Peru",
+  "more": "Valikko",
+  "done": "Valmis",
+  "back": "Takaisin",
+  "loading": "Ladataan",
+  "language": "Kieli",
+  "grimoireStyle": "Loitsukirjan tyyli",
+  "velvet_burgundy": "Viininpunainen",
+  "velvet_forest": "Metsä",
+  "velvet_midnight": "Keskiyö",
+  "velvet_plum": "Luumu",
+  "settings": "Asetukset",
+  "players": {
+    "one": "{count} pelaaja",
+    "other": "{count} pelaajaa"
+  },
+  "close": "Sulje",
+  "save": "Tallenna",
+  "unknown": "Tuntematon",
+  "home": "Alkuun",
+  "scripts": "Kässärit",
+  "history": "Historia",
+  "resumeGame": "Jatka peliä",
+  "newGame": "Uusi peli",
+  "noGames": "Ei vielä pelejä. Aloita peli, niin se tallentuu tänne.",
+  "deleteGame": "Poista {name}",
+  "deleteGameTitle": "Poistetaanko peli?",
+  "deleteGameMessage": "Peli ja sen loki poistetaan pysyvästi. Tätä ei voi perua.",
+  "deleteGameConfirm": "Poista peli",
+  "justNow": "Juuri nyt",
+  "minutesAgo": {
+    "one": "{count} minuutti sitten",
+    "other": "{count} minuuttia sitten"
+  },
+  "hoursAgo": {
+    "one": "{count} tunti sitten",
+    "other": "{count} tuntia sitten"
+  },
+  "daysAgo": {
+    "one": "Eilen",
+    "other": "{count} päivää sitten"
+  },
+  "scriptsHint": "Painokset ja omat kässärisi",
+  "localeName": "Suomi",
+  "about": "Tietoja",
+  "supportCreators": "Pidätkö Blood on the Clocktower -pelistä? {link} ja tue pelin tekijää, The Pandemonium Institute -yhtiötä.",
+  "buyGrimoire": "Osta oma fyysinen Loitsukirja",
+  "settingsHint": "Kieli, Loitsukirjan tyyli ja tietoja",
+  "historyHint": "Menneet pelit, toistot ja tuonnit"
+}

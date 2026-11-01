@@ -1,0 +1,58 @@
+{
+  "appName": "BotC Grimoire",
+  "tagline": "Unofficial Blood on the Clocktower grimoire for in-person games",
+  "seoDescription": "Run in-person Blood on the Clocktower games with an unofficial, community-made Storyteller grimoire. Track roles, reminders and night order offline, in nine languages.",
+  "documentTitle": "{phase} · {app}",
+  "unofficial": "Unofficial, community-made companion for Blood on the Clocktower. Not affiliated with The Pandemonium Institute.",
+  "ownership": "Blood on the Clocktower, its characters, art and ability text are the property of Steven Medway and The Pandemonium Institute.",
+  "contact": "Questions about the app? {link}",
+  "cancel": "Cancel",
+  "more": "More",
+  "done": "Done",
+  "back": "Back",
+  "loading": "Loading",
+  "language": "Language",
+  "grimoireStyle": "Grimoire style",
+  "velvet_burgundy": "Burgundy",
+  "velvet_forest": "Forest",
+  "velvet_midnight": "Midnight",
+  "velvet_plum": "Plum",
+  "settings": "Settings",
+  "players": {
+    "one": "{count} player",
+    "other": "{count} players"
+  },
+  "close": "Close",
+  "save": "Save",
+  "unknown": "Unknown",
+  "home": "Home",
+  "scripts": "Scripts",
+  "history": "History",
+  "resumeGame": "Resume game",
+  "newGame": "New game",
+  "noGames": "No games yet. Start one and it is saved here.",
+  "deleteGame": "Delete {name}",
+  "deleteGameTitle": "Delete this game?",
+  "deleteGameMessage": "This permanently deletes the game and its log. This cannot be undone.",
+  "deleteGameConfirm": "Delete this game",
+  "justNow": "Just now",
+  "minutesAgo": {
+    "one": "{count} minute ago",
+    "other": "{count} minutes ago"
+  },
+  "hoursAgo": {
+    "one": "{count} hour ago",
+    "other": "{count} hours ago"
+  },
+  "daysAgo": {
+    "one": "Yesterday",
+    "other": "{count} days ago"
+  },
+  "scriptsHint": "The editions and your own",
+  "localeName": "English",
+  "about": "About",
+  "supportCreators": "Enjoy Blood on the Clocktower? Consider {link} to support The Pandemonium Institute, the creators of the game.",
+  "buyGrimoire": "buying your own physical Grimoire",
+  "settingsHint": "Language, grimoire style and about",
+  "historyHint": "Past games, replays and imports"
+}
