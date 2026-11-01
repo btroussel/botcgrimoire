@@ -196,8 +196,10 @@ The share QR code is black on white with the standard quiet zone, whatever the v
 camera reads contrast. A custom script's web logo shows only when the network reaches it; otherwise
 the bundled art stands in, so the sheet works offline.
 
-Printing uses A4, black on white with team-coloured names. Ability text never shrinks below 8 pt: a
-long script continues onto another page rather than clipping.
+Printing uses A4, black on white with team-coloured names and team words. The logo and the title
+head the first page, the largest things on it. Ability text never shrinks below 8 pt: a long script
+continues onto another page rather than clipping. Art on the sheet is an image, never a CSS
+background, because browsers leave backgrounds off paper unless the reader turns them on.
 
 ## The theme
 

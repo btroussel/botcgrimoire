@@ -1,5 +1,23 @@
+import { font, palette } from '../theme'
+
 // Print is the browser's paper, not a palette: white and black whatever the setting.
 const print = { paper: '#ffffff', ink: '#000000' } as const
+
+// The one colour left on paper: each team's band word and character names, so a player finds
+// the evil half of the sheet at a glance.
+const teamInk = {
+  townsfolk: '#00689b',
+  outsider: '#00689b',
+  minion: '#8b1616',
+  demon: '#8b1616',
+  traveller: palette.teamOnPaper.traveller,
+  fabled: palette.teamOnPaper.fabled,
+  loric: palette.teamOnPaper.loric,
+} as const
+
+const teamColours = Object.entries(teamInk)
+  .map(([team, ink]) => `#script-sheet-band-${team} [dir="auto"], #script-sheet-team-${team} [id^="script-sheet-name-"] { color: ${ink} !important; }`)
+  .join('\n  ')
 
 export const printCss = `
 .script-jinx-markers, .script-reference-title, .script-count-table { display: none; }
@@ -22,11 +40,13 @@ export const printCss = `
   [id^="script-sheet-jinx-"] { break-inside: avoid; }
   #script-sheet-jinxes > :first-child { break-after: avoid; }
   [id^="script-sheet-row-"] { width: 100% !important; break-inside: avoid; }
-  #script-sheet-head { padding: 0 0 3mm !important; }
-  #script-sheet-head > div { gap: 3mm !important; }
-  #script-sheet-logo, #script-sheet-logo * { width: 16mm !important; height: 12mm !important; }
-  #script-sheet-title { font-size: 14pt !important; line-height: 1.2 !important; }
-  #script-sheet-author { font-size: 9pt !important; line-height: 1.2 !important; }
+  /* The logo and the title are the largest things on the paper: they tell a player which script
+     they hold. */
+  #script-sheet-head { padding: 0 0 4mm !important; }
+  #script-sheet-head > div { gap: 5mm !important; }
+  #script-sheet-logo, #script-sheet-logo * { width: 24mm !important; height: 24mm !important; }
+  #script-sheet-title { font-size: 24pt !important; line-height: 1.1 !important; }
+  #script-sheet-author { font-size: 11pt !important; line-height: 1.3 !important; }
   #script-sheet .script-jinx-markers { display: inline-flex; align-items: center; gap: 0.5mm; }
   #script-sheet .script-jinx-markers img,
   #script-sheet .script-jinx-markers div { width: calc(4mm * var(--print-density, 1)) !important; height: calc(4mm * var(--print-density, 1)) !important; }
@@ -44,10 +64,7 @@ export const printCss = `
   [id^="script-sheet-row-"] > div > :nth-child(2),
   [id^="script-sheet-row-"] > div > :nth-child(2) > div { padding: 0 !important; gap: 0 !important; }
   [id^="script-sheet-name-"], [id^="script-sheet-ability-"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
-  #script-sheet-team-townsfolk [id^="script-sheet-name-"],
-  #script-sheet-team-outsider [id^="script-sheet-name-"] { color: #00689b !important; }
-  #script-sheet-team-minion [id^="script-sheet-name-"],
-  #script-sheet-team-demon [id^="script-sheet-name-"] { color: #8b1616 !important; }
+  ${teamColours}
   #script-sheet-references {
     display: grid !important;
     grid-template-columns: 32mm minmax(0, 1fr) 32mm;
@@ -56,8 +73,9 @@ export const printCss = `
     min-height: 275mm;
     align-items: start;
   }
-  #script-sheet .script-reference-title { display: block; grid-column: 2; grid-row: 1; text-align: center; font-size: 15pt; padding-bottom: 6mm; }
-  #script-sheet .script-reference-title small { display: block; font-size: 8pt; margin-top: 1mm; }
+  /* A plain element, so it names the sheet's faces itself rather than print in the browser's serif. */
+  #script-sheet .script-reference-title { display: block; grid-column: 2; grid-row: 1; text-align: center; font-family: ${font.display.semibold}; font-size: 18pt; line-height: 1.15; padding-bottom: 6mm; }
+  #script-sheet .script-reference-title small { display: block; font-family: ${font.body.regular}; font-size: 9pt; margin-top: 1mm; }
   #script-sheet-nights { display: contents !important; }
   #script-sheet-nights > div { grid-row: 1 / 5; min-width: 0; max-width: 100% !important; gap: 3mm !important; }
   #script-sheet-nights > div:first-child { grid-column: 1; padding-right: 2mm; border-right: 0.3mm solid #d5cec5; }

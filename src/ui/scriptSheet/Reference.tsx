@@ -1,8 +1,9 @@
 import type { StyleProp, ViewStyle } from 'react-native'
-import { Image, ScrollView, Text, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
 import type { NightMarker } from '../../content'
 import { genericArt } from '../../content/generated/art'
 import type { ArtSource } from '../Art'
+import { Art } from '../Art'
 import { CharacterIcon } from '../CharacterIcon'
 import type { Palette } from '../theme'
 import { tabular, type } from '../theme'
@@ -19,9 +20,11 @@ export const nightMarkerArt: Readonly<Record<NightMarker, number | undefined>> =
 }
 
 // Art that is not a character, at its own aspect ratio: a night marker or the script's logo.
+// A plain image, because react-native-web's Image paints a CSS background and browsers leave
+// backgrounds off the printed page by default.
 export const SheetArt = ({ source, width, height }: { readonly source: ArtSource | undefined; readonly width: number; readonly height: number; }) => (
   <View style={[{ width, height }]} accessible={false}>
-    {source !== undefined ? <Image source={source} style={{ width, height }} resizeMode="contain" accessible={false} /> : null}
+    {source !== undefined ? <Art source={source} /> : null}
   </View>
 )
 
