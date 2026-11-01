@@ -34,7 +34,7 @@ const scriptLink = (items) =>
 test('paper lists the Travellers, Fabled and Loric beside the night orders, not on a page of their own', async ({ page }) => {
   await open(page, scriptLink([
     { id: '_meta', name: 'Paper Test', author: 'Camille', bootlegger: ['The Demon may choose to kill no one.'] },
-    'washerwoman', 'chef', 'slayer', 'butler', 'poisoner', 'lleech', 'thief', 'spiritofivory',
+    'washerwoman', 'chef', 'slayer', 'butler', 'poisoner', 'imp', 'lleech', 'thief', 'spiritofivory',
   ]))
   await expect(page.getByRole('heading', { name: 'Paper Test', exact: true })).toBeVisible()
   await expect(page.getByText('by Camille', { exact: true }).first()).toBeVisible()
