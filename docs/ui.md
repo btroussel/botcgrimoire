@@ -191,13 +191,12 @@ is never seen off the board.
 The official player sheet is the model, kept where it works and adapted where paper and phone
 differ. Teams come in a fixed order: Townsfolk, Outsiders, Minions, Demons, then Travellers, Fabled
 and Loric. The sheet keeps the distribution table next to the characters, and the two night orders.
-Upstream marks an ability that skips the first night with an asterisk in its text, so the line
-explaining it shows whenever an ability carries one, whatever the night order says. The
-Storyteller's night instructions stay off the sheet. Jinxes follow, once per pair, indented under
-the Djinn, whose rule they are, whether or not the script lists it. Homebrew rules sit under the
-Bootlegger, whose ability says the script has them, and are written there in compose; the board's
-reference lists them the same way. The Fabled and Loric take one column, so the rules keep the
-sheet's width.
+The line explaining the asterisk is always there, as on the official sheet, since nearly every
+script has one. The Storyteller's night instructions stay off the sheet. Jinxes follow, once per
+pair, indented under the Djinn, whose rule they are, whether or not the script lists it. Homebrew
+rules sit under the Bootlegger, whose ability says the script has them, and are written there in
+compose; the board's reference lists them the same way. The Fabled and Loric take one column, so the
+rules keep the sheet's width.
 
 On screen, team headers stick while their team scrolls past. The night orders become two lists
 below the characters, since paper's upside-down column is meant for turning the page.

@@ -57,6 +57,5 @@ test('paper lists the Travellers, Fabled and Loric beside the night orders, not 
   const foot = page.locator('#script-sheet-page-foot')
   await expect(foot).toBeVisible()
   await expect(foot).toContainText('The Pandemonium Institute')
-  // The Lleech wakes on the first night, but its ability shows the asterisk, so the foot explains it.
   await expect(foot).toContainText('* Not the first night.')
 })

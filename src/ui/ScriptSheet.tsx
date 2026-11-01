@@ -133,7 +133,6 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     ? <Rules label={labels.rules} {...(props.rulesField ? { field: props.rulesField } : { rules: props.rules ?? [] })} p={p} />
     : null
 
-  let footnote = false
   teams.forEach((group) => {
     const color = p.teamOnPaper[group.team]
     // The Fabled and Loric are few, with long text, and the Bootlegger carries its rules under
@@ -155,9 +154,6 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
           {columns.map((column, index) => (
             <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns && columns.length > 1 ? styles.half : styles.full}>
               {column.map((row) => {
-                // The asterisk is upstream's own mark in the text, which a night order cannot predict:
-                // the Lleech wakes on the first night, yet its ability reads "Each night*".
-                if (row.ability.includes('*')) footnote = true
                 return (
                   <View key={row.id} style={styles.full} id={`script-sheet-row-${row.id}`}>
                     <Row
@@ -183,13 +179,13 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     )
   })
 
-  if (footnote) {
-    children.push(
-      <Text key="footnote" id="script-sheet-footnote" style={[type.text.small, styles.footnote, { color: p.inkMuted }]}>
-        {`* ${labels.footnote}`}
-      </Text>,
-    )
-  }
+  // Always there, as on the official sheet: nearly every script has an asterisk, and guessing from
+  // the night order missed some, like the Lleech, which wakes on the first night yet reads "Each night*".
+  children.push(
+    <Text key="footnote" id="script-sheet-footnote" style={[type.text.small, styles.footnote, { color: p.inkMuted }]}>
+      {`* ${labels.footnote}`}
+    </Text>,
+  )
 
   if (props.notice) {
     children.push(
@@ -281,12 +277,10 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
       >
         {children}
       </ScrollView>
-      {labels.credit || footnote ? (
-        <div id="script-sheet-page-foot">
-          <span>{labels.credit}</span>
-          {footnote ? <span>{`* ${labels.footnote}`}</span> : null}
-        </div>
-      ) : null}
+      <div id="script-sheet-page-foot">
+        <span>{labels.credit}</span>
+        <span>{`* ${labels.footnote}`}</span>
+      </div>
     </View>
   )
 }
