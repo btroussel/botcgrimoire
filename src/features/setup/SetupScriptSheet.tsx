@@ -8,6 +8,7 @@ import { useStore } from '../../store'
 import { jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
+import { Token } from '../../ui/Token'
 import { palette, radius, shadows, space, tabular, touch, type } from '../../ui/theme'
 import { ShownPicker } from './BagPicker'
 import { bagDisguises } from './draw'
@@ -72,9 +73,12 @@ export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCou
         return { ...row, inBag, ...(copies || disguise || (inBag && note) ? {
           below: <>
             {inBag && note ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{t(note)}</Text> : null}
-            {disguise ? <Button surface="paper" style={styles.choice} disabled={busy}
-              label={disguise.chosen ? t('setup.disguise', { name: row.name, shown: nameOf(disguise.chosen) }) : t('setup.disguiseChoose', { name: row.name })}
-              onPress={() => setChoosing({ character: disguise.character, open: true })} /> : null}
+            {/* Once picked, the token the player will draw stands for the choice, and a tap changes it. */}
+            {disguise?.chosen ? <Token size={64} character={disguise.chosen} name={nameOf(disguise.chosen)} printName markers={false}
+              accessibilityLabel={t('setup.disguise', { name: row.name, shown: nameOf(disguise.chosen) })} disabled={busy} style={styles.choice}
+              onPress={() => setChoosing({ character: disguise.character, open: true })} />
+              : disguise ? <Button surface="paper" style={styles.choice} disabled={busy} label={t('setup.disguiseChoose', { name: row.name })}
+                onPress={() => setChoosing({ character: disguise.character, open: true })} /> : null}
             {copies ? <View style={styles.copies}>
               <IconButton icon="minus" label={t('setup.removeCopy', { name: row.name })} surface="paper" style={styles.step}
                 disabled={busy} onPress={() => removeCopy(row.id)} />
