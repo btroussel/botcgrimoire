@@ -30,7 +30,8 @@ const markOf = (spec: CardSpec): Alignment | undefined =>
 const rowTokenSize = (width: number, count: number, phone: boolean): number => {
   if (!phone) return tokenSize.show
   const across = Math.max(count, 1)
-  const usable = width - 2 * gutter.phone - space.lg * (across - 1)
+  // Each captioned cell is space.sm wider than its token, so its name has room under it.
+  const usable = width - 2 * gutter.phone - space.lg * (across - 1) - space.sm * across
   const fit = Math.floor(usable / across / 8) * 8
   return Math.min(tokenSize.show, Math.max(tokenSize.sheet, fit))
 }

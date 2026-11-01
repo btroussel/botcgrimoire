@@ -95,7 +95,10 @@ time, so every player keeps their neighbours.
 Any seat, an empty one too, takes any reminder from the script or its loose characters, recorded
 characters first, with no ability source to pick. A note needs text, and this game's notes come
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
-players unless saved, since the Demon gets none there. Showing a card records nothing.
+players unless saved, since the Demon gets none there. A card about a player starts from the
+character that player believes, which the Storyteller can change or add to, since a poisoned player
+may be shown something false. Any card about characters takes as many as the Storyteller picks.
+Showing a card records nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)).

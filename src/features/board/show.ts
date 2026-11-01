@@ -1,14 +1,14 @@
 // Manual cards only need the choices that affect their display. They produce no game events.
-// A disguised seat carries what its player believes, so a card cannot leak the true token.
+// A card about a seat starts from what its player believes, so it cannot leak the true token, and
+// the Storyteller may change it, since a poisoned player can be shown a false character.
 import type { CharacterId } from '../../content'
-import { character, isEmptySeat, teamSide } from '../../content'
 import type { Grimoire, SeatId } from '../../engine'
 import { playerIdentity, seatById } from '../../engine'
 import type { CardKind, CardSpec } from '../../ui/BoardInteraction'
 
 export type ShowKind = Exclude<CardKind, 'custom'>
 
-export type ShowAbout = 'seat' | 'character' | 'characters'
+export type ShowAbout = 'seat' | 'characters' | 'bluffs'
 
 export interface ShowToken {
   readonly kind: ShowKind
@@ -21,32 +21,42 @@ export const showTokens: readonly ShowToken[] = [
   { kind: 'thisPlayerIs', about: 'seat' },
   { kind: 'youAreGood' },
   { kind: 'youAreEvil' },
-  { kind: 'thisCharacterIs', about: 'character' },
-  { kind: 'selectedYou', about: 'character' },
+  { kind: 'thisCharacterIs', about: 'characters' },
+  { kind: 'selectedYou', about: 'characters' },
   { kind: 'thisIsTheDemon' },
   { kind: 'theseAreYourMinions' },
-  { kind: 'notInPlay', about: 'characters' },
+  { kind: 'notInPlay', about: 'bluffs' },
 ]
+
+// What the Storyteller picked: the seat a seat card is about, then the characters to print.
+export interface ShowChoice {
+  readonly seat?: SeatId | undefined
+  readonly characters?: readonly string[]
+}
+
+// The character a seat card offers first; none for a seat without a token.
+export const believed = (g: Grimoire, seat: SeatId): CharacterId | undefined => playerIdentity(g, seat)?.character
 
 // Nothing comes back when a required seat or character is missing.
 export const showing = (
   g: Grimoire,
   kind: ShowKind,
-  about: readonly string[],
+  choice: ShowChoice,
   words: string,
   name: (id: CharacterId) => string,
 ): CardSpec | undefined => {
-  const one = about[0]
-  const aboutSeat = one !== undefined ? seatById(g, one as SeatId) : undefined
-  const characterIds = about as readonly CharacterId[]
-  const printed = (ids: readonly CharacterId[]) => ids.map((id) => ({ id, name: name(id) }))
+  const ids = (choice.characters ?? []) as readonly CharacterId[]
+  const characters = ids.map((id) => ({ id, name: name(id) }))
   switch (kind) {
     case 'youAre':
     case 'thisPlayerIs': {
-      if (!aboutSeat || isEmptySeat(aboutSeat.shown ?? aboutSeat.character)) return undefined
-      const identity = playerIdentity(g, aboutSeat.id)
-      if (!identity) return undefined
-      return { kind, words, characters: printed([identity.character]), tint: identity.alignment, ...(kind === 'thisPlayerIs' ? { caption: aboutSeat.name } : {}) }
+      const seat = choice.seat !== undefined ? seatById(g, choice.seat) : undefined
+      const identity = seat ? playerIdentity(g, seat.id) : undefined
+      if (!seat || !identity || ids.length === 0) return undefined
+      // YOU ARE tells the player their side too. THIS PLAYER IS keeps the seat's side only on the
+      // seat's own character, since a false one in that colour would give the real side away.
+      const own = kind === 'youAre' || (ids.length === 1 && ids[0] === identity.character)
+      return { kind, words, characters, ...(own ? { tint: identity.alignment } : {}), ...(kind === 'thisPlayerIs' ? { caption: seat.name } : {}) }
     }
     case 'youAreGood':
     case 'youAreEvil':
@@ -54,14 +64,12 @@ export const showing = (
     case 'theseAreYourMinions':
       return { kind, words }
     case 'thisCharacterIs':
-    case 'selectedYou': {
-      const id = characterIds[0]
-      if (id === undefined) return undefined
-      const tint = teamSide(character(id).team)
-      return { kind, words, characters: printed([id]), ...(tint ? { tint } : {}) }
-    }
+    case 'selectedYou':
+      // No tint: each token keeps its own team's side, which several characters need not share.
+      if (ids.length === 0) return undefined
+      return { kind, words, characters }
     case 'notInPlay':
-      if (characterIds.length === 0) return undefined
-      return { kind, words, characters: printed(characterIds), tint: 'good' }
+      if (ids.length === 0) return undefined
+      return { kind, words, characters, tint: 'good' }
   }
 }

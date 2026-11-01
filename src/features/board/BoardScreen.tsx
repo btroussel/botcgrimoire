@@ -364,7 +364,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <ReminderPicker target={reminderTarget} onClose={() => setReminderTarget(undefined)}
           onWriteNote={seat => { setReminderTarget(undefined); setNoteTarget({ kind: 'new', seat }) }} />
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
-        <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} />
+        <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onReopen={openShow} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <EndGameDialog visible={endOpen} t={t} width={Math.min(layout.dialogWidth, window.width - 2 * space.lg)}
           onClose={() => setEndOpen(false)} onEnd={winner => {
