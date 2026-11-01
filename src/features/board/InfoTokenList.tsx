@@ -32,10 +32,8 @@ type PreviewMark = { readonly art: CharacterImage | undefined } | { readonly gly
 
 const previewMark: Readonly<Record<CardKind, PreviewMark>> = {
   youAre: { glyph: 'identity' },
-  youAreGood: { art: characterArt.good?.single },
-  youAreEvil: { art: characterArt.evil?.single },
   thisPlayerIs: { glyph: 'player' },
-  thisCharacterIs: { art: characterArt.townsfolk?.good },
+  tokenOnly: { art: characterArt.townsfolk?.good },
   selectedYou: { glyph: 'selection' },
   thisIsTheDemon: { art: characterArt.demon?.evil },
   theseAreYourMinions: { art: characterArt.minion?.evil },

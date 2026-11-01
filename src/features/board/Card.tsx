@@ -1,12 +1,11 @@
-// The info token turned to a player: large words on felt and a character token where needed.
-// The token rises into place, the words follow a beat later, and a tap hands the phone back.
+// The info token turned to a player: large words on felt and character tokens where needed, or
+// the tokens alone. The token rises into place, the words follow a beat later, and a tap hands
+// the phone back.
 import { useEffect, useState } from 'react'
-import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import type { TextStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import type { Alignment } from '../../content'
-import { characterArt } from '../../content/generated/art'
 import type { CardSpec } from '../../ui/BoardInteraction'
 import { IconButton } from '../../ui/Button'
 import { usePhone } from '../../ui/breakpoint'
@@ -20,11 +19,6 @@ export interface CardProps {
   readonly onDismiss: () => void
   readonly closeLabel: string // what a screen reader calls the cross and the tap-anywhere target
 }
-
-// The one card whose words are about a side rather than a character carries the generic mark
-// of that side and its words in that side's colour.
-const markOf = (spec: CardSpec): Alignment | undefined =>
-  spec.kind === 'youAreGood' ? 'good' : spec.kind === 'youAreEvil' ? 'evil' : undefined
 
 // Several tokens share a row. Under tablet width they shrink to fit three across the phone with
 // a gap between, rounded to a multiple of eight, and since that is below `show` the arc carries
@@ -56,8 +50,6 @@ export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
   const reduced = useReducedMotion()
 
   const printed = spec.characters ?? []
-  const mark = markOf(spec)
-  const markArt = mark ? characterArt[mark]?.single : undefined
   const size = printed.length > 1 ? rowTokenSize(width, printed.length, phone) : tokenSize.show
   const captioned = printed.length > 1 && size < tokenSize.show
   const captionStyle = captioned ? captionFit(printed.map((c) => c.name), size + space.sm) : undefined
@@ -94,8 +86,7 @@ export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
   // The containing Modal owns Escape. Closing on keydown here would let the same key's
   // keyup dismiss the player sheet underneath after the card unmounts.
   const gap = phone ? space.lg : space.xl
-  const wordsColor = mark ? (mark === 'good' ? p.goodOnFelt : p.evilOnFelt) : p.text
-  const wordsOnly = printed.length === 0 && !mark && !spec.caption
+  const wordsOnly = printed.length === 0 && !spec.caption
   const horizontal = phone ? gutter.phone : gutter.tablet
   const numberOnly = wordsOnly && /^\d+$/.test(spec.words)
   // The tap-anywhere target is a layer under the content, never around it: the cross is a button
@@ -107,23 +98,21 @@ export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
       </View>
       <ScrollView contentContainerStyle={[styles.content, wordsOnly ? { justifyContent: 'center' } : {}]}>
       <Pressable accessibilityRole="button" accessibilityLabel={closeLabel} onPress={onDismiss} style={styles.tapLayer} />
-      <Animated.Text
+      {spec.words !== '' ? <Animated.Text
         pointerEvents="none"
         accessibilityRole="header"
         style={[numberOnly ? styles.number : spec.words.length > 100 ? type.display.title : type.display.hero, styles.words,
-          { color: wordsColor, opacity: words, paddingHorizontal: horizontal }, wordsOnly ? { marginTop: 0 } : {}, spec.kind === 'custom' ? { textTransform: 'none' } : {}]}
+          { color: p.text, opacity: words, paddingHorizontal: horizontal }, wordsOnly ? { marginTop: 0 } : {}, spec.kind === 'custom' ? { textTransform: 'none' } : {}]}
       >
         {spec.words}
-      </Animated.Text>
+      </Animated.Text> : null}
       {!wordsOnly ? <Animated.View style={[styles.stage, { opacity: rise, transform: [{ scale }] }]} pointerEvents="none">
-        {markArt !== undefined && printed.length === 0 ? (
-          <Image source={markArt} style={{ width: tokenSize.show, height: tokenSize.show }} accessibilityIgnoresInvertColors />
-        ) : null}
         {printed.length > 0 ? (
           <View style={[styles.row, { gap, paddingHorizontal: gutter.phone }]}>
             {printed.map((c, i) => (
+              // The night and reminder leaves are the Storyteller's, as on the setup reveal.
               <View key={`${c.id}-${i}`} style={[styles.cell, { width: captioned ? size + space.sm : size }]}>
-                <Token character={c.id} name={c.name} size={size} {...(spec.tint ? { alignment: spec.tint } : {})} />
+                <Token character={c.id} name={c.name} size={size} markers={false} {...(spec.tint ? { alignment: spec.tint } : {})} />
                 {captioned ? (
                   <Text style={[type.display.title, styles.caption, captionStyle, { color: p.text }]} numberOfLines={2}>
                     {c.name}

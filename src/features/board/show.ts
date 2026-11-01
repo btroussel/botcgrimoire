@@ -17,13 +17,12 @@ export interface ShowToken {
   readonly about?: ShowAbout // omitted for fixed-text cards that open immediately
 }
 
-// The official set in the order the list shows it.
+// The six info tokens the night sheet names, and the character tokens alone, which it asks for
+// more often than any of them. The list shows them two by two, in this order.
 export const showTokens: readonly ShowToken[] = [
   { kind: 'youAre', about: 'seat' },
   { kind: 'thisPlayerIs', about: 'seat' },
-  { kind: 'youAreGood' },
-  { kind: 'youAreEvil' },
-  { kind: 'thisCharacterIs', about: 'characters' },
+  { kind: 'tokenOnly', about: 'characters' },
   { kind: 'selectedYou', about: 'characters' },
   { kind: 'thisIsTheDemon' },
   { kind: 'theseAreYourMinions' },
@@ -74,14 +73,14 @@ export const showing = (
       if (!seat || !playerIdentity(g, seat.id) || ids.length === 0) return undefined
       return { kind, words, characters, caption: seat.name }
     }
-    case 'youAreGood':
-    case 'youAreEvil':
     case 'thisIsTheDemon':
     case 'theseAreYourMinions':
       return { kind, words }
-    case 'thisCharacterIs':
+    case 'tokenOnly':
+      // The tokens alone, as the night sheet shows a Washerwoman or an Undertaker their character.
+      if (ids.length === 0) return undefined
+      return { kind, words: '', characters }
     case 'selectedYou':
-      // No tint: each token keeps its own team's side, which several characters need not share.
       if (ids.length === 0) return undefined
       return { kind, words, characters }
     case 'notInPlay':

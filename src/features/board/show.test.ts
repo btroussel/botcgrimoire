@@ -79,7 +79,7 @@ describe('showing a card from the board', () => {
     expect(seatStart(empty.g, 'youAre', empty.id('Empty'))).toEqual([])
   })
 
-  test.each(['youAreGood', 'youAreEvil', 'thisIsTheDemon', 'theseAreYourMinions'] as const)('%s opens without any player selection', (kind) => {
+  test.each(['thisIsTheDemon', 'theseAreYourMinions'] as const)('%s opens without any player selection', (kind) => {
     const { g } = game().build()
     expect(showTokens.find((token) => token.kind === kind)?.about).toBeUndefined()
     expect(showing(g, kind, {}, 'w', name)).toEqual({ kind, words: 'w' })
@@ -93,16 +93,19 @@ describe('showing a card from the board', () => {
     expect(showing(g, 'selectedYou', { characters: ['poisoner'] }, 'w', name)).toEqual({
       kind: 'selectedYou', words: 'w', characters: printed('poisoner'),
     })
-    expect(showing(g, 'thisCharacterIs', { characters: ['chef'] }, 'w', name)).toEqual({
-      kind: 'thisCharacterIs', words: 'w', characters: printed('chef'),
+  })
+
+  test('the tokens alone carry no words, whatever the list calls them', () => {
+    const { g } = table().build()
+    expect(showing(g, 'tokenOnly', { characters: ['chef'] }, 'Token only', name)).toEqual({
+      kind: 'tokenOnly', words: '', characters: printed('chef'),
     })
   })
 
   test('several characters on one card keep their own sides', () => {
     const { g } = table().build()
-    for (const kind of ['thisCharacterIs', 'selectedYou'] as const) {
-      expect(showing(g, kind, { characters: ['empath', 'imp'] }, 'w', name)).toEqual({ kind, words: 'w', characters: printed('empath', 'imp') })
-    }
+    expect(showing(g, 'tokenOnly', { characters: ['empath', 'imp'] }, 'w', name)).toEqual({ kind: 'tokenOnly', words: '', characters: printed('empath', 'imp') })
+    expect(showing(g, 'selectedYou', { characters: ['empath', 'imp'] }, 'w', name)).toEqual({ kind: 'selectedYou', words: 'w', characters: printed('empath', 'imp') })
   })
 
   test('manual displays leave the board, saved bluffs and existing log unchanged', () => {
@@ -111,7 +114,7 @@ describe('showing a card from the board', () => {
     for (let repeat = 0; repeat < 2; repeat++) {
       showing(g, 'notInPlay', { characters: ['chef', 'saint', 'butler'] }, 'w', name)
       showing(g, 'youAre', { seat: id('Ann'), characters: ['chef'] }, 'w', name)
-      showing(g, 'youAreEvil', {}, 'w', name)
+      showing(g, 'thisIsTheDemon', {}, 'w', name)
     }
     expect(JSON.stringify({ g, log })).toBe(before)
     expect(bluffsOf(g, log)).toEqual(['librarian', 'monk', 'slayer'])
@@ -124,6 +127,7 @@ describe('showing a card from the board', () => {
     expect(showing(g, 'thisPlayerIs', { seat: id('Dan') }, 'w', name)).toBeUndefined()
     expect(showing(g, 'notInPlay', {}, 'w', name)).toBeUndefined()
     expect(showing(g, 'selectedYou', { characters: [] }, 'w', name)).toBeUndefined()
+    expect(showing(g, 'tokenOnly', {}, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: 'nobody' as SeatId, characters: ['chef'] }, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: id('Empty'), characters: ['chef'] }, 'w', name)).toBeUndefined()
   })

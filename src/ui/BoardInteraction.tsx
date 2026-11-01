@@ -15,14 +15,12 @@ import type { ReactNode } from 'react'
 
 export type CardKind =
   | 'youAre'
-  | 'youAreGood'
-  | 'youAreEvil'
   | 'thisIsTheDemon'
   | 'theseAreYourMinions'
   | 'notInPlay'
   | 'selectedYou'
   | 'thisPlayerIs'
-  | 'thisCharacterIs'
+  | 'tokenOnly'
   | 'custom'
 
 // A character on a card: its id for the art and its name in the locale for the arc or the
@@ -37,7 +35,7 @@ export interface PrintedCharacter {
 // the player is meant to see (a disguised seat's believed side, never the truth).
 export interface CardSpec {
   readonly kind: CardKind
-  readonly words: string
+  readonly words: string // empty for the tokens alone
   readonly characters?: readonly PrintedCharacter[] // drawn as printed tokens, left to right
   readonly tint?: 'good' | 'evil'
   readonly caption?: string // a seat's name under the token, for THIS PLAYER IS

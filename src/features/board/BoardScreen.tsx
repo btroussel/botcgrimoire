@@ -394,7 +394,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           onCancel={() => setConfirmHome(false)}
         />
         {interaction.card ? (
-          <Modal visible animationType="none" onRequestClose={interaction.closeCard} aria-label={interaction.card.words}>
+          <Modal visible animationType="none" onRequestClose={interaction.closeCard}
+            aria-label={interaction.card.words || interaction.card.characters?.map((c) => c.name).join(', ')}>
             <Card spec={interaction.card} onDismiss={interaction.closeCard} closeLabel={t('common.close')} />
           </Modal>
         ) : null}

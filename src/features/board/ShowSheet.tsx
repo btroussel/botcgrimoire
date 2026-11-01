@@ -24,13 +24,12 @@ export interface ShowSheetProps {
   readonly onReopen: () => void // the sheet steps aside for a seat pick on the ring, then comes back
 }
 
-// The words on each card, sentence case here and set uppercase by the card.
-const wordsKey: Readonly<Record<ShowKind, string>> = {
+// Each card's name in the list, sentence case here, which is also the words the card sets
+// uppercase. The tokens alone have a name and no words.
+const labelKey: Readonly<Record<ShowKind, string>> = {
   youAre: 'board.youAre',
-  youAreGood: 'board.cardYouAreGood',
-  youAreEvil: 'board.cardYouAreEvil',
   thisPlayerIs: 'board.cardThisPlayerIs',
-  thisCharacterIs: 'board.cardThisCharacterIs',
+  tokenOnly: 'board.cardTokenOnly',
   selectedYou: 'board.cardSelectedYou',
   thisIsTheDemon: 'board.cardThisIsTheDemon',
   theseAreYourMinions: 'board.cardTheseAreYourMinions',
@@ -67,14 +66,14 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
   const savedBluffs = board ? bluffsOf(board, e.log) : []
   const items: readonly InfoTokenItem[] = [...showTokens.map((x) => ({
     kind: x.kind,
-    label: t(wordsKey[x.kind]),
+    label: t(labelKey[x.kind]),
     ...(x.kind === 'notInPlay' ? { characters: savedBluffs } : {}),
   })), { kind: 'custom', label: t('board.customNote') }]
 
   const show = (token: ShowToken, choice: ShowChoice) => {
     onClose()
     if (!board) return
-    const card = showing(board, token.kind, choice, t(wordsKey[token.kind]), e.name)
+    const card = showing(board, token.kind, choice, t(labelKey[token.kind]), e.name)
     if (card) interaction.showCard(card)
   }
   const pickToken = (item: InfoTokenItem) => {
