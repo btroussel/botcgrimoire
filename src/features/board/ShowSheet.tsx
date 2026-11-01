@@ -15,7 +15,7 @@ import { Sheet } from '../../ui/Sheet'
 import { palette } from '../../ui/theme'
 import { bluffChoices, characterGroups, pickerGroups, roster } from './seat'
 import type { ShowChoice, ShowKind, ShowToken } from './show'
-import { believed, showTokens, showing } from './show'
+import { believed, seatStart, showTokens, showing } from './show'
 import { useEdits } from './useEdits'
 
 export interface ShowSheetProps {
@@ -121,11 +121,10 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
   )
   if (step.kind === 'about' && board) {
     // Bluffs keep to the three a Demon is shown. Any other card takes as many characters as the
-    // Storyteller picks, a seat card starting from what that player believes.
+    // Storyteller picks.
     const bluffs = step.token.about === 'bluffs'
     const ids = bluffs ? bluffChoices(board) : characterGroups(board.script).flatMap((g) => g.ids)
-    const seatCharacter = step.seat ? believed(board, step.seat) : undefined
-    const start = bluffs ? savedBluffs : seatCharacter ? [seatCharacter] : []
+    const start = bluffs ? savedBluffs : step.seat ? seatStart(board, step.token.kind, step.seat) : []
     return (
       <Picker
         visible={visible}

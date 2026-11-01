@@ -1,7 +1,7 @@
 import type { SeatId } from '../../engine'
 import { game, info, token } from '../../engine/testing/board'
 import { bluffsOf } from '../../store/bluffs'
-import { believed, showTokens, showing } from './show'
+import { believed, seatStart, showTokens, showing } from './show'
 
 // Uppercase ids verify that card names come from the supplied locale lookup.
 const name = (id: string) => id.toUpperCase()
@@ -41,14 +41,14 @@ describe('showing a card from the board', () => {
     })
   })
 
-  test('THIS PLAYER IS names the selected player without leaking a disguised role', () => {
+  test('THIS PLAYER IS names the selected player under the characters picked', () => {
     const { g, id } = table().build()
-    expect(showing(g, 'thisPlayerIs', { seat: id('Cat'), characters: [believed(g, id('Cat'))!] }, 'This player is', name)).toEqual({
-      kind: 'thisPlayerIs', words: 'This player is', characters: printed('empath'), caption: 'Cat', tint: 'good',
+    expect(showing(g, 'thisPlayerIs', { seat: id('Cat'), characters: ['drunk'] }, 'This player is', name)).toEqual({
+      kind: 'thisPlayerIs', words: 'This player is', characters: printed('drunk'), caption: 'Cat',
     })
   })
 
-  test('THIS PLAYER IS shows a false character in its own colours, never the seat side', () => {
+  test('THIS PLAYER IS keeps every token in its team colours, never the seat side', () => {
     const { g, id } = table().build()
     expect(showing(g, 'thisPlayerIs', { seat: id('Ann'), characters: ['chef'] }, 'w', name)).toEqual({
       kind: 'thisPlayerIs', words: 'w', characters: printed('chef'), caption: 'Ann',
@@ -56,6 +56,27 @@ describe('showing a card from the board', () => {
     expect(showing(g, 'thisPlayerIs', { seat: id('Ann'), characters: ['imp', 'chef'] }, 'w', name)).toEqual({
       kind: 'thisPlayerIs', words: 'w', characters: printed('imp', 'chef'), caption: 'Ann',
     })
+    // A Nightwatchman who has turned evil wakes their target: red would give the side away.
+    const turned = game().seat('Nat', 'nightwatchman', { alignment: 'evil' }).build()
+    expect(showing(turned.g, 'thisPlayerIs', { seat: turned.id('Nat'), characters: ['nightwatchman'] }, 'w', name)).toEqual({
+      kind: 'thisPlayerIs', words: 'w', characters: printed('nightwatchman'), caption: 'Nat',
+    })
+  })
+
+  test('YOU ARE starts from what the player believes, THIS PLAYER IS from the seat unless it is disguised', () => {
+    const { g, id } = table().build()
+    expect(seatStart(g, 'youAre', id('Ann'))).toEqual(['imp'])
+    expect(seatStart(g, 'thisPlayerIs', id('Ann'))).toEqual(['imp'])
+    expect(seatStart(g, 'youAre', id('Cat'))).toEqual(['empath'])
+    expect(seatStart(g, 'thisPlayerIs', id('Cat'))).toEqual([])
+    const marionette = game().seat('Bob', 'chef', { alignment: 'evil' }).add(token('storyteller', 'marionette/Is The Marionette', 'Bob')).build()
+    expect(seatStart(marionette.g, 'youAre', marionette.id('Bob'))).toEqual(['chef'])
+    expect(seatStart(marionette.g, 'thisPlayerIs', marionette.id('Bob'))).toEqual([])
+    const lunatic = game('bmr').seat('Lou', 'lunatic', { shown: 'zombuul' }).build()
+    expect(seatStart(lunatic.g, 'youAre', lunatic.id('Lou'))).toEqual(['zombuul'])
+    expect(seatStart(lunatic.g, 'thisPlayerIs', lunatic.id('Lou'))).toEqual([])
+    const empty = game().seat('Empty', '_empty').build()
+    expect(seatStart(empty.g, 'youAre', empty.id('Empty'))).toEqual([])
   })
 
   test.each(['youAreGood', 'youAreEvil', 'thisIsTheDemon', 'theseAreYourMinions'] as const)('%s opens without any player selection', (kind) => {

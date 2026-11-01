@@ -1,9 +1,11 @@
 // Manual cards only need the choices that affect their display. They produce no game events.
-// A card about a seat starts from what its player believes, so it cannot leak the true token, and
-// the Storyteller may change it, since a poisoned player can be shown a false character.
+// Only You are speaks about a side: the side its player believes, read from the board. Every other
+// card leaves each token in its team's colours, as the printed token is, so no card tells one
+// player another's side. The Storyteller may change any card's characters, since a poisoned
+// player can be shown a false one.
 import type { CharacterId } from '../../content'
 import type { Grimoire, SeatId } from '../../engine'
-import { playerIdentity, seatById } from '../../engine'
+import { markedCharacters, playerIdentity, seatById } from '../../engine'
 import type { CardKind, CardSpec } from '../../ui/BoardInteraction'
 
 export type ShowKind = Exclude<CardKind, 'custom'>
@@ -34,8 +36,20 @@ export interface ShowChoice {
   readonly characters?: readonly string[]
 }
 
-// The character a seat card offers first; none for a seat without a token.
+// What a seat's player believes they are; none for a seat without a token, which takes no tap.
 export const believed = (g: Grimoire, seat: SeatId): CharacterId | undefined => playerIdentity(g, seat)?.character
+
+// What a seat card offers first. You are starts from what its player believes, so it cannot leak
+// the true token. This player is tells someone else, and on a disguised seat neither token is a
+// safe start: the Demon learns the real Marionette or Lunatic, but a Drunk's real token must never
+// go out on a hasty tap. So it starts from nothing there.
+export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly CharacterId[] => {
+  const shown = believed(g, seat)
+  const record = seatById(g, seat)
+  if (shown === undefined || !record) return []
+  const real = markedCharacters(record)[0] ?? record.character
+  return kind === 'thisPlayerIs' && real !== shown ? [] : [shown]
+}
 
 // Nothing comes back when a required seat or character is missing.
 export const showing = (
@@ -48,15 +62,17 @@ export const showing = (
   const ids = (choice.characters ?? []) as readonly CharacterId[]
   const characters = ids.map((id) => ({ id, name: name(id) }))
   switch (kind) {
-    case 'youAre':
+    case 'youAre': {
+      const identity = choice.seat !== undefined ? playerIdentity(g, choice.seat) : undefined
+      if (!identity || ids.length === 0) return undefined
+      return { kind, words, characters, tint: identity.alignment }
+    }
     case 'thisPlayerIs': {
+      // The ability tells a character, never a side: an evil Nightwatchman shown in red would
+      // give their alignment away to the player they woke.
       const seat = choice.seat !== undefined ? seatById(g, choice.seat) : undefined
-      const identity = seat ? playerIdentity(g, seat.id) : undefined
-      if (!seat || !identity || ids.length === 0) return undefined
-      // YOU ARE tells the player their side too. THIS PLAYER IS keeps the seat's side only on the
-      // seat's own character, since a false one in that colour would give the real side away.
-      const own = kind === 'youAre' || (ids.length === 1 && ids[0] === identity.character)
-      return { kind, words, characters, ...(own ? { tint: identity.alignment } : {}), ...(kind === 'thisPlayerIs' ? { caption: seat.name } : {}) }
+      if (!seat || !playerIdentity(g, seat.id) || ids.length === 0) return undefined
+      return { kind, words, characters, caption: seat.name }
     }
     case 'youAreGood':
     case 'youAreEvil':
