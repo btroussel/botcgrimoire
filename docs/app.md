@@ -68,8 +68,10 @@ stay with the Storyteller, and setup notes flag the roles that need a decision.
 The Drunk, Lunatic and Marionette never see their own token. The bag gives the Drunk and
 Marionette a Townsfolk not in play to show, and the Lunatic a Demon in play, never two disguises
 alike. A Marionette is shown the Huntsman only when the Damsel is in play, as their jinx asks.
-The deal records the disguise as a paper grimoire would
-([Model](model.md#identity-survives-changes-to-the-ring)).
+Until a player takes one of these tokens, the setup window lets the Storyteller choose what it
+shows instead: a Townsfolk not in play, or for the Lunatic any Demon. Random stays the default, and
+a refill keeps a choice while the new bag leaves it free. The deal records the disguise as a paper
+grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
 
 Open grimoire saves the game with every seat empty and the bag face down. Let players draw has
 each player tap a token that is then theirs, so nobody feels the Storyteller chose for them; the

@@ -3,7 +3,7 @@ import { asEventId, inPlay, playerIdentity, reduce } from '../../engine'
 import { game } from '../../engine/testing/board'
 import type { Draw } from '../../store'
 import { listed } from '../../store/scriptSheet'
-import { bagContents, dealDraw, dealTaken, drawPlayer, drawRunsShort, drawTurns, fillBag, nextDrawer, refillBag, takeToken } from './draw'
+import { bagContents, bagDisguises, dealDraw, dealTaken, drawPlayer, drawRunsShort, drawTurns, fillBag, nextDrawer, refillBag, showAs, takeToken } from './draw'
 import { spreadLayout } from './spreadLayout'
 
 const ids = (...names: string[]) => names.map(asCharacterId)
@@ -166,6 +166,93 @@ describe('the players draw from the bag', () => {
     expect(playerIdentity(dealt, id('Ann'))).toEqual({ character: 'chef', alignment: 'good' })
     expect(inPlay(dealt)).toEqual(expect.arrayContaining(['chef', 'marionette', 'lunatic', 'empath', 'drunk']))
     expect(inPlay(dealt)).not.toContain('imp')
+  })
+
+  test('the Storyteller can choose the Townsfolk a Drunk shows, among those nobody holds', () => {
+    const { g, id } = table()
+    const roles = listed('tb', 'en')
+    const draw = fillBag(ids('drunk', 'imp', 'empath'), roles, () => 0, inPlay(g))!
+    const at = draw.tokens.findIndex(token => token.character === 'drunk')
+    const [drunk] = bagDisguises(g, draw, roles)
+    // Left alone, the bag picks at random, and Cat's Chef on the board is no choice.
+    expect(drunk).toMatchObject({ at, character: 'drunk', chosen: undefined })
+    expect(drunk!.choices).toEqual(roles.filter(role => role.team === 'townsfolk' && !['chef', 'empath'].includes(role.id)).map(role => role.id))
+    expect(bagDisguises(g, draw, roles)).toHaveLength(1)
+    for (const not of ['empath', 'chef', 'imp', 'baron']) expect(showAs(g, draw, at, asCharacterId(not), roles)).toBeUndefined()
+    expect(showAs(g, draw, draw.tokens.findIndex(token => token.character === 'imp'), asCharacterId('monk'), roles)).toBeUndefined()
+
+    const chosen = showAs(g, draw, at, asCharacterId('monk'), roles)!
+    expect(chosen.tokens[at]).toEqual({ character: 'drunk', shown: 'monk', chosen: true })
+    expect(chosen.tokens.filter((_, i) => i !== at)).toEqual(draw.tokens.filter((_, i) => i !== at))
+    expect(bagDisguises(g, chosen, roles)[0]).toMatchObject({ chosen: 'monk' })
+    // The player who draws it sees the Monk, and the deal seats the Monk under the Drunk's reminder.
+    const taken = takeToken(g, chosen, id('Ann'), at)!
+    expect(drawPlayer(g, taken, id('Ann'), 'en', roles)).toMatchObject({ character: 'monk', alignment: 'good', roleName: 'Monk' })
+    expect(dealTaken(g, taken, roles)).toEqual([
+      { kind: 'setCharacter', seat: id('Ann'), to: 'monk', alignment: 'good' },
+      { kind: 'placeToken', token: ['drunk', 'Is The Drunk'], seat: id('Ann') },
+    ])
+
+    // Back to random, the bag picks again from the same free Townsfolk.
+    for (const seed of [0, 0.5, 0.99]) {
+      const random = showAs(g, chosen, at, undefined, roles, () => seed)!.tokens[at]!
+      expect(random.chosen).toBeUndefined()
+      expect(drunk!.choices).toContain(random.shown)
+    }
+  })
+
+  test('a Lunatic may be shown any Demon, and no two disguises show the same character', () => {
+    const { g } = table()
+    const roles = listed('bmr', 'en')
+    const draw = fillBag(ids('lunatic', 'zombuul', 'drunk', 'marionette'), roles, () => 0)!
+    const of = (character: string) => draw.tokens.findIndex(token => token.character === character)
+    const choices = (d: Draw, character: string) => bagDisguises(g, d, roles).find(open => open.character === character)!.choices
+    expect(choices(draw, 'lunatic')).toEqual(roles.filter(role => role.team === 'demon').map(role => role.id))
+    // What the Marionette shows is no choice for the Drunk, and the other way round.
+    expect(choices(draw, 'drunk')).not.toContain(draw.tokens[of('marionette')]!.shown)
+    const pick = choices(draw, 'drunk')[0]!
+    const drunk = showAs(g, draw, of('drunk'), pick, roles)!
+    expect(choices(drunk, 'marionette')).not.toContain(pick)
+    expect(showAs(g, drunk, of('marionette'), pick, roles)).toBeUndefined()
+    const pukka = showAs(g, drunk, of('lunatic'), asCharacterId('pukka'), roles)!
+    expect(pukka.tokens[of('lunatic')]).toEqual({ character: 'lunatic', shown: 'pukka', chosen: true })
+    expect(pukka.tokens[of('drunk')]).toEqual({ character: 'drunk', shown: pick, chosen: true })
+  })
+
+  test('a token a player has taken keeps what they saw', () => {
+    const { g, id } = table()
+    const roles = listed('tb', 'en')
+    const draw = takeToken(g, { tokens: [{ character: asCharacterId('drunk'), shown: asCharacterId('empath') }, { character: asCharacterId('imp') }] }, id('Ann'), 0)!
+    expect(bagDisguises(g, draw, roles)).toEqual([])
+    expect(showAs(g, draw, 0, asCharacterId('monk'), roles)).toBeUndefined()
+    expect(showAs(g, draw, 0, undefined, roles)).toBeUndefined()
+  })
+
+  test('a refill keeps a chosen disguise while it still fits the bag, and picks the rest at random', () => {
+    const { g, id } = table()
+    const roles = listed('tb', 'en')
+    // Ann has drawn a Drunk showing the Empath; the Storyteller chose the Monk for the other.
+    const draw = takeToken(g, { tokens: [
+      { character: asCharacterId('drunk'), shown: asCharacterId('empath') },
+      { character: asCharacterId('drunk'), shown: asCharacterId('monk'), chosen: true },
+      { character: asCharacterId('imp') },
+    ] }, id('Ann'), 0)!
+    for (const seed of [0, 0.5, 0.99]) {
+      const refilled = refillBag(g, draw, ids('drunk', 'drunk'), roles, () => seed)!
+      expect(refilled.tokens[0]).toEqual({ character: 'drunk', shown: 'empath', seat: id('Ann') })
+      const fresh = refilled.tokens.slice(1)
+      expect(fresh).toHaveLength(2)
+      expect(fresh).toContainEqual({ character: 'drunk', shown: 'monk', chosen: true })
+      // The other new Drunk avoids the choice, the Townsfolk Ann saw and the Chef on the board.
+      const other = fresh.find(token => token.character === 'drunk' && !token.chosen)!
+      expect(['monk', 'empath', 'chef']).not.toContain(other.shown)
+      expect(roles.find(role => role.id === other.shown)?.team).toBe('townsfolk')
+    }
+    // A choice the new bag now holds goes back to random, and a bag with no Drunk left drops it.
+    const monk = refillBag(g, draw, ids('drunk', 'monk'), roles, () => 0)!.tokens.find(token => token.character === 'drunk' && !token.seat)!
+    expect(monk.chosen).toBeUndefined()
+    expect(['monk', 'empath', 'chef']).not.toContain(monk.shown)
+    expect(refillBag(g, draw, ids('imp'), roles, () => 0)!.tokens).toEqual([{ character: 'drunk', shown: 'empath', seat: id('Ann') }, { character: 'imp' }])
   })
 
   test('homebrew characters start on their declared side', () => {
