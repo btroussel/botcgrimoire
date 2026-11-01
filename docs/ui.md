@@ -144,6 +144,12 @@ Stacked reminders always show each one's rim and name, and spread out on hover o
 or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
 it.
 
+A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it
+off and a pan or a pinch that starts on it still moves the board; a mouse lifts it once it moves.
+Lifted, it rides above the finger, the seat it would land on wears the brass ring and the board
+holds still. Letting go anywhere else, a second finger or Escape puts it back. Nothing drags while
+the seats are being arranged, a panel or a vote is asking for seats, or in replay.
+
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.
@@ -172,7 +178,8 @@ Days and nights shows each player as they were at the time, and reads in order a
 
 The board shrinks so the timeline at the bottom never covers a seat. The timeline is a native range
 input, and its phase labels never overlap: the track scrolls sideways when it gets crowded. Exit
-replay sits apart from the timeline.
+replay sits apart from the timeline. A step is one action, as undo counts them, so a moved reminder
+is never seen off the board.
 
 ## The script sheet
 

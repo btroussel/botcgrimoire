@@ -10,9 +10,9 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import type { Alignment } from '../content'
 import { AddBadge, ReminderChip } from './ReminderChip'
-import { AvailableRing, BlockMark, GhostVoteMark } from './SeatMarks'
+import { AvailableRing, BlockMark, GhostVoteMark, SelectedRing } from './SeatMarks'
 import { Token } from './Token'
-import { palette, space, tokenSize, touch, type, seatMetrics } from './theme'
+import { motion, palette, space, tokenSize, touch, type, seatMetrics } from './theme'
 
 export interface SeatChip {
   readonly key: string
@@ -21,6 +21,8 @@ export interface SeatChip {
   readonly alignment?: Alignment
   readonly onPress?: () => void
   readonly accessibilityLabel?: string
+  readonly draggable?: boolean // tagged with data-chip, its key, for the board's drag
+  readonly lifted?: boolean // being dragged: it stays in its place, faded, until it lands
 }
 
 export interface SeatProps {
@@ -33,6 +35,7 @@ export interface SeatProps {
   readonly onBlock?: boolean
   readonly ghostVote?: boolean // a dead seat shows its skull while it holds the vote
   readonly selected?: boolean | undefined // the brass ring: a hand recorded, a seat picked
+  readonly dropTarget?: boolean // the brass ring alone: a dragged reminder would land here
   readonly pickable?: boolean // unavailable seats fade; earlier selections stay marked and readable
   readonly quietPick?: boolean // voting keeps the board unchanged apart from recorded hands
   readonly chips?: readonly SeatChip[]
@@ -52,6 +55,10 @@ const nameOverhang = seatMetrics.nameOverhang
 // counts across the top, the setup flower low on the right and the name along the bottom.
 const plusCorners = [-140, -40].map(degrees => ({ x: Math.cos(degrees * Math.PI / 180), y: Math.sin(degrees * Math.PI / 180) }))
 
+// Chips keep their size up to a board-sized token and grow with a larger one, so a tablet's
+// or a desktop's big tokens do not carry small reminders.
+export const reminderSize = (token: number): number => Math.round(tokenSize.chip * Math.max(1, token / tokenSize.board))
+
 export const Seat = ({
   size,
   name,
@@ -62,6 +69,7 @@ export const Seat = ({
   onBlock,
   ghostVote,
   selected,
+  dropTarget = false,
   pickable,
   quietPick = false,
   chips = [],
@@ -96,9 +104,7 @@ export const Seat = ({
     document.addEventListener('pointerdown', dismiss)
     return () => document.removeEventListener('pointerdown', dismiss)
   }, [expanded, onRemindersExpanded])
-  // Chips keep their size up to a board-sized token and grow with a larger one, so a tablet's
-  // or a desktop's big tokens do not carry small reminders.
-  const chipSize = Math.round(tokenSize.chip * Math.max(1, size / tokenSize.board))
+  const chipSize = reminderSize(size)
   const chipSlot = { width: chipSize + 2 * space.xs, height: Math.max(touch, chipSize + 2 * space.xs) }
   const radians = ((angle ?? 270) * Math.PI) / 180
   const inward = { x: -Math.cos(radians), y: -Math.sin(radians) }
@@ -153,6 +159,7 @@ export const Seat = ({
         {...(onPress ? { onPress } : {})}
         accessibilityLabel={accessibilityLabel ?? name}
       />
+      {dropTarget ? <SelectedRing size={size} /> : null}
       {onBlock ? <BlockMark size={size} /> : null}
       {dead && ghostVote ? <GhostVoteMark size={size} /> : null}
       <Text
@@ -177,7 +184,8 @@ export const Seat = ({
             transform: `rotate(${Math.atan2(inward.y, inward.x)}rad)`, pointerEvents: 'auto' }} /> : null}
           {chips.map((chip, i) => {
             const point = points[i]!
-            return <View key={chip.key} style={{ position: 'absolute', left: point.x - minX - chipSlot.width / 2, top: point.y - minY - chipSlot.height / 2, width: chipSlot.width, height: chipSlot.height, alignItems: 'center', justifyContent: 'center', zIndex: layer(i), pointerEvents: 'none' }}>
+            return <div key={chip.key} {...(chip.draggable ? { 'data-chip': chip.key } : {})} style={{ position: 'absolute', left: point.x - minX - chipSlot.width / 2, top: point.y - minY - chipSlot.height / 2, width: chipSlot.width, height: chipSlot.height,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: layer(i), pointerEvents: 'none', opacity: chip.lifted ? motion.dimOpacity : 1 }}>
               {/* A note's text spills past its disc, so under another disc of a folded stack it
                   shows its initials rather than fragments. */}
               <ReminderChip size={chipSize} label={chip.label} discHitArea arrive disabled={chips.length > 1 && !expanded}
@@ -186,7 +194,7 @@ export const Seat = ({
                 {...(chip.alignment ? { alignment: chip.alignment } : {})}
                 {...(chip.onPress ? { onPress: chip.onPress } : {})}
                 {...(chip.accessibilityLabel ? { accessibilityLabel: chip.accessibilityLabel } : {})} />
-            </View>
+            </div>
           })}
           {chips.length > 1 ? <button type="button"
             aria-label={remindersLabel ?? name} aria-expanded={expanded}

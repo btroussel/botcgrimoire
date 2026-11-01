@@ -165,9 +165,13 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     reserved: reservedWidth, toolbar: toolbarSize, bluffs: bluffsSize, clockHeight, seats: seatCount, strip: stripCount }),
   [availableWidth, availableHeight, landscape, live, reservedWidth, toolbarSize, bluffsSize, clockHeight, seatCount, stripCount])
   const resultBoxes = useMemo(() => centreBoxes(geometry.ring, seatMetrics, resultWidth), [geometry.ring])
-  const { append } = e
+  const { append, appendAll, board: edited } = e
   const addReminder = useCallback((seat: SeatId) => setReminderTarget(seat), [])
   const removeReminder = useCallback((placedBy: EventId) => append(edits.removeToken(placedBy)), [append])
+  const moveReminder = useCallback((placedBy: EventId, to: SeatId) => {
+    const move = edited ? edits.moveToken(edited, placedBy, to) : []
+    if (move.length > 0) appendAll(move)
+  }, [edited, appendAll])
   const editNote = useCallback((placedBy: EventId) => setNoteTarget({ kind: 'placed', placedBy }), [])
   // The toolbar keeps the same handlers from render to render, so an edit leaves it alone.
   const openShow = useCallback(() => setShowOpen(true), [])
@@ -281,7 +285,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
 
         <View style={{ paddingTop: geometry.fitted ? 0 : utilitiesHeight }}>
           <View style={styles.ring}>
-            <SeatRing seats={view.seats} band={geometry.band} geometry={geometry.ring} t={t} readOnly={b.lookingBack} panelDocked={panelDocked} deal={deal} {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
+            <SeatRing seats={view.seats} band={geometry.band} geometry={geometry.ring} t={t} readOnly={b.lookingBack} panelDocked={panelDocked} deal={deal} {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
+              {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
               {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats } : {}) } : {})} />
           </View>
           {winner ? <VictoryAnnouncement winner={winner} label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}

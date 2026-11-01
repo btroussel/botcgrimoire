@@ -20,6 +20,10 @@ export const replayStops = (log: readonly Event[], script: Script, locale: Local
     board = apply(board, event)
     if (event.kind === 'setBluffs') chosen = event.characters
     else if (event.kind === 'info' && event.to.length === 1 && event.told.kind === 'characters') shown.set(event.to[0]!, event.told.characters)
+    // One action is one step, as it is one undo, so a moved reminder is never seen off the board.
+    // A phase keeps its own stop, since the timeline's labels sit on it.
+    const continuing = event.batch !== undefined && log[index + 1]?.batch === event.batch
+    if (continuing && event.kind !== 'phase' && event.kind !== 'endGame') continue
     const demon = board.seats.find(seat => character(seat.character).team === 'demon')
     const view = boardView(board, [], locale, chosen ?? (demon ? shown.get(demon.id) : undefined) ?? [])
     const signature = JSON.stringify({

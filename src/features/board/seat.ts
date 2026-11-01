@@ -112,6 +112,20 @@ export const edits = {
   kill: (seat: SeatId): Payload => ({ kind: 'kill', seat, cause: 'storyteller' }),
   revive: (seat: SeatId): Payload => ({ kind: 'revive', seat }),
   removeToken: (placedBy: EventId): Payload => ({ kind: 'removeToken', placedBy }),
+  // A reminder dragged to another seat comes off and goes on again as one action, so one undo
+  // puts it back where it was. The copy keeps the source's tint and a note's text.
+  moveToken: (g: Grimoire, placedBy: EventId, to: SeatId): readonly Payload[] => {
+    const from = g.seats.find((s) => s.tokens.some((t) => t.placedBy === placedBy))
+    const token = from?.tokens.find((t) => t.placedBy === placedBy)
+    if (!from || !token || from.id === to || !g.seats.some((s) => s.id === to)) return []
+    return [{ kind: 'removeToken', placedBy }, {
+      kind: 'placeToken',
+      seat: to,
+      token: token.def,
+      ...(token.source !== undefined ? { source: token.source } : {}),
+      ...(token.note !== undefined ? { note: token.note } : {}),
+    }]
+  },
   setNote: (placedBy: EventId, text: string): Payload => ({ kind: 'setNote', placedBy, note: text.trim() }),
   placeReminder: (entry: { readonly character: CharacterId; readonly reminder: string }, seat: SeatId): Payload => ({
     kind: 'placeToken',
