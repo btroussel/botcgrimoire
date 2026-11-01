@@ -50,13 +50,15 @@ Shuffle is optional. From five to fifteen seats it starts from the standard team
 applies the setup changes of the characters it picks:
 
 - Outsiders: Baron plus two, Fang Gu plus one, Vigormortis minus one if there is one, Godfather
-  one either way, Balloonist zero or plus one, Hermit zero or minus one. Xaan, Atheist, Kazali and
-  Lord of Typhon allow any count, and Xaan overrides the others.
+  one either way, Balloonist zero or plus one, Hermit zero or minus one. Xaan, Atheist, Legion,
+  Kazali and Lord of Typhon allow any count, and Xaan overrides the others.
 - Companions: the Huntsman brings the Damsel, the Choirboy the King.
 - Teams: the Summoner replaces the Demon with a Townsfolk, Lil' Monsta with an extra Minion.
   Atheist has no evil, Kazali no starting Minions, Lord of Typhon one more Minion. Legion flips
   the split, the usual evil count becoming the good players. Village Idiot comes in one to three
   copies.
+
+A good character that changes the setup is picked as often as any other character of its team.
 
 Above fifteen seats shuffle adds the script's Travellers; below five it just draws primary roles.
 It never picks Fabled or Loric, leaves the Marionette out of Summoner and Lil' Monsta games, and
@@ -65,10 +67,11 @@ stay with the Storyteller, and setup notes flag the roles that need a decision.
 
 The Drunk, Lunatic and Marionette never see their own token. The bag gives the Drunk and
 Marionette a Townsfolk not in play to show, and the Lunatic a Demon in play, never two disguises
-alike. Until a player takes one of these tokens, the setup window lets the Storyteller choose what
-it shows instead: a Townsfolk not in play, or for the Lunatic any Demon. Random stays the default,
-and a refill keeps a choice while the new bag leaves it free. The deal records the disguise as a
-paper grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
+alike. A Marionette is shown the Huntsman only when the Damsel is in play, as their jinx asks.
+Until a player takes one of these tokens, the setup window lets the Storyteller choose what it
+shows instead: a Townsfolk not in play, or for the Lunatic any Demon. Random stays the default, and
+a refill keeps a choice while the new bag leaves it free. The deal records the disguise as a paper
+grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
 
 Open grimoire saves the game with every seat empty and the bag face down. Let players draw has
 each player tap a token that is then theirs, so nobody feels the Storyteller chose for them; the

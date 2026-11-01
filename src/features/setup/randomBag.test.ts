@@ -3,6 +3,7 @@ import type { CharacterId, Team } from '../../content'
 import { baseCounts } from '../../engine'
 import { listed } from '../../store/scriptSheet'
 import { randomBag } from './randomBag'
+import type { BagRole } from './randomBag'
 import { seatedCharacters } from './setup'
 
 const roles = (...ids: string[]) => ids.map(id => character(asCharacterId(id)))
@@ -187,6 +188,23 @@ test('Lord of Typhon adds a Minion and permits a variable Outsider count', () =>
     counts.add(countTeam(bag, 'outsider'))
   }
   expect(counts.size).toBeGreaterThan(1)
+})
+
+test('a setup modifier is in the bag as often as the Townsfolk it replaces on the script', () => {
+  const tb = listed('tb', 'en')
+  const pool = tb.map(role => role.id === 'chef' ? character(asCharacterId('balloonist'))
+    : role.id === 'mayor' ? character(asCharacterId('villageidiot')) : role)
+  const random = rng(1)
+  const shares = (roles: readonly BagRole[], players: number) => {
+    const seen = new Map<string, number>()
+    for (let i = 0; i < 2000; i++) new Set(randomBag(roles, players, random)).forEach(id => seen.set(id, (seen.get(id) ?? 0) + 1 / 2000))
+    return seen
+  }
+  for (const players of [5, 9, 15]) {
+    const before = shares(tb, players), after = shares(pool, players)
+    expect(Math.abs(after.get('balloonist')! - before.get('chef')!)).toBeLessThan(0.05)
+    expect(Math.abs(after.get('villageidiot')! - before.get('mayor')!)).toBeLessThan(0.05)
+  }
 })
 
 test('a duplicate script entry cannot fill a missing Townsfolk slot', () => {
