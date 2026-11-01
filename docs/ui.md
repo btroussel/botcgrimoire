@@ -187,7 +187,9 @@ The official player sheet is the model, kept where it works and adapted where pa
 differ. Teams come in a fixed order: Townsfolk, Outsiders, Minions, Demons, then Travellers, Fabled
 and Loric. The sheet keeps the asterisk for an ability that skips the first night, the distribution
 table next to the characters, and the two night orders. The Storyteller's night instructions stay
-off it. Jinxes follow, once per pair, then homebrew rules.
+off it. Jinxes follow, once per pair. Homebrew rules sit under the Bootlegger, whose ability says
+the script has them, and are written there in compose; the board's reference lists them the same
+way. The Fabled and Loric take one column, so the rules keep the sheet's width.
 
 On screen, team headers stick while their team scrolls past. The night orders become two lists
 below the characters, since paper's upside-down column is meant for turning the page.

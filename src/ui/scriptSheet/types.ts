@@ -50,7 +50,7 @@ export interface ScriptSheetLabels {
   readonly otherNights: string
   readonly footnote: string // what the asterisk means: not the first night
   readonly jinxes: string
-  readonly rules: string // the Bootlegger's homebrew rules
+  readonly rules: string // names the list of the Bootlegger's homebrew rules for a screen reader
   readonly teensyville?: string // shown under the title when the script is recognised as one
 }
 
@@ -84,7 +84,7 @@ export interface ScriptSheetProps {
   readonly teams: readonly ScriptSheetTeam[] // in the fixed order, Travellers last
   readonly jinxes?: readonly ScriptSheetJinx[] // grouped at the end, each pair drawn once
   readonly notice?: string // a line under the characters, such as the ids this version does not know
-  readonly rules?: readonly string[] // the Bootlegger's homebrew rules, after the jinxes
+  readonly rules?: readonly string[] // the Bootlegger's homebrew rules, under its row
   readonly rulesField?: ScriptSheetRulesField // compose: writes them instead
   readonly counts?: ScriptSheetCountTable
   readonly nightOrders?: ScriptSheetNightOrders

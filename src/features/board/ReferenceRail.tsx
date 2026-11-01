@@ -80,11 +80,13 @@ interface RowLayout {
 
 // The sheet stays mounted while closed and its store re-renders it on every edit, so each row
 // redraws only when its own text, players or the paper's opening change.
-const CharacterRow = memo(function CharacterRow({ id, team, name, ability, phone, nameColumnWidth, artSize, expansion, descriptionWidth }: RowLayout & {
+const CharacterRow = memo(function CharacterRow({ id, team, name, ability, rules, rulesLabel, phone, nameColumnWidth, artSize, expansion, descriptionWidth }: RowLayout & {
   readonly id: string
   readonly team: Team
   readonly name: string
   readonly ability: string
+  readonly rules?: readonly string[] | undefined // the Bootlegger's homebrew rules, read after its ability as on the sheet
+  readonly rulesLabel?: string | undefined
 }) {
   return <View style={styles.referenceRow}>
     <View style={[styles.identity, { width: nameColumnWidth }]}>
@@ -97,6 +99,9 @@ const CharacterRow = memo(function CharacterRow({ id, team, name, ability, phone
     </View>
     <ReferenceDescription expansion={expansion} width={descriptionWidth}>
       <Text style={[type.text.body, styles.ink]}>{ability}</Text>
+      {rules?.length ? <View role="list" aria-label={rulesLabel} style={styles.rules}>
+        {rules.map((rule, i) => <Text key={i} role="listitem" style={[type.text.body, styles.ink]}>{rule}</Text>)}
+      </View> : null}
     </ReferenceDescription>
   </View>
 })
@@ -187,6 +192,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   const locale = settings.locale
   const text = useMemo(() => gameText(locale), [locale])
   const list = useMemo(() => script ? listed(script, locale) : [], [script, locale])
+  const rules = useMemo(() => script ? scriptRules(script) : [], [script])
   const jinxes = useMemo(() => jinxesAmong(list, locale), [list, locale])
   const teams = useMemo(() => teamLabels(t), [t])
   const orders = useMemo(() => script ? nightOrders(script, list, locale, marker => t(markerKeys[marker])) : { first: [], other: [] }, [script, list, locale, t])
@@ -266,7 +272,8 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
                 <Text accessibilityRole="header" style={[type.text.label, { color: palette.teamOnPaper[team] }]}>{teams[team]}</Text>
                 <View style={styles.rule} />
               </View>
-              {rows.map(entry => <CharacterRow key={entry.id} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability} {...row} />)}
+              {rows.map(entry => <CharacterRow key={entry.id} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability}
+                {...(entry.id === 'bootlegger' ? { rules, rulesLabel: t('scripts.rules') } : {})} {...row} />)}
             </View>
           })}
           {jinxes.length ? <View style={styles.team}>
@@ -275,15 +282,6 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
               <View style={[styles.jinxArt, { width: nameColumnWidth }]}><CharacterIcon id={jinx.a} size={32} /><CharacterIcon id={jinx.b} size={32} /></View>
               <ReferenceDescription expansion={row.expansion} width={row.descriptionWidth}>
                 <Text style={[type.text.small, styles.ink]}>{jinx.reason}</Text>
-              </ReferenceDescription>
-            </View>)}
-          </View> : null}
-          {scriptRules(script).length ? <View style={styles.team}>
-            <Text accessibilityRole="header" style={[type.display.title, styles.ink]}>{t('scripts.rules')}</Text>
-            {scriptRules(script).map((rule, i) => <View key={i} style={styles.jinx}>
-              <View style={[styles.jinxArt, { width: nameColumnWidth }]}><CharacterIcon id="bootlegger" size={32} /></View>
-              <ReferenceDescription expansion={row.expansion} width={row.descriptionWidth}>
-                <Text style={[type.text.small, styles.ink]}>{rule}</Text>
               </ReferenceDescription>
             </View>)}
           </View> : null}
@@ -322,6 +320,7 @@ const styles = StyleSheet.create({
   muted: { color: palette.inkMuted },
   jinx: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.xs },
   jinxArt: { flexShrink: 0, flexDirection: 'row', gap: space.xs },
+  rules: { gap: space.xs, paddingTop: space.xs },
   nightRow: { borderBottomColor: palette.parchmentShade, borderBottomWidth: StyleSheet.hairlineWidth },
   crossed: { textDecorationLine: 'line-through', color: palette.inkMuted },
   emphasis: { fontFamily: font.body.bold },

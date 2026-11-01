@@ -37,13 +37,15 @@ export const printCss = `
   [id^="script-sheet-team-"] { padding: 0 !important; }
   [id^="script-sheet-column-"]:first-child { padding-right: 3mm; }
   [id^="script-sheet-column-"]:last-child { padding-left: 3mm; }
+  #script-sheet-team-fabled > div, #script-sheet-team-loric > div { width: 100% !important; padding: 0 !important; }
   [id^="script-sheet-row-"] > div { min-height: 0 !important; gap: 2mm !important; padding: calc(1.2mm * var(--print-density, 1)) 0 !important; }
   [id^="script-sheet-row-"] > div > :first-child,
   [id^="script-sheet-row-"] > div > :first-child > div,
   [id^="script-sheet-row-"] img { width: calc(15mm * var(--print-density, 1)) !important; height: calc(15mm * var(--print-density, 1)) !important; }
   [id^="script-sheet-row-"] > div > :nth-child(2),
   [id^="script-sheet-row-"] > div > :nth-child(2) > div { padding: 0 !important; gap: 0 !important; }
-  [id^="script-sheet-name-"], [id^="script-sheet-ability-"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
+  [id^="script-sheet-name-"], [id^="script-sheet-ability-"], #script-sheet-rules [dir="auto"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
+  #script-sheet-rules { gap: 1mm !important; padding-top: 1mm !important; }
   #script-sheet-team-townsfolk [id^="script-sheet-name-"],
   #script-sheet-team-outsider [id^="script-sheet-name-"] { color: #00689b !important; }
   #script-sheet-team-minion [id^="script-sheet-name-"],
@@ -70,7 +72,6 @@ export const printCss = `
   #script-sheet-nights > div > div > div > div:first-child *,
   #script-sheet-nights img { width: 7mm !important; height: 7mm !important; }
   #script-sheet-jinxes { grid-column: 2; grid-row: 2; padding: 0 0 5mm !important; gap: 3mm !important; }
-  #script-sheet-rules { grid-column: 2; grid-row: 3; padding: 0 !important; gap: 2mm !important; }
   #script-sheet-counts { grid-column: 2; grid-row: 4; padding: 5mm 0 0 !important; }
   #script-sheet-counts-screen { display: none !important; }
   #script-sheet .script-count-table { display: table !important; width: calc(100% + 8mm); margin-left: -4mm; table-layout: fixed; border-collapse: collapse; font-size: 8.5pt; line-height: 1.2; }
@@ -79,7 +80,7 @@ export const printCss = `
   #script-sheet .script-count-table thead th { font-weight: bold; }
   #script-sheet-jinxes > [id^="script-sheet-jinx-"] { gap: 2mm !important; }
 
-  #script-sheet-jinxes [dir="auto"], #script-sheet-rules [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
+  #script-sheet-jinxes [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
   #script-sheet-footnote { font-size: 8pt !important; line-height: 1.15 !important; padding: 2mm 0 0 !important; }
 
 }
