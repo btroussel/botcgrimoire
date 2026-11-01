@@ -240,6 +240,13 @@ export const unknownIds = (script: Script): readonly string[] => {
   return scriptCharacters(script).filter((id) => !characters.has(id) && !carried.has(id))
 }
 
+// The Djinn in the UI locale. It heads a sheet's jinxes, since its rule is what they are, whether
+// or not the script lists it.
+export const djinnText = (locale: Locale): { readonly name: string; readonly ability: string } => {
+  const role = gameText(locale).role(asCharacterId('djinn'))
+  return { name: role.name, ability: role.ability }
+}
+
 // The line a sheet prints under its characters to name those ids, or nothing when there are none.
 export const unknownNotice = (script: Script, t: Translate): string | undefined => {
   const unknown = unknownIds(script)

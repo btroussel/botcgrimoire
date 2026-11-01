@@ -19,12 +19,18 @@ const teamColours = Object.entries(teamInk)
   .map(([team, ink]) => [
     `#script-sheet-band-${team} [dir="auto"]`,
     `#script-sheet-team-${team} [id^="script-sheet-name-"]`,
-    `#script-sheet-reference-${team} [role="heading"]`,
-    `#script-sheet-reference-${team} [id^="script-sheet-refname-"]`,
+    `#script-sheet [id^="script-sheet-refname-${team}-"]`,
+    `#script-sheet-reference-${team} .script-reference-band > span`,
     `#script-sheet .script-sheet-npc-${team} > span`,
     `#script-sheet tr.script-count-${team} > *`,
   ].join(', ') + ` { color: ${ink} !important; }`)
   .join('\n  ')
+
+// The official sheet's gold, for the second page's headings, frame and bars; a bar is the gold at
+// a fifth of its strength.
+const gold = palette.teamOnPaper.fabled
+const bar = `${gold}33`
+const nightColumn = 38 // mm, bar and gutter included
 
 // The foot of every page holds the ownership line and the asterisk's meaning; the characters stop
 // this far above the paper's printable bottom edge.
@@ -47,8 +53,8 @@ export const printCss = `
   #script-sheet-toolbar, #script-sheet-footer, #script-sheet-notice, #script-sheet .paper-texture { display: none !important; }
   [id^="script-sheet-band-"] { position: static !important; break-after: avoid; }
   #script-sheet-references { break-before: page; }
-  /* Travellers and Fabled print on the second page, so their bands leave the first. */
-  #script-sheet:has(#script-sheet-references) :is(#script-sheet-block-traveller, #script-sheet-block-fabled) { display: none !important; }
+  /* Travellers, Fabled and Loric print on the second page, so their bands leave the first. */
+  #script-sheet:has(#script-sheet-references) :is(#script-sheet-block-traveller, #script-sheet-block-fabled, #script-sheet-block-loric) { display: none !important; }
   #script-sheet .script-print-only { display: block; }
   [id^="script-sheet-column-"] { width: 50% !important; }
   [id^="script-sheet-jinx-"] { break-inside: avoid; }
@@ -84,36 +90,48 @@ export const printCss = `
   [id^="script-sheet-name-"], [id^="script-sheet-ability-"], #script-sheet-rules [dir="auto"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
   #script-sheet-rules { gap: 2mm !important; padding-top: 1mm !important; }
   ${teamColours}
-  /* The night orders take the outer columns; everything else stacks between them, the count
-     table at the foot. */
+  /* The second page follows the official sheet: the night orders in the outer columns, each
+     behind a pale gold bar that runs the page, and everything else stacked between them with the
+     count table at the foot. */
   #script-sheet-references {
     display: grid !important;
-    grid-template-columns: 32mm minmax(0, 1fr) 32mm;
+    grid-template-columns: ${nightColumn}mm minmax(0, 1fr) ${nightColumn}mm;
     grid-template-rows: 1fr auto;
-    column-gap: 4mm;
+    column-gap: 3mm;
     min-height: ${pageHeight - footHeight}mm;
     align-items: start;
   }
-  #script-sheet-centre { grid-column: 2; grid-row: 1; min-width: 0; display: flex !important; flex-direction: column; gap: 5mm; }
+  #script-sheet-centre { grid-column: 2; grid-row: 1; min-width: 0; display: flex !important; flex-direction: column; gap: 6mm; }
   /* A plain element, so it names the sheet's faces itself rather than print in the browser's serif. */
-  #script-sheet .script-reference-title { display: block; text-align: center; font-family: ${font.display.semibold}; font-size: 18pt; line-height: 1.15; padding-bottom: 1mm; }
+  #script-sheet .script-reference-title { display: block; text-align: center; font-family: ${font.display.semibold}; font-size: 18pt; line-height: 1.15; }
   #script-sheet .script-reference-title small { display: block; font-family: ${font.body.regular}; font-size: 9pt; margin-top: 1mm; }
   #script-sheet-nights { display: contents !important; }
-  #script-sheet-nights > div { grid-row: 1 / 3; min-width: 0; max-width: 100% !important; gap: 3mm !important; }
-  #script-sheet-nights > div:first-child { grid-column: 1; padding-right: 2mm; border-right: 0.3mm solid #d5cec5; }
-  #script-sheet-nights > div:last-child { grid-column: 3; padding-left: 2mm; border-left: 0.3mm solid #d5cec5; }
-  #script-sheet-nights > div > :first-child { font-size: 10pt !important; line-height: 1.15 !important; }
-  #script-sheet-nights > div > div { gap: 1mm !important; }
-  #script-sheet-nights > div > div > div { min-height: 8mm !important; gap: 1mm !important; }
-  #script-sheet-nights [dir="auto"] { font-size: 7.5pt !important; line-height: 1.15 !important; }
+  #script-sheet-nights > div { grid-row: 1 / 3; align-self: stretch; min-width: 0; max-width: 100% !important; gap: 4mm !important; }
+  #script-sheet-nights > div:first-child { grid-column: 1; padding-right: 3mm; border-right: 1.5mm solid ${bar}; }
+  #script-sheet-nights > div:last-child { grid-column: 3; padding-left: 3mm; border-left: 1.5mm solid ${bar}; }
+  #script-sheet-nights > div > div { gap: 1.2mm !important; }
+  #script-sheet-nights > div > div > div { min-height: 9mm !important; gap: 1.5mm !important; }
+  #script-sheet-nights [dir="auto"] { font-family: ${font.body.bold} !important; font-size: 8pt !important; line-height: 1.15 !important; }
+  #script-sheet #script-sheet-nights > div > [dir="auto"]:first-child { font-family: ${font.display.semibold} !important; font-size: 12pt !important; line-height: 1.15 !important; letter-spacing: 0.06em; text-transform: uppercase; color: ${gold} !important; }
   #script-sheet-nights > div > div > div > div:first-child,
   #script-sheet-nights > div > div > div > div:first-child *,
-  #script-sheet-nights img { width: 7mm !important; height: 7mm !important; }
-  #script-sheet-jinxes { padding: 0 !important; gap: 3mm !important; }
-  [id^="script-sheet-reference-"] { padding: 0 !important; gap: 2.5mm !important; break-inside: avoid; }
-  [id^="script-sheet-reference-"] > div { gap: 2mm !important; }
-  [id^="script-sheet-reference-"] > div > :first-child,
-  [id^="script-sheet-reference-"] img { width: 9mm !important; height: 9mm !important; }
+  #script-sheet-nights img { width: 8.5mm !important; height: 8.5mm !important; }
+  /* The Djinn, Fabled and Loric read like characters, with large icons; the jinxes step in under
+     the Djinn. */
+  #script-sheet-jinxes, [id^="script-sheet-reference-"] { padding: 0 !important; gap: 4mm !important; }
+  [id^="script-sheet-refrow-"] { gap: 3mm !important; break-inside: avoid; }
+  [id^="script-sheet-refrow-"] > :first-child,
+  [id^="script-sheet-refrow-"] > :first-child img { width: 12mm !important; height: 12mm !important; flex-shrink: 0; }
+  [id^="script-sheet-refrow-"] > :last-child { gap: 0.6mm !important; }
+  #script-sheet-jinxlist { gap: 2.5mm !important; }
+  #script-sheet-refrow-djinn + #script-sheet-jinxlist { padding-left: 6mm !important; }
+  [id^="script-sheet-jinx-"] { gap: 3mm !important; padding: 0 !important; }
+  [id^="script-sheet-jinx-"] > :first-child { gap: 1mm !important; }
+  [id^="script-sheet-jinx-"] > :first-child > div,
+  [id^="script-sheet-jinx-"] > :first-child img { width: 8mm !important; height: 8mm !important; }
+  #script-sheet-jinxes [dir="auto"], [id^="script-sheet-reference-"] [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
+  #script-sheet .script-reference-band { display: flex; align-items: center; gap: 3mm; font-family: ${font.display.medium}; font-size: 10pt; letter-spacing: 0.1em; text-transform: uppercase; }
+  #script-sheet .script-reference-band::before, #script-sheet .script-reference-band::after { content: ''; flex: 1; border-top: 0.2mm solid #9b8872; }
   #script-sheet-counts { grid-column: 2; grid-row: 2; padding: 5mm 0 0 !important; }
   #script-sheet-counts-screen { display: none !important; }
   /* The official sheet's table: a double gold frame, no inner rules, a row per team in its colour. */
@@ -121,20 +139,18 @@ export const printCss = `
     display: table !important;
     margin: 0 auto;
     padding: 1.5mm 2.5mm;
-    border: 0.8mm double ${palette.teamOnPaper.fabled};
+    border: 0.8mm double ${gold};
     border-collapse: separate;
     border-spacing: 0;
     font-family: ${font.display.medium};
-    font-size: 13pt;
+    font-size: 11.5pt;
     font-variant-numeric: lining-nums tabular-nums;
     line-height: 1.1;
   }
-  #script-sheet .script-count-table th, #script-sheet .script-count-table td { min-width: 6mm; border: none; padding: 0.6mm 0.8mm; text-align: center; font-weight: normal; }
+  #script-sheet .script-count-table th, #script-sheet .script-count-table td { min-width: 5.5mm; border: none; padding: 0.6mm 0.5mm; text-align: center; font-weight: normal; }
   #script-sheet .script-count-table th:first-child { text-align: right; padding-right: 3mm; font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; }
-  #script-sheet .script-count-table thead th { color: ${palette.teamOnPaper.fabled} !important; }
-  #script-sheet-jinxes > [id^="script-sheet-jinx-"] { gap: 2mm !important; }
+  #script-sheet .script-count-table thead th { color: ${gold} !important; }
 
-  #script-sheet-jinxes [dir="auto"], [id^="script-sheet-reference-"] [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
   /* Repeated at the foot of every page, so the asterisk is explained wherever it appears. */
   #script-sheet-footnote { display: none !important; }
   #script-sheet-page-foot {
@@ -152,7 +168,6 @@ export const printCss = `
   }
   #script-sheet #script-sheet-page-foot, #script-sheet #script-sheet-page-foot * { color: #666666 !important; }
   #script-sheet-page-foot > span + span { flex-shrink: 0; white-space: nowrap; }
-
 }
 `
 

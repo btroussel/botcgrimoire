@@ -5,7 +5,7 @@ import type { CharacterId, Script } from '../../content'
 import { editionAuthor, gameText, isLoose, scriptAuthor, scriptName, scriptRules } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
-import { jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
+import { djinnText, jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { Token } from '../../ui/Token'
@@ -125,7 +125,7 @@ export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCou
   const notice = error ? t('setup.createError') : shuffleError ? t('setup.shuffleUnavailable') : undefined
   const unknown = unknownNotice(script, t)
   return <View style={styles.root}>
-    <ScriptSheet mode="deal" teams={teams} jinxes={jinxesAmong(roles, settings.locale)} selected={bag}
+    <ScriptSheet mode="deal" teams={teams} jinxes={jinxesAmong(roles, settings.locale)} djinn={djinnText(settings.locale)} selected={bag}
     {...(unknown ? { notice: unknown } : {})}
     rules={scriptRules(script)}
     bottomInset={footerHeight + space.md + space.lg}

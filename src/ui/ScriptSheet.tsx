@@ -14,8 +14,8 @@ import { CharacterIcon } from './CharacterIcon'
 import { PaperTexture } from './PaperTexture'
 import { Band, JinxLine, Row } from './scriptSheet/CharacterRows'
 import { fitPrintedRoles, printCss } from './scriptSheet/print'
-import { CountTable, NightOrder, ReferenceTeam, SheetArt } from './scriptSheet/Reference'
-import { Rules } from './scriptSheet/Rules'
+import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetArt } from './scriptSheet/Reference'
+import { RuleList, Rules } from './scriptSheet/Rules'
 import { styles } from './scriptSheet/styles'
 import type { ScriptSheetProps, ScriptSheetRow } from './scriptSheet/types'
 import { palette, type } from './theme'
@@ -59,7 +59,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
 
   const children: ReactNode[] = props.scrollHeader ? [<View key="intro">{props.scrollHeader}</View>] : []
   const teamOf = (team: Team) => teams.find((group) => group.team === team && group.rows.length > 0)
-  const npcs = teamOf('fabled')?.rows ?? []
+  const npcs = [teamOf('fabled'), teamOf('loric')].flatMap((group) => group?.rows ?? [])
 
   // The deal supplies its own introduction instead of a logo and title; an
   // empty head would still take its padding.
@@ -98,7 +98,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
             />
           ) : props.author ? <Text id="script-sheet-author" style={[type.text.small, { color: p.inkMuted }]}>{props.author}</Text> : null}
         </View>
-        {/* Paper names the Fabled beside the title, since their text waits on the next page. */}
+        {/* Paper names the Fabled and Loric beside the title, since their text waits on the next page. */}
         {npcs.length > 0 ? (
           <div className="script-print-only script-sheet-npcs">
             {npcs.map((row) => (
@@ -209,23 +209,34 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     )
   }
 
+  // The Djinn heads the jinxes, as on the official sheet: its rule is what they are. Each jinx sits
+  // indented under it.
+  const djinn = visibleJinxes.length > 0 ? props.djinn : undefined
   const jinxSection = visibleJinxes.length > 0 ? (
-    <View id="script-sheet-jinxes" style={styles.section}>
-      <View style={styles.jinxHeading}>
-        <CharacterIcon id="djinn" team="fabled" size={24} />
-        <Text role="heading" style={[type.text.strong, styles.heading, { color: p.ink }]}>{labels.jinxes}</Text>
+    <View id="script-sheet-jinxes" role="group" aria-label={labels.jinxes} style={styles.section}>
+      {djinn ? <ReferenceRow row={{ id: 'djinn', team: 'fabled', ...djinn }} color={p.teamOnPaper.fabled} p={p} /> : null}
+      <View id="script-sheet-jinxlist" style={[styles.jinxList, djinn ? styles.jinxIndent : null]}>
+        {visibleJinxes.map((j) => (
+          <JinxLine key={`${j.a}-${j.b}`} jinx={j} rowsById={rowsById} p={p} />
+        ))}
       </View>
-      {visibleJinxes.map((j) => (
-        <JinxLine key={`${j.a}-${j.b}`} jinx={j} rowsById={rowsById} p={p} />
-      ))}
     </View>
   ) : null
 
-  // A few Travellers or Fabled would leave a page almost empty after the Demons, so paper lists
-  // them on this page instead, and print hides their bands.
+  // A few Travellers, Fabled or Loric would leave a page almost empty after the Demons, so paper
+  // lists them on this page instead, and print hides their bands. Like the official sheet, the
+  // Fabled and Loric need no heading there; the Travellers, being optional, sit under a band.
+  // The Bootlegger's rules follow it, read only.
+  const paperRules = (props.rules ?? props.rulesField?.values ?? []).filter((rule) => rule.trim() !== '')
   const onPaper = (team: Team) => {
     const group = teamOf(team)
-    return group ? <div className="script-print-only"><ReferenceTeam group={group} color={p.teamOnPaper[team]} p={p} /></div> : null
+    const rows = group?.rows.filter((row) => !(djinn && row.id === 'djinn')) ?? []
+    return group && rows.length > 0 ? (
+      <div className="script-print-only">
+        <ReferenceTeam group={{ ...group, rows }} color={p.teamOnPaper[team]} p={p} band={team === 'traveller'}
+          below={(id) => id === 'bootlegger' && paperRules.length > 0 ? <RuleList label={labels.rules} rules={paperRules} text={type.text.small} p={p} /> : null} />
+      </div>
+    ) : null
   }
 
   // On paper the night orders take the outer columns and the rest stacks between them.
@@ -239,6 +250,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
         </div>
         {jinxSection}
         {onPaper('fabled')}
+        {onPaper('loric')}
         {onPaper('traveller')}
       </View>
     </View>,

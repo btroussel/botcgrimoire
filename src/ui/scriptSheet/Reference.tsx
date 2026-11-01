@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { StyleProp, ViewStyle } from 'react-native'
 import { ScrollView, Text, View } from 'react-native'
 import type { NightMarker } from '../../content'
@@ -117,20 +118,39 @@ export const NightOrder = ({ heading, items, p }: { readonly heading: string; re
 )
 
 // ---------------------------------------------------------------------------------------------
-// A team as the printed reference page lists it: Travellers, Fabled and Loric are a few lines,
-// not worth a page of their own after the Demons.
+// One character as the reference column lists it, a large icon beside its name and ability, with
+// whatever hangs under it, such as the Bootlegger's rules. The Djinn heads the jinxes this way.
 
-export const ReferenceTeam = ({ group, color, p }: { readonly group: ScriptSheetTeam; readonly color: string; readonly p: Palette }) => (
+interface ReferenceRowProps {
+  readonly row: { readonly id: string; readonly team: ScriptSheetTeam['team']; readonly name: string; readonly ability: string }
+  readonly color: string
+  readonly p: Palette
+  readonly below?: ReactNode
+}
+
+export const ReferenceRow = ({ row, color, p, below }: ReferenceRowProps) => (
+  <View id={`script-sheet-refrow-${row.id}`} style={styles.referenceRow}>
+    <CharacterIcon id={row.id} team={row.team} size={referenceIcon} />
+    <View style={[styles.grow, styles.referenceText]}>
+      <Text id={`script-sheet-refname-${row.team}-${row.id}`} style={[type.text.strong, { color }]}>{row.name}</Text>
+      <Text style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
+      {below}
+    </View>
+  </View>
+)
+
+// A team as the printed reference page lists it: Travellers, Fabled and Loric are a few lines,
+// not worth a page of their own after the Demons. Only the Travellers take a band, since they are
+// optional extras rather than rules of the game.
+export const ReferenceTeam = ({ group, color, p, band = false, below }: {
+  readonly group: ScriptSheetTeam
+  readonly color: string
+  readonly p: Palette
+  readonly band?: boolean
+  readonly below?: (id: string) => ReactNode
+}) => (
   <View id={`script-sheet-reference-${group.team}`} style={styles.section}>
-    <Text role="heading" style={[type.text.strong, styles.heading, { color }]}>{group.label}</Text>
-    {group.rows.map((row) => (
-      <View key={row.id} style={styles.referenceRow}>
-        <CharacterIcon id={row.id} team={row.team} size={referenceIcon} />
-        <View style={styles.grow}>
-          <Text id={`script-sheet-refname-${row.id}`} style={[type.text.strong, { color }]}>{row.name}</Text>
-          <Text style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
-        </View>
-      </View>
-    ))}
+    {band ? <div className="script-reference-band"><span>{group.label}</span></div> : null}
+    {group.rows.map((row) => <ReferenceRow key={row.id} row={row} color={color} p={p} below={below?.(row.id)} />)}
   </View>
 )

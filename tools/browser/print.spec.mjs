@@ -33,8 +33,8 @@ const scriptLink = (items) =>
 
 test('paper lists the Travellers, Fabled and Loric beside the night orders, not on a page of their own', async ({ page }) => {
   await open(page, scriptLink([
-    { id: '_meta', name: 'Paper Test', author: 'Camille' },
-    'washerwoman', 'chef', 'empath', 'butler', 'poisoner', 'imp', 'thief', 'spiritofivory',
+    { id: '_meta', name: 'Paper Test', author: 'Camille', bootlegger: ['The Demon may choose to kill no one.'] },
+    'washerwoman', 'chef', 'slayer', 'butler', 'poisoner', 'lleech', 'thief', 'spiritofivory',
   ]))
   await expect(page.getByRole('heading', { name: 'Paper Test', exact: true })).toBeVisible()
   await expect(page.getByText('by Camille', { exact: true }).first()).toBeVisible()
@@ -46,6 +46,12 @@ test('paper lists the Travellers, Fabled and Loric beside the night orders, not 
   await expect(page.locator('#script-sheet-block-fabled')).toBeHidden()
   await expect(page.locator('#script-sheet-reference-traveller').getByText('Thief', { exact: true })).toBeVisible()
   await expect(page.locator('#script-sheet-reference-fabled').getByText('Spirit of Ivory', { exact: true })).toBeVisible()
+  // As on the official sheet, the Djinn heads the jinxes, the Fabled and Loric need no heading, and
+  // the Bootlegger's rules follow it to this page.
+  await expect(page.locator('#script-sheet-refrow-djinn')).toBeVisible()
+  await expect(page.locator('#script-sheet-jinxlist').getByText('If the Slayer slays the Lleech host, the host dies.', { exact: true })).toBeVisible()
+  await expect(page.locator('#script-sheet-reference-fabled').getByText('Fabled', { exact: true })).toHaveCount(0)
+  await expect(page.locator('#script-sheet-reference-loric').getByText('The Demon may choose to kill no one.', { exact: true })).toBeVisible()
   // The head still names the Fabled, whose rule is on the next page.
   await expect(page.locator('#script-sheet-head').getByText('Spirit of Ivory', { exact: true })).toBeVisible()
   const foot = page.locator('#script-sheet-page-foot')

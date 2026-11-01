@@ -11,7 +11,7 @@ import { editionAuthor, gameText, isCustom, scriptAuthor, scriptRules } from '..
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
 import { isWeb } from '../../store/browser'
-import { isTeensyville, countTable, jinxesAmong, listed, nightOrders, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
+import { isTeensyville, countTable, djinnText, jinxesAmong, listed, nightOrders, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
@@ -45,6 +45,7 @@ export const ScriptReader = ({ script, onBack, onExport, onEdit, onSave, saveFai
   const list = useMemo(() => listed(script, locale), [script, locale])
   const teams = useMemo(() => sheetGroups(list, words.teams), [list, words])
   const jinxes = useMemo(() => jinxesAmong(list, locale), [list, locale])
+  const djinn = useMemo(() => djinnText(locale), [locale])
   const counts = useMemo(() => countTable(words.countRows), [words])
   const orders = useMemo(() => nightOrders(script, list, locale, words.marker), [script, list, locale, words])
   const unknown = useMemo(() => unknownNotice(script, t), [script, t])
@@ -67,6 +68,7 @@ export const ScriptReader = ({ script, onBack, onExport, onEdit, onSave, saveFai
           {...head}
           teams={teams}
           jinxes={jinxes}
+          djinn={djinn}
           rules={scriptRules(script)}
           {...(unknown ? { notice: unknown } : {})}
           counts={counts}

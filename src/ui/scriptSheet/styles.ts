@@ -8,7 +8,7 @@ export const readRowIcon = 48
 const rowMinHeight = 56
 export const smallArt = 24
 export const orderIcon = 36
-export const referenceIcon = 36
+export const referenceIcon = readRowIcon
 const orderItemHeight = 36
 const countCell = 44
 const countLabel = 120
@@ -52,7 +52,10 @@ export const styles = StyleSheet.create({
   jinx: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.sm },
   jinxPair: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 0 },
   jinxHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  referenceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  referenceRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  referenceText: { gap: space.xxs },
+  jinxList: { gap: space.xs },
+  jinxIndent: { paddingLeft: space.xl }, // the jinxes step in under the Djinn that rules them
   footnote: { paddingHorizontal: space.lg, paddingTop: space.sm },
   section: { paddingHorizontal: space.lg, paddingTop: space.xl, gap: space.md },
   heading: { textTransform: 'uppercase', letterSpacing: 1 },

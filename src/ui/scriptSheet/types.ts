@@ -84,6 +84,7 @@ export interface ScriptSheetProps {
   readonly authorField?: ScriptSheetNameField
   readonly teams: readonly ScriptSheetTeam[] // in the fixed order, Travellers last
   readonly jinxes?: readonly ScriptSheetJinx[] // grouped at the end, each pair drawn once
+  readonly djinn?: { readonly name: string; readonly ability: string } // heads the jinxes, whose rule it is
   readonly notice?: string // a line under the characters, such as the ids this version does not know
   readonly rules?: readonly string[] // the Bootlegger's homebrew rules, under its row
   readonly rulesField?: ScriptSheetRulesField // compose: writes them instead
