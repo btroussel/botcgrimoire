@@ -33,7 +33,9 @@ Install the test browser once with `npx playwright install --only-shell chromium
 it free.
 
 [Dependabot](../.github/dependabot.yml) proposes new major versions of the workflow's actions once a
-month. It leaves npm alone: Expo's packages move together and get upgraded by hand.
+month. Its version updates leave npm alone: Expo's packages move together and get upgraded by hand.
+Its security updates are a repository setting, not that file, so an advisory on an npm package still
+opens a pull request, and its lockfile change is reviewed as one that could [deploy](#deploy).
 
 ## Deploy
 
