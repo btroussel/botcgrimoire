@@ -114,8 +114,10 @@ a disguised seat, since the Demon must learn a real Marionette or Lunatic while 
 must never go out on a hasty tap. Every other card keeps each token in its team's colours, as the
 printed token is, so no card tells one player another's side. The Storyteller can change or add to
 any card's characters, since a poisoned player may be shown something false, and a card about
-characters takes as many as they pick. A card's tokens leave out the night and reminder marks, as
-the setup reveal does. Showing a card records nothing.
+characters takes as many as they pick. The not-in-play card starts from the saved bluffs and offers
+the good characters in play last, which its shuffle never picks, since a Lunatic may be shown any
+good characters. A card's tokens leave out the night and reminder marks, as the setup reveal does.
+Showing a card records nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)).

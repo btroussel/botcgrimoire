@@ -13,7 +13,7 @@ import type { PickerGroup } from '../../ui/Picker'
 import { Picker } from '../../ui/Picker'
 import { Sheet } from '../../ui/Sheet'
 import { palette } from '../../ui/theme'
-import { bluffChoices, characterGroups, pickerGroups, roster } from './seat'
+import { bluffChoices, characterGroups, goodInPlay, pickerGroups, roster } from './seat'
 import type { ShowChoice, ShowKind, ShowToken } from './show'
 import { believed, seatStart, showTokens, showing } from './show'
 import { useEdits } from './useEdits'
@@ -123,6 +123,13 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
     // Storyteller picks.
     const bluffs = step.token.about === 'bluffs'
     const ids = bluffs ? bluffChoices(board) : characterGroups(board.script).flatMap((g) => g.ids)
+    // Good characters in play come last, for a Lunatic's bluffs, and a shuffle never picks them.
+    const playing = bluffs ? goodInPlay(board) : []
+    const groups: readonly PickerGroup[] = [...characterRows(ids), ...(playing.length > 0 ? [{
+      key: 'inPlay', label: t('board.inPlayGroup'), shuffled: false,
+      rows: playing.map((id) => ({ id, character: id, name: e.name(id) })),
+    }] : [])]
+    const offered = [...ids, ...playing]
     const start = bluffs ? savedBluffs : step.seat ? seatStart(board, step.token.kind, step.seat) : []
     return (
       <Picker
@@ -132,8 +139,8 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
         closeLabel={t('common.close')}
         onBack={back}
         backLabel={t('common.back')}
-        groups={characterRows(ids)}
-        selected={start.filter((id) => ids.includes(id))}
+        groups={groups}
+        selected={start.filter((id) => offered.includes(id))}
         tokenGrid
         multi={{
           min: 1,
