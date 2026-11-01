@@ -6,6 +6,7 @@ import { palette, space, type } from '../../ui/theme'
 import type { Translate } from '../../content'
 
 const contact = 'contact@botcgrimoire.com'
+const source = 'https://github.com/btroussel/botcgrimoire'
 
 // The body of the About group; the settings screen draws its heading like every other group.
 export const AboutSection = ({ t }: { readonly t: Translate }) => (
@@ -21,6 +22,10 @@ export const AboutSection = ({ t }: { readonly t: Translate }) => (
       {withLink(t('common.supportCreators'), <TextLink href={shop} external surface="paper">{t('common.buyGrimoire')}</TextLink>)}
     </Text>
     <Image source={communityArt['ccc-parchment']} style={styles.badge} resizeMode="contain" accessible={false} />
+    {/* Last and smallest on purpose: there for whoever looks, never competing with the game. */}
+    <Text style={[type.text.small, styles.muted, styles.source]}>
+      <TextLink href={source} external surface="paper">{t('common.sourceCode')}</TextLink>
+    </Text>
   </View>
 )
 
@@ -29,4 +34,5 @@ const styles = StyleSheet.create({
   badge: { width: 176, height: 66, maxWidth: '100%', alignSelf: 'center' },
   notice: { gap: space.xs },
   muted: { color: palette.inkMuted },
+  source: { textAlign: 'center' },
 })
