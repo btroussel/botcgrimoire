@@ -192,7 +192,9 @@ The official player sheet is the model, kept where it works and adapted where pa
 differ. Teams come in a fixed order: Townsfolk, Outsiders, Minions, Demons, then Travellers, Fabled
 and Loric. The sheet keeps the asterisk for an ability that skips the first night, the distribution
 table next to the characters, and the two night orders. The Storyteller's night instructions stay
-off it. Jinxes follow, once per pair, then homebrew rules.
+off it. Jinxes follow, once per pair. Homebrew rules sit under the Bootlegger, whose ability says
+the script has them, and are written there in compose; the board's reference lists them the same
+way. The Fabled and Loric take one column, so the rules keep the sheet's width.
 
 On screen, team headers stick while their team scrolls past. The night orders become two lists
 below the characters, since paper's upside-down column is meant for turning the page.
@@ -203,9 +205,9 @@ the bundled art stands in, so the sheet works offline.
 
 Printing uses A4, black on white with team colours on names, team words and the count table, which
 follows the official sheet's framed table. The logo and the title head the first page, the largest
-things on it, with the script's Fabled and Loric named beside them. The second page puts the night
-orders in its outer columns and stacks the rest between them: jinxes, Fabled, Loric, homebrew rules
-and Travellers, so a handful of those never take a page of their own. The foot of every page names
+things on it, with the script's Fabled named beside them. The second page puts the night orders in
+its outer columns and stacks the rest between them: jinxes, Fabled and Travellers, so a handful of
+those never take a page of their own. The foot of every page names
 who owns the game and what the asterisk means. Ability text never shrinks below 8 pt: a long script
 continues onto another page rather than clipping. Art on the sheet is an image, never a CSS
 background, because browsers leave backgrounds off paper unless the reader turns them on.

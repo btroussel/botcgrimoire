@@ -47,8 +47,8 @@ export const printCss = `
   #script-sheet-toolbar, #script-sheet-footer, #script-sheet-notice, #script-sheet .paper-texture { display: none !important; }
   [id^="script-sheet-band-"] { position: static !important; break-after: avoid; }
   #script-sheet-references { break-before: page; }
-  /* Travellers, Fabled and Loric print on the second page, so their bands leave the first. */
-  #script-sheet:has(#script-sheet-references) :is(#script-sheet-block-traveller, #script-sheet-block-fabled, #script-sheet-block-loric) { display: none !important; }
+  /* Travellers and Fabled print on the second page, so their bands leave the first. */
+  #script-sheet:has(#script-sheet-references) :is(#script-sheet-block-traveller, #script-sheet-block-fabled) { display: none !important; }
   #script-sheet .script-print-only { display: block; }
   [id^="script-sheet-column-"] { width: 50% !important; }
   [id^="script-sheet-jinx-"] { break-inside: avoid; }
@@ -74,13 +74,15 @@ export const printCss = `
   [id^="script-sheet-team-"] { padding: 0 !important; }
   [id^="script-sheet-column-"]:first-child { padding-right: 3mm; }
   [id^="script-sheet-column-"]:last-child { padding-left: 3mm; }
+  #script-sheet-team-fabled > div, #script-sheet-team-loric > div { width: 100% !important; padding: 0 !important; }
   [id^="script-sheet-row-"] > div { min-height: 0 !important; gap: 2mm !important; padding: calc(1.2mm * var(--print-density, 1)) 0 !important; }
   [id^="script-sheet-row-"] > div > :first-child,
   [id^="script-sheet-row-"] > div > :first-child > div,
   [id^="script-sheet-row-"] img { width: calc(15mm * var(--print-density, 1)) !important; height: calc(15mm * var(--print-density, 1)) !important; }
   [id^="script-sheet-row-"] > div > :nth-child(2),
   [id^="script-sheet-row-"] > div > :nth-child(2) > div { padding: 0 !important; gap: 0 !important; }
-  [id^="script-sheet-name-"], [id^="script-sheet-ability-"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
+  [id^="script-sheet-name-"], [id^="script-sheet-ability-"], #script-sheet-rules [dir="auto"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
+  #script-sheet-rules { gap: 2mm !important; padding-top: 1mm !important; }
   ${teamColours}
   /* The night orders take the outer columns; everything else stacks between them, the count
      table at the foot. */
@@ -108,7 +110,6 @@ export const printCss = `
   #script-sheet-nights > div > div > div > div:first-child *,
   #script-sheet-nights img { width: 7mm !important; height: 7mm !important; }
   #script-sheet-jinxes { padding: 0 !important; gap: 3mm !important; }
-  #script-sheet-rules { padding: 0 !important; gap: 2mm !important; }
   [id^="script-sheet-reference-"] { padding: 0 !important; gap: 2.5mm !important; break-inside: avoid; }
   [id^="script-sheet-reference-"] > div { gap: 2mm !important; }
   [id^="script-sheet-reference-"] > div > :first-child,
@@ -133,7 +134,7 @@ export const printCss = `
   #script-sheet .script-count-table thead th { color: ${palette.teamOnPaper.fabled} !important; }
   #script-sheet-jinxes > [id^="script-sheet-jinx-"] { gap: 2mm !important; }
 
-  #script-sheet-jinxes [dir="auto"], #script-sheet-rules [dir="auto"], [id^="script-sheet-reference-"] [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
+  #script-sheet-jinxes [dir="auto"], [id^="script-sheet-reference-"] [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
   /* Repeated at the foot of every page, so the asterisk is explained wherever it appears. */
   #script-sheet-footnote { display: none !important; }
   #script-sheet-page-foot {

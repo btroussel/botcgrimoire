@@ -1,6 +1,7 @@
 // The script laid out as the printed player sheet (docs/ui.md): ink on parchment, the teams in
 // the fixed order as bands whose word sits on the divider rule, one row per character, the
-// count table, night orders, Jinx and homebrew rule sections below. Printing uses plain white paper.
+// Bootlegger's homebrew rules under its row, the count table, night orders and jinxes below.
+// Printing uses plain white paper.
 // The one rule it keeps: it is told what every word says and what a tap means. Read, compose
 // and deal are one sheet with different rows lit; the feature decides which and why.
 import type { ReactNode } from 'react'
@@ -58,7 +59,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
 
   const children: ReactNode[] = props.scrollHeader ? [<View key="intro">{props.scrollHeader}</View>] : []
   const teamOf = (team: Team) => teams.find((group) => group.team === team && group.rows.length > 0)
-  const npcs = [teamOf('fabled'), teamOf('loric')].flatMap((group) => group?.rows ?? [])
+  const npcs = teamOf('fabled')?.rows ?? []
 
   // The deal supplies its own introduction instead of a logo and title; an
   // empty head would still take its padding.
@@ -97,7 +98,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
             />
           ) : props.author ? <Text id="script-sheet-author" style={[type.text.small, { color: p.inkMuted }]}>{props.author}</Text> : null}
         </View>
-        {/* Paper names the Fabled and Loric beside the title, since their text waits on the next page. */}
+        {/* Paper names the Fabled beside the title, since their text waits on the next page. */}
         {npcs.length > 0 ? (
           <div className="script-print-only script-sheet-npcs">
             {npcs.map((row) => (
@@ -128,9 +129,19 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
   ) : null
   if (countTable && mode === 'deal') children.push(countTable)
 
+  const rules = props.rulesField || (props.rules?.length ?? 0) > 0
+    ? <Rules label={labels.rules} {...(props.rulesField ? { field: props.rulesField } : { rules: props.rules ?? [] })} p={p} />
+    : null
+
   let footnote = false
   teams.forEach((group) => {
     const color = p.teamOnPaper[group.team]
+    // The Fabled and Loric are few, with long text, and the Bootlegger carries its rules under
+    // it: one column keeps them readable where two would leave a narrow, ragged half. Other teams
+    // keep both halves on a phone too, stacked, since printing sets them side by side.
+    const columns = group.team === 'fabled' || group.team === 'loric'
+      ? [group.rows]
+      : [group.rows.slice(0, Math.ceil(group.rows.length / 2)), group.rows.slice(Math.ceil(group.rows.length / 2))]
     // Each team is its own block so its band sticks only until the team's last row leaves.
     children.push(
       <View key={`team-${group.team}`} id={`script-sheet-block-${group.team}`}>
@@ -141,14 +152,15 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
           </View>
         ) : null}
         <View id={`script-sheet-team-${group.team}`} style={styles.rows}>
-          {[group.rows.slice(0, Math.ceil(group.rows.length / 2)), group.rows.slice(Math.ceil(group.rows.length / 2))].map((column, index) => (
-            <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns ? styles.half : styles.full}>
+          {columns.map((column, index) => (
+            <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns && columns.length > 1 ? styles.half : styles.full}>
               {column.map((row) => {
                 if (row.skipsFirstNight) footnote = true
                 return (
                   <View key={row.id} style={styles.full} id={`script-sheet-row-${row.id}`}>
                     <Row
                       {...row}
+                      below={row.id === 'bootlegger' && rules ? <>{rules}{row.below}</> : row.below}
                       jinxPartners={jinxPartners.get(row.id)}
                       color={color}
                       mode={mode}
@@ -209,19 +221,15 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     </View>
   ) : null
 
-  const rulesSection = props.rulesField || (props.rules?.length ?? 0) > 0 ? (
-    <Rules heading={labels.rules} {...(props.rulesField ? { field: props.rulesField } : { rules: props.rules ?? [] })} p={p} />
-  ) : null
-
-  // A few Travellers, Fabled or Loric would leave a page almost empty after the Demons, so paper
-  // lists them on this page instead, and print hides their bands.
+  // A few Travellers or Fabled would leave a page almost empty after the Demons, so paper lists
+  // them on this page instead, and print hides their bands.
   const onPaper = (team: Team) => {
     const group = teamOf(team)
     return group ? <div className="script-print-only"><ReferenceTeam group={group} color={p.teamOnPaper[team]} p={p} /></div> : null
   }
 
   // On paper the night orders take the outer columns and the rest stacks between them.
-  if (references.length > 0 || jinxSection || rulesSection) children.push(
+  if (references.length > 0 || jinxSection) children.push(
     <View key="references" id="script-sheet-references">
       {references}
       <View id="script-sheet-centre">
@@ -231,8 +239,6 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
         </div>
         {jinxSection}
         {onPaper('fabled')}
-        {onPaper('loric')}
-        {rulesSection}
         {onPaper('traveller')}
       </View>
     </View>,

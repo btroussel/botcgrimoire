@@ -48,6 +48,7 @@ export const styles = StyleSheet.create({
   dimmed: { opacity: 0.45 },
   iconHit: { width: rowIcon, height: rowIcon, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: rowIcon / 2 },
   rowText: { flex: 1, gap: space.xxs, paddingTop: space.xxs },
+  below: { gap: space.xxs }, // the row text's gap, kept between the pieces hung under it
   jinx: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.sm },
   jinxPair: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 0 },
   jinxHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
