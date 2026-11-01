@@ -54,7 +54,7 @@ export const ScriptReader = ({ script, onBack, onExport, onEdit, onSave, saveFai
   const logo = ownLogo ? { uri: ownLogo } : editionArt[isCustom(script) ? 'custom' : script]
   const head = {
     title: isCustom(script) ? script.name : gameText(locale).edition(script).name,
-    ...(author ? { author } : {}),
+    ...(author ? { author: t('scripts.byAuthor', { author }) } : {}),
     ...(logo !== undefined ? { logo } : {}),
   }
 

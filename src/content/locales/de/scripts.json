@@ -68,6 +68,7 @@
   "nameLabel": "Skripttitel",
   "defaultName": "Mein Skript",
   "authorPlaceholder": "Autor",
+  "byAuthor": "von {author}",
   "saveScript": "Skript speichern",
   "discardTitle": "Ohne Speichern verlassen?",
   "discardMessage": "Deine Änderungen an diesem Skript gehen verloren.",

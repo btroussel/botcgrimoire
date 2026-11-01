@@ -117,7 +117,7 @@ export const SetupScriptSheet = ({ script, count, bag, busy, error, onCount, onB
         <Image source={editionArt[typeof script === 'string' ? script : 'custom']} style={styles.logo} resizeMode="contain" />
         <View style={styles.identityText}>
           <Text style={[type.text.strong, { color: palette.ink }]}>{typeof script === 'string' ? text.edition(script).name : scriptName(script)}</Text>
-          {author ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{author}</Text> : null}
+          {author ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{t('scripts.byAuthor', { author })}</Text> : null}
         </View>
       </View>
       <View style={[styles.stepper, compact && styles.centered]}>

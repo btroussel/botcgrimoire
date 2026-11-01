@@ -68,6 +68,7 @@
   "nameLabel": "Nombre del escenario",
   "defaultName": "Mi escenario",
   "authorPlaceholder": "Autor",
+  "byAuthor": "por {author}",
   "saveScript": "Guardar escenario",
   "discardTitle": "¿Salir sin guardar?",
   "discardMessage": "Se perderán tus cambios en este escenario.",

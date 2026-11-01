@@ -68,6 +68,7 @@
   "nameLabel": "Nom du script",
   "defaultName": "Mon script",
   "authorPlaceholder": "Auteur",
+  "byAuthor": "par {author}",
   "saveScript": "Enregistrer le script",
   "discardTitle": "Quitter sans enregistrer ?",
   "discardMessage": "Vos modifications de ce script seront perdues.",

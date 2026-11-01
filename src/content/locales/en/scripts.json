@@ -68,6 +68,7 @@
   "nameLabel": "Script name",
   "defaultName": "My script",
   "authorPlaceholder": "Author",
+  "byAuthor": "by {author}",
   "saveScript": "Save script",
   "discardTitle": "Leave without saving?",
   "discardMessage": "Your changes to this script will be lost.",

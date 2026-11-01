@@ -68,6 +68,7 @@
   "nameLabel": "Manustitel",
   "defaultName": "Mitt manus",
   "authorPlaceholder": "Författare",
+  "byAuthor": "av {author}",
   "saveScript": "Spara manuset",
   "discardTitle": "Lämna utan att spara?",
   "discardMessage": "Dina ändringar i manuset går förlorade.",

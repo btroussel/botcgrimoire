@@ -68,6 +68,7 @@
   "nameLabel": "Kässärin nimi",
   "defaultName": "Oma kässäri",
   "authorPlaceholder": "Tekijä",
+  "byAuthor": "Tekijä: {author}",
   "saveScript": "Tallenna kässäri",
   "discardTitle": "Poistutaanko tallentamatta?",
   "discardMessage": "Kässärin muutokset menetetään.",

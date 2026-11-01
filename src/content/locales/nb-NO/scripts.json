@@ -68,6 +68,7 @@
   "nameLabel": "Manuskriptnavn",
   "defaultName": "Mitt manuskript",
   "authorPlaceholder": "Forfatter",
+  "byAuthor": "av {author}",
   "saveScript": "Lagre manuskriptet",
   "discardTitle": "Gå ut uten å lagre?",
   "discardMessage": "Endringene i dette manuskriptet går tapt.",
