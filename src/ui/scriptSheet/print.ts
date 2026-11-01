@@ -45,7 +45,7 @@ export const printCss = `
   [id^="script-sheet-row-"] > div > :nth-child(2),
   [id^="script-sheet-row-"] > div > :nth-child(2) > div { padding: 0 !important; gap: 0 !important; }
   [id^="script-sheet-name-"], [id^="script-sheet-ability-"], #script-sheet-rules [dir="auto"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
-  #script-sheet-rules { gap: 1mm !important; padding-top: 1mm !important; }
+  #script-sheet-rules { gap: 2mm !important; padding-top: 1mm !important; }
   #script-sheet-team-townsfolk [id^="script-sheet-name-"],
   #script-sheet-team-outsider [id^="script-sheet-name-"] { color: #00689b !important; }
   #script-sheet-team-minion [id^="script-sheet-name-"],

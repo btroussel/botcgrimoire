@@ -14,6 +14,7 @@ import { Icon } from '../../ui/icons'
 import { nightInstruction } from './nightInstruction'
 import { PaperTexture } from '../../ui/PaperTexture'
 import { nightMarkerArt } from '../../ui/scriptSheet/Reference'
+import { RuleList } from '../../ui/scriptSheet/Rules'
 import { Segment } from './Segment'
 import { font, palette, space, touch, type } from '../../ui/theme'
 import { nightEntries, seatCharacters } from './nightReference'
@@ -99,9 +100,7 @@ const CharacterRow = memo(function CharacterRow({ id, team, name, ability, rules
     </View>
     <ReferenceDescription expansion={expansion} width={descriptionWidth}>
       <Text style={[type.text.body, styles.ink]}>{ability}</Text>
-      {rules?.length ? <View role="list" aria-label={rulesLabel} style={styles.rules}>
-        {rules.map((rule, i) => <Text key={i} role="listitem" style={[type.text.body, styles.ink]}>{rule}</Text>)}
-      </View> : null}
+      {rules?.length && rulesLabel ? <RuleList label={rulesLabel} rules={rules} text={type.text.body} p={palette} /> : null}
     </ReferenceDescription>
   </View>
 })
@@ -320,7 +319,6 @@ const styles = StyleSheet.create({
   muted: { color: palette.inkMuted },
   jinx: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.xs },
   jinxArt: { flexShrink: 0, flexDirection: 'row', gap: space.xs },
-  rules: { gap: space.xs, paddingTop: space.xs },
   nightRow: { borderBottomColor: palette.parchmentShade, borderBottomWidth: StyleSheet.hairlineWidth },
   crossed: { textDecorationLine: 'line-through', color: palette.inkMuted },
   emphasis: { fontFamily: font.body.bold },
