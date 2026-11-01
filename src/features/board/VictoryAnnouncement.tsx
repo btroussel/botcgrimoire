@@ -3,17 +3,10 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { durationFor, useReducedMotion } from '../../ui/motion'
 import { font, motion, palette } from '../../ui/theme'
 import type { CentreBox } from './ringLayout'
+import { slack, widthAtOnePoint as widthIn } from './textWidth'
 import { fitResult, resultFrame, twoLineWidth } from './victory'
 
-// Canvas widths run a little under the laid-out text's, so the fit keeps a margin.
-const slack = 1.05
-let canvas: CanvasRenderingContext2D | null | undefined
-const widthAtOnePoint = (text: string) => {
-  canvas ??= typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
-  if (!canvas) return text.length * 0.6
-  canvas.font = `100px ${font.display.bold}`
-  return canvas.measureText(text).width / 100
-}
+const widthAtOnePoint = (text: string) => widthIn(text, font.display.bold)
 
 // The saved result stays on the velvet for as long as the board is finished, in the largest
 // box across the ring's centre that leaves every token and name clear. A dark glow opens first

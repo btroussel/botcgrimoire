@@ -50,3 +50,24 @@ test('several characters on a card share one row on a phone', async ({ page }) =
   const [chef, imp] = await Promise.all(names.map(name => name.boundingBox()))
   expect(chef.y).toBe(imp.y)
 })
+
+test('a long name under a token keeps its word whole on the narrowest phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await openBoard(page)
+  await chooseCard(page, 'This character is')
+  const picker = page.getByRole('dialog', { name: 'Which character' })
+  const long = ['Washerwoman', 'Undertaker', 'Ravenkeeper']
+  for (const name of long) await picker.getByRole('button', { name, exact: true }).click()
+  await picker.getByRole('button', { name: 'Show 3 characters', exact: true }).click()
+
+  const card = page.getByRole('dialog', { name: 'This character is' })
+  // A word broken across two lines leaves its characters on two line tops.
+  for (const name of long) {
+    const lines = await card.getByText(name, { exact: true }).evaluate(caption => {
+      const range = document.createRange()
+      range.selectNodeContents(caption)
+      return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size
+    })
+    expect(lines, name).toBe(1)
+  }
+})
