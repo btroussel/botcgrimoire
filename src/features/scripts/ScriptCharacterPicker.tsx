@@ -11,6 +11,7 @@ import { characters, editions, gameText } from '../../content'
 import { useStore } from '../../store'
 import type { Listed } from '../../store/scriptSheet'
 import { sheetTeams } from '../../store/scriptSheet'
+import { AbilityText } from '../../ui/AbilityText'
 import { Button, IconButton, focusStyle, isFocused } from '../../ui/Button'
 import { CharacterIcon } from '../../ui/CharacterIcon'
 import { useFocusVisible } from '../../ui/focus'
@@ -161,7 +162,7 @@ const PickerRow = memo(function PickerRow({ character, selected, label, onToggle
       <CharacterIcon id={character.id} team={character.team} size={56} lazy />
       <View style={styles.grow}>
         <Text style={[type.text.strong, { color: p.teamOnPaper[character.team] }]}>{character.name}</Text>
-        <Text style={[type.text.small, { color: p.ink }]}>{character.ability}</Text>
+        <Text style={[type.text.small, { color: p.ink }]}><AbilityText text={character.ability} /></Text>
       </View>
       <Icon name={selected ? 'check' : 'add'} size={20} color={p.inkMuted} />
     </Pressable>
