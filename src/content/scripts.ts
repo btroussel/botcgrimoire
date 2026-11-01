@@ -75,7 +75,7 @@ const jinxList = (x: unknown): readonly HomebrewJinx[] =>
     ? [{ id: normalizeId(j.id), reason: j.reason }] : [])) : []
 
 // Another app's integration features, such as a vote multiplier. The app never runs them; it keeps
-// each well-formed one so the file still works there.
+// each well-formed one so the file still works there, and shows a `card` signal's text (scriptCards).
 const specialList = (x: unknown): readonly HomebrewSpecial[] =>
   Array.isArray(x) ? x.flatMap((f: unknown) => (isRecord(f) && text(f.type) && text(f.name) ? [{
     type: f.type, name: f.name,
@@ -195,6 +195,18 @@ export const scriptHomebrew = (script: Script): readonly Homebrew[] =>
   isCustom(script)
     ? script.items.flatMap((item) => (typeof item !== 'string' && item.id !== '_meta' && 'team' in item && item.team ? [item] : []))
     : []
+
+export interface ScriptCard {
+  readonly character: CharacterId
+  readonly text: string
+}
+
+// A homebrew character's own Storyteller card: the text of a `card` signal, the one `special`
+// feature the app reads, since showing words runs nothing.
+export const scriptCards = (script: Script): readonly ScriptCard[] =>
+  scriptHomebrew(script).flatMap((h) => (h.special ?? []).flatMap((s) =>
+    s.type === 'signal' && s.name === 'card' && typeof s.value === 'string' && s.value.trim() !== ''
+      ? [{ character: h.id as CharacterId, text: s.value.trim() }] : []))
 
 // A custom script's `_meta`, nothing for an edition.
 export const scriptMeta = (script: Script): ScriptMeta | undefined =>

@@ -32,6 +32,7 @@ export interface PickerGroup {
   readonly label?: string
   readonly color?: string
   readonly rows: readonly PickerRow[]
+  readonly shuffled?: boolean // false leaves the group to a deliberate tap, out of shuffles
 }
 
 export interface PickerMulti {
@@ -60,8 +61,10 @@ export interface PickerProps {
   readonly emptyLabel: string
 }
 
+const shufflable = (groups: readonly PickerGroup[]): readonly PickerGroup[] => groups.filter((g) => g.shuffled !== false)
+
 const randomSelection = (groups: readonly PickerGroup[], max: number): readonly string[] => {
-  const pool = [...new Set(groups.flatMap((g) => g.rows.map((r) => r.id)))]
+  const pool = [...new Set(shufflable(groups).flatMap((g) => g.rows.map((r) => r.id)))]
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
@@ -107,7 +110,7 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
       icon="shuffle"
       label={multi.shuffleLabel}
       onPress={() => setChosen(randomSelection(groups, multi.max))}
-      disabled={!groups.some((g) => g.rows.length > 0)}
+      disabled={!shufflable(groups).some((g) => g.rows.length > 0)}
 
       surface="paper"
     />

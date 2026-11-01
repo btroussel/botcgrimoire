@@ -90,16 +90,24 @@ export const writtenNotes = (log: readonly Event[]): readonly string[] => {
   return [...new Set([...latest.values()].reverse())]
 }
 
-// The bluff catalogue excludes recorded characters, including dead seats and ability annotations.
-export const bluffChoices = (g: Grimoire): readonly CharacterId[] => {
+// The script's Townsfolk and Outsiders, split by whether a character is recorded, dead seats and
+// ability annotations included.
+const goodByPlay = (g: Grimoire, recorded: boolean): readonly CharacterId[] => {
   const playing = new Set(inPlay(g))
   const customTeams = new Map(isCustom(g.script) ? g.script.items.flatMap(item =>
     typeof item !== 'string' && 'team' in item ? [[item.id, item.team] as const] : []) : [])
   return roster(g.script).filter(id => {
     const team = customTeams.get(id) ?? character(id).team
-    return (team === 'townsfolk' || team === 'outsider') && !playing.has(id)
+    return (team === 'townsfolk' || team === 'outsider') && playing.has(id) === recorded
   })
 }
+
+// The bluff catalogue excludes recorded characters.
+export const bluffChoices = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, false)
+
+// The night sheet shows the Lunatic "3 good character tokens", not the Demon's not-in-play ones, so
+// the card offers these too.
+export const goodInPlay = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, true)
 
 const placeNote = (text: string, seat: SeatId): Payload => ({ kind: 'placeToken', token: noteToken, note: text, seat })
 

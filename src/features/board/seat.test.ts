@@ -5,7 +5,7 @@ import { asCharacterId, registerHomebrew, scriptHomebrew } from '../../content'
 import { deserialize, newGame, serialize } from '../../store/saved'
 import { appendAll, boardOf, openSession, redo, undo } from '../../store/session'
 import { boardView } from './board'
-import { bluffChoices, characterGroups, edits, pickerGroups, reminderGroups, roster, writtenNotes } from './seat'
+import { bluffChoices, characterGroups, edits, goodInPlay, pickerGroups, reminderGroups, roster, writtenNotes } from './seat'
 
 const characterIds = (...ids: readonly string[]) => ids.map(asCharacterId)
 const manual = (payload: Payload): Event => ({ ...payload, id: asEventId(100), audience: 'storyteller', manual: true })
@@ -89,6 +89,14 @@ describe('the pickers', () => {
     const noDemon = game().seat('Dan', 'chef').build()
     expect(bluffChoices(noDemon.g)).not.toContain('chef')
     expect(bluffChoices(noDemon.g)).toContain('monk')
+  })
+
+  test('the good characters in play are the ones bluffs leave out', () => {
+    const { g } = table().build()
+    expect([...goodInPlay(g)].sort()).toEqual(characterIds('chef', 'drunk', 'washerwoman'))
+    // Together they are Trouble Brewing's 13 Townsfolk and 4 Outsiders, each once.
+    expect(new Set([...goodInPlay(g), ...bluffChoices(g)]).size).toBe(17)
+    expect(goodInPlay(g).length + bluffChoices(g).length).toBe(17)
   })
 
   test('bluffs exclude dead characters and ability annotations but allow shown characters', () => {

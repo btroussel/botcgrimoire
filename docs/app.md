@@ -104,10 +104,22 @@ it off and places it again, with no new kind of edit, so one undo puts it back w
 Any seat, an empty one too, takes any reminder from the script or its loose characters, recorded
 characters first, with no ability source to pick. A note needs text, and this game's notes come
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
-players unless saved, since the Demon gets none there. A card about a player starts from the
-character that player believes, which the Storyteller can change or add to, since a poisoned player
-may be shown something false. Any card about characters takes as many as the Storyteller picks.
-Showing a card records nothing.
+players unless saved, since the Demon gets none there.
+
+The cards are the six info tokens the night sheet names, the character tokens alone, which it asks
+for more often than any of them, and a written note. A homebrew character's own card text, from its
+script, adds one more card with its token ([Content](content.md#homebrew-characters)). A side goes
+with You are, as the official app sends it with a thumb, so no card tells a side on its own. You are
+starts from the character its player believes and shows it in the side they believe, read from the
+board, so a side that changes is recorded before it is shown. This player is starts from the seat's
+character, or from nothing on a disguised seat, since the Demon must learn a real Marionette or
+Lunatic while a Drunk's real token must never go out on a hasty tap. Every other card keeps each
+token in its team's colours, as the printed token is, so no card tells one player another's side.
+The Storyteller can change or add to any card's characters, since a poisoned player may be shown
+something false, and a card about characters takes as many as they pick. The not-in-play card starts
+from the saved bluffs and offers the good characters in play last, which its shuffle never picks,
+since a Lunatic may be shown any good characters. A card's tokens leave out the night and reminder
+marks, as the setup reveal does. Showing a card records nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)).

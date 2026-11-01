@@ -2,6 +2,7 @@
 import { useState } from 'react'
 
 import type { CharacterId } from '../../content'
+import { scriptCards } from '../../content'
 import type { SeatId } from '../../engine'
 import { bluffsOf } from '../../store/bluffs'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
@@ -13,9 +14,9 @@ import type { PickerGroup } from '../../ui/Picker'
 import { Picker } from '../../ui/Picker'
 import { Sheet } from '../../ui/Sheet'
 import { palette } from '../../ui/theme'
-import { bluffChoices, characterGroups, pickerGroups, roster } from './seat'
+import { bluffChoices, characterGroups, goodInPlay, pickerGroups, roster } from './seat'
 import type { ShowChoice, ShowKind, ShowToken } from './show'
-import { believed, showTokens, showing } from './show'
+import { believed, seatStart, showTokens, showing } from './show'
 import { useEdits } from './useEdits'
 
 export interface ShowSheetProps {
@@ -24,13 +25,12 @@ export interface ShowSheetProps {
   readonly onReopen: () => void // the sheet steps aside for a seat pick on the ring, then comes back
 }
 
-// The words on each card, sentence case here and set uppercase by the card.
-const wordsKey: Readonly<Record<ShowKind, string>> = {
+// Each card's name in the list, sentence case here, which is also the words the card sets
+// uppercase. The tokens alone have a name and no words.
+const labelKey: Readonly<Record<ShowKind, string>> = {
   youAre: 'board.youAre',
-  youAreGood: 'board.cardYouAreGood',
-  youAreEvil: 'board.cardYouAreEvil',
   thisPlayerIs: 'board.cardThisPlayerIs',
-  thisCharacterIs: 'board.cardThisCharacterIs',
+  tokenOnly: 'board.cardTokenOnly',
   selectedYou: 'board.cardSelectedYou',
   thisIsTheDemon: 'board.cardThisIsTheDemon',
   theseAreYourMinions: 'board.cardTheseAreYourMinions',
@@ -67,19 +67,29 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
   const savedBluffs = board ? bluffsOf(board, e.log) : []
   const items: readonly InfoTokenItem[] = [...showTokens.map((x) => ({
     kind: x.kind,
-    label: t(wordsKey[x.kind]),
+    label: t(labelKey[x.kind]),
     ...(x.kind === 'notInPlay' ? { characters: savedBluffs } : {}),
-  })), { kind: 'custom', label: t('board.customNote') }]
+  })), { kind: 'custom', label: t('board.customNote') },
+  // A homebrew character's own card, written in its script, comes after the note and shows at once.
+  ...(board ? scriptCards(board.script) : []).map((c): InfoTokenItem => ({
+    kind: 'custom', key: `card/${c.character}/${c.text}`, label: c.text, characters: [c.character],
+  }))]
 
   const show = (token: ShowToken, choice: ShowChoice) => {
     onClose()
     if (!board) return
-    const card = showing(board, token.kind, choice, t(wordsKey[token.kind]), e.name)
+    const card = showing(board, token.kind, choice, t(labelKey[token.kind]), e.name)
     if (card) interaction.showCard(card)
   }
   const pickToken = (item: InfoTokenItem) => {
     if (item.kind === 'custom') {
-      setStep({ kind: 'note' })
+      const own = item.characters?.[0] as CharacterId | undefined
+      if (own === undefined) {
+        setStep({ kind: 'note' })
+        return
+      }
+      onClose()
+      interaction.showCard({ kind: 'custom', words: item.label, characters: [{ id: own, name: e.name(own) }] })
       return
     }
     const token = showTokens.find((x) => x.kind === item.kind)
@@ -121,11 +131,17 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
   )
   if (step.kind === 'about' && board) {
     // Bluffs keep to the three a Demon is shown. Any other card takes as many characters as the
-    // Storyteller picks, a seat card starting from what that player believes.
+    // Storyteller picks.
     const bluffs = step.token.about === 'bluffs'
     const ids = bluffs ? bluffChoices(board) : characterGroups(board.script).flatMap((g) => g.ids)
-    const seatCharacter = step.seat ? believed(board, step.seat) : undefined
-    const start = bluffs ? savedBluffs : seatCharacter ? [seatCharacter] : []
+    // Good characters in play come last, for a Lunatic's bluffs, and a shuffle never picks them.
+    const playing = bluffs ? goodInPlay(board) : []
+    const groups: readonly PickerGroup[] = [...characterRows(ids), ...(playing.length > 0 ? [{
+      key: 'inPlay', label: t('board.inPlayGroup'), shuffled: false,
+      rows: playing.map((id) => ({ id, character: id, name: e.name(id) })),
+    }] : [])]
+    const offered = [...ids, ...playing]
+    const start = bluffs ? savedBluffs : step.seat ? seatStart(board, step.token.kind, step.seat) : []
     return (
       <Picker
         visible={visible}
@@ -134,8 +150,8 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
         closeLabel={t('common.close')}
         onBack={back}
         backLabel={t('common.back')}
-        groups={characterRows(ids)}
-        selected={start.filter((id) => ids.includes(id))}
+        groups={groups}
+        selected={start.filter((id) => offered.includes(id))}
         tokenGrid
         multi={{
           min: 1,
