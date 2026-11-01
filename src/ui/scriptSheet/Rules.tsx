@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   list: { gap: space.sm, paddingTop: space.xs },
   fields: { gap: space.xs }, // each field's own padding and rule already set it apart
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: space.xs },
-  bullet: { width: space.sm },
+  bullet: { width: space.sm, userSelect: 'none' }, // a copied rule comes without it
   text: { flex: 1, minWidth: 0 },
   fieldBullet: { paddingTop: space.sm },
   // Sized to the text by the browser where it can; elsewhere a long rule scrolls in its field.

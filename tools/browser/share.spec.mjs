@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { open } from './app.mjs'
 
 const script = (name) => [
-  { id: '_meta', name, author: 'Camille' },
+  { id: '_meta', name, author: 'Camille', bootlegger: ['Dead players may whisper.'] },
   'washerwoman', 'librarian', 'investigator', 'chef', 'empath', 'fortuneteller', 'undertaker', 'monk', 'ravenkeeper',
   'virgin', 'slayer', 'soldier', 'mayor', 'butler', 'drunk', 'recluse', 'saint', 'poisoner', 'spy', 'scarletwoman', 'baron', 'imp',
   { id: 'brewerx7k2', name: 'Brewer', team: 'townsfolk', ability: 'Each night, choose a player: you learn whether they are drunk or poisoned.' },
@@ -38,6 +38,9 @@ test('a copied link opens the script on another device, which saves it once', as
     await open(page, link)
     await expect(page.getByRole('heading', { name: 'Shared Script', exact: true })).toBeVisible()
     await expect(page.getByText('Brewer', { exact: true })).toBeVisible()
+    // The homebrew rules travel with the link and read under the Bootlegger, whose ability promises them.
+    await expect(page.locator('#script-sheet-row-bootlegger').getByRole('list', { name: 'Homebrew rules' }).getByRole('listitem'))
+      .toContainText(['Dead players may whisper.'])
     await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
     expect(new URL(page.url()).hash).toBe('')
