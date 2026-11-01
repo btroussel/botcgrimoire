@@ -5,7 +5,7 @@ import type { CharacterId, Script } from '../../content'
 import { editionAuthor, gameText, isLoose, scriptAuthor, scriptName, scriptRules } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
-import { jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
+import { djinnText, jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { Token } from '../../ui/Token'
@@ -125,7 +125,7 @@ export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCou
   const notice = error ? t('setup.createError') : shuffleError ? t('setup.shuffleUnavailable') : undefined
   const unknown = unknownNotice(script, t)
   return <View style={styles.root}>
-    <ScriptSheet mode="deal" teams={teams} jinxes={jinxesAmong(roles, settings.locale)} selected={bag}
+    <ScriptSheet mode="deal" teams={teams} jinxes={jinxesAmong(roles, settings.locale)} djinn={djinnText(settings.locale)} selected={bag}
     {...(unknown ? { notice: unknown } : {})}
     rules={scriptRules(script)}
     bottomInset={footerHeight + space.md + space.lg}
@@ -136,7 +136,7 @@ export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCou
         <Image source={editionArt[typeof script === 'string' ? script : 'custom']} style={styles.logo} resizeMode="contain" />
         <View style={styles.identityText}>
           <Text style={[type.text.strong, { color: palette.ink }]}>{typeof script === 'string' ? text.edition(script).name : scriptName(script)}</Text>
-          {author ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{author}</Text> : null}
+          {author ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{t('scripts.byAuthor', { author })}</Text> : null}
         </View>
       </View>
       <View style={[styles.stepper, compact && styles.centered]}>

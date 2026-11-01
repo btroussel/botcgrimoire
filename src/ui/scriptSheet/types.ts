@@ -9,7 +9,6 @@ export interface ScriptSheetRow {
   readonly team: Team
   readonly name: string
   readonly ability: string
-  readonly skipsFirstNight?: boolean // the ability text carries its asterisk; this turns on labels.footnote
   readonly inBag?: number // deal mode: copies in the bag; from two, the count follows the name
   readonly below?: ReactNode // what the feature hangs under a row: a deal-mode choice, a setup instruction
   readonly implied?: boolean // compose: the rest of the script brings it, so it has no remove control
@@ -31,7 +30,7 @@ export interface ScriptSheetJinx {
 
 export interface ScriptSheetCountTable {
   readonly players: readonly number[] // the columns, in order
-  readonly rows: readonly { readonly label: string; readonly by: readonly number[] }[] // one per team, a value per column
+  readonly rows: readonly { readonly team: Team; readonly label: string; readonly by: readonly number[] }[] // one per team, a value per column
 }
 
 
@@ -52,6 +51,7 @@ export interface ScriptSheetLabels {
   readonly jinxes: string
   readonly rules: string // names the list of the Bootlegger's homebrew rules for a screen reader
   readonly teensyville?: string // shown under the title when the script is recognised as one
+  readonly credit?: string // whose game this is, at the foot of every printed page
 }
 
 export interface ScriptSheetRulesField {
@@ -83,6 +83,7 @@ export interface ScriptSheetProps {
   readonly authorField?: ScriptSheetNameField
   readonly teams: readonly ScriptSheetTeam[] // in the fixed order, Travellers last
   readonly jinxes?: readonly ScriptSheetJinx[] // grouped at the end, each pair drawn once
+  readonly djinn?: { readonly name: string; readonly ability: string } // heads the jinxes, whose rule it is
   readonly notice?: string // a line under the characters, such as the ids this version does not know
   readonly rules?: readonly string[] // the Bootlegger's homebrew rules, under its row
   readonly rulesField?: ScriptSheetRulesField // compose: writes them instead

@@ -1,13 +1,16 @@
+import type { ReactNode } from 'react'
 import type { StyleProp, ViewStyle } from 'react-native'
-import { Image, ScrollView, Text, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
 import type { NightMarker } from '../../content'
 import { genericArt } from '../../content/generated/art'
 import type { ArtSource } from '../Art'
+import { AbilityText } from '../AbilityText'
+import { Art } from '../Art'
 import { CharacterIcon } from '../CharacterIcon'
 import type { Palette } from '../theme'
 import { tabular, type } from '../theme'
-import { orderIcon, styles } from './styles'
-import type { NightOrderItem, ScriptSheetCountTable } from './types'
+import { orderIcon, referenceIcon, styles } from './styles'
+import type { NightOrderItem, ScriptSheetCountTable, ScriptSheetTeam } from './types'
 
 // The markers' art under the upstream file names, which are the ids on the night sheet. The board's
 // reference and the character editor's order column draw the same discs.
@@ -19,9 +22,11 @@ export const nightMarkerArt: Readonly<Record<NightMarker, number | undefined>> =
 }
 
 // Art that is not a character, at its own aspect ratio: a night marker or the script's logo.
+// A plain image, because react-native-web's Image paints a CSS background and browsers leave
+// backgrounds off the printed page by default.
 export const SheetArt = ({ source, width, height }: { readonly source: ArtSource | undefined; readonly width: number; readonly height: number; }) => (
   <View style={[{ width, height }]} accessible={false}>
-    {source !== undefined ? <Image source={source} style={{ width, height }} resizeMode="contain" accessible={false} /> : null}
+    {source !== undefined ? <Art source={source} /> : null}
   </View>
 )
 
@@ -40,13 +45,13 @@ export const CountTable = ({ table, columns, heading, p }: CountTableProps) => {
   ]
   return (
     <View id="script-sheet-counts" style={styles.section}>
-      <table className="script-count-table" style={{ display: 'none', fontFamily: type.text.small.fontFamily }}>
+      <table className="script-count-table" style={{ display: 'none' }}>
         <thead>
           <tr><th scope="col">{heading}</th>{indices.map((i) => <th key={i} scope="col">{table.players[i]}</th>)}</tr>
         </thead>
         <tbody>
           {table.rows.map((row) => (
-            <tr key={row.label}>
+            <tr key={row.label} className={`script-count-${row.team}`}>
               <th scope="row">{row.label}</th>
               {indices.map((i) => <td key={i}>{row.by[i] ?? 0}</td>)}
             </tr>
@@ -112,3 +117,40 @@ export const NightOrder = ({ heading, items, p }: { readonly heading: string; re
   </View>
 )
 
+// ---------------------------------------------------------------------------------------------
+// One character as the reference column lists it, a large icon beside its name and ability, with
+// whatever hangs under it, such as the Bootlegger's rules. The Djinn heads the jinxes this way.
+
+interface ReferenceRowProps {
+  readonly row: { readonly id: string; readonly team: ScriptSheetTeam['team']; readonly name: string; readonly ability: string }
+  readonly color: string
+  readonly p: Palette
+  readonly below?: ReactNode
+}
+
+export const ReferenceRow = ({ row, color, p, below }: ReferenceRowProps) => (
+  <View id={`script-sheet-refrow-${row.id}`} style={styles.referenceRow}>
+    <CharacterIcon id={row.id} team={row.team} size={referenceIcon} />
+    <View style={[styles.grow, styles.referenceText]}>
+      <Text id={`script-sheet-refname-${row.team}-${row.id}`} style={[type.text.strong, { color }]}>{row.name}</Text>
+      <Text style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
+      {below}
+    </View>
+  </View>
+)
+
+// A team as the printed reference page lists it: Travellers, Fabled and Loric are a few lines,
+// not worth a page of their own after the Demons. Only the Travellers take a band, since they are
+// optional extras rather than rules of the game.
+export const ReferenceTeam = ({ group, color, p, band = false, below }: {
+  readonly group: ScriptSheetTeam
+  readonly color: string
+  readonly p: Palette
+  readonly band?: boolean
+  readonly below?: (id: string) => ReactNode
+}) => (
+  <View id={`script-sheet-reference-${group.team}`} style={styles.section}>
+    {band ? <div className="script-reference-band"><span>{group.label}</span></div> : null}
+    {group.rows.map((row) => <ReferenceRow key={row.id} row={row} color={color} p={p} below={below?.(row.id)} />)}
+  </View>
+)

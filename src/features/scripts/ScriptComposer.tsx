@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { CharacterId, Homebrew, Team } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
-import { isTeensyville, composeTarget, jinxesAmong, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
+import { isTeensyville, composeTarget, djinnText, jinxesAmong, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
 import { Button, IconButton } from '../../ui/Button'
 import { Confirm } from '../../ui/Confirm'
@@ -87,6 +87,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
     [chosen, words, target, counts, t, openPicker, bootlegged],
   )
   const jinxes = useMemo(() => jinxesAmong(chosen, locale), [chosen, locale])
+  const djinn = useMemo(() => djinnText(locale), [locale])
   const unknown = useMemo(() => unknownNotice(fileOf(draft, own), t), [draft, own, t])
 
   const namedDraft = { ...draft, name: draft.name.trim() || defaultName }
@@ -129,6 +130,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
           authorField={{ value: draft.author, placeholder: t('scripts.authorPlaceholder'), label: t('scripts.authorPlaceholder'), onChange: (author) => setDraft((d) => ({ ...d, author })) }}
           teams={teams}
           jinxes={jinxes}
+          djinn={djinn}
           rulesField={{
             values: draft.rules ?? [],
             onChange: (rules) => setDraft((d) => ({ ...d, rules })),

@@ -68,6 +68,7 @@
   "nameLabel": "Szkript neve",
   "defaultName": "Saját szkript",
   "authorPlaceholder": "Szerző",
+  "byAuthor": "Készítette: {author}",
   "saveScript": "Szkript mentése",
   "discardTitle": "Kilépsz mentés nélkül?",
   "discardMessage": "A szkripten végzett módosításaid elvesznek.",

@@ -8,13 +8,14 @@ import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native'
 
+import type { Team } from '../content'
 import { Button, IconButton } from './Button'
 import { CharacterIcon } from './CharacterIcon'
 import { PaperTexture } from './PaperTexture'
 import { Band, JinxLine, Row } from './scriptSheet/CharacterRows'
 import { fitPrintedRoles, printCss } from './scriptSheet/print'
-import { CountTable, NightOrder, SheetArt } from './scriptSheet/Reference'
-import { Rules } from './scriptSheet/Rules'
+import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetArt } from './scriptSheet/Reference'
+import { RuleList, Rules } from './scriptSheet/Rules'
 import { styles } from './scriptSheet/styles'
 import type { ScriptSheetProps, ScriptSheetRow } from './scriptSheet/types'
 import { palette, type } from './theme'
@@ -57,6 +58,8 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
   }, [jinxes, rowsById])
 
   const children: ReactNode[] = props.scrollHeader ? [<View key="intro">{props.scrollHeader}</View>] : []
+  const teamOf = (team: Team) => teams.find((group) => group.team === team && group.rows.length > 0)
+  const npcs = [teamOf('fabled'), teamOf('loric')].flatMap((group) => group?.rows ?? [])
 
   // The deal supplies its own introduction instead of a logo and title; an
   // empty head would still take its padding.
@@ -95,6 +98,17 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
             />
           ) : props.author ? <Text id="script-sheet-author" style={[type.text.small, { color: p.inkMuted }]}>{props.author}</Text> : null}
         </View>
+        {/* Paper names the Fabled and Loric beside the title, since their text waits on the next page. */}
+        {npcs.length > 0 ? (
+          <div className="script-print-only script-sheet-npcs">
+            {npcs.map((row) => (
+              <span key={row.id} className={`script-sheet-npc-${row.team}`}>
+                <CharacterIcon id={row.id} team={row.team} size={24} />
+                <span>{row.name}</span>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </View>
       {teensyville && labels.teensyville ? (
         <Text style={[type.text.small, styles.centred, { color: p.inkMuted }]}>{labels.teensyville}</Text>
@@ -119,7 +133,6 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     ? <Rules label={labels.rules} {...(props.rulesField ? { field: props.rulesField } : { rules: props.rules ?? [] })} p={p} />
     : null
 
-  let footnote = false
   teams.forEach((group) => {
     const color = p.teamOnPaper[group.team]
     // The Fabled and Loric are few, with long text, and the Bootlegger carries its rules under
@@ -141,7 +154,6 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
           {columns.map((column, index) => (
             <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns && columns.length > 1 ? styles.half : styles.full}>
               {column.map((row) => {
-                if (row.skipsFirstNight) footnote = true
                 return (
                   <View key={row.id} style={styles.full} id={`script-sheet-row-${row.id}`}>
                     <Row
@@ -167,13 +179,13 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     )
   })
 
-  if (footnote) {
-    children.push(
-      <Text key="footnote" id="script-sheet-footnote" style={[type.text.small, styles.footnote, { color: p.inkMuted }]}>
-        {`* ${labels.footnote}`}
-      </Text>,
-    )
-  }
+  // Always there, as on the official sheet: nearly every script has an asterisk, and guessing from
+  // the night order missed some, like the Lleech, which wakes on the first night yet reads "Each night*".
+  children.push(
+    <Text key="footnote" id="script-sheet-footnote" style={[type.text.small, styles.footnote, { color: p.inkMuted }]}>
+      {`* ${labels.footnote}`}
+    </Text>,
+  )
 
   if (props.notice) {
     children.push(
@@ -195,25 +207,50 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     )
   }
 
-  if (visibleJinxes.length > 0) references.push(
-    <View key="jinxes" id="script-sheet-jinxes" style={styles.section}>
-      <View style={styles.jinxHeading}>
-        <CharacterIcon id="djinn" team="fabled" size={24} />
-        <Text role="heading" style={[type.text.strong, styles.heading, { color: p.ink }]}>{labels.jinxes}</Text>
+  // The Djinn heads the jinxes, as on the official sheet: its rule is what they are. Each jinx sits
+  // indented under it.
+  const djinn = visibleJinxes.length > 0 ? props.djinn : undefined
+  const jinxSection = visibleJinxes.length > 0 ? (
+    <View id="script-sheet-jinxes" role="group" aria-label={labels.jinxes} style={styles.section}>
+      {djinn ? <ReferenceRow row={{ id: 'djinn', team: 'fabled', ...djinn }} color={p.teamOnPaper.fabled} p={p} /> : null}
+      <View id="script-sheet-jinxlist" style={[styles.jinxList, djinn ? styles.jinxIndent : null]}>
+        {visibleJinxes.map((j) => (
+          <JinxLine key={`${j.a}-${j.b}`} jinx={j} rowsById={rowsById} p={p} />
+        ))}
       </View>
-      {visibleJinxes.map((j) => (
-        <JinxLine key={`${j.a}-${j.b}`} jinx={j} rowsById={rowsById} p={p} />
-      ))}
-    </View>,
-  )
+    </View>
+  ) : null
 
-  if (references.length > 0) children.push(
-    <View key="references" id="script-sheet-references">
-      <div className="script-reference-title">
-        <div>{title ?? nameField?.value}</div>
-        {props.author || authorField?.value ? <small>{props.author ?? authorField?.value}</small> : null}
+  // A few Travellers, Fabled or Loric would leave a page almost empty after the Demons, so paper
+  // lists them on this page instead, and print hides their bands. Like the official sheet, the
+  // Fabled and Loric need no heading there; the Travellers, being optional, sit under a band.
+  // The Bootlegger's rules follow it, read only.
+  const paperRules = (props.rules ?? props.rulesField?.values ?? []).filter((rule) => rule.trim() !== '')
+  const onPaper = (team: Team) => {
+    const group = teamOf(team)
+    const rows = group?.rows.filter((row) => !(djinn && row.id === 'djinn')) ?? []
+    return group && rows.length > 0 ? (
+      <div className="script-print-only">
+        <ReferenceTeam group={{ ...group, rows }} color={p.teamOnPaper[team]} p={p} band={team === 'traveller'}
+          below={(id) => id === 'bootlegger' && paperRules.length > 0 ? <RuleList label={labels.rules} rules={paperRules} text={type.text.small} p={p} /> : null} />
       </div>
+    ) : null
+  }
+
+  // On paper the night orders take the outer columns and the rest stacks between them.
+  if (references.length > 0 || jinxSection) children.push(
+    <View key="references" id="script-sheet-references">
       {references}
+      <View id="script-sheet-centre">
+        <div className="script-reference-title">
+          <div>{title ?? nameField?.value}</div>
+          {props.author || authorField?.value ? <small>{props.author ?? authorField?.value}</small> : null}
+        </div>
+        {jinxSection}
+        {onPaper('fabled')}
+        {onPaper('loric')}
+        {onPaper('traveller')}
+      </View>
     </View>,
   )
 
@@ -240,6 +277,10 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
       >
         {children}
       </ScrollView>
+      <div id="script-sheet-page-foot">
+        <span>{labels.credit}</span>
+        <span>{`* ${labels.footnote}`}</span>
+      </div>
     </View>
   )
 }

@@ -21,8 +21,9 @@ with the Node version in [.nvmrc](../.nvmrc) and a clean install. `npm run verif
   worker in a simulated browser: offline routes, updates and failed downloads.
 - **Browser.** `npm run test:browser` drives Chromium through the real export, one case per risk the
   other checks can't reach: offline use, a full game to Replay, phone layout and keyboard, long
-  translated labels, scripts across devices. Each page waits for React to hydrate first
-  ([UI](ui.md#the-device)), or a check could pass on the static export instead of the app.
+  translated labels, scripts across devices, what a printed sheet shows. Each page waits for React
+  to hydrate first ([UI](ui.md#the-device)), or a check could pass on the static export instead of
+  the app.
 
 While working, `npm run check` is the quick loop: links, generated files, types, lint and unit
 tests. Before a pull request, run `npm run verify`. A change to Markdown alone only needs
@@ -52,7 +53,8 @@ uploads nothing and installed apps don't update. `wrangler.jsonc`, `public/_redi
 ## What the checks miss
 
 - The browser tests run in Chromium only, one case per risk, not every screen, language or phone.
-  Safari, a real phone keyboard, the QR scanner and sharing still need a manual try.
+  Safari, a real phone keyboard, the QR scanner and sharing still need a manual try, and so does the
+  printed page's layout: the test checks what prints, not how it falls on A4.
 - After an Expo upgrade, export twice with `--clear` and compare with `diff -r`: nothing checks that
   two builds still match.
 - Green means the app records what the Storyteller enters. It says nothing about rulings.

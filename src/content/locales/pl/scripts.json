@@ -72,6 +72,7 @@
   "nameLabel": "Nazwa skryptu",
   "defaultName": "Mój skrypt",
   "authorPlaceholder": "Autor",
+  "byAuthor": "Autor: {author}",
   "saveScript": "Zapisz skrypt",
   "discardTitle": "Wyjść bez zapisywania?",
   "discardMessage": "Zmiany w tym skrypcie przepadną.",

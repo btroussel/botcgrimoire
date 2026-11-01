@@ -32,7 +32,6 @@ export interface SheetRow {
   readonly team: Team
   readonly name: string
   readonly ability: string
-  readonly skipsFirstNight?: boolean
 }
 
 export interface SheetTeam {
@@ -50,7 +49,7 @@ export interface SheetJinx {
 
 export interface SheetCountTable {
   readonly players: readonly number[]
-  readonly rows: readonly { readonly label: string; readonly by: readonly number[] }[]
+  readonly rows: readonly { readonly team: Team; readonly label: string; readonly by: readonly number[] }[]
 }
 
 export type SheetNightItem =
@@ -138,13 +137,11 @@ export const everyCharacter = (locale: Locale): readonly Listed[] => {
   return all.sort((a, b) => rank(a.team) - rank(b.team))
 }
 
-// The ability text carries its own asterisk where upstream prints one; this only lights the footnote.
 const toRow = (c: Listed): SheetRow => ({
   id: c.id,
   team: c.team,
   name: c.name,
   ability: c.ability,
-  ...(c.ordinals.first === undefined && c.ordinals.other !== undefined ? { skipsFirstNight: true } : {}),
 })
 
 export type TeamLabels = Readonly<Record<Team, string>>
@@ -170,6 +167,7 @@ export const sheetLabels = (t: Translate) => ({
   jinxes: t('scripts.jinxes'),
   rules: t('scripts.rules'),
   teensyville: t('scripts.teensyville'),
+  credit: t('common.ownership'),
 })
 
 export interface TeamCount {
@@ -239,6 +237,13 @@ export const unknownIds = (script: Script): readonly string[] => {
   return scriptCharacters(script).filter((id) => !characters.has(id) && !carried.has(id))
 }
 
+// The Djinn in the UI locale. It heads a sheet's jinxes, since its rule is what they are, whether
+// or not the script lists it.
+export const djinnText = (locale: Locale): { readonly name: string; readonly ability: string } => {
+  const role = gameText(locale).role(asCharacterId('djinn'))
+  return { name: role.name, ability: role.ability }
+}
+
 // The line a sheet prints under its characters to name those ids, or nothing when there are none.
 export const unknownNotice = (script: Script, t: Translate): string | undefined => {
   const unknown = unknownIds(script)
@@ -258,10 +263,10 @@ export interface CountRowLabels {
 export const countTable = (labels: CountRowLabels): SheetCountTable => ({
   players: tablePlayers,
   rows: [
-    { label: labels.townsfolk, by: tablePlayers.map((n) => baseCounts(n)?.townsfolk ?? 0) },
-    { label: labels.outsiders, by: tablePlayers.map((n) => baseCounts(n)?.outsiders ?? 0) },
-    { label: labels.minions, by: tablePlayers.map((n) => baseCounts(n)?.minions ?? 0) },
-    { label: labels.demon, by: tablePlayers.map((n) => baseCounts(n)?.demon ?? 0) },
+    { team: 'townsfolk', label: labels.townsfolk, by: tablePlayers.map((n) => baseCounts(n)?.townsfolk ?? 0) },
+    { team: 'outsider', label: labels.outsiders, by: tablePlayers.map((n) => baseCounts(n)?.outsiders ?? 0) },
+    { team: 'minion', label: labels.minions, by: tablePlayers.map((n) => baseCounts(n)?.minions ?? 0) },
+    { team: 'demon', label: labels.demon, by: tablePlayers.map((n) => baseCounts(n)?.demon ?? 0) },
   ],
 })
 

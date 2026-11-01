@@ -68,6 +68,7 @@
   "nameLabel": "Nombre del guion",
   "defaultName": "Mi guion",
   "authorPlaceholder": "Autor",
+  "byAuthor": "por {author}",
   "saveScript": "Guardar guion",
   "discardTitle": "¿Salir sin guardar?",
   "discardMessage": "Se perderán tus cambios en este guion.",
