@@ -155,7 +155,9 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
           {columns.map((column, index) => (
             <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns && columns.length > 1 ? styles.half : styles.full}>
               {column.map((row) => {
-                if (row.skipsFirstNight) footnote = true
+                // The asterisk is upstream's own mark in the text, which a night order cannot predict:
+                // the Lleech wakes on the first night, yet its ability reads "Each night*".
+                if (row.ability.includes('*')) footnote = true
                 return (
                   <View key={row.id} style={styles.full} id={`script-sheet-row-${row.id}`}>
                     <Row

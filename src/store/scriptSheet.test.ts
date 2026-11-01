@@ -125,13 +125,6 @@ describe('sheetGroups', () => {
     expect(groups[0]?.count).toEqual({ have: 6, of: 6, label: '6 of 6' })
     expect(groups[4]?.count).toBeUndefined()
   })
-
-  test('a row marks the footnote only for a character that skips the first night', () => {
-    const rows = sheetGroups(listed(teensy, 'en'), teamWords).flatMap((g) => g.rows)
-    expect(rows.find((r) => r.id === 'undertaker')?.skipsFirstNight).toBe(true)
-    expect(rows.find((r) => r.id === 'washerwoman')?.skipsFirstNight).toBeUndefined()
-    expect(rows.find((r) => r.id === 'imp')?.skipsFirstNight).toBe(true)
-  })
 })
 
 describe('composeTarget', () => {

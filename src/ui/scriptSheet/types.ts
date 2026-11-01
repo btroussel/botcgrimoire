@@ -9,7 +9,6 @@ export interface ScriptSheetRow {
   readonly team: Team
   readonly name: string
   readonly ability: string
-  readonly skipsFirstNight?: boolean // the ability text carries its asterisk; this turns on labels.footnote
   readonly inBag?: number // deal mode: copies in the bag; from two, the count follows the name
   readonly below?: ReactNode // what the feature hangs under a row: a deal-mode choice, a setup instruction
   readonly implied?: boolean // compose: the rest of the script brings it, so it has no remove control

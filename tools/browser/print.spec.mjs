@@ -34,7 +34,7 @@ const scriptLink = (items) =>
 test('paper lists the Travellers, Fabled and Loric beside the night orders, not on a page of their own', async ({ page }) => {
   await open(page, scriptLink([
     { id: '_meta', name: 'Paper Test', author: 'Camille', bootlegger: ['The Demon may choose to kill no one.'] },
-    'washerwoman', 'chef', 'slayer', 'butler', 'poisoner', 'imp', 'lleech', 'thief', 'spiritofivory',
+    'washerwoman', 'chef', 'slayer', 'butler', 'poisoner', 'lleech', 'thief', 'spiritofivory',
   ]))
   await expect(page.getByRole('heading', { name: 'Paper Test', exact: true })).toBeVisible()
   await expect(page.getByText('by Camille', { exact: true }).first()).toBeVisible()
@@ -57,5 +57,6 @@ test('paper lists the Travellers, Fabled and Loric beside the night orders, not 
   const foot = page.locator('#script-sheet-page-foot')
   await expect(foot).toBeVisible()
   await expect(foot).toContainText('The Pandemonium Institute')
+  // The Lleech wakes on the first night, but its ability shows the asterisk, so the foot explains it.
   await expect(foot).toContainText('* Not the first night.')
 })

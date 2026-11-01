@@ -32,7 +32,6 @@ export interface SheetRow {
   readonly team: Team
   readonly name: string
   readonly ability: string
-  readonly skipsFirstNight?: boolean
 }
 
 export interface SheetTeam {
@@ -138,13 +137,11 @@ export const everyCharacter = (locale: Locale): readonly Listed[] => {
   return all.sort((a, b) => rank(a.team) - rank(b.team))
 }
 
-// The ability text carries its own asterisk where upstream prints one; this only lights the footnote.
 const toRow = (c: Listed): SheetRow => ({
   id: c.id,
   team: c.team,
   name: c.name,
   ability: c.ability,
-  ...(c.ordinals.first === undefined && c.ordinals.other !== undefined ? { skipsFirstNight: true } : {}),
 })
 
 export type TeamLabels = Readonly<Record<Team, string>>
