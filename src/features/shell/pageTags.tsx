@@ -8,8 +8,14 @@ import type { Translate } from '../../content'
 import { homePath } from '../../ui/homePath'
 import { homeOf, searchLanguage, site } from './homePages'
 
-// Search engines show this name for the whole site, from the root's structured data.
-const siteData = JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebSite', name: translate('en', 'common.appName'), url: `${site}/` })
+// Search engines show this name for the whole site, from the root's structured data. One name
+// covers every Home, so a language that names the app its own way offers that as an alternate.
+const name = translate('en', 'common.appName')
+const alternateName = [...new Set(locales.map((l) => translate(l, 'common.appName')))].filter((n) => n !== name)
+const siteData = JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebSite', name, alternateName, url: `${site}/` })
+// Left to choose, a search result's thumbnail took the largest picture Home draws: a blank token
+// disc. The square board reads at thumbnail size, which the wide sharing image with its text does not.
+const pageData = (url: string) => JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', url, primaryImageOfPage: `${site}/search.jpg` })
 
 // Head takes only plain tags, so this is a list rather than a component. A board in play titles
 // the document with its phase.
@@ -31,6 +37,7 @@ export const pageTags = (pathname: string, t: Translate, phase?: string): ReactE
       // Every Home names each language's Home, its own included, and the root for any other.
       ...locales.map((l) => <link key={`alternate-${l}`} rel="alternate" hrefLang={searchLanguage(l)} href={site + homePath(l)} />),
       <link key="alternate-default" rel="alternate" hrefLang="x-default" href={`${site}/`} />,
+      <script key="page" type="application/ld+json">{pageData(url)}</script>,
     ] : []),
     ...(page === 'en' ? [<script key="site" type="application/ld+json">{siteData}</script>] : []),
     <meta key="og:type" property="og:type" content="website" />,

@@ -31,6 +31,11 @@ bones that reads as the game's world. Atkinson Hyperlegible for everything you r
 for low vision, and a Storyteller reading ability text in a dim room is that case. Counts, tallies
 and clocks use its tabular figures.
 
+Wherever an ability shows, its setup change in square brackets, like the Baron's `[+2 Outsiders]`,
+is bold with its brackets, as the official Script Tool prints it, so the Storyteller sees what to
+change before play. Nothing else in an ability is bold, and the bold is only how it looks: no code
+reads the brackets.
+
 ## Controls
 
 - Touch targets are at least 44 points. A mis-tap on a phone records an edit.

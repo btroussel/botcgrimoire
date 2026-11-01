@@ -126,7 +126,8 @@ test('exported HTML exposes every language\'s Home to search and excludes workin
     homes.set(url, {
       lang: html.match(/<html lang="([^"]+)"/)?.[1],
       alternates: [...head.matchAll(/rel="alternate" hrefLang="([^"]+)" href="([^"]+)"/g)].map(([, hreflang, href]) => `${hreflang} ${href}`).sort(),
-      siteName: /"@type":"WebSite","name":"BotC Grimoire"/.test(head),
+      siteName: /"@type":"WebSite","name":"BotC Grimoire","alternateName":\["Grimoire BotC"\]/.test(head),
+      thumbnail: head.includes(`"@type":"WebPage","url":"${url}","primaryImageOfPage":"${site}/search.jpg"`),
       // The window a first visit opens: closed, its text stays in the page for search engines.
       reading: html.match(/<dialog(?![^>]*\bopen\b)[^>]*>[\s\S]*?<h2[^>]*>([^<]+)<\/h2>/)?.[1],
       board: /<img(?=[^>]*src="\/share\.jpg")(?=[^>]*alt="[^"]+")[^>]*>/.test(html),
@@ -142,12 +143,15 @@ test('exported HTML exposes every language\'s Home to search and excludes workin
     assert.deepEqual(page.alternates, alternates, url)
     assert.ok(page.alternates.some(a => a.endsWith(` ${url}`)), url)
     assert.equal(page.siteName, url === `${site}/`, url)
+    assert.ok(page.thumbnail, url)
     assert.ok(page.reading && page.board, url)
   }
   // Each Home reads in its own language, Spain's Spanish and the Latin American one included.
   assert.equal(new Set([...homes.values()].map(page => page.reading)).size, homes.size)
-  // Home's window shows the board capture, so the offline download carries it.
+  // Home's window shows the board capture, so the offline download carries it. Only crawlers
+  // fetch the search thumbnail.
   assert.match(script, /"url":"\/share\.jpg"/)
+  assert.doesNotMatch(script, /"url":"\/search\.jpg"/)
   for (const a of alternates) assert.match(a.split(' ')[0], /^([a-z]{2}(-[A-Z]{2})?|x-default)$/)
   assert.equal(homes.get(`${site}/`).lang, 'en')
   assert.equal(homes.get(`${site}/fr`).lang, 'fr')
@@ -159,6 +163,9 @@ test('exported HTML exposes every language\'s Home to search and excludes workin
   assert.deepEqual([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]).sort(), [...homes.keys()].sort())
   const { width, height } = await sharp(await readFile(new URL('share.jpg', root))).metadata()
   assert.deepEqual([width, height], [1200, 630])
+  // A result thumbnail is square, so a square image keeps the whole ring.
+  const thumbnail = await sharp(await readFile(new URL('search.jpg', root))).metadata()
+  assert.deepEqual([thumbnail.width, thumbnail.height], [1200, 1200])
 })
 
 test('font preloads name the exported files their font faces load, as the host spells them', async () => {

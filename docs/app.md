@@ -186,6 +186,13 @@ never opens by itself, since a dialog covering the page on load counts against i
 Home never redirects to match the visitor's language. Search results use the 192-pixel icon,
 since they show a site icon only at a multiple of 48 pixels. [UI](ui.md#home) owns the look.
 
+Each Home names `search.jpg`, a square capture of the whole board, as its primary image. Left to
+choose, search took the largest picture Home draws for the result thumbnail: a blank token disc.
+The sharing image stays for link previews, which draw it wide, but is too wide and too full of text
+to read as a thumbnail. Only crawlers fetch the thumbnail, so the offline download leaves it out.
+Search shows one site name for every Home, the English one, so a language that names the app its
+own way gives that name as an alternate.
+
 ## Attribution
 
 The app is unofficial and non-commercial. Home ends with the official Community Created Content
