@@ -37,7 +37,7 @@ test('each player takes a token from the open bag, and the Storyteller deals wha
   await expect(page.getByText('5 of 5 characters assigned', { exact: true })).toBeVisible()
 })
 
-test('the Storyteller chooses the Townsfolk the Drunk sees, and its player draws it', async ({ page }) => {
+test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, and its player draws it', async ({ page }) => {
   await open(page, '/new')
   await button(page, 'Trouble Brewing').click()
   const count = page.getByText(/^\d+ players?$/).first()
@@ -45,17 +45,20 @@ test('the Storyteller chooses the Townsfolk the Drunk sees, and its player draws
     await button(page, now < 3 ? 'More players' : 'Fewer players').click()
   }
   for (const name of ['Drunk', 'Imp', 'Chef']) await button(page, name).click()
-  await button(page, 'Open grimoire').click()
 
-  // The bag picks at random unless the Storyteller chooses, never a Townsfolk already in the bag.
-  await button(page, 'Drunk sees: Random').click()
+  // While choosing the characters, the Storyteller may pick what the Drunk sees, never a
+  // Townsfolk already in the bag. Left alone, the bag picks.
+  await button(page, 'Choose what the Drunk sees').click()
   const picker = page.getByRole('dialog', { name: 'What the Drunk sees' })
   await expect(button(picker, 'Chef')).toHaveCount(0)
-  await expect(button(picker, 'Random')).toHaveCount(0)
+  await expect(button(picker, 'Clear choice')).toHaveCount(0)
   await button(picker, 'Monk').click()
   await button(page, 'Drunk sees: Monk').click()
   await expect(button(picker, 'Monk')).toHaveAttribute('aria-pressed', 'true')
   await button(picker, 'Close').click()
+  await button(page, 'Open grimoire').click()
+  // The setup window only deals the bag.
+  await expect(button(page, 'Drunk sees: Monk')).toHaveCount(0)
 
   await button(page, 'Let players draw').click()
   await button(page, 'Start with Seat 1').click()

@@ -8,7 +8,10 @@ import { useStore } from '../../store'
 import { jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
+import { Token } from '../../ui/Token'
 import { palette, radius, shadows, space, tabular, touch, type } from '../../ui/theme'
+import { ShownPicker } from './BagPicker'
+import { bagDisguises } from './draw'
 import { randomBag } from './randomBag'
 import { dealTarget, scriptLoose, seatedCharacters, showsCopies } from './setup'
 
@@ -25,25 +28,34 @@ const setupNotes: Readonly<Record<string, string>> = {
   lilmonsta: 'setup.prepareLilMonsta',
 }
 
-export const SetupScriptSheet = ({ script, count, bag, busy, error, onCount, onBag, onCreate }: {
+export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCount, onBag, onShow, onCreate }: {
   readonly script: Script
   readonly count: number
   readonly bag: readonly CharacterId[]
+  readonly shows: ReadonlyMap<CharacterId, CharacterId> // what the Storyteller chose a disguise shows its player
   readonly busy: boolean
   readonly error: boolean
   readonly onCount: (count: number) => void
   readonly onBag: (bag: readonly CharacterId[]) => void
+  readonly onShow: (character: CharacterId, shown: CharacterId | undefined) => void
   readonly onCreate: () => void
 }) => {
   const { t, settings } = useStore()
   const [shuffleError, setShuffleError] = useState(false)
   const [footerHeight, setFooterHeight] = useState(touch)
+  // The disguise whose shown character is being chosen, kept while its picker closes.
+  const [choosing, setChoosing] = useState<{ readonly character: CharacterId; readonly open: boolean }>()
   const { width } = useWindowDimensions()
   const compact = width < 640
   const text = gameText(settings.locale)
   const roles = [...new Map(listed(script, settings.locale).map(role => [role.id, role])).values()]
+  const nameOf = (id: CharacterId) => roles.find(role => role.id === id)?.name ?? id
   const seated = seatedCharacters(bag)
   const target = dealTarget(count, bag)
+  // A disguise left alone shows what its setup note says; the Storyteller may pick instead.
+  const disguises = bagDisguises(bag, roles, shows).filter(open => open.choices.length > 0)
+  const editing = disguises.find(open => open.character === choosing?.character)
+  const closeChoice = () => setChoosing(current => current && { ...current, open: false })
   const teams = sheetGroups(roles, teamLabels(t)).map(group => {
     // The script's Fabled and Loric take no seat, so their bands count nothing.
     const loose = group.team === 'fabled' || group.team === 'loric'
@@ -57,9 +69,16 @@ export const SetupScriptSheet = ({ script, count, bag, busy, error, onCount, onB
         const note = loose ? 'setup.looseNote' : roles.find(role => role.id === row.id)?.homebrew ? 'setup.prepareHomebrew'
           : row.id === 'villageidiot' && inBag > 1 ? 'setup.prepareVillageIdiot' : setupNotes[row.id]
         const copies = showsCopies(row.id as CharacterId, inBag)
-        return { ...row, inBag, ...(copies || (inBag && note) ? {
+        const disguise = inBag ? disguises.find(open => open.character === row.id) : undefined
+        return { ...row, inBag, ...(copies || disguise || (inBag && note) ? {
           below: <>
             {inBag && note ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{t(note)}</Text> : null}
+            {/* Once picked, the token the player will draw stands for the choice, and a tap changes it. */}
+            {disguise?.chosen ? <Token size={64} character={disguise.chosen} name={nameOf(disguise.chosen)} printName markers={false}
+              accessibilityLabel={t('setup.disguise', { name: row.name, shown: nameOf(disguise.chosen) })} disabled={busy} style={styles.choice}
+              onPress={() => setChoosing({ character: disguise.character, open: true })} />
+              : disguise ? <Button surface="paper" style={styles.choice} disabled={busy} label={t('setup.disguiseChoose', { name: row.name })}
+                onPress={() => setChoosing({ character: disguise.character, open: true })} /> : null}
             {copies ? <View style={styles.copies}>
               <IconButton icon="minus" label={t('setup.removeCopy', { name: row.name })} surface="paper" style={styles.step}
                 disabled={busy} onPress={() => removeCopy(row.id)} />
@@ -140,6 +159,9 @@ export const SetupScriptSheet = ({ script, count, bag, busy, error, onCount, onB
         <Button surface="paper" variant="primary" icon="play" label={t('setup.manualOpen')} disabled={busy} onPress={onCreate} />
       </View>
     </View>
+    <ShownPicker visible={!!choosing?.open && !!editing} name={editing ? nameOf(editing.character) : ''}
+      choices={editing ? editing.choices.flatMap(id => roles.find(role => role.id === id) ?? []) : []} chosen={editing?.chosen}
+      onClose={closeChoice} onChoose={shown => { if (editing) onShow(editing.character, shown); closeChoice() }} />
   </View>
 }
 
@@ -153,6 +175,7 @@ const styles = StyleSheet.create({
   identityText: { flex: 1, minWidth: 0, gap: space.xs },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 0 },
   copies: { flexDirection: 'row', gap: space.sm },
+  choice: { alignSelf: 'flex-start', maxWidth: '100%', marginTop: space.xs },
   step: { borderColor: palette.parchmentShade },
   // Wide enough for "20 joueurs", so the buttons stay put while the number changes.
   count: { minWidth: 96, textAlign: 'center' },
