@@ -34,22 +34,49 @@ const believable = (character: CharacterId, roles: readonly BagRole[], present: 
     && (team === 'demon' || !present.has(role.id))).map(role => role.id))] : []
 }
 
-// `inPlay` holds the characters already on the board, which a disguise avoids like the bag's own.
-// `kept` holds tokens the Storyteller chose for earlier: a choice stays while the new bag still
-// has its character and what it shows is still free, and goes in first so the random picks avoid it.
-export const fillBag = (bag: readonly CharacterId[], roles: readonly BagRole[] = [], random = Math.random,
-  inPlay: readonly CharacterId[] = [], kept: readonly DrawToken[] = []): Draw | undefined => {
-  const seated = seatedCharacters(bag)
-  const present = new Set([...seated, ...inPlay])
+interface Chosen { readonly character: CharacterId; readonly shown: CharacterId; readonly chosen: true }
+
+// A choice stays while the bag still has a token of its character and what it shows is still
+// free. Earlier choices win, so of two that show the same character only the first stays.
+const keptChoices = (seated: readonly CharacterId[], roles: readonly BagRole[], present: ReadonlySet<CharacterId>,
+  kept: readonly DrawToken[]) => {
   const used = new Set<CharacterId>()
   const left = [...seated]
-  const chosen = kept.flatMap((token): DrawToken[] => {
+  const chosen = kept.flatMap((token): Chosen[] => {
     const at = left.indexOf(token.character)
     if (!token.chosen || !token.shown || at < 0 || !believable(token.character, roles, present, used).includes(token.shown)) return []
     left.splice(at, 1)
     used.add(token.shown)
     return [{ character: token.character, shown: token.shown, chosen: true }]
   })
+  return { chosen, left, used }
+}
+
+// What the Storyteller picked while choosing the characters, one per disguised character, as
+// the tokens `fillBag` keeps.
+export const chosenTokens = (shows: ReadonlyMap<CharacterId, CharacterId>): readonly DrawToken[] =>
+  [...shows].map(([character, shown]) => ({ character, shown, chosen: true }))
+
+// The bag's Drunks, Lunatics and Marionettes while the characters are chosen, each with what
+// the Storyteller picked it shows, if that still fits the bag, and what it could show.
+export const bagDisguises = (bag: readonly CharacterId[], roles: readonly BagRole[], shows: ReadonlyMap<CharacterId, CharacterId>) => {
+  const seated = seatedCharacters(bag)
+  const present = new Set(seated)
+  const { chosen } = keptChoices(seated, roles, present, chosenTokens(shows))
+  return [...new Set(seated.filter(id => disguises[id]))].map(character => ({
+    character,
+    chosen: chosen.find(token => token.character === character)?.shown,
+    choices: believable(character, roles, present, new Set(chosen.flatMap(token => token.character === character ? [] : [token.shown]))),
+  }))
+}
+
+// `inPlay` holds the characters already on the board, which a disguise avoids like the bag's own.
+// `kept` holds the Storyteller's choices, which go in first so the random picks avoid them.
+export const fillBag = (bag: readonly CharacterId[], roles: readonly BagRole[] = [], random = Math.random,
+  inPlay: readonly CharacterId[] = [], kept: readonly DrawToken[] = []): Draw | undefined => {
+  const seated = seatedCharacters(bag)
+  const present = new Set([...seated, ...inPlay])
+  const { chosen, left, used } = keptChoices(seated, roles, present, kept)
   const tokens = shuffled([...chosen, ...left.map((character): DrawToken => {
     const shown = believed(character, roles, present, used, random)
     if (!shown) return { character }
@@ -57,38 +84,6 @@ export const fillBag = (bag: readonly CharacterId[], roles: readonly BagRole[] =
     return { character, shown }
   })], random)
   return tokens.length ? { tokens } : undefined
-}
-
-// A disguise is open to choice until someone takes its token, since only then has a player seen
-// it. Its choices avoid the whole bag and what the board holds.
-const disguised = (g: Grimoire, draw: Draw, at: number) => {
-  const token = draw.tokens[at]
-  if (!token || token.seat !== undefined || !disguises[token.character]) return undefined
-  const present = new Set([...draw.tokens.map(other => other.character), ...inPlay(g)])
-  const used = new Set(draw.tokens.flatMap((other, i) => i !== at && other.shown ? [other.shown] : []))
-  return { token, present, used }
-}
-
-// The bag's untaken Drunks, Lunatics and Marionettes, each with what the Storyteller chose it
-// shows, if anything, and what it could show.
-export const bagDisguises = (g: Grimoire, draw: Draw, roles: readonly BagRole[] = []) => draw.tokens.flatMap((_, at) => {
-  const open = disguised(g, draw, at)
-  if (!open) return []
-  const { token, present, used } = open
-  return [{ at, character: token.character, chosen: token.chosen ? token.shown : undefined, choices: believable(token.character, roles, present, used) }]
-})
-
-// The Storyteller sets what an untaken disguise shows, or with no character hands it back to the
-// bag, which picks again at random.
-export const showAs = (g: Grimoire, draw: Draw, at: number, to: CharacterId | undefined, roles: readonly BagRole[] = [],
-  random = Math.random): Draw | undefined => {
-  const open = disguised(g, draw, at)
-  if (!open) return undefined
-  const { token, present, used } = open
-  if (to !== undefined && !believable(token.character, roles, present, used).includes(to)) return undefined
-  const shown = to ?? believed(token.character, roles, present, used, random)
-  const next: DrawToken = { character: token.character, ...(shown ? { shown } : {}), ...(to ? { chosen: true } : {}) }
-  return { tokens: draw.tokens.map((other, i) => i === at ? next : other) }
 }
 
 const emptySeats = (g: Grimoire): ReadonlySet<SeatId> => new Set(g.seats.filter(seat => isEmptySeat(seat.character)).map(seat => seat.id))
