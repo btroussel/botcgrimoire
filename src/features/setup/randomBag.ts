@@ -44,10 +44,12 @@ export const randomBag = (roles: readonly BagRole[], count: number, random = Mat
   if (travellers.length !== count - players) return undefined
 
   const modifiers = pool.filter(role => goodModifiers.has(role.id))
-  const selections = shuffled(Array.from({ length: 2 ** modifiers.length }, (_, mask) =>
-    modifiers.filter((_, i) => (mask & (1 << i)) !== 0)), random)
+  const masks = shuffled(Array.from({ length: 2 ** modifiers.length }, (_, mask) => mask), random)
+  const subset = (mask: number) => modifiers.filter((_, i) => (mask & (1 << i)) !== 0)
   const ordinaryGood = pool.filter(role => (role.team === 'townsfolk' || role.team === 'outsider')
     && !goodModifiers.has(role.id) && role.id !== 'atheist')
+  const townsfolkOrder = pool.filter(role => role.team === 'townsfolk' && role.id !== 'atheist')
+  const outsiderOrder = pool.filter(role => role.team === 'outsider')
   const modes = pool.filter(role => role.team === 'demon' || role.id === 'atheist' || role.id === 'summoner')
 
   for (const mode of modes) {
@@ -68,6 +70,14 @@ export const randomBag = (roles: readonly BagRole[], count: number, random = Mat
     for (const otherMinions of minionSets(availableMinions, minionCount - (summoner ? 1 : 0))) {
       const minions = summoner ? [mode, ...otherMinions] : otherMinions
       const hasMinion = (id: string) => minions.some(role => role.id === id)
+      // A modifier lands as often as any other character of its team: the first bag tried keeps
+      // those the shuffle put within their team's usual slots, and the next ones change the fewest.
+      const outsiderSlots = Math.min(goodCount, Math.max(0, base.outsiders + (hasMinion('baron') ? 2 : 0)
+        + (mode.id === 'fanggu' ? 1 : 0) - (mode.id === 'vigormortis' ? 1 : 0)))
+      const usual = modifiers.reduce((mask, role, i) => (role.team === 'outsider'
+        ? outsiderOrder.indexOf(role) < outsiderSlots
+        : townsfolkOrder.indexOf(role) < goodCount - outsiderSlots) ? mask | (1 << i) : mask, 0)
+      const selections = [...masks].sort((a, b) => subset(a ^ usual).length - subset(b ^ usual).length).map(subset)
       for (const selected of selections) {
         const hasGood = (id: string) => selected.some(role => role.id === id)
         const required = [...selected, ...(atheist ? [mode] : [])]
