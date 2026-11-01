@@ -14,7 +14,7 @@ import { Screen } from '../../ui/Screen'
 import { ScriptListRow } from '../../ui/ScriptListRow'
 import { palette, space, type } from '../../ui/theme'
 import { SetupScriptSheet } from './SetupScriptSheet'
-import { fillBag } from './draw'
+import { chosenTokens, fillBag } from './draw'
 import { looseEvents, openingEvents, scriptLoose, trimBag } from './setup'
 
 export const NewGameScreen = () => {
@@ -38,11 +38,18 @@ export const NewGameScreen = () => {
   const [chosenCount, setCount] = useState<number>()
   const count = chosenCount ?? lastTable
   const [bag, setBag] = useState<readonly CharacterId[]>([])
+  const [shows, setShows] = useState<ReadonlyMap<CharacterId, CharacterId>>(new Map())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
   const opening = useRef(false)
   const text = gameText(store.settings.locale)
-  const back = () => { if (script) { setScript(undefined); setBag([]); setError(false) } else backOrHome(router, locale) }
+  const back = () => { if (script) { setScript(undefined); setBag([]); setShows(new Map()); setError(false) } else backOrHome(router, locale) }
+  const show = (character: CharacterId, shown: CharacterId | undefined) => setShows(current => {
+    const next = new Map(current)
+    if (shown) next.set(character, shown)
+    else next.delete(character)
+    return next
+  })
   // A script's Fabled and Loric are its rules, so they start selected for the board.
   const choose = (next: Script) => { setScript(next); setBag(scriptLoose(listed(next, locale))) }
   const open = async () => {
@@ -54,15 +61,15 @@ export const NewGameScreen = () => {
       const id = await store.create(script)
       store.appendAll([...seats, ...looseEvents(bag)])
       // The tokens wait in the bag, so the board opens empty on the setup window that deals them.
-      const draw = fillBag(bag, listed(script, locale))
+      const draw = fillBag(bag, listed(script, locale), Math.random, [], chosenTokens(shows))
       if (draw) store.setDraw(draw)
       router.replace({ pathname: '/game/[id]', params: { id, ...(draw ? { setup: '1' } : {}) } })
     } catch { setError(true) } finally { opening.current = false; setBusy(false) }
   }
   if (script) return <Screen title={t('setup.newGame')} onBack={back} backLabel={t('common.back')} surface="paper" scroll={false}>
     <Enter>
-      <SetupScriptSheet script={script} count={count} bag={bag} busy={busy} error={error}
-        onCount={next => { setCount(next); setBag(trimBag(bag, next)) }} onBag={setBag} onCreate={() => void open()} />
+      <SetupScriptSheet script={script} count={count} bag={bag} shows={shows} busy={busy} error={error}
+        onCount={next => { setCount(next); setBag(trimBag(bag, next)) }} onBag={setBag} onShow={show} onCreate={() => void open()} />
     </Enter>
   </Screen>
   return <Screen title={t('setup.scriptStep')} onBack={back} backLabel={t('common.back')}>
