@@ -1,7 +1,7 @@
 // The players draw their own tokens: the bag lies face down, each player in seating order takes
 // one, and the Storyteller deals what they took. Until the deal nothing is on the board, so a
 // draw can stop and resume, and the Storyteller can deal the rest at random instead.
-import { character as characterOf, gameText, isEmptySeat } from '../../content'
+import { asCharacterId, character as characterOf, gameText, isEmptySeat } from '../../content'
 import type { CharacterId, Locale, Team } from '../../content'
 import { inPlay } from '../../engine'
 import type { Grimoire, Payload, SeatId } from '../../engine'
@@ -14,13 +14,15 @@ import { dealing, seatedCharacters, sideOf } from './setup'
 const disguises: Readonly<Record<string, Team>> = { drunk: 'townsfolk', lunatic: 'demon', marionette: 'townsfolk' }
 
 // A Lunatic believes they are the Demon in play, a Drunk or Marionette a Townsfolk nobody holds.
-// A script short of those still gets a character of the team rather than the true token.
+// A script short of those still gets a character of the team rather than the true token. The
+// Marionette and Huntsman jinx lets a Marionette believe they are the Huntsman only beside a Damsel.
 const believed = (character: CharacterId, roles: readonly BagRole[], present: ReadonlySet<CharacterId>,
   used: ReadonlySet<CharacterId>, random: () => number): CharacterId | undefined => {
   const team = disguises[character]
   if (!team) return undefined
+  const jinxed = (id: CharacterId) => character === 'marionette' && id === 'huntsman' && !present.has(asCharacterId('damsel'))
   const candidates = shuffled(roles.filter(role => role.team === team && !used.has(role.id)), random)
-  return (candidates.find(role => present.has(role.id) === (team === 'demon')) ?? candidates[0])?.id
+  return (candidates.find(role => present.has(role.id) === (team === 'demon') && !jinxed(role.id)) ?? candidates[0])?.id
 }
 
 // `inPlay` holds the characters already on the board, which a disguise avoids like the bag's own.

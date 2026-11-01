@@ -1,4 +1,4 @@
-import { asCharacterId } from '../../content'
+import { asCharacterId, character } from '../../content'
 import { asEventId, inPlay, playerIdentity, reduce } from '../../engine'
 import { game } from '../../engine/testing/board'
 import type { Draw } from '../../store'
@@ -126,6 +126,14 @@ describe('the players draw from the bag', () => {
       expect(demons).toContain(fillBag(ids('lunatic'), roles, () => seed)!.tokens[0]!.shown)
     }
     expect(fillBag(ids('drunk'))!.tokens).toEqual([{ character: 'drunk' }])
+  })
+
+  test('a Marionette believes they are the Huntsman only when the Damsel is in play', () => {
+    const roles = ids('huntsman', 'empath', 'chef', 'damsel', 'marionette', 'imp').map(id => character(id))
+    const shown = (bag: readonly string[]) => new Set([0, 0.2, 0.4, 0.6, 0.8, 0.99].map(seed =>
+      fillBag(ids(...bag), roles, () => seed)!.tokens.find(token => token.character === 'marionette')!.shown))
+    expect(shown(['marionette', 'chef', 'imp'])).toEqual(new Set(['empath']))
+    expect(shown(['marionette', 'chef', 'damsel', 'imp'])).toEqual(new Set(['empath', 'huntsman']))
   })
 
   test('a disguised token shows its player what they believe, and lands as in a paper grimoire', () => {
