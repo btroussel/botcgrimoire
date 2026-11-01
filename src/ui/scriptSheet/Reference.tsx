@@ -3,12 +3,13 @@ import { ScrollView, Text, View } from 'react-native'
 import type { NightMarker } from '../../content'
 import { genericArt } from '../../content/generated/art'
 import type { ArtSource } from '../Art'
+import { AbilityText } from '../AbilityText'
 import { Art } from '../Art'
 import { CharacterIcon } from '../CharacterIcon'
 import type { Palette } from '../theme'
 import { tabular, type } from '../theme'
-import { orderIcon, styles } from './styles'
-import type { NightOrderItem, ScriptSheetCountTable } from './types'
+import { orderIcon, referenceIcon, styles } from './styles'
+import type { NightOrderItem, ScriptSheetCountTable, ScriptSheetTeam } from './types'
 
 // The markers' art under the upstream file names, which are the ids on the night sheet. The board's
 // reference and the character editor's order column draw the same discs.
@@ -43,13 +44,13 @@ export const CountTable = ({ table, columns, heading, p }: CountTableProps) => {
   ]
   return (
     <View id="script-sheet-counts" style={styles.section}>
-      <table className="script-count-table" style={{ display: 'none', fontFamily: type.text.small.fontFamily }}>
+      <table className="script-count-table" style={{ display: 'none' }}>
         <thead>
           <tr><th scope="col">{heading}</th>{indices.map((i) => <th key={i} scope="col">{table.players[i]}</th>)}</tr>
         </thead>
         <tbody>
           {table.rows.map((row) => (
-            <tr key={row.label}>
+            <tr key={row.label} className={`script-count-${row.team}`}>
               <th scope="row">{row.label}</th>
               {indices.map((i) => <td key={i}>{row.by[i] ?? 0}</td>)}
             </tr>
@@ -115,3 +116,21 @@ export const NightOrder = ({ heading, items, p }: { readonly heading: string; re
   </View>
 )
 
+// ---------------------------------------------------------------------------------------------
+// A team as the printed reference page lists it: Travellers, Fabled and Loric are a few lines,
+// not worth a page of their own after the Demons.
+
+export const ReferenceTeam = ({ group, color, p }: { readonly group: ScriptSheetTeam; readonly color: string; readonly p: Palette }) => (
+  <View id={`script-sheet-reference-${group.team}`} style={styles.section}>
+    <Text role="heading" style={[type.text.strong, styles.heading, { color }]}>{group.label}</Text>
+    {group.rows.map((row) => (
+      <View key={row.id} style={styles.referenceRow}>
+        <CharacterIcon id={row.id} team={row.team} size={referenceIcon} />
+        <View style={styles.grow}>
+          <Text id={`script-sheet-refname-${row.id}`} style={[type.text.strong, { color }]}>{row.name}</Text>
+          <Text style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
+        </View>
+      </View>
+    ))}
+  </View>
+)

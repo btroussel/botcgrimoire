@@ -50,7 +50,7 @@ export interface SheetJinx {
 
 export interface SheetCountTable {
   readonly players: readonly number[]
-  readonly rows: readonly { readonly label: string; readonly by: readonly number[] }[]
+  readonly rows: readonly { readonly team: Team; readonly label: string; readonly by: readonly number[] }[]
 }
 
 export type SheetNightItem =
@@ -170,6 +170,7 @@ export const sheetLabels = (t: Translate) => ({
   jinxes: t('scripts.jinxes'),
   rules: t('scripts.rules'),
   teensyville: t('scripts.teensyville'),
+  credit: t('common.ownership'),
 })
 
 export interface TeamCount {
@@ -258,10 +259,10 @@ export interface CountRowLabels {
 export const countTable = (labels: CountRowLabels): SheetCountTable => ({
   players: tablePlayers,
   rows: [
-    { label: labels.townsfolk, by: tablePlayers.map((n) => baseCounts(n)?.townsfolk ?? 0) },
-    { label: labels.outsiders, by: tablePlayers.map((n) => baseCounts(n)?.outsiders ?? 0) },
-    { label: labels.minions, by: tablePlayers.map((n) => baseCounts(n)?.minions ?? 0) },
-    { label: labels.demon, by: tablePlayers.map((n) => baseCounts(n)?.demon ?? 0) },
+    { team: 'townsfolk', label: labels.townsfolk, by: tablePlayers.map((n) => baseCounts(n)?.townsfolk ?? 0) },
+    { team: 'outsider', label: labels.outsiders, by: tablePlayers.map((n) => baseCounts(n)?.outsiders ?? 0) },
+    { team: 'minion', label: labels.minions, by: tablePlayers.map((n) => baseCounts(n)?.minions ?? 0) },
+    { team: 'demon', label: labels.demon, by: tablePlayers.map((n) => baseCounts(n)?.demon ?? 0) },
   ],
 })
 

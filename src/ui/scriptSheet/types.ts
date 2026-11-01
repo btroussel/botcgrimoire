@@ -31,7 +31,7 @@ export interface ScriptSheetJinx {
 
 export interface ScriptSheetCountTable {
   readonly players: readonly number[] // the columns, in order
-  readonly rows: readonly { readonly label: string; readonly by: readonly number[] }[] // one per team, a value per column
+  readonly rows: readonly { readonly team: Team; readonly label: string; readonly by: readonly number[] }[] // one per team, a value per column
 }
 
 
@@ -52,6 +52,7 @@ export interface ScriptSheetLabels {
   readonly jinxes: string
   readonly rules: string // the Bootlegger's homebrew rules
   readonly teensyville?: string // shown under the title when the script is recognised as one
+  readonly credit?: string // whose game this is, at the foot of every printed page
 }
 
 export interface ScriptSheetRulesField {

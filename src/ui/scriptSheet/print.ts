@@ -3,8 +3,8 @@ import { font, palette } from '../theme'
 // Print is the browser's paper, not a palette: white and black whatever the setting.
 const print = { paper: '#ffffff', ink: '#000000' } as const
 
-// The one colour left on paper: each team's band word and character names, so a player finds
-// the evil half of the sheet at a glance.
+// The one colour left on paper: each team's words, its band, character names and count row, so a
+// player finds the evil half of the sheet at a glance.
 const teamInk = {
   townsfolk: '#00689b',
   outsider: '#00689b',
@@ -16,11 +16,23 @@ const teamInk = {
 } as const
 
 const teamColours = Object.entries(teamInk)
-  .map(([team, ink]) => `#script-sheet-band-${team} [dir="auto"], #script-sheet-team-${team} [id^="script-sheet-name-"] { color: ${ink} !important; }`)
+  .map(([team, ink]) => [
+    `#script-sheet-band-${team} [dir="auto"]`,
+    `#script-sheet-team-${team} [id^="script-sheet-name-"]`,
+    `#script-sheet-reference-${team} [role="heading"]`,
+    `#script-sheet-reference-${team} [id^="script-sheet-refname-"]`,
+    `#script-sheet .script-sheet-npc-${team} > span`,
+    `#script-sheet tr.script-count-${team} > *`,
+  ].join(', ') + ` { color: ${ink} !important; }`)
   .join('\n  ')
 
+// The foot of every page holds the ownership line and the asterisk's meaning; the characters stop
+// this far above the paper's printable bottom edge.
+const footHeight = 7 // mm
+const pageHeight = 281 // mm: A4 less the top and bottom margins
+
 export const printCss = `
-.script-jinx-markers, .script-reference-title, .script-count-table { display: none; }
+.script-jinx-markers, .script-reference-title, .script-count-table, .script-print-only, #script-sheet-page-foot { display: none; }
 @media print {
   /* Leave printable margins without room for the browser's automatic header and footer. */
   @page { size: A4; margin: 8mm 12mm; }
@@ -34,8 +46,10 @@ export const printCss = `
   /* The unknown-id notice speaks to the Storyteller about this app, not to the players. */
   #script-sheet-toolbar, #script-sheet-footer, #script-sheet-notice, #script-sheet .paper-texture { display: none !important; }
   [id^="script-sheet-band-"] { position: static !important; break-after: avoid; }
-  /* The first team after the Demons, Travellers, Fabled or Loric, starts the second page. */
-  #script-sheet-block-demon + [id^="script-sheet-block-"], #script-sheet-references { break-before: page; }
+  #script-sheet-references { break-before: page; }
+  /* Travellers, Fabled and Loric print on the second page, so their bands leave the first. */
+  #script-sheet:has(#script-sheet-references) :is(#script-sheet-block-traveller, #script-sheet-block-fabled, #script-sheet-block-loric) { display: none !important; }
+  #script-sheet .script-print-only { display: block; }
   [id^="script-sheet-column-"] { width: 50% !important; }
   [id^="script-sheet-jinx-"] { break-inside: avoid; }
   #script-sheet-jinxes > :first-child { break-after: avoid; }
@@ -47,6 +61,9 @@ export const printCss = `
   #script-sheet-logo, #script-sheet-logo * { width: 24mm !important; height: 24mm !important; }
   #script-sheet-title { font-size: 24pt !important; line-height: 1.1 !important; }
   #script-sheet-author { font-size: 11pt !important; line-height: 1.3 !important; }
+  #script-sheet .script-sheet-npcs { display: flex; flex-direction: column; align-items: flex-end; align-self: flex-start; gap: 1.5mm; }
+  .script-sheet-npcs > span { display: inline-flex; align-items: center; gap: 1.5mm; font-family: ${font.body.regular}; font-size: 9pt; }
+  .script-sheet-npcs > span > :first-child, .script-sheet-npcs img { width: 7mm !important; height: 7mm !important; }
   #script-sheet .script-jinx-markers { display: inline-flex; align-items: center; gap: 0.5mm; }
   #script-sheet .script-jinx-markers img,
   #script-sheet .script-jinx-markers div { width: calc(4mm * var(--print-density, 1)) !important; height: calc(4mm * var(--print-density, 1)) !important; }
@@ -65,19 +82,22 @@ export const printCss = `
   [id^="script-sheet-row-"] > div > :nth-child(2) > div { padding: 0 !important; gap: 0 !important; }
   [id^="script-sheet-name-"], [id^="script-sheet-ability-"] { font-size: calc(10.5pt * var(--print-density, 1)) !important; line-height: 1.15 !important; }
   ${teamColours}
+  /* The night orders take the outer columns; everything else stacks between them, the count
+     table at the foot. */
   #script-sheet-references {
     display: grid !important;
     grid-template-columns: 32mm minmax(0, 1fr) 32mm;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: 1fr auto;
     column-gap: 4mm;
-    min-height: 275mm;
+    min-height: ${pageHeight - footHeight}mm;
     align-items: start;
   }
+  #script-sheet-centre { grid-column: 2; grid-row: 1; min-width: 0; display: flex !important; flex-direction: column; gap: 5mm; }
   /* A plain element, so it names the sheet's faces itself rather than print in the browser's serif. */
-  #script-sheet .script-reference-title { display: block; grid-column: 2; grid-row: 1; text-align: center; font-family: ${font.display.semibold}; font-size: 18pt; line-height: 1.15; padding-bottom: 6mm; }
+  #script-sheet .script-reference-title { display: block; text-align: center; font-family: ${font.display.semibold}; font-size: 18pt; line-height: 1.15; padding-bottom: 1mm; }
   #script-sheet .script-reference-title small { display: block; font-family: ${font.body.regular}; font-size: 9pt; margin-top: 1mm; }
   #script-sheet-nights { display: contents !important; }
-  #script-sheet-nights > div { grid-row: 1 / 5; min-width: 0; max-width: 100% !important; gap: 3mm !important; }
+  #script-sheet-nights > div { grid-row: 1 / 3; min-width: 0; max-width: 100% !important; gap: 3mm !important; }
   #script-sheet-nights > div:first-child { grid-column: 1; padding-right: 2mm; border-right: 0.3mm solid #d5cec5; }
   #script-sheet-nights > div:last-child { grid-column: 3; padding-left: 2mm; border-left: 0.3mm solid #d5cec5; }
   #script-sheet-nights > div > :first-child { font-size: 10pt !important; line-height: 1.15 !important; }
@@ -87,25 +107,58 @@ export const printCss = `
   #script-sheet-nights > div > div > div > div:first-child,
   #script-sheet-nights > div > div > div > div:first-child *,
   #script-sheet-nights img { width: 7mm !important; height: 7mm !important; }
-  #script-sheet-jinxes { grid-column: 2; grid-row: 2; padding: 0 0 5mm !important; gap: 3mm !important; }
-  #script-sheet-rules { grid-column: 2; grid-row: 3; padding: 0 !important; gap: 2mm !important; }
-  #script-sheet-counts { grid-column: 2; grid-row: 4; padding: 5mm 0 0 !important; }
+  #script-sheet-jinxes { padding: 0 !important; gap: 3mm !important; }
+  #script-sheet-rules { padding: 0 !important; gap: 2mm !important; }
+  [id^="script-sheet-reference-"] { padding: 0 !important; gap: 2.5mm !important; break-inside: avoid; }
+  [id^="script-sheet-reference-"] > div { gap: 2mm !important; }
+  [id^="script-sheet-reference-"] > div > :first-child,
+  [id^="script-sheet-reference-"] img { width: 9mm !important; height: 9mm !important; }
+  #script-sheet-counts { grid-column: 2; grid-row: 2; padding: 5mm 0 0 !important; }
   #script-sheet-counts-screen { display: none !important; }
-  #script-sheet .script-count-table { display: table !important; width: calc(100% + 8mm); margin-left: -4mm; table-layout: fixed; border-collapse: collapse; font-size: 8.5pt; line-height: 1.2; }
-  #script-sheet .script-count-table th, #script-sheet .script-count-table td { height: 5.5mm; padding: 0.4mm 0; box-sizing: border-box; border: 0.2mm solid #9b8872; text-align: center; font-weight: normal; }
-  #script-sheet .script-count-table th:first-child { width: 25mm; text-align: left; padding-left: 1.5mm; }
-  #script-sheet .script-count-table thead th { font-weight: bold; }
+  /* The official sheet's table: a double gold frame, no inner rules, a row per team in its colour. */
+  #script-sheet .script-count-table {
+    display: table !important;
+    margin: 0 auto;
+    padding: 1.5mm 2.5mm;
+    border: 0.8mm double ${palette.teamOnPaper.fabled};
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: ${font.display.medium};
+    font-size: 13pt;
+    font-variant-numeric: lining-nums tabular-nums;
+    line-height: 1.1;
+  }
+  #script-sheet .script-count-table th, #script-sheet .script-count-table td { min-width: 6mm; border: none; padding: 0.6mm 0.8mm; text-align: center; font-weight: normal; }
+  #script-sheet .script-count-table th:first-child { text-align: right; padding-right: 3mm; font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; }
+  #script-sheet .script-count-table thead th { color: ${palette.teamOnPaper.fabled} !important; }
   #script-sheet-jinxes > [id^="script-sheet-jinx-"] { gap: 2mm !important; }
 
-  #script-sheet-jinxes [dir="auto"], #script-sheet-rules [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
-  #script-sheet-footnote { font-size: 8pt !important; line-height: 1.15 !important; padding: 2mm 0 0 !important; }
+  #script-sheet-jinxes [dir="auto"], #script-sheet-rules [dir="auto"], [id^="script-sheet-reference-"] [dir="auto"] { font-size: 9pt !important; line-height: 1.2 !important; }
+  /* Repeated at the foot of every page, so the asterisk is explained wherever it appears. */
+  #script-sheet-footnote { display: none !important; }
+  #script-sheet-page-foot {
+    display: flex !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8mm;
+    font-family: ${font.body.regular};
+    font-size: 6.5pt;
+    line-height: 1.25;
+  }
+  #script-sheet #script-sheet-page-foot, #script-sheet #script-sheet-page-foot * { color: #666666 !important; }
+  #script-sheet-page-foot > span + span { flex-shrink: 0; white-space: nowrap; }
 
 }
 `
 
 
 // Measure the actual translated lines at the fixed A4 print width. Text and icons shrink
-// together, down to 8 pt; an unusually large script then continues onto another page.
+// together, down to 8 pt; an unusually large script then continues onto another page, and its
+// first page fills to the bottom, where a row can meet the foot.
 export const fitPrintedRoles = (): void => {
   const sheet = document.getElementById('script-sheet')
   if (!sheet) return
@@ -119,7 +172,7 @@ export const fitPrintedRoles = (): void => {
   document.head.appendChild(measurement)
   try {
     sheet.style.setProperty('--print-density', '1')
-    const available = 275 * 96 / 25.4 // Reserve 6 mm of the printable A4 height for the footnote.
+    const available = (pageHeight - footHeight) * 96 / 25.4
     let density = 1
     for (let attempt = 0; attempt < 8; attempt++) {
       const height = last.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top
