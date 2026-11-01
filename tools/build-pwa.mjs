@@ -21,11 +21,12 @@ for (const file of ['404.html', '_sitemap.html']) {
   const html = await readFile(location, 'utf8')
   await writeFile(location, html.replace('</head>', '<meta name="robots" content="noindex, follow"/></head>'))
 }
-// Include exported routes, the script, fonts and all art, even files never opened online.
+// Include exported routes, the script, fonts and all art, even files never opened online. The
+// search thumbnail is for crawlers only, so it stays out of the offline download.
 const files = (await readdir(root, { recursive: true, withFileTypes: true }))
   .filter((entry) => entry.isFile())
   .map((entry) => path.relative(root, path.join(entry.parentPath, entry.name)).replaceAll('\\', '/'))
-  .filter((file) => !['sw.js', '_headers', '_redirects'].includes(file) && !file.endsWith('.map'))
+  .filter((file) => !['sw.js', '_headers', '_redirects', 'search.jpg'].includes(file) && !file.endsWith('.map'))
   .sort()
 const hash = createHash('sha256')
 const template = await readFile(new URL('./service-worker.js', import.meta.url), 'utf8')

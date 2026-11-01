@@ -88,7 +88,7 @@ MIT license doesn't cover them. That material lives in:
 - `assets/data/raw/` and `assets/schema/`
 - `assets/art/characters/`, `assets/art/editions/`, `assets/art/community/` and `assets/art/generic/`
 - `src/content/generated/nightText.ts`
-- `public/share.jpg`, a screenshot showing official art
+- `public/share.jpg` and `public/search.jpg`, screenshots showing official art
 
 Game text quoted in `src/content/locales/*/night.json` is theirs too, and
 [assets/README.md](assets/README.md) lists where every file comes from. TPI shares this material for

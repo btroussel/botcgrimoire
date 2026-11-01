@@ -29,6 +29,8 @@ Official art from The Pandemonium Institute:
   by hand from the official Blood on the Clocktower website. The sync skips them.
 - [../public/share.jpg](../public/share.jpg): the sharing image, a screenshot of a Trouble Brewing
   board in the app, so it shows official character art.
+- [../public/search.jpg](../public/search.jpg): the search result thumbnail, the same board
+  imported as a saved game and captured at 800 by 800 points at 1.5x with the night sheet closed.
 
 Our own:
 

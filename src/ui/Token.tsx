@@ -11,6 +11,7 @@ import Svg, { Defs, Path, Text as SvgText, TextPath } from 'react-native-svg'
 import type { Alignment } from '../content'
 import { asCharacterId, character } from '../content'
 import { tokenArt } from '../content/generated/art'
+import { AbilityText } from './AbilityText'
 import { Art } from './Art'
 import { focusStyle, isFocused } from './Button'
 import { CharacterIcon, useHomebrew } from './CharacterIcon'
@@ -152,7 +153,7 @@ const TokenFace = memo(function TokenFace({ size, id, alignment, name, named, sh
         <CharacterIcon id={id} team={record.team} size={size * (ability ? abilityArtSize : named ? 0.64 : artShare)} {...(alignment ? { tint: alignment } : {})} />
       </View>
       {ability ? <View style={{ position: 'absolute', top: size * 0.14, left: size * 0.15, width: size * 0.70 }}>
-        <Text ref={abilityText} style={[type.text.small, { color: p.ink, textAlign: 'center', fontSize: size * (longAbility ? 0.039 : 0.047), lineHeight: size * (longAbility ? 0.046 : 0.055) }]}>{ability}</Text>
+        <Text ref={abilityText} style={[type.text.small, { color: p.ink, textAlign: 'center', fontSize: size * (longAbility ? 0.039 : 0.047), lineHeight: size * (longAbility ? 0.046 : 0.055) }]}><AbilityText text={ability} /></Text>
       </View> : null}
       {named ? <PrintedName name={name ?? record.name} size={size} color={p.ink} {...(ability ? { outline: p.text } : {})} /> : null}
     </TokenDisc>
