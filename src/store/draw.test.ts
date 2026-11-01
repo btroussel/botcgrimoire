@@ -12,6 +12,7 @@ const bag: Draw = { tokens: [
   { character: asCharacterId('imp'), seat: asSeatId('a') },
   { character: asCharacterId('chef') },
   { character: asCharacterId('drunk'), shown: asCharacterId('empath') },
+  { character: asCharacterId('lunatic'), shown: asCharacterId('imp'), chosen: true },
 ] }
 
 test('filling the bag or taking a token records no game action and keeps redo', () => {
@@ -41,6 +42,8 @@ test('a malformed bag is refused on load', () => {
     { tokens: [{ character: '' }] },
     { tokens: [{ character: 'drunk', shown: '' }] },
     { tokens: [{ character: 'drunk', shown: 7 }] },
+    { tokens: [{ character: 'drunk', shown: 'empath', chosen: 'yes' }] },
+    { tokens: [{ character: 'drunk', chosen: true }] },
     { tokens: [{ character: 'imp', seat: 'a' }, { character: 'chef', seat: 'a' }] },
     { tokens: Array.from({ length: 21 }, () => ({ character: 'chef' })) },
     { tokens: 'imp' },
