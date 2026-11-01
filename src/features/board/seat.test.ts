@@ -2,6 +2,8 @@ import { game, grant, kill, setShown, token } from '../../engine/testing/board'
 import type { Event, Payload, SeatId } from '../../engine'
 import { apply, asEventId } from '../../engine'
 import { asCharacterId, registerHomebrew, scriptHomebrew } from '../../content'
+import { deserialize, newGame, serialize } from '../../store/saved'
+import { appendAll, boardOf, openSession, redo, undo } from '../../store/session'
 import { boardView } from './board'
 import { bluffChoices, characterGroups, edits, pickerGroups, reminderGroups, roster, writtenNotes } from './seat'
 
@@ -145,6 +147,32 @@ describe('the edits', () => {
       token: ['poisoner', 'Poisoned'],
       seat: 'a',
     })
+  })
+
+  test('moving a reminder lands it on the other seat as it was, survives a reload, and one undo puts it back', () => {
+    const table = game().seat('Ann', 'poisoner').seat('Bob', 'monk').seat('Cat', 'chef')
+      .night(1, [token('Ann', 'poisoner/Poisoned', 'Bob'), token('Bob', 'monk/Safe', 'Bob')])
+      .add(id => edits.placeNote('Claimed Chef', id('Bob'))).build()
+    const before = openSession({ ...newGame('tb', 1000), log: table.log })
+    const board = boardOf(before)
+    const [poisoned, safe, note] = board.seats[1]!.tokens
+    const moved = appendAll(before, edits.moveToken(board, poisoned!.placedBy, table.id('Cat')), 1001)
+    const after = boardOf(moved)
+    expect(after.seats[1]!.tokens).toEqual([safe, note])
+    expect(after.seats[2]!.tokens).toEqual([{ ...poisoned, placedBy: moved.game.log.at(-1)!.id }])
+    expect(boardOf(openSession(deserialize(serialize(moved.game))))).toEqual(after)
+
+    const undone = undo(moved, 1002)
+    expect(undone.game.log).toEqual(before.game.log)
+    expect(boardOf(undone)).toEqual(board)
+    expect(boardOf(redo(undone, 1003))).toEqual(after)
+
+    const noted = boardOf(appendAll(before, edits.moveToken(board, note!.placedBy, table.id('Ann')), 1001))
+    expect(noted.seats[0]!.tokens).toEqual([{ ...note, placedBy: asEventId(before.game.log.length + 1) }])
+    // Dropped where it already sits, or naming nothing on the board, a move records nothing.
+    expect(edits.moveToken(board, poisoned!.placedBy, table.id('Bob'))).toEqual([])
+    expect(edits.moveToken(board, asEventId(999), table.id('Cat'))).toEqual([])
+    expect(edits.moveToken(board, poisoned!.placedBy, 'nobody' as SeatId)).toEqual([])
   })
 
   test('a death by hand is the Storyteller\'s, and bluff selection does not tell the Demon', () => {

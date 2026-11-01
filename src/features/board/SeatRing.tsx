@@ -6,7 +6,8 @@
 // engine's once-a-day limits records that nomination. The deal is the ring's motion: a seat
 // that goes from empty to dealt leaves the centre at corner size and lands on its place, one
 // after another. A ring opened just after the deal counts every seat as empty before it, so a
-// new game opens with the deal.
+// new game opens with the deal. A placed reminder can be dragged to another seat; the hook beside
+// this file reads the gesture and the ring says which seat is under it.
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -21,9 +22,10 @@ import { Token } from '../../ui/Token'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { domElement } from '../../ui/focus'
 import { useReducedMotion } from '../../ui/motion'
-import { Seat } from '../../ui/Seat'
+import { ReminderChip } from '../../ui/ReminderChip'
+import { reminderSize, Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
-import { hairline, motion, palette, radius, shadows, space, tokenSize } from '../../ui/theme'
+import { hairline, motion, palette, radius, shadows, space, tokenSize, touch } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
@@ -38,6 +40,7 @@ import type { SeatDialogAction } from './SeatActionDialog'
 import { VotingArc } from './VotingArc'
 import { edits } from './seat'
 import { useEdits } from './useEdits'
+import { useReminderDrag } from './useReminderDrag'
 
 interface Tracked {
   readonly empty: ReadonlyMap<string, boolean> // by seat id, as of the last change
@@ -54,6 +57,7 @@ export interface SeatRingProps {
   readonly t: Translate
   readonly onAddReminder?: (seat: SeatId) => void
   readonly onRemoveReminder?: (placedBy: EventId) => void
+  readonly onMoveReminder?: (placedBy: EventId, to: SeatId) => void
   readonly onEditNote?: (placedBy: EventId) => void
   readonly onGap?: (at: number) => void
   readonly onTurn?: (direction: 'clockwise' | 'counterclockwise') => void
@@ -62,7 +66,10 @@ export interface SeatRingProps {
   readonly deal?: boolean // the game was dealt just before the ring opened
 }
 
-export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, t, onAddReminder, onRemoveReminder, onEditNote, onGap, onTurn, onArrangeDone,
+// A lifted reminder is drawn a little larger, raised off the board.
+const liftScale = 1.15
+
+export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, t, onAddReminder, onRemoveReminder, onMoveReminder, onEditNote, onGap, onTurn, onArrangeDone,
   readOnly = false, panelDocked = false, deal = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
@@ -73,7 +80,33 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const [dialogOpen, setDialogOpen] = useState(false)
   const pick = readOnly ? undefined : interaction.pick
   const action = readOnly || pick ? undefined : interaction.seatAction
-  const contextScope = `${e.board?.clock.phase}:${e.board?.clock.night}:${dialogOpen}:${!!interaction.card}:${!!pick}:${!!action}:${!!onGap}:${!!onArrangeDone}`
+  const { size, band, positions } = geometry
+  const bandView = useRef<ViewInstance>(null)
+  const chipSize = reminderSize(size)
+  const canDrag = !!onMoveReminder && !readOnly && !pick && !action
+  const { lifted, root, ghost, handlers: dragHandlers } = useReminderDrag(canDrag, (clientX, clientY, touch) => {
+    const origin = domElement(bandView.current)?.getBoundingClientRect()
+    const x = clientX - (origin?.left ?? 0)
+    // On touch the reminder rides above the finger, so the finger never hides it or its target.
+    const y = clientY - (origin?.top ?? 0) - (touch ? chipSize : 0)
+    // The nearest seat whose disc, with a little margin, is under it.
+    let seat: SeatId | undefined
+    let nearest = size * 0.6
+    seats.forEach((s, i) => {
+      const at = positions[i]
+      const distance = at ? Math.hypot(at.x - x, at.y - y) : Infinity
+      if (distance <= nearest) { nearest = distance; seat = s.id }
+    })
+    return { x, y, ...(seat !== undefined ? { seat } : {}) }
+  }, (from, chip, to) => {
+    const placedBy = seats.find(s => s.id === from)?.chips.find(c => c.key === chip)?.placedBy
+    if (placedBy !== undefined) onMoveReminder?.(placedBy, to)
+  })
+  const liftedChip = lifted && seats.find(s => s.id === lifted.seat)?.chips.find(c => c.key === lifted.chip)
+  const ghostSize = Math.round(chipSize * liftScale)
+  const ghostSlot = { width: ghostSize + 2 * space.xs, height: Math.max(touch, ghostSize + 2 * space.xs) }
+  // Lifting a reminder closes the seat menu, as any other change of mode does.
+  const contextScope = `${e.board?.clock.phase}:${e.board?.clock.night}:${dialogOpen}:${!!interaction.card}:${!!pick}:${!!action}:${!!onGap}:${!!onArrangeDone}:${!!lifted}`
   const [previousScope, setPreviousScope] = useState(contextScope)
   if (previousScope !== contextScope) {
     setPreviousScope(contextScope)
@@ -96,7 +129,6 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   // A big table shares a fixed spread, so twenty seats land about as soon as twelve.
   const stagger = Math.min(motion.duration.dealStagger, motion.duration.dealSpread / Math.max(1, tracked.ranks.size - 1))
 
-  const { size, band, positions } = geometry
   const centre = { x: band.width / 2, y: band.height / 2 }
   const contextIndex = !pick && !action && !onGap && !onArrangeDone ? seats.findIndex(seat => seat.id === contextSeat) : -1
   const contextPlayer = seats[contextIndex]
@@ -140,8 +172,9 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
     : seatPositions(band, geometry.rx, geometry.ry, seats.length * 2).filter((_, index) => index % 2 === 1)) : []
 
   return (
-    <div style={{ width: viewport.width, height: viewport.height, overflow: band.height > viewport.height || band.width > viewport.width ? 'auto' : 'visible' }}>
-      <View style={[styles.band, { width: band.width, height: band.height }]}>
+    <div ref={root} {...dragHandlers} style={{ width: viewport.width, height: viewport.height, overflow: band.height > viewport.height || band.width > viewport.width ? 'auto' : 'visible',
+      ...(lifted && !lifted.touch ? { cursor: 'grabbing' } : {}) }}>
+      <View ref={bandView} style={[styles.band, { width: band.width, height: band.height }]}>
         {vote && nomineeAt ? <VotingArc band={band} rx={geometry.rx} ry={geometry.ry} tokenSize={size} seatCount={seats.length}
           nominee={nomineeAt} reached={positionOf(vote.reached)} label={vote.label} /> : null}
         {seats.map((seat, i) => {
@@ -161,8 +194,15 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             selected={inPick ? chosen : contextPlayer?.id === seat.id || undefined} pickable={inPick ? allowed : undefined} allowed={allowed}
             quietPick={!!vote && !pick} readOnly={readOnly} editChips={!readOnly && !inPick}
             canRemove={!!onRemoveReminder && !inPick && !readOnly} canAdd={!!onAddReminder && !inPick && !readOnly && !nominationLabel}
-            nominationLabel={nominationLabel} markedLabel={chosen ? action?.markedLabel : undefined} t={t} handlers={handlers} />
+            canDrag={canDrag} lifted={lifted?.seat === seat.id ? lifted.chip : undefined}
+            dropTarget={lifted?.target === seat.id} nominationLabel={nominationLabel} markedLabel={chosen ? action?.markedLabel : undefined} t={t} handlers={handlers} />
         })}
+        {liftedChip ? <div ref={ghost} aria-hidden style={{ position: 'absolute', left: 0, top: 0, zIndex: 20, pointerEvents: 'none' }}>
+          <Appear from={1 / liftScale} style={{ position: 'absolute', left: -ghostSlot.width / 2, top: -ghostSlot.height / 2, filter: `drop-shadow(${shadows.lifted})` }}>
+            <ReminderChip size={ghostSize} label={liftedChip.label} {...(liftedChip.character !== undefined ? { character: liftedChip.character } : {})}
+              {...(liftedChip.alignment ? { alignment: liftedChip.alignment } : {})} />
+          </Appear>
+        </div> : null}
         {gaps.map((at, index) => {
           const position = seats.length === 0 ? 0 : index + 1
           return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - tokenSize.corner / 2, top: at.y - tokenSize.corner / 2 }]}>
@@ -227,6 +267,9 @@ interface RingSeatProps {
   readonly readOnly: boolean
   readonly editChips: boolean // identity chips open the seat menu
   readonly canRemove: boolean // placed reminders come off on a tap, and placed notes open for editing
+  readonly canDrag: boolean // placed reminders and notes can be dragged to another seat
+  readonly lifted: string | undefined // the key of this seat's chip being dragged
+  readonly dropTarget: boolean // a dragged reminder would land here
   readonly canAdd: boolean
   readonly nominationLabel: string | undefined // set while this seat can be nominated from the open menu
   readonly markedLabel: string | undefined // the recorded-hand badge
@@ -240,13 +283,15 @@ const sameRingSeat = (a: RingSeatProps, b: RingSeatProps) =>
   (Object.keys(a) as (keyof RingSeatProps)[]).every(key => key === 'seat' ? sameSeat(a.seat, b.seat) : a[key] === b[key])
 
 const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raised, rank, stagger, arrived, seatCount, index, selected, pickable, allowed,
-  quietPick, readOnly, editChips, canRemove, canAdd, nominationLabel, markedLabel, t, handlers }: RingSeatProps) {
+  quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, canAdd, nominationLabel, markedLabel, t, handlers }: RingSeatProps) {
   const empty = seat.character === ''
   const chips: readonly SeatChip[] = seat.chips.map((c) => ({
     key: c.key,
     label: c.label,
     ...(c.character !== undefined ? { character: c.character } : {}),
     ...(c.alignment ? { alignment: c.alignment } : {}),
+    ...(canDrag && c.placedBy !== undefined ? { draggable: true } : {}),
+    ...(lifted === c.key ? { lifted: true } : {}),
     ...(c.placedBy !== undefined
       ? canRemove ? c.character === undefined ? {
           onPress: () => handlers.editNote(c.placedBy!),
@@ -278,6 +323,7 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         onBlock={seat.onBlock === true}
         ghostVote={seat.ghostVote}
         selected={selected}
+        dropTarget={dropTarget}
         {...(pickable !== undefined ? { pickable } : {})}
         quietPick={quietPick}
         chips={chips}

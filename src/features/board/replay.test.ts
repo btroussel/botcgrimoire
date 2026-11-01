@@ -1,6 +1,9 @@
 import { asCharacterId } from '../../content'
 import { game, info, kill, nominate, setCharacter, token, vote, wake } from '../../engine/testing/board'
+import { newGame } from '../../store/saved'
+import { appendAll, openSession } from '../../store/session'
 import { replayStops } from './replay'
+import { edits } from './seat'
 
 describe('visible replay steps', () => {
   test('skips wakes, nominations and living votes, preserving reminders, death and ghost votes', () => {
@@ -18,6 +21,17 @@ describe('visible replay steps', () => {
       .day().build()
     expect(replayStops(log, 'tb', 'en')).toEqual([1, 2, 4])
     expect(replayStops([], 'tb', 'en')).toEqual([0])
+  })
+
+  test('one action is one step, so a moved reminder never shows off the board, and a phase keeps its stop', () => {
+    const table = game().seat('Ann', 'poisoner').seat('Bob', 'monk').night(1, [token('Ann', 'poisoner/Poisoned', 'Bob')]).build()
+    const session = openSession({ ...newGame('tb', 1000), log: table.log })
+    const placedBy = table.g.seats[1]!.tokens[0]!.placedBy
+    const moved = appendAll(session, edits.moveToken(table.g, placedBy, table.id('Ann')), 1001)
+    expect(moved.game.log).toHaveLength(6)
+    expect(replayStops(moved.game.log, 'tb', 'en')).toEqual([2, 3, 4, 6])
+    const dawn = appendAll(moved, [{ kind: 'phase', to: 'day' }, edits.removeToken(moved.game.log.at(-1)!.id)], 1002)
+    expect(replayStops(dawn.game.log, 'tb', 'en')).toEqual([2, 3, 4, 6, 7, 8])
   })
 
   test('stops where the bluffs change, whether chosen or shown to the Demon in an older game', () => {

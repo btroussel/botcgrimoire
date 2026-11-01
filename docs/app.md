@@ -92,6 +92,9 @@ or an ability annotation; old ones stay readable.
 Arrange the seats, in More, is the only way to move seats. It turns the whole ring one place at a
 time, so every player keeps their neighbours.
 
+A placed reminder or note moves to another seat by dragging it. The move is one action that takes
+it off and places it again, with no new kind of edit, so one undo puts it back where it was.
+
 Any seat, an empty one too, takes any reminder from the script or its loose characters, recorded
 characters first, with no ability source to pick. A note needs text, and this game's notes come
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
