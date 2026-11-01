@@ -28,7 +28,7 @@ A script is a bundled edition id or an embedded custom script in the official sc
   [homebrew characters](#homebrew-characters).
 - An id the bundled data doesn't know is kept, since it's usually a newer character. The sheet names
   it on a line of its own until an update bundles it.
-- `_meta` keeps the name, author, logo link and the Bootlegger's rules, printed after the jinxes.
+- `_meta` keeps the name, author, logo link and the Bootlegger's rules, printed under the Bootlegger.
   Fields for other apps are kept so a file round-trips, never shown. Night order arrays are dropped.
 
 A composed script lists each team in the official order, homebrew last by name. An imported script

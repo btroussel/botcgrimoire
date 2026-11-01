@@ -85,8 +85,10 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
           ) : null}
         </View>
   // Unchosen rows step back but their words still read on vellum; the dimmer icon carries the cue.
+  // What hangs under the row, such as the Bootlegger's rules, steps back with it.
+  const stepBack = { opacity: dim ? 0.8 : 1 }
   const details = (
-    <View style={{ opacity: dim ? 0.8 : 1 }}>
+    <View style={stepBack}>
       {name}
       <Text id={`script-sheet-ability-${row.id}`} style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
     </View>
@@ -117,7 +119,7 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
           >
             {details}
           </Pressable> : <View style={styles.rowAction}>{details}</View>}
-          {row.below}
+          {row.below ? <View style={[styles.below, stepBack]}>{row.below}</View> : null}
         </View>
       </View>
       {onRemove && !row.implied ? <IconButton icon="close" label={removeLabel ?? row.name} onPress={() => onRemove(row.id)} surface="paper" /> : null}
