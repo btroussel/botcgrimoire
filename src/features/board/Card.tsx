@@ -2,6 +2,7 @@
 // The token rises into place, the words follow a beat later, and a tap hands the phone back.
 import { useEffect, useState } from 'react'
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import type { TextStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { Alignment } from '../../content'
@@ -10,8 +11,9 @@ import type { CardSpec } from '../../ui/BoardInteraction'
 import { IconButton } from '../../ui/Button'
 import { usePhone } from '../../ui/breakpoint'
 import { durationFor, useReducedMotion } from '../../ui/motion'
-import { gutter, motion, palette, space, tokenSize, type } from '../../ui/theme'
+import { font, gutter, motion, palette, space, tokenSize, type } from '../../ui/theme'
 import { Token } from '../../ui/Token'
+import { slack, widthAtOnePoint } from './textWidth'
 
 export interface CardProps {
   readonly spec: CardSpec
@@ -30,9 +32,20 @@ const markOf = (spec: CardSpec): Alignment | undefined =>
 const rowTokenSize = (width: number, count: number, phone: boolean): number => {
   if (!phone) return tokenSize.show
   const across = Math.max(count, 1)
-  const usable = width - 2 * gutter.phone - space.lg * (across - 1)
+  // Each captioned cell is space.sm wider than its token, so its name has room under it.
+  const usable = width - 2 * gutter.phone - space.lg * (across - 1) - space.sm * across
   const fit = Math.floor(usable / across / 8) * 8
   return Math.min(tokenSize.show, Math.max(tokenSize.sheet, fit))
+}
+
+// The captions share one size, shrunk until the longest word among them fits a cell, since a
+// name broken mid-word reads as two.
+const captionFit = (names: readonly string[], width: number): TextStyle => {
+  const { fontSize = 24, lineHeight = 28 } = type.display.title
+  const words = names.flatMap((name) => name.split(/\s+/))
+  const widest = Math.max(...words.map((word) => widthAtOnePoint(word, font.display.semibold))) * slack * fontSize
+  const scale = width / widest
+  return scale < 1 ? { fontSize: Math.floor(fontSize * scale), lineHeight: Math.ceil(lineHeight * scale) } : {}
 }
 
 export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
@@ -47,6 +60,7 @@ export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
   const markArt = mark ? characterArt[mark]?.single : undefined
   const size = printed.length > 1 ? rowTokenSize(width, printed.length, phone) : tokenSize.show
   const captioned = printed.length > 1 && size < tokenSize.show
+  const captionStyle = captioned ? captionFit(printed.map((c) => c.name), size + space.sm) : undefined
   // What the reveal keys on: a re-render with an equal spec must not run it again.
   const revealKey = [spec.kind, spec.words, spec.caption, ...printed.map((c) => c.id)].join('|')
 
@@ -111,7 +125,7 @@ export const Card = ({ spec, onDismiss, closeLabel }: CardProps) => {
               <View key={`${c.id}-${i}`} style={[styles.cell, { width: captioned ? size + space.sm : size }]}>
                 <Token character={c.id} name={c.name} size={size} {...(spec.tint ? { alignment: spec.tint } : {})} />
                 {captioned ? (
-                  <Text style={[type.display.title, styles.caption, { color: p.text }]} numberOfLines={2}>
+                  <Text style={[type.display.title, styles.caption, captionStyle, { color: p.text }]} numberOfLines={2}>
                     {c.name}
                   </Text>
                 ) : null}
