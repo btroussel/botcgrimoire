@@ -1,6 +1,6 @@
 import { characters } from './index'
 import type { CharacterId } from './types'
-import { impliesBootlegger, parseScript, scriptAuthor, scriptCharacters, scriptFile, scriptHomebrew, scriptRules } from './scripts'
+import { impliesBootlegger, parseScript, scriptAuthor, scriptCards, scriptCharacters, scriptFile, scriptHomebrew, scriptRules } from './scripts'
 
 const meta = { id: '_meta', name: 'Test night', author: 'Us' }
 
@@ -63,6 +63,17 @@ describe('parseScript', () => {
       jinxes: [{ id: 'scarletwoman', reason: 'The Lamp stays lit.' }],
       special: [{ type: 'vote', name: 'multiplier', value: 3 }, { type: 'signal', name: 'card', value: 'Lit', time: 'night' }],
     }] })
+  })
+
+  test('a homebrew character\'s card signal is the one special feature read, as a card to show', () => {
+    const parsed = parseScript([meta, 'imp', {
+      id: 'Lamp', name: 'Lamp', team: 'outsider', ability: 'x',
+      special: [{ type: 'vote', name: 'multiplier', value: 3 }, { type: 'signal', name: 'card', value: ' You are lit ' },
+        { type: 'signal', name: 'card', value: 2 }, { type: 'signal', name: 'card', value: ' ' }],
+    }, { id: 'wick', name: 'Wick', team: 'townsfolk', ability: 'x', special: [{ type: 'signal', name: 'grimoire' }] }])
+    if ('errors' in parsed) throw new Error(parsed.errors.join())
+    expect(scriptCards(parsed)).toEqual([{ character: 'lamp', text: 'You are lit' }])
+    expect(scriptCards('tb')).toEqual([])
   })
 
   test('_meta keeps the Bootlegger\'s rules and the links and flags other apps use', () => {

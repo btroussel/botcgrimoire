@@ -18,6 +18,7 @@ import { useViewport } from '../../ui/Viewport'
 
 export interface InfoTokenItem {
   readonly kind: CardKind
+  readonly key?: string // set where several items share a kind, as homebrew cards do
   readonly label: string // the token's words, short, sentence case
   readonly characters?: readonly string[] // current characters used in a composed preview
 }
@@ -45,9 +46,13 @@ const Preview = ({ item, p, stacked }: { readonly item: InfoTokenItem; readonly 
   const mark = previewMark[item.kind]
   const art = 'art' in mark ? mark.art : undefined
   const glyph = 'glyph' in mark ? mark.glyph : undefined
+  // A homebrew character's own card shows that character.
+  const own = item.kind === 'custom' ? item.characters?.[0] : undefined
   return (
     <View accessible={false} style={[styles.preview, stacked && styles.stackedPreview]}>
-      {art !== undefined ? (
+      {own !== undefined ? (
+        <Token character={own} size={50} />
+      ) : art !== undefined ? (
         <Image source={art} style={styles.previewArt} resizeMode="contain" accessible={false} />
       ) : glyph === 'identity' || glyph === 'player' ? (
         <View style={styles.masks}>
@@ -121,7 +126,7 @@ export const InfoTokenList = ({ items, onPick }: InfoTokenListProps) => {
   return (
         <View style={styles.grid}>
           {items.map((item) => (
-            <View key={item.kind} style={styles.half}>
+            <View key={item.key ?? item.kind} style={styles.half}>
               <Row item={item} p={p} stacked={stacked} onPick={onPick} />
             </View>
           ))}

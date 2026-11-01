@@ -2,6 +2,7 @@
 import { useState } from 'react'
 
 import type { CharacterId } from '../../content'
+import { scriptCards } from '../../content'
 import type { SeatId } from '../../engine'
 import { bluffsOf } from '../../store/bluffs'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
@@ -68,7 +69,11 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
     kind: x.kind,
     label: t(labelKey[x.kind]),
     ...(x.kind === 'notInPlay' ? { characters: savedBluffs } : {}),
-  })), { kind: 'custom', label: t('board.customNote') }]
+  })), { kind: 'custom', label: t('board.customNote') },
+  // A homebrew character's own card, written in its script, comes after the note and shows at once.
+  ...(board ? scriptCards(board.script) : []).map((c): InfoTokenItem => ({
+    kind: 'custom', key: `card/${c.character}/${c.text}`, label: c.text, characters: [c.character],
+  }))]
 
   const show = (token: ShowToken, choice: ShowChoice) => {
     onClose()
@@ -78,7 +83,13 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
   }
   const pickToken = (item: InfoTokenItem) => {
     if (item.kind === 'custom') {
-      setStep({ kind: 'note' })
+      const own = item.characters?.[0] as CharacterId | undefined
+      if (own === undefined) {
+        setStep({ kind: 'note' })
+        return
+      }
+      onClose()
+      interaction.showCard({ kind: 'custom', words: item.label, characters: [{ id: own, name: e.name(own) }] })
       return
     }
     const token = showTokens.find((x) => x.kind === item.kind)

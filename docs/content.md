@@ -41,7 +41,9 @@ recognised by size, since the schema has no flag for it.
 
 A homebrew character is a script item in the schema's object form, so the file stays readable by
 other tools. Import needs an id, name, team and ability, and drops a wrongly typed optional field
-rather than refusing the file. `special` features are kept for other apps, never run.
+rather than refusing the file. `special` features are kept for other apps, never run. The one the
+app reads is a `signal` named `card`, the official app's custom Storyteller card: its text becomes
+one more card to show, since showing words runs nothing.
 
 Lookups fall back to a registry of homebrew records, so a homebrew character shows wherever a
 bundled one does. A bundled id always wins, and the open game's script fills the registry last, so

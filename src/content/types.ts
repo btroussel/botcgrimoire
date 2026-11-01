@@ -49,7 +49,7 @@ export interface Homebrew {
   readonly remindersGlobal?: readonly string[]
   readonly setup?: boolean
   readonly jinxes?: readonly HomebrewJinx[] // with other characters, shown when both are on the script
-  readonly special?: readonly HomebrewSpecial[] // other apps' integration features, kept, never run
+  readonly special?: readonly HomebrewSpecial[] // other apps' integration features, kept, never run; a card's text is shown
   readonly edition?: string
 }
 
