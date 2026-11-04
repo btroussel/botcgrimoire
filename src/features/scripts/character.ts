@@ -76,6 +76,30 @@ export const shownImage = (image: Homebrew['image']): string | undefined => {
   return first !== undefined && first.startsWith('data:image/') ? first : undefined
 }
 
+// The two images the editor offers: the main one, drawn on the team's own side, and an optional
+// one for when the character changes side. The schema lists the usual side then the flipped one,
+// or for a Traveller unaligned, good and evil. The board draws every Traveller good or evil, so
+// the main image fills both of its first places.
+export interface DraftImages {
+  readonly main?: string
+  readonly flipped?: string
+}
+
+export const imagesOf = (image: Homebrew['image'], team: Team): DraftImages => {
+  const [first, second, third] = (typeof image === 'string' ? [image] : (image ?? [])).map((uri) => uri || undefined)
+  const main = team === 'traveller' ? (second ?? first) : first
+  const flipped = team === 'traveller' ? third : second
+  return main === undefined ? {} : { main, ...(flipped !== undefined ? { flipped } : {}) }
+}
+
+export const imageOf = ({ main, flipped }: DraftImages, team: Team): Homebrew['image'] =>
+  main === undefined || flipped === undefined ? main : team === 'traveller' ? [main, main, flipped] : [main, flipped]
+
+// A Traveller numbers its images differently, so moving to or from one rewrites the list. Other
+// team changes keep it as it is: the main image stays the main one.
+export const imageForTeam = (image: Homebrew['image'], from: Team, to: Team): Homebrew['image'] =>
+  (from === 'traveller') === (to === 'traveller') ? image : imageOf(imagesOf(image, from), to)
+
 // The official night order a homebrew character is placed in: every character step and the
 // dusk, information and dawn markers, in order. Placing a character after a step gives it the
 // position half way to the next one, so the sheets sort it between the two.

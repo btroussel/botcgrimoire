@@ -1,6 +1,9 @@
-import type { Homebrew } from '../../content'
-import { asCharacterId, character, nightMarkers, t } from '../../content'
-import { after, anchorOf, characterOf, characterProblem, draftOfCharacter, limits, momentOf, moveBy, nightMoments, nightSteps, shownImage, teamWords } from './character'
+import type { Homebrew, Team } from '../../content'
+import { asCharacterId, character, homebrewArt, nightMarkers, t, teams } from '../../content'
+import {
+  after, anchorOf, characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, nightMoments, nightSteps,
+  shownImage, teamWords,
+} from './character'
 import { fitWithin, hasTransparency, visibleBounds } from './image'
 
 const markers = { dusk: 'Dusk', minionInfo: 'Minion info', demonInfo: 'Demon info', dawn: 'Dawn' }
@@ -47,6 +50,33 @@ describe('the character draft', () => {
     expect(shownImage(['data:image/png;base64,BB', 'x'])).toBe('data:image/png;base64,BB')
     expect(shownImage('https://example.invalid/a.png')).toBeUndefined()
     expect(shownImage(undefined)).toBeUndefined()
+  })
+
+  const [main, flipped] = ['data:image/png;base64,AA', 'data:image/png;base64,BB']
+
+  test('writes the flipped image where the board draws it on the other side', () => {
+    const record = (team: Team): Homebrew => ({ id: 'lamp', name: 'Lamp', team, ability: 'x', image: imageOf({ main, flipped }, team)! })
+    expect(homebrewArt(record('townsfolk'))).toEqual({ good: { uri: main }, evil: { uri: flipped } })
+    expect(homebrewArt(record('demon'))).toEqual({ evil: { uri: main }, good: { uri: flipped } })
+    expect(homebrewArt(record('traveller'))).toMatchObject({ good: { uri: main }, evil: { uri: flipped } })
+    expect(imageOf({ main }, 'townsfolk')).toBe(main)
+    expect(imageOf({}, 'townsfolk')).toBeUndefined()
+  })
+
+  test('reads back the images it wrote, and an imported Traveller\'s good and evil ones', () => {
+    for (const team of teams) expect(imagesOf(imageOf({ main, flipped }, team), team)).toEqual({ main, flipped })
+    expect(imagesOf(main, 'traveller')).toEqual({ main })
+    expect(imagesOf(['u', 'g', 'e'], 'traveller')).toEqual({ main: 'g', flipped: 'e' })
+    expect(imagesOf(['', 'x'], 'townsfolk')).toEqual({})
+    expect(imagesOf(undefined, 'townsfolk')).toEqual({})
+  })
+
+  test('a team change keeps the main image the main one', () => {
+    const pair = imageOf({ main, flipped }, 'townsfolk')
+    expect(imageForTeam(pair, 'townsfolk', 'minion')).toBe(pair)
+    expect(imageForTeam(pair, 'townsfolk', 'traveller')).toEqual([main, main, flipped])
+    expect(imageForTeam([main, main, flipped], 'traveller', 'outsider')).toEqual([main, flipped])
+    expect(imageForTeam(main, 'townsfolk', 'traveller')).toBe(main)
   })
 
   test('names its team in the singular', () => {
