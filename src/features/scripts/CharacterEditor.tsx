@@ -1,5 +1,5 @@
 // Writing a homebrew character (docs/app.md, Scripts): its token as it will look on the board,
-// which is also where its image is chosen, the schema's fields, its reminder tokens and when it
+// which is also where its images are chosen, the schema's fields, its reminder tokens and when it
 // wakes. A changed draft is kept on the device until it is saved or discarded, and leaving it in
 // the app asks first. Saving hands the record back; the screen that opened the editor decides
 // where it goes.
@@ -7,7 +7,8 @@ import { useId, useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 
-import type { Homebrew, Team } from '../../content'
+import type { Alignment, Homebrew, Team } from '../../content'
+import { teamSide } from '../../content'
 import { tokenArt } from '../../content/generated/art'
 import { mintCharacterId, useStore } from '../../store'
 import { pickFile } from '../../store/browser'
@@ -26,7 +27,7 @@ import { PrintedName } from '../../ui/Token'
 import { TokenDisc } from '../../ui/TokenDisc'
 import { border, focusRing, hoverWash, motion, palette, radius, space, touch, type } from '../../ui/theme'
 import type { CharacterDraft } from './character'
-import { characterOf, characterProblem, draftOfCharacter, limits, nightSteps, shownImage, teamWords } from './character'
+import { characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, nightSteps, shownImage, teamWords } from './character'
 import { keepCharacter, useKept } from './drafts'
 import { iconFromFile } from './image'
 import { NightPlacement } from './NightPlacement'
@@ -54,6 +55,7 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
   const [reading, setReading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [flippedShown, setFlippedShown] = useState(false) // the token previewed on the other side
   const set = (patch: Partial<CharacterDraft>) => setDraft((d) => ({ ...d, ...patch }))
 
   const markers = useMemo(() => ({ dusk: t('scripts.dusk'), minionInfo: t('scripts.minionInfo'), demonInfo: t('scripts.demonInfo'), dawn: t('scripts.dawn') }), [t])
@@ -76,13 +78,24 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
     })
   }
 
+  const images = imagesOf(draft.image, draft.team)
+  const own = teamSide(draft.team) // nothing for a Fabled or Loric, which never changes side
+  const otherSide: Alignment | undefined = own === undefined ? undefined : own === 'good' ? 'evil' : 'good'
+  // The other side has an image of its own only once the main one exists, as the schema lists it second.
+  const flipped = flippedShown && otherSide !== undefined && images.main !== undefined ? otherSide : undefined
+
+  // The image chosen is for the side the token shows.
   const chooseImage = async () => {
     setImageError(false)
     const file = await pickFile('image/*')
     if (!file) return
     setReading(true)
     try {
-      set({ image: await iconFromFile(file) })
+      const uri = await iconFromFile(file)
+      setDraft((d) => {
+        const now = imagesOf(d.image, d.team)
+        return { ...d, image: imageOf(flipped ? { ...now, flipped: uri } : { main: uri, ...(now.flipped ? { flipped: now.flipped } : {}) }, d.team) }
+      })
     } catch {
       setImageError(true)
     } finally {
@@ -90,11 +103,15 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
     }
   }
 
-  const image = shownImage(draft.image)
-  // The character's art at any size: its own image, or its team's icon until it has one.
-  const art = (size: number) => image
-    ? <img src={image} alt="" draggable={false} width={size} height={size} style={{ width: size, height: size, objectFit: 'contain' }} />
-    : <CharacterIcon id="" team={draft.team} size={size} />
+  const image = shownImage(images.main)
+  // The character's art at any size: its own image, or its team's icon until it has one. On the
+  // other side, its image for that side, or the main one, as the board falls back.
+  const art = (size: number, side?: Alignment) => {
+    const uri = side ? shownImage(images.flipped ?? images.main) : image
+    return uri
+      ? <img src={uri} alt="" draggable={false} width={size} height={size} style={{ width: size, height: size, objectFit: 'contain' }} />
+      : <CharacterIcon id="" team={draft.team} size={size} {...(side ? { tint: side } : {})} />
+  }
   const reminders = draft.reminders.filter((r) => r.trim() !== '').length
   const instruction = (value: string, onChange: (text: string) => void) =>
     <Field label={t('scripts.nightInstruction')} value={value} maxLength={limits.instruction} multiline lines={2} onChange={onChange} />
@@ -109,15 +126,28 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
             <View style={styles.identity}>
               <div className="editor-head">
                 <div className="editor-preview">
-                  <TokenPreview name={draft.name} art={art(previewSize * 0.64)} disabled={reading}
-                    label={t(image ? 'scripts.changeImage' : 'scripts.chooseImage')} onPress={() => void chooseImage()}
+                  <TokenPreview name={draft.name} art={art(previewSize * 0.64, flipped)} disabled={reading}
+                    label={flipped ? t(flipped === 'good' ? 'scripts.chooseGoodImage' : 'scripts.chooseEvilImage') : t(image ? 'scripts.changeImage' : 'scripts.chooseImage')}
+                    onPress={() => void chooseImage()}
                     markers={[
                       ...(draft.firstNight !== undefined ? ['firstnight'] : []),
                       ...(draft.otherNight !== undefined ? ['othernight'] : []),
                       ...(draft.setup ? ['setup'] : []),
                       ...(reminders > 0 ? [`count_${Math.min(7, reminders)}`] : []),
                     ]} />
-                  {draft.image !== undefined ? <Button label={t('scripts.removeImage')} onPress={() => set({ image: undefined })} variant="text" surface="paper" /> : null}
+                  {own !== undefined && otherSide !== undefined && images.main !== undefined ? (
+                    <SideChoice label={t('scripts.imageSide')} sides={[own, otherSide]} value={flipped ?? own} words={{ good: t('board.good'), evil: t('board.evil') }}
+                      art={(side) => art(sideIcon, side === own ? undefined : side)} onChange={(side) => setFlippedShown(side !== own)} />
+                  ) : null}
+                  {flipped === undefined && draft.image !== undefined
+                    ? <Button label={t(images.flipped ? 'scripts.removeImages' : 'scripts.removeImage')} onPress={() => { setFlippedShown(false); set({ image: undefined }) }} variant="text" surface="paper" />
+                    : null}
+                  {flipped !== undefined && images.flipped !== undefined
+                    ? <Button label={t('scripts.useSameImage')} onPress={() => set({ image: images.main })} variant="text" surface="paper" />
+                    : null}
+                  {flipped !== undefined && images.flipped === undefined
+                    ? <Text style={[type.text.small, styles.centred, { color: palette.inkMuted }]}>{t('scripts.sameImageHint')}</Text>
+                    : null}
                   {imageError ? <Text accessibilityRole="alert" style={[type.text.small, styles.centred, { color: palette.danger }]}>{t('scripts.imageUnreadable')}</Text> : null}
                 </div>
                 <View style={styles.identity}>
@@ -125,7 +155,8 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
                   <Field label={t('scripts.characterAbility')} value={draft.ability} maxLength={limits.ability} multiline lines={2} onChange={(ability) => set({ ability })} />
                 </View>
               </div>
-              <TeamChoice label={t('scripts.filterTeam')} value={draft.team} words={teamWords(t)} onChange={(team) => set({ team })} />
+              <TeamChoice label={t('scripts.filterTeam')} value={draft.team} words={teamWords(t)}
+                onChange={(team) => setDraft((d) => ({ ...d, team, image: imageForTeam(d.image, d.team, team) }))} />
               <label className="editor-toggle">
                 <span style={toggleLabel}>{t('scripts.setupFlag')}</span>
                 <input type="checkbox" role="switch" className="editor-switch" checked={draft.setup} onChange={(event) => set({ setup: event.target.checked })} />
@@ -238,6 +269,32 @@ const TeamChoice = ({ label, value, words, onChange }: {
 
 const teamIcon = 32
 
+// Which side the token preview shows, the team's own first, each tile with that side's art. The
+// choice decides which image a tap on the token replaces. Native radios, as for the teams.
+const SideChoice = ({ label, sides, value, words, art, onChange }: {
+  readonly label: string
+  readonly sides: readonly [Alignment, Alignment]
+  readonly value: Alignment
+  readonly words: Readonly<Record<Alignment, string>>
+  readonly art: (side: Alignment) => ReactNode
+  readonly onChange: (side: Alignment) => void
+}) => {
+  const name = useId()
+  return (
+    <div className="editor-sides" role="radiogroup" aria-label={label}>
+      {sides.map((side) => (
+        <label key={side} className="editor-side">
+          <input type="radio" name={name} value={side} checked={side === value} aria-label={words[side]} onChange={() => onChange(side)} />
+          {art(side)}
+          <span className="editor-team-name" style={{ color: side === 'good' ? palette.goodOnPaper : palette.evilOnPaper }}>{words[side]}</span>
+        </label>
+      ))}
+    </div>
+  )
+}
+
+const sideIcon = 24
+
 // Once the panel is 600 points wide the token stands beside the name and ability, about their
 // height, and the teams run four over three; a narrower one centres the token above everything. A
 // container query decides before paint, by the panel's width rather than the window's. Every
@@ -256,11 +313,19 @@ const EditorStyles = () => <style href="grimoire-character-editor" precedence="d
     transition: border-color ${motion.duration.mark}ms ${motion.css.ease}, background-color ${motion.duration.mark}ms ${motion.css.ease};
   }
   .editor-team:nth-child(n+4) { grid-column: span 3; }
-  .editor-team input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
-  .editor-team:hover { background-color: ${hoverWash.paper}; }
-  .editor-team:active { opacity: ${motion.pressedOpacity}; }
-  .editor-team:has(input:focus-visible) { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; }
-  .editor-team:has(input:checked) { border-color: ${palette.accent}; background-color: ${palette.paperPressed}; }
+  .editor-sides { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: ${space.xs}px; width: ${previewSize}px; }
+  .editor-side {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: ${space.xxs}px; min-height: ${touch}px; padding: ${space.xs}px; cursor: pointer;
+    border: ${border}px solid ${palette.parchmentShade}; border-radius: ${radius.control}px;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color ${motion.duration.mark}ms ${motion.css.ease}, background-color ${motion.duration.mark}ms ${motion.css.ease};
+  }
+  .editor-team input, .editor-side input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+  .editor-team:hover, .editor-side:hover { background-color: ${hoverWash.paper}; }
+  .editor-team:active, .editor-side:active { opacity: ${motion.pressedOpacity}; }
+  .editor-team:has(input:focus-visible), .editor-side:has(input:focus-visible) { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; }
+  .editor-team:has(input:checked), .editor-side:has(input:checked) { border-color: ${palette.accent}; background-color: ${palette.paperPressed}; }
   .editor-team-name {
     max-width: 100%; text-align: center;
     font: ${type.text.small.fontSize}px/${type.text.small.lineHeight}px ${type.text.strong.fontFamily};
@@ -290,7 +355,7 @@ const EditorStyles = () => <style href="grimoire-character-editor" precedence="d
     .editor-team:nth-child(n+5) { grid-column: span 4; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .editor-team, .editor-switch, .editor-switch::before { transition: none; }
+    .editor-team, .editor-side, .editor-switch, .editor-switch::before { transition: none; }
   }
 `}</style>
 

@@ -180,10 +180,12 @@ Editions have no Share, since every device already has them.
 ### Homebrew characters
 
 A Storyteller can write their own characters, with art, reminders, a setup mark and night wakes.
-Saving one updates the scripts that carry it; games keep their own copy. Each night offers three
-moments around its fixed points, on one rule: whatever makes a player drunk or poisoned wakes
-before the characters it can disable, and information wakes after all of it. The Storyteller can
-also pick an exact place in the official order.
+A character can carry a second image for the side opposite its team, since the tint of the art is
+the only mark of alignment on the board ([UI](ui.md#tokens-and-art)). Saving one updates the
+scripts that carry it; games keep their own copy. Each night offers three moments around its fixed
+points, on one rule: whatever makes a player drunk or poisoned wakes before the characters it can
+disable, and information wakes after all of it. The Storyteller can also pick an exact place in the
+official order.
 
 ## Search and sharing
 

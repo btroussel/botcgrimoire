@@ -56,6 +56,11 @@ Only an embedded `data:image/` icon is drawn. A web address is kept but never fe
 must not need the network or tell another server who is playing. An icon made in the app is cropped
 to its visible pixels, or a photo to a centred disc, then sized like the bundled icons.
 
+The schema lists a character's icons as its usual side then its flipped one, or for a Traveller
+unaligned, good and evil, and one icon serves every side. The editor writes a main icon and an
+optional flipped one in that order. The board draws every Traveller good or evil, so a Traveller's
+main icon fills its first two places.
+
 ## UI strings
 
 The app's own text lives in `src/content/locales/<tag>/<area>.json`, one folder per BCP 47 tag.
