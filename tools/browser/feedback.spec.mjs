@@ -18,7 +18,10 @@ test('someone who has played finds Feedback on Home, writes from Settings and re
   await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
   await expect(page).toHaveURL(/\/game\/[^/]+$/)
   await open(page, '/')
-  await expect(page.getByRole('button', { name: 'About this app', exact: true })).toHaveCount(0)
+  // About stays for anyone; beside Feedback it keeps only its glyph.
+  const about = page.getByRole('button', { name: 'About this app', exact: true })
+  await expect(about).toBeVisible()
+  await expect(about).not.toContainText('About this app')
   await page.getByRole('button', { name: 'Feedback', exact: true }).tap()
   await expect(page).toHaveURL(/\/settings\?section=feedback$/)
   await expect(page.getByRole('heading', { name: 'Feedback', exact: true })).toBeInViewport()
