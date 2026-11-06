@@ -224,8 +224,11 @@ Everything a game needs is bundled, so after the first full download a game runs
 and no account. Installing is left to the browser's own controls.
 
 The app checks for an update on launch, when it becomes visible and every minute while visible.
-A fully downloaded build takes over and refreshes open windows, games included, with no prompt:
-every edit is already saved. A failed download keeps the current build.
+A fully downloaded build waits, with no prompt, until a window of the app is hidden or not on a
+game, then takes over and refreshes every open window. Every edit is already saved, but a reload in
+the middle of a game would close a card being shown to a player, an open sheet and the redo
+history. A second window open beside the game can still let the build in. A failed download keeps
+the current build.
 [Store](store.md#offline-build-recovery) owns caches and recovery.
 
 ## Language

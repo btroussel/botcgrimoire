@@ -58,7 +58,7 @@ self.addEventListener('install', (event) => {
       await caches.delete(CACHE)
       throw failed.reason
     }
-    await self.skipWaiting()
+    // The build waits for a page to ask for it, so a game in view is never reloaded.
   })())
 })
 

@@ -14,7 +14,7 @@ const template = await readFile(new URL('./service-worker.js', import.meta.url),
 const bytesOf = async (response) => Buffer.from(await response.arrayBuffer())
 const responseOf = (value) => value instanceof Response ? value.clone() : new Response(value)
 
-function worker({ windows = [], failDownload = false, failCacheRead = false, source = script, files, browserCache = new Map(),
+function worker({ failDownload = false, failCacheRead = false, source = script, files, browserCache = new Map(),
   storage = new Map([['unrelated', new Map()], ['botc-grimoire-old', new Map()]]) } = {}) {
   const handlers = {}
   const network = []
@@ -58,7 +58,7 @@ function worker({ windows = [], failDownload = false, failCacheRead = false, sou
     self: {
       location: { origin },
       addEventListener: (name, handler) => { handlers[name] = handler },
-      clients: { matchAll: async () => windows, claim: async () => { claimed = true } },
+      clients: { claim: async () => { claimed = true } },
       skipWaiting: async () => { skipped = true },
     },
   })
@@ -202,7 +202,6 @@ test('offline navigation includes unvisited game IDs, history and query strings'
     assert.deepEqual(await bytesOf(await w.navigate(route)), await readFile(new URL(file, root)))
   }
   assert.equal(w.network.length, 0)
-  assert.equal(w.skipped(), true)
 })
 
 test('missing cached pages and failed cache reads fall back to the requested network URL', async () => {
@@ -368,13 +367,12 @@ test('activation removes only this app’s old caches', async () => {
   assert.equal(w.claimed(), true)
 })
 
-test('verified updates activate automatically on any screen with multiple windows', async () => {
-  for (const paths of [['/game/local-123'], ['/scripts'], ['/new'], ['/', '/game/local-123']]) {
-    const windows = paths.map((path, index) => ({ id: String(index), url: origin + path }))
-    const w = worker({ source: build('automatic', new Map()), windows })
-    await w.dispatch('install')
-    assert.equal(w.skipped(), true)
-  }
+test('a verified build waits until a page asks for it', async () => {
+  const w = worker({ source: build('waiting', new Map()) })
+  await w.dispatch('install')
+  assert.equal(w.skipped(), false)
+  await w.dispatch('message', { data: 'APPLY_UPDATE' })
+  assert.equal(w.skipped(), true)
 })
 
 test('reports the build identity without activating the update', async () => {
