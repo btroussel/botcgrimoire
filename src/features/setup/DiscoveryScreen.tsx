@@ -130,14 +130,16 @@ export const Player = ({ player, title, t, onName, onNext, onBack, bag }: {
   const insets = useSafeAreaInsets()
   const [editing, setEditing] = useState(false)
   const upright = Math.min(360, width - 64, Math.max(280, height - 280))
-  // While the name is typed, the token shrinks to stay whole above the field and the keyboard.
-  // It returns to size on blur, before a reveal begins, so a turn never resizes mid-flip.
-  const size = wide ? Math.max(160, Math.min(360, height - 136, (width - 96) / 2))
-    : editing && visible > 0 ? Math.max(120, Math.min(upright, visible - insets.top - aboveName)) : upright
+  // While the name is typed, the token and the bag shrink to stay whole above the field and the
+  // keyboard, and no further: a tablet has room for both, and a field that moves under the finger
+  // as it is tapped loses the tap. They return to size on blur, before a reveal begins, so a turn
+  // never resizes mid-flip.
+  const fits = editing && visible > 0 ? visible - insets.top - aboveName : Infinity
+  const size = wide ? Math.max(160, Math.min(360, height - 136, (width - 96) / 2)) : Math.max(120, Math.min(upright, fits))
   // A draw turn gives the bag more room than the token when the screen has it, enough to see into
   // it. The token stays centred in that room, so the name below never moves when it rises.
-  const room = bag && !editing
-    ? Math.max(size, wide ? Math.min((width - 96) / 2, height - 136) : Math.min(width - 32, height - 260, 600))
+  const room = bag
+    ? Math.max(size, wide ? Math.min((width - 96) / 2, height - 136) : Math.min(width - 32, height - 260, 600, fits))
     : size
   const [draft, setDraft] = useState(player.name)
   const savedName = useRef(player.name)
