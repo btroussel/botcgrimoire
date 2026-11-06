@@ -88,7 +88,6 @@ export const ReminderPicker = ({ target, onClose, onWriteNote }: ReminderPickerP
             size={tokenSize}
             label={chip.label}
             {...(chip.character !== undefined ? { character: chip.character } : {})}
-            contained
             accessibilityLabel={chip.a11y}
             onPress={chip.onPress}
           />

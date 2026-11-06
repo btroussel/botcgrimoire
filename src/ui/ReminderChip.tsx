@@ -1,6 +1,8 @@
 // A reminder token: a purple disc with large source art and its name curved along the lower rim.
 // Its fixed footprint lets the ring place reminders without measuring the text. Notes use
-// the same disc, showing their text or initials when labels are hidden.
+// the same disc, their text clipped to the few lines that fit the disc's slot, so a long note
+// never covers a neighbour; its window holds the whole text. With labels hidden a note shows its
+// initials.
 import { memo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -28,7 +30,6 @@ export interface ReminderChipProps {
   readonly disabled?: boolean // keep the control and token face mounted while a stack is collapsed
   readonly discHitArea?: boolean // board tokens respond only inside the visible disc
   readonly arrive?: boolean // placed on the board: it grows in on mount, where a picker's copy is simply there
-  readonly contained?: boolean // a note's text wraps within its own slot, for a grid of notes side by side
   readonly onPress?: () => void
   readonly accessibilityLabel?: string
 }
@@ -57,7 +58,6 @@ export const ReminderChip = ({
   disabled = false,
   discHitArea = false,
   arrive = false,
-  contained = false,
   onPress,
   accessibilityLabel,
 }: ReminderChipProps) => {
@@ -80,7 +80,7 @@ export const ReminderChip = ({
     >
       <Placed arrive={arrive}>
         <View style={[styles.discBox, { width: size + 2 * space.xs, height: size }]}>
-          <ReminderFace size={size} label={label} showLabel={showLabel} noteWidth={contained ? size + 2 * space.xs : size * 1.5}
+          <ReminderFace size={size} label={label} showLabel={showLabel} noteWidth={size + 2 * space.xs}
             {...(character !== undefined ? { character } : {})} {...(art !== undefined ? { art } : {})} {...(alignment ? { alignment } : {})} />
         </View>
       </Placed>
@@ -91,6 +91,9 @@ export const ReminderChip = ({
 const Placed = ({ arrive, children }: { readonly arrive: boolean; readonly children: ReactNode }) => arrive
   ? <Appear style={styles.placed} pointerEvents="none">{children}</Appear>
   : <View style={styles.placed} pointerEvents="none">{children}</View>
+
+// Three lines of a note's text fit the disc's height.
+const noteLines = 3
 
 // The face depends only on these values, so a stack redrawn for its seat leaves each disc's
 // art and printed name alone.
@@ -116,7 +119,7 @@ const ReminderFace = memo(function ReminderFace({ size, label, noteWidth, charac
       ) : null}
     </Disc>
     {character === undefined && art === undefined ? <View style={styles.centre}>
-      <Text style={[type.text.label, styles.note, { color: p.text, width: noteWidth, fontSize: size * 10 / 48, lineHeight: size * 11 / 48 }]}>
+      <Text numberOfLines={noteLines} style={[type.text.label, styles.note, { color: p.text, width: noteWidth, fontSize: size * 10 / 48, lineHeight: size * 11 / 48 }]}>
         {showLabel ? label : noteInitials(label)}
       </Text>
     </View> : null}

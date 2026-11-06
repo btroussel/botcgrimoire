@@ -149,6 +149,9 @@ Stacked reminders always show each one's rim and name, and spread out on hover o
 or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
 it.
 
+A note's text stays within its disc's slot, three lines at most, on the board and in the picker, so
+a long note never runs over a neighbour or a name. A tap opens the whole text in its window.
+
 A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it
 off and a pan or a pinch that starts on it still moves the board; a mouse lifts it once it moves.
 Lifted, it rides above the finger, the seat it would land on wears the brass ring and the board
