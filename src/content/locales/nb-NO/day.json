@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Avbryt nominasjonen: {by} → {of}",
+  "cancelExile": "Avbryt forvisningen: {of}",
   "mostVotes": "Flest stemmer",
   "votesLabel": {
     "one": "stemme",
@@ -8,10 +9,15 @@
   "noVoters": "Ingen hender registrert.",
   "voted": "Stemmen er registrert",
   "nominationArrow": "{by} nominerer {of}",
+  "exileOf": "Forvisning: {of}",
   "manualNight": "Start neste natt",
   "manualNomination": {
     "one": "{by} → {of}: {count} stemme",
     "other": "{by} → {of}: {count} stemmer"
+  },
+  "manualExile": {
+    "one": "Forvisning: {of}, {count} stemme",
+    "other": "Forvisning: {of}, {count} stemmer"
   },
   "timerAdd": "Legg til nedtelling",
   "timerAddThirtySeconds": "Legg til 30 sekunder",
@@ -32,5 +38,9 @@
   "votesToTieExecute": {
     "one": "{count} stemme for uavgjort, {execute} for å henrette",
     "other": "{count} stemmer for uavgjort, {execute} for å henrette"
+  },
+  "votesToExile": {
+    "one": "{count} stemme for å forvise",
+    "other": "{count} stemmer for å forvise"
   }
 }

@@ -168,6 +168,7 @@ export const storytellerNominates = (of: string): Step => (id) => ({ kind: 'nomi
 
 // A nomination of the Storyteller, with an Atheist at the table.
 export const nominateStoryteller = (by: string): Step => (id) => ({ kind: 'nominate', by: id(by), of: 'storyteller' })
+export const exile = (of: string): Step => (id) => ({ kind: 'nominate', by: 'storyteller', of: id(of), exile: true })
 
 // What a seat was told. `truth` defaults to what was told, so an honest info is one argument.
 export const info = (

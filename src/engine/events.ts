@@ -88,8 +88,9 @@ export type Payload =
   | { readonly kind: 'execute'; readonly seat?: SeatId; readonly cause: ExecuteCause }
   | { readonly kind: 'exile'; readonly seat: SeatId }
   | { readonly kind: 'revive'; readonly seat: SeatId }
-  // The Storyteller, who is not a seat, may nominate or be nominated.
-  | { readonly kind: 'nominate'; readonly by: SeatId | 'storyteller'; readonly of: SeatId | 'storyteller'; readonly secret?: boolean }
+  // The Storyteller, who is not a seat, may nominate or be nominated. An exile is a Traveller's
+  // ballot that anyone may call, so it names no caller and its `by` is the Storyteller.
+  | { readonly kind: 'nominate'; readonly by: SeatId | 'storyteller'; readonly of: SeatId | 'storyteller'; readonly secret?: boolean; readonly exile?: true }
   // `free` is a hand that spent no ghost vote. Every new vote carries it, since a ghost vote is
   // spent by its own edit; in an older log, a dead hand without it spent one.
   | { readonly kind: 'vote'; readonly nomination: EventId; readonly seat: SeatId; readonly weight: number; readonly free?: boolean }

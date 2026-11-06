@@ -39,6 +39,7 @@
   "makeEvil": "Volver malvado",
   "makeGood": "Volver bueno",
   "nominateSelf": "Nominarse",
+  "callExile": "Pedir el exilio",
   "nominatePlayer": "Nominar a {name}",
   "emptySeat": "Vaciar asiento",
   "clearCharacter": "Quitar el rol",

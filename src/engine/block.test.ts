@@ -1,4 +1,4 @@
-import { nominationThresholds, onTheBlock } from './block'
+import { exileThreshold, nominationThresholds, onTheBlock } from './block'
 import type { Event, Payload } from './events'
 import { today } from './grimoire'
 import { asEventId, asSeatId } from './ids'
@@ -90,4 +90,16 @@ test('execution markers reset on a new day and replay restores the earlier refer
   const nextDay = boardWith({ kind: 'markForExecution', seat: other }, { kind: 'phase', to: 'night' }, { kind: 'phase', to: 'day' })
   expect(nextDay.days.at(-1)?.markedForExecution).toBeUndefined()
   expect(onTheBlock(nextDay)).toBeUndefined()
+})
+
+test('an exile needs half the living, and neither sets nor reaches the execution\'s target', () => {
+  const exile: Payload = { kind: 'nominate', by: 'storyteller', of: table.id('G'), exile: true }
+  expect(exileThreshold(boardWith())).toBe(4)
+  expect(exileThreshold(boardWith({ kind: 'kill', seat: table.id('G'), cause: 'storyteller' }))).toBe(3)
+  const exiled = boardWith(exile, total(6))
+  expect(today(exiled)?.nominations[0]?.exile).toBe(true)
+  expect(onTheBlock(exiled)).toBeUndefined()
+  expect(nominationThresholds(exiled)).toEqual({ execute: 4 })
+  expect(onTheBlock(boardWith(exile, total(6), { kind: 'nominate', by: table.id('A'), of: nominee },
+    { kind: 'setVoteTotal', nomination: second, total: 4 }))).toBe(nominee)
 })

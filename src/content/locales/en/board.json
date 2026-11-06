@@ -39,6 +39,7 @@
   "makeEvil": "Make evil",
   "makeGood": "Make good",
   "nominateSelf": "Nominate self",
+  "callExile": "Call for exile",
   "nominatePlayer": "Nominate {name}",
   "emptySeat": "Empty seat",
   "clearCharacter": "Clear character",

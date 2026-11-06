@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Peru nimitys: {by} → {of}",
+  "cancelExile": "Peru karkotus: {of}",
   "mostVotes": "Eniten ääniä",
   "votesLabel": {
     "one": "ääni",
@@ -8,10 +9,15 @@
   "noVoters": "Ei kirjattuja käsiä.",
   "voted": "Ääni kirjattu",
   "nominationArrow": "{by} nimittää pelaajan {of}",
+  "exileOf": "Karkotus: {of}",
   "manualNight": "Aloita seuraava yö",
   "manualNomination": {
     "one": "{by} → {of}: {count} ääni",
     "other": "{by} → {of}: {count} ääntä"
+  },
+  "manualExile": {
+    "one": "Karkotus: {of}, {count} ääni",
+    "other": "Karkotus: {of}, {count} ääntä"
   },
   "timerAdd": "Lisää keskusteluajastin",
   "timerAddThirtySeconds": "Lisää 30 sekuntia",
@@ -32,5 +38,9 @@
   "votesToTieExecute": {
     "one": "{count} ääni tasapeliin, {execute} teloitukseen",
     "other": "{count} ääntä tasapeliin, {execute} teloitukseen"
+  },
+  "votesToExile": {
+    "one": "{count} ääni karkotukseen",
+    "other": "{count} ääntä karkotukseen"
   }
 }

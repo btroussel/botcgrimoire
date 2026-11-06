@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Gyanúsítás törlése: {by} → {of}",
+  "cancelExile": "Száműzés törlése: {of}",
   "mostVotes": "Legtöbb szavazat",
   "votesLabel": {
     "one": "szavazat",
@@ -8,10 +9,15 @@
   "noVoters": "Nincs rögzített szavazat.",
   "voted": "Szavazat rögzítve",
   "nominationArrow": "{by} gyanúsít: {of}",
+  "exileOf": "Száműzés: {of}",
   "manualNight": "Következő éjszaka",
   "manualNomination": {
     "one": "{by} → {of}: {count} szavazat",
     "other": "{by} → {of}: {count} szavazat"
+  },
+  "manualExile": {
+    "one": "Száműzés: {of}, {count} szavazat",
+    "other": "Száműzés: {of}, {count} szavazat"
   },
   "timerAdd": "Vitaidőzítő hozzáadása",
   "timerAddThirtySeconds": "30 másodperc hozzáadása",
@@ -32,5 +38,9 @@
   "votesToTieExecute": {
     "one": "Döntetlenhez {count}, kivégzéshez {execute} szavazat kell",
     "other": "Döntetlenhez {count}, kivégzéshez {execute} szavazat kell"
+  },
+  "votesToExile": {
+    "one": "Száműzéshez {count} szavazat kell",
+    "other": "Száműzéshez {count} szavazat kell"
   }
 }

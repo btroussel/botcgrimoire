@@ -23,7 +23,7 @@ export interface Hand {
 
 export type Fact =
   | { readonly kind: 'dies' | 'revives' | 'becomes' | 'turns' | 'joins' | 'leaves' | 'executed' | 'exiled' | 'onBlock'; readonly player: Player }
-  | { readonly kind: 'nomination'; readonly by: Side; readonly of: Side; readonly hands: readonly Hand[]; readonly count: number }
+  | { readonly kind: 'nomination'; readonly by: Side; readonly of: Side; readonly hands: readonly Hand[]; readonly count: number; readonly exile?: true }
 
 export interface Chapter {
   readonly phase: 'night' | 'day'
@@ -52,7 +52,7 @@ export interface Chronicle {
 // A day's nominations and its block are settled when the day ends, so a cancelled nomination
 // drops out and the final tally counts. Until then they hold their place among the day's facts.
 type Draft = Fact
-  | { readonly kind: 'nominated'; readonly opened: EventId; readonly by?: Side; readonly of?: Side; readonly hands: Map<SeatId, Hand> }
+  | { readonly kind: 'nominated'; readonly opened: EventId; readonly by?: Side; readonly of?: Side; readonly exile?: true; readonly hands: Map<SeatId, Hand> }
   | { readonly kind: 'marked' }
 
 const playerOf = (seat: Seat): Player => ({ id: seat.id, name: seat.name, character: seat.character, alignment: seat.alignment })
@@ -92,7 +92,7 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
         const hand = d.hands.get(id) ?? (seat && { player: playerOf(seat), ghost: false })
         return hand ? [hand] : []
       })
-      return [{ kind: 'nomination', by: d.by, of: d.of, hands, count: nomination.weight }]
+      return [{ kind: 'nomination', by: d.by, of: d.of, hands, count: nomination.weight, ...(d.exile ? { exile: true as const } : {}) }]
     })
     // An older day put its leader on the block from the votes alone, with no marker edit.
     if (blocked && lastMark === -1) settled.splice(lastNomination + 1, 0, { kind: 'onBlock', player: playerOf(blocked) })
@@ -146,7 +146,7 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
       case 'nominate': {
         const by = sideOf(after, event.by)
         const of = sideOf(after, event.of)
-        record({ kind: 'nominated', opened: event.id, ...(by ? { by } : {}), ...(of ? { of } : {}), hands: new Map() })
+        record({ kind: 'nominated', opened: event.id, ...(by ? { by } : {}), ...(of ? { of } : {}), ...(event.exile ? { exile: true } : {}), hands: new Map() })
         break
       }
       case 'vote': {

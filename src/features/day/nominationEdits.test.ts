@@ -111,3 +111,12 @@ test('a dead voter with no ghost vote left is counted and spends nothing', () =>
   const edits = confirmNomination(boardOf(spent), spent.game.log, nomination, { mark: false })
   expect(edits).toEqual([{ kind: 'setVoteTotal', nomination: nomination.opened, total: 1 }])
 })
+
+test('an exile counts the dead hand without spending its ghost vote and marks nobody', () => {
+  const { session, id } = prepare()
+  const called = append(session, { kind: 'nominate', by: 'storyteller', of: id('Alice'), exile: true }, 4)
+  const exile = today(boardOf(called))!.nominations[1]!
+  const voted = append(called, { kind: 'vote', nomination: exile.opened, seat: id('Ghost'), weight: 1, free: true }, 5)
+  const ballot = today(boardOf(voted))!.nominations[1]!
+  expect(confirmNomination(boardOf(voted), voted.game.log, ballot)).toEqual([{ kind: 'setVoteTotal', nomination: exile.opened, total: 1 }])
+})

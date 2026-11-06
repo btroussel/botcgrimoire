@@ -13,7 +13,7 @@ import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuFrame, menuRowHeight, menuStyles } from './popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
-export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onEmpty, onRename, onLife, onGhostVote }: {
+export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onCallExile, onEmpty, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
   readonly name: string
   readonly alignment: Alignment
@@ -28,6 +28,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly onCharacter: () => void
   readonly onAlignment: () => void
   readonly onNominateSelf?: () => void
+  readonly onCallExile?: () => void
   readonly onEmpty: () => void
   readonly onRename: (name: string) => void
   readonly onLife: () => void
@@ -110,6 +111,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     { label: t(dead ? 'board.markAlive' : 'board.markDead'), icon: dead ? 'sun' : 'skull', run: onLife },
     ...(dead ? [{ label: t(ghostVote ? 'board.spendGhostVote' : 'board.restoreGhostVote'), icon: 'vote' as const, run: onGhostVote }] : []),
     ...(onNominateSelf ? [{ label: t('board.nominateSelf'), icon: 'player' as const, run: onNominateSelf }] : []),
+    ...(onCallExile ? [{ label: t('board.callExile'), icon: 'nominate' as const, run: onCallExile }] : []),
   ]
   const row = (item: { label: string; icon: IconName; run: () => void }) =>
     <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} />

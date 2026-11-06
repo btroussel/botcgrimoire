@@ -1,7 +1,7 @@
 import type { Payload } from '../engine'
 import { asEventId } from '../engine'
 import type { Step } from '../engine/testing/board'
-import { addTraveller, execute, game, kill, nominate, removeSeat, revive, setAlignment, setCharacter, vote } from '../engine/testing/board'
+import { addTraveller, execute, exile, game, kill, nominate, removeSeat, revive, setAlignment, setCharacter, vote } from '../engine/testing/board'
 import type { Fact } from './chronicle'
 import { chronicleOf } from './chronicle'
 
@@ -17,7 +17,7 @@ const hand = (who: string) => vote(who, undefined, 1, true)
 const line = (fact: Fact): string => {
   if (fact.kind !== 'nomination') return `${fact.player.name} ${fact.kind}${fact.kind === 'becomes' ? ` ${fact.player.character}` : ''}`
   const side = (s: typeof fact.by) => (s === 'storyteller' ? 'Storyteller' : s.name)
-  return `${side(fact.by)} → ${side(fact.of)}: ${fact.count} (${fact.hands.map(h => h.player.name + (h.ghost ? '†' : '')).join(', ')})`
+  return `${fact.exile ? 'exile' : side(fact.by)} → ${side(fact.of)}: ${fact.count} (${fact.hands.map(h => h.player.name + (h.ghost ? '†' : '')).join(', ')})`
 }
 const story = (b: ReturnType<ReturnType<typeof game>['build']>) =>
   chronicleOf(b.log, 'tb').chapters.map(c => [`${c.phase} ${c.night}`, ...c.facts.map(line)])
@@ -92,5 +92,12 @@ describe('the chronicle of a game', () => {
       .build()
     expect(story(b)).toEqual([['day 1', 'Fay joins', 'Eve turns', 'Dan executed'], ['night 2', 'Fay leaves']])
     expect(chronicleOf(b.log, 'tb').players.get(b.id('Eve'))).toEqual({ startedOn: 'good' })
+  })
+
+  test('an exile is told with its hands and puts nobody on the block', () => {
+    const b = table().night(1, [kill('Ann', 'storyteller')])
+      .day([addTraveller('Fay', 'beggar', 5, 'good'), exile('Fay'), hand('Ann'), hand('Bob'), hand('Cat'), tally(3)])
+      .build()
+    expect(story(b)).toEqual([['night 1', 'Ann dies'], ['day 1', 'Fay joins', 'exile → Fay: 3 (Ann†, Bob, Cat)']])
   })
 })
