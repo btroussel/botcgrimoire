@@ -195,9 +195,10 @@ in its language and lists every Home as an `hreflang` alternate, the root as `x-
 other route is `noindex, follow`: they are working screens for games on one device. That is an
 indexing rule, not access control. The sitemap lists every Home.
 
-A visitor with no saved game gets a prompt that opens a short About card. The card is a native
-dialog, so its text stays in the exported page: text nobody could open would count as hidden. It
-never opens by itself, since a dialog covering the page on load counts against it on phones.
+A visitor with no saved game gets a prompt that opens a short About card, which the button beside
+Home's badge opens for anyone. The card is a native dialog, so its text stays in the exported page:
+text nobody could open would count as hidden. It never opens by itself, since a dialog covering the
+page on load counts against it on phones.
 Home never redirects to match the visitor's language. Search results use the 192-pixel icon,
 since they show a site icon only at a multiple of 48 pixels. [UI](ui.md#home) owns the look.
 
@@ -231,8 +232,8 @@ The version is the build's own, as its service worker names it: the first seven 
 precache version, which changes exactly when the bundled files do. About shows it beside Source
 code. A page no worker controls yet, the very first load, has none, and the email says so.
 
-Home offers Feedback beside the badge to someone who has played, where a first visit gets About
-instead, and opens Settings on its group. Settings always has it.
+Home offers Feedback beside the badge and About to someone who has played, and opens Settings on
+its group. Settings always has it.
 
 ## Offline and installation
 

@@ -10,8 +10,8 @@ import { shop, TextLink, withLink } from '../../ui/TextLink'
 import { Velvet, VelvetColourContext } from '../../ui/Velvet'
 import { font, hairline, motion, palette, radius, scrim, shadows, space, touch, type, velvetPanel } from '../../ui/theme'
 
-// What the grimoire is, for a first visit, in the card the button beside the badge opens: the
-// board, a name, one sentence and four lines, then a word for the game's makers. New game stays
+// What the grimoire is, in the card the button beside the badge opens, written for a first visit:
+// the board, a name, one sentence and four lines, then a word for the game's makers. New game stays
 // on Home, right behind the card. Search engines read the exported page and never press a button,
 // so the card is a native dialog that keeps its text in the page while closed. Text no visitor
 // could open at all would be hidden text, which they penalize.

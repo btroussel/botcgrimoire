@@ -92,15 +92,16 @@ export const HomeScreen = () => {
           {badge ? <View style={styles.badgeRow}>
             <Image source={communityArt['ccc-parchment']} style={styles.badge} resizeMode="contain"
               accessibilityRole="image" accessibilityLabel={t('common.unofficial')} />
-            {/* A first visit learns what the app is; someone who has played can say how it went. Where
-                the row has no room, the feedback is still in Settings. */}
-            {home.newcomer ? <BadgeButton icon="info" label={t('home.about')} onPress={openAbout} iconOnly={narrow} dialog />
-              : <BadgeButton icon="mail" label={t('common.feedback')} onPress={home.openFeedback} iconOnly={narrow} />}
+            {/* The card says what the app is, to anyone. Someone who has played can also say how it
+                went, and the card keeps only its glyph so the row still fits a phone. Where the row
+                has no room at all, the feedback is still in Settings. */}
+            <BadgeButton icon="info" label={t('home.about')} onPress={openAbout} iconOnly={narrow || !home.newcomer} dialog />
+            {home.newcomer ? null : <BadgeButton icon="mail" label={t('common.feedback')} onPress={home.openFeedback} iconOnly={narrow} />}
           </View> : null}
         </div>
       </View>
       {nudging ? <Nudge label={t('home.nudge')} closeLabel={t('common.close')} onFollow={followNudge} onDismiss={dismissNudge} beside={beside} /> : null}
-      {home.newcomer ? <About t={t} dialog={about} /> : null}
+      <About t={t} dialog={about} />
     </Screen>
   )
 }
@@ -277,9 +278,13 @@ const styles = StyleSheet.create({
   navItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingLeft: space.md, paddingRight: space.lg, paddingVertical: space.sm, minHeight: 64 },
   navItemCompact: { minHeight: 52 },
   navText: { flex: 1, minWidth: 0, gap: space.xxs },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md, alignSelf: 'center' },
-  badge: { width: 120, height: 45 },
-  about: { minHeight: touch, flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, borderRadius: radius.control },
+  // As wide as the column, its contents centred, so a crowded row squeezes the badge instead of
+  // growing past the column's edges.
+  badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
+  // A long word beside it, such as Norwegian's Tilbakemelding on a 360-point phone, shrinks the
+  // badge a little rather than the buttons, which keep their touch size and whole words.
+  badge: { width: 120, height: 45, flexShrink: 1, minWidth: 96 },
+  about: { minHeight: touch, minWidth: touch, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingHorizontal: space.sm, borderRadius: radius.control },
   nudge: { flexDirection: 'row', alignItems: 'center', maxWidth: 420, borderRadius: touch / 2, borderWidth: 1, backgroundColor: '#100917f0', boxShadow: shadows.sheet },
   nudgeFollow: { flexShrink: 1, minHeight: touch, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, paddingRight: space.xs, borderRadius: touch / 2 },
   nudgeLabel: { flexShrink: 1, color: palette.text },
