@@ -1,5 +1,5 @@
 import { contentPin } from '../../content'
-import { canNominate, onTheBlock, today } from '../../engine'
+import { onTheBlock, today } from '../../engine'
 import { game, kill } from '../../engine/testing/board'
 import { append, appendAll, boardOf, openSession, redo, undo } from '../../store/session'
 import { deserialize, mintGameId, SAVED_VERSION, serialize } from '../../store/saved'
@@ -35,13 +35,12 @@ test('Reset clears hands and total but preserves the nomination, ghost votes and
   expect(today(boardOf(undo(reset, 6)))!.nominations).toEqual(before)
 })
 
-test('cancelling an unconfirmed vote restores nomination availability without spending a ghost vote', () => {
+test('cancelling an unconfirmed vote spends no ghost vote', () => {
   const { session, id } = prepare()
   const nomination = today(boardOf(session))!.nominations[0]!
   const cancelled = appendAll(session, cancelNomination(session.game.log, nomination), 4)
   const board = boardOf(cancelled)
   expect(today(board)!.nominations).toEqual([])
-  expect(canNominate(today(board), id('Alice'), id('Bob'))).toBe(true)
   expect(board.seats.find(s => s.id === id('Ghost'))!.ghostVote).toBe(true)
   expect(onTheBlock(board)).toBeUndefined()
 })
@@ -103,4 +102,12 @@ test('removing a previously confirmed dead hand returns its token on the next co
   const saved = appendAll(edited, confirmNomination(boardOf(edited), edited.game.log, today(boardOf(edited))!.nominations[0]!), 6)
   expect(boardOf(saved).seats.find(s => s.id === id('Ghost'))!.ghostVote).toBe(true)
   expect(today(boardOf(saved))!.nominations[0]!.weight).toBe(0)
+})
+
+test('a dead voter with no ghost vote left is counted and spends nothing', () => {
+  const { session, id } = prepare()
+  const spent = append(session, { kind: 'setGhostVote', seat: id('Ghost'), available: false }, 4)
+  const nomination = today(boardOf(spent))!.nominations[0]!
+  const edits = confirmNomination(boardOf(spent), spent.game.log, nomination, { mark: false })
+  expect(edits).toEqual([{ kind: 'setVoteTotal', nomination: nomination.opened, total: 1 }])
 })

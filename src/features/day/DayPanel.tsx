@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import type { Translate } from '../../content'
 import type { EventId, Nomination } from '../../engine'
-import { asEventId, canNominate, nominationThresholds, onTheBlock, today } from '../../engine'
+import { asEventId, nominationThresholds, onTheBlock, today } from '../../engine'
 import { useStore } from '../../store'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { Button, IconButton, focusStyle, isFocused } from '../../ui/Button'
@@ -13,7 +13,7 @@ import { palette, space, tabular, type } from '../../ui/theme'
 import { DayTimerControls } from './DayTimer'
 import { furthestHand, recordedVoteWeight } from './votes'
 import { NominationControls } from './NominationControls'
-import { cancelNomination, confirmNomination, nominationGhostVotes, resetNominationVotes } from './nominationEdits'
+import { cancelNomination, confirmNomination, resetNominationVotes } from './nominationEdits'
 
 // The open ballot is screen state, not an edit, so it lives in the tab: a reload, such as the
 // automatic update, reopens the controls on the same nomination instead of stranding its hands.
@@ -47,16 +47,16 @@ export const DayPanel = () => {
   const name = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.name ?? t('board.storyteller'), [board, t])
   // The ring hands back its seats' ids as plain strings; each one names a seat on this board.
   const seatIn = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.id, [board])
-  // Hands are recorded as soon as a nomination is open: a tap on an eligible player toggles theirs.
+  // Hands are recorded as soon as a nomination is open: a tap on any player toggles theirs. A dead
+  // player with no ghost vote left still raises one, since an ability can let them vote again.
   useEffect(() => {
     if (!board || !current || replaying) {
       setSeatAction(undefined)
       return
     }
     const log = session?.game.log ?? []
-    const spentHere = nominationGhostVotes(log, current.opened)
     setSeatAction({
-      allowed: board.seats.filter(seat => seat.alive || seat.ghostVote || spentHere.has(seat.id) || current.votes.includes(seat.id)).map(seat => seat.id),
+      allowed: board.seats.map(seat => seat.id),
       marked: current.votes,
       markedLabel: t('day.voted'),
       onTap: id => {
@@ -79,7 +79,6 @@ export const DayPanel = () => {
   const nominate = useCallback((nominator: string, nominee: string) => {
     if (!board || !session || replaying || board.clock.phase !== 'day') return
     const day = today(board)
-    if (!canNominate(day, nominator, nominee)) return
     const by = seatIn(nominator)
     const of = seatIn(nominee)
     if (!by || !of) return

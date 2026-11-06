@@ -1,4 +1,4 @@
-import type { Day, Grimoire } from './grimoire'
+import type { Grimoire } from './grimoire'
 import { today } from './grimoire'
 import type { EventId, SeatId } from './ids'
 
@@ -12,11 +12,6 @@ export const nominationThresholds = (g: Grimoire, excluding?: EventId): { readon
   const highest = Math.max(0, ...previous.map(nomination => nomination.weight))
   return { execute: Math.max(minimum, highest + 1), ...(highest >= minimum ? { tie: highest } : {}) }
 }
-
-// A seat nominates once a day and is nominated once a day, the two limits apart. Reduction
-// records any nomination; the controls ask this before they offer or record one.
-export const canNominate = (day: Day | undefined, by: string, of: string): boolean =>
-  !day?.nominations.some(nomination => nomination.by === by || nomination.of === of)
 
 // A reference for ordinary voting, never an execution or a life-state edit.
 export const onTheBlock = (g: Grimoire): SeatId | undefined => {

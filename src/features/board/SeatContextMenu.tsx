@@ -13,7 +13,7 @@ import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuFrame, menuRowHeight, menuStyles } from './popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
-export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, nominateSelfDisabled, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onEmpty, onRename, onLife, onGhostVote }: {
+export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onEmpty, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
   readonly name: string
   readonly alignment: Alignment
@@ -23,7 +23,6 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly place: (menu: Size, room: SeatMenuRoom) => SeatMenuPlace // where the menu goes, given its measured size
   readonly width: number
   readonly t: Translate
-  readonly nominateSelfDisabled: boolean
   readonly onClose: () => void
   readonly onReminder?: () => void
   readonly onCharacter: () => void
@@ -103,17 +102,17 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
       document.removeEventListener('keydown', escape)
     }
   }, [onClose])
-  const actions: readonly { label: string; icon: IconName; run: () => void; disabled?: boolean }[] = [
+  const actions: readonly { label: string; icon: IconName; run: () => void }[] = [
     // First, as the action a Storyteller repeats most, and the only way to it on touch.
     ...(onReminder ? [{ label: t('board.addReminder'), icon: 'add' as const, run: onReminder }] : []),
     { label: t('board.changeCharacter'), icon: 'character', run: onCharacter },
     { label: t(alignment === 'good' ? 'board.makeEvil' : 'board.makeGood'), icon: 'shuffle', run: onAlignment },
     { label: t(dead ? 'board.markAlive' : 'board.markDead'), icon: dead ? 'sun' : 'skull', run: onLife },
     ...(dead ? [{ label: t(ghostVote ? 'board.spendGhostVote' : 'board.restoreGhostVote'), icon: 'vote' as const, run: onGhostVote }] : []),
-    ...(onNominateSelf ? [{ label: t('board.nominateSelf'), icon: 'player' as const, run: onNominateSelf, disabled: nominateSelfDisabled }] : []),
+    ...(onNominateSelf ? [{ label: t('board.nominateSelf'), icon: 'player' as const, run: onNominateSelf }] : []),
   ]
-  const row = (item: { label: string; icon: IconName; run: () => void; disabled?: boolean }) =>
-    <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} disabled={item.disabled} />
+  const row = (item: { label: string; icon: IconName; run: () => void }) =>
+    <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} />
   return <div ref={menu} role="group" aria-label={name} data-layer style={{ ...menuFrame, position: 'absolute', width, background: `${palette.ink}eb`,
     maxHeight: Math.max(0, viewport.height - space.sm * 2), overflowY: 'auto', zIndex: 30 }}>
     {renaming ? <TextInput autoFocus selectTextOnFocus value={draft} onChangeText={setDraft}

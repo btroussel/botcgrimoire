@@ -1,4 +1,4 @@
-import { canNominate, nominationThresholds, onTheBlock } from './block'
+import { nominationThresholds, onTheBlock } from './block'
 import type { Event, Payload } from './events'
 import { today } from './grimoire'
 import { asEventId, asSeatId } from './ids'
@@ -90,16 +90,4 @@ test('execution markers reset on a new day and replay restores the earlier refer
   const nextDay = boardWith({ kind: 'markForExecution', seat: other }, { kind: 'phase', to: 'night' }, { kind: 'phase', to: 'day' })
   expect(nextDay.days.at(-1)?.markedForExecution).toBeUndefined()
   expect(onTheBlock(nextDay)).toBeUndefined()
-})
-
-test('each seat nominates once a day and is nominated once a day, the two limits apart', () => {
-  const day = today(boardWith(nomination))
-  expect(canNominate(day, table.id('A'), other)).toBe(false)
-  expect(canNominate(day, other, nominee)).toBe(false)
-  expect(canNominate(day, nominee, table.id('A'))).toBe(true)
-  expect(canNominate(day, other, table.id('D'))).toBe(true)
-  // Cancelling the nomination, or a new day, frees both seats again.
-  expect(canNominate(today(boardWith(nomination, { kind: 'cancelNomination', nomination: first })), table.id('A'), nominee)).toBe(true)
-  expect(canNominate(today(boardWith(nomination, { kind: 'phase', to: 'night' }, { kind: 'phase', to: 'day' })), table.id('A'), nominee)).toBe(true)
-  expect(canNominate(undefined, table.id('A'), nominee)).toBe(true)
 })

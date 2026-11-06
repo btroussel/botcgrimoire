@@ -133,13 +133,14 @@ checklist: reading a row records nothing.
 
 ### Day
 
-Tap the nominator, then the nominee. A seat nominates once and is nominated once per day, with no
-ability or life check. Hands toggle in any order, with no countdown, and a dead player votes only
-with a ghost vote left. The threshold shown is the larger of half the living players, rounded up,
+Tap the nominator, then the nominee. Nothing limits who nominates or is nominated, or how often:
+the day's list shows who already has, and the Storyteller rules on a second nomination, as a
+Banshee or Riot allows. Every player's hand toggles, in any order, with no countdown, and a dead
+player with no ghost vote left still votes, as a Voudon allows. The threshold shown is the larger of half the living players, rounded up,
 and one more than the day's best tally, with a tie once that tally reaches the minimum. It counts
 living Travellers and adjusts for no character.
 
-Mark and Done end the vote and spend the dead voters' ghost votes. Mark puts a skull on the
+Mark and Done end the vote and spend the ghost vote of each dead voter who held one. Mark puts a skull on the
 nominee, never an execution: the Storyteller records deaths. Cancelling a nomination gives back
 the ghost votes it spent. The browser tab remembers an open nomination, so a reload reopens it.
 

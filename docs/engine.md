@@ -44,7 +44,7 @@ Whether a player may nominate, vote, die or survive is the Storyteller's call. A
 changes data, never engine code.
 
 A few read-only helpers serve the screens: the base setup counts, the night order, what is in
-play, who is on the block, nomination thresholds and limits, and what a player is shown of their
+play, who is on the block, nomination thresholds, and what a player is shown of their
 seat. They read the board and never append.
 
 ## Older games
