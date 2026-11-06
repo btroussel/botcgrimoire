@@ -82,6 +82,26 @@ test('Done records a failed vote, leaves the leader on the block, and History te
   await expect(day).toContainText('Seat 2 → Seat 6: 1 vote')
 })
 
+test('a seat nominates again and a dead player with no ghost vote still raises a hand', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  await seat(page, 4).tap()
+  const menu = page.getByRole('group', { name: 'Seat 5', exact: true })
+  await menu.getByRole('button', { name: 'Mark dead', exact: true }).tap()
+  await menu.getByRole('button', { name: 'Spend ghost vote', exact: true }).tap()
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
+
+  for (const nominee of [2, 3]) {
+    const controls = await nominate(page, 0, nominee, [4])
+    await page.getByRole('button', { name: 'Done', exact: true }).tap()
+    await expect(controls).toHaveCount(0)
+  }
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 1 vote. Most votes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 4: 1 vote. Most votes', exact: true })).toBeVisible()
+})
+
 // A seat's token and its name, which sits below the token outside the seat's own box.
 const seatBoxes = page => page.locator('[data-seat-context-target]').evaluateAll(seats => seats.map(seat =>
   [seat, ...seat.querySelectorAll('div')].filter(part => part === seat || (part.childElementCount === 0 && part.textContent.trim()))
