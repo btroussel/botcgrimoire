@@ -76,3 +76,31 @@ test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, 
   await expect(page.getByRole('button', { name: /^Seat \d, Monk$/ })).toHaveCount(1)
   await expect(page.getByRole('button', { name: /^Seat \d, Drunk$/ })).toHaveCount(0)
 })
+
+test.describe('on a tablet', () => {
+  test.use({ viewport: { width: 810, height: 1080 } })
+
+  test('tapping the name holds the field still, and the keyboard shrinks the bag only as far as it must', async ({ page }) => {
+    await open(page, '/new')
+    await button(page, 'Trouble Brewing').click()
+    await button(page, 'Shuffle characters').click()
+    await button(page, 'Open grimoire').click()
+    await button(page, 'Let players draw').click()
+    await button(page, 'Start with Seat 1').click()
+    const name = page.getByRole('textbox', { name: 'Player name', exact: true })
+    // The turn slides in, so the field is measured once it has come to rest.
+    let before
+    await expect.poll(async () => { const last = before; before = await name.boundingBox(); return last?.y === before.y }).toBe(true)
+    await name.tap()
+    await expect(name).toBeFocused()
+    expect(await name.boundingBox()).toEqual(before)
+
+    // Desktop automation has no software keyboard, so only the visual viewport shrinks, as on a tablet.
+    await page.evaluate(() => {
+      Object.defineProperty(visualViewport, 'height', { configurable: true, value: 700 })
+      visualViewport.dispatchEvent(new Event('resize'))
+    })
+    await expect.poll(async () => (await name.boundingBox()).y + (await name.boundingBox()).height).toBeLessThanOrEqual(700)
+    await expect(faceDown(page).first()).toBeVisible()
+  })
+})
