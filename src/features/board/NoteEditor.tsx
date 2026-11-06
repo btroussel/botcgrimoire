@@ -1,5 +1,6 @@
 // One window for a note's text: a new note written for a seat from the reminder picker's plus,
-// or a placed note opened from its disc on the board, rewritten in place or taken off.
+// or a placed note opened from its disc on the board, rewritten in place or taken off. The disc
+// clips a long note, so this is where it reads in full.
 // Reminders from characters have no text to edit, so their tap still removes them.
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -62,7 +63,7 @@ export const NoteEditor = ({ target, onClose }: NoteEditorProps) => {
         {placed ? <Button label={e.t('board.removeNote')} onPress={remove} variant="dangerText" surface="paper" /> : null}
         <Button label={e.t(placed ? 'board.saveNote' : 'board.placeNote')} onPress={save} disabled={!ready} variant="primary" surface="paper" />
       </View>}>
-      <Field label={e.t('board.note')} value={text} onChange={setText} autoFocus />
+      <Field label={e.t('board.note')} value={text} onChange={setText} multiline lines={3} autoFocus />
     </Sheet>
   )
 }

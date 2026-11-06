@@ -186,8 +186,8 @@ export const Seat = ({
             const point = points[i]!
             return <div key={chip.key} {...(chip.draggable ? { 'data-chip': chip.key } : {})} style={{ position: 'absolute', left: point.x - minX - chipSlot.width / 2, top: point.y - minY - chipSlot.height / 2, width: chipSlot.width, height: chipSlot.height,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: layer(i), pointerEvents: 'none', opacity: chip.lifted ? motion.dimOpacity : 1 }}>
-              {/* A note's text spills past its disc, so under another disc of a folded stack it
-                  shows its initials rather than fragments. */}
+              {/* A note's text fills its disc, so under another disc of a folded stack it shows
+                  its initials rather than fragments. */}
               <ReminderChip size={chipSize} label={chip.label} discHitArea arrive disabled={chips.length > 1 && !expanded}
                 showLabel={chip.character !== undefined || expanded || layer(i) === chips.length}
                 {...(chip.character !== undefined ? { character: chip.character } : {})}
