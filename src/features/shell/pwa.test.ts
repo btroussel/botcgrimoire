@@ -1,9 +1,9 @@
 import { afterEach, expect, test, vi } from 'vitest'
 
 vi.mock('react', () => ({ useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot() }))
-afterEach(() => { vi.unstubAllGlobals(); vi.resetModules() })
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.resetModules() })
 
-const browser = (saved?: string) => {
+const browser = (pathname = '/', saved?: string) => {
   const worker = { postMessage: vi.fn() }
   const registration = Object.assign(new EventTarget(), { waiting: worker, active: {}, installing: undefined, update: vi.fn(async () => {}) })
   const serviceWorker = Object.assign(new EventTarget(), { controller: {}, register: vi.fn(async () => registration) })
@@ -11,7 +11,7 @@ const browser = (saved?: string) => {
   vi.stubGlobal('__DEV__', false)
   vi.stubGlobal('navigator', { serviceWorker })
   vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'visible' }))
-  vi.stubGlobal('window', Object.assign(new EventTarget(), { location: { reload: vi.fn() }, setInterval: vi.fn(() => 1), clearInterval: vi.fn() }))
+  vi.stubGlobal('window', Object.assign(new EventTarget(), { location: { pathname, reload: vi.fn() }, setInterval: vi.fn(() => 1), clearInterval: vi.fn() }))
   vi.stubGlobal('localStorage', storage)
   const message = (data: unknown, source: unknown = worker) => {
     serviceWorker.dispatchEvent(Object.assign(new Event('message'), { data, source }))
@@ -19,16 +19,50 @@ const browser = (saved?: string) => {
   return { worker, registration, serviceWorker, storage, message }
 }
 
-test('a waiting update applies automatically and controller changes reload the app', async () => {
+test('a waiting update applies once the screen settles and controller changes reload the app', async () => {
+  vi.useFakeTimers()
   const b = browser()
   const pwa = await import('./pwa')
   const stop = pwa.registerPwa()
   await Promise.resolve()
+  expect(b.worker.postMessage).not.toHaveBeenCalled()
+  vi.advanceTimersByTime(2_000)
   expect(b.worker.postMessage).toHaveBeenCalledWith('APPLY_UPDATE')
   b.serviceWorker.dispatchEvent(new Event('controllerchange'))
   expect(window.location.reload).toHaveBeenCalledOnce()
   stop?.()
   expect(window.clearInterval).toHaveBeenCalledWith(1)
+})
+
+test('a game in view keeps its build until it is hidden', async () => {
+  vi.useFakeTimers()
+  const b = browser('/game/local-123')
+  const pwa = await import('./pwa')
+  const stop = pwa.registerPwa()
+  await Promise.resolve()
+  vi.advanceTimersByTime(60_000)
+  expect(b.worker.postMessage).not.toHaveBeenCalled()
+  Object.assign(document, { visibilityState: 'hidden' })
+  document.dispatchEvent(new Event('visibilitychange'))
+  expect(b.worker.postMessage).toHaveBeenCalledWith('APPLY_UPDATE')
+  stop?.()
+})
+
+test('leaving a game applies the waiting build, unless the Storyteller enters a game first', async () => {
+  vi.useFakeTimers()
+  const b = browser('/game/local-123')
+  const pwa = await import('./pwa')
+  const stop = pwa.registerPwa()
+  await Promise.resolve()
+  pwa.followPwaRoute('/')
+  vi.advanceTimersByTime(1_000)
+  pwa.followPwaRoute('/game/local-456')
+  vi.advanceTimersByTime(60_000)
+  expect(b.worker.postMessage).not.toHaveBeenCalled()
+  pwa.followPwaRoute('/')
+  vi.advanceTimersByTime(2_000)
+  expect(b.worker.postMessage).toHaveBeenCalledWith('APPLY_UPDATE')
+  stop?.()
 })
 
 test('visible pages check periodically, hidden pages wait until visible', async () => {

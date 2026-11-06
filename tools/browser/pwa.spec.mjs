@@ -73,22 +73,29 @@ const activated = async (page, version) => {
   await page.waitForFunction(() => !!navigator.serviceWorker.controller)
 }
 
-test('a new release automatically updates open game and settings windows', async ({ page, context, request }) => {
+test('a new release waits while a game is on screen and installs once the Storyteller leaves it', async ({ page, context, request }) => {
   await open(page, '/settings')
   await ready(page)
   const game = await createGame(page)
-  const settings = await context.newPage()
-  await open(settings, '/settings')
-  await ready(settings)
+  // A reload would clear this mark.
+  await page.evaluate(() => { window.sameDocument = true })
   await release(request, 'v2')
-  await checkUpdate(settings)
-  await activated(settings, 'v2')
-  await ready(settings)
-  await expect(page).toHaveURL(new RegExp(game + '$'))
+  await checkUpdate(page)
+  const waiting = () => page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration()).waiting)
+  await expect.poll(waiting).toBe(true)
+  // Longer than a page off a game waits before it asks for the build.
+  await page.waitForTimeout(3_000)
+  expect(await waiting()).toBe(true)
+  expect(await page.evaluate(() => window.sameDocument)).toBe(true)
   await expectSetup(page)
-  await expect(settings.getByRole('button', { name: 'Update and reload', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('button', { name: 'Home', exact: true }).click()
+  await page.getByRole('button', { name: 'Go home', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => window.sameDocument).catch(() => true)).toBeUndefined()
+  await installed(page)
+  await ready(page)
   await context.setOffline(true)
-  await reload(page)
+  await open(page, game)
   await expectSetup(page)
 })
 

@@ -13,7 +13,7 @@ import { phaseLabel } from '../../store/gameSummary'
 import { artIds } from '../../store/scriptSheet'
 import { preloadArt, preloadImage } from '../../ui/preloadArt'
 import { palette } from '../../ui/theme'
-import { registerPwa, usePwa } from './pwa'
+import { followPwaRoute, registerPwa, usePwa } from './pwa'
 import { VelvetColourContext } from '../../ui/Velvet'
 import { pageTags } from './pageTags'
 
@@ -22,6 +22,7 @@ export const Navigator = () => {
   const store = useStore()
   const p = palette
   const pathname = usePathname()
+  useEffect(() => followPwaRoute(pathname), [pathname])
   const pwa = usePwa()
   const script = pathname.startsWith('/game/') ? store.session?.game.script : undefined
   useEffect(() => {

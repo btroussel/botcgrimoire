@@ -10,9 +10,24 @@ const snapshot = () => status
 const serverSnapshot = (): Status => 'unavailable'
 
 export const usePwa = () => useSyncExternalStore(subscribe, snapshot, serverSnapshot)
-const applyPwaUpdate = () => registration?.waiting?.postMessage('APPLY_UPDATE')
+// A new build reloads every window it takes over. A game in view keeps the build it has until the
+// Storyteller leaves it or the page is hidden: a reload there would close a card being shown to a
+// player, drop an open sheet and empty the redo history. Nothing saved is at risk either way.
+let route = ''
+const quiet = () => document.visibilityState === 'hidden' || !route.startsWith('/game/')
+const askForUpdate = () => { if (quiet()) registration?.waiting?.postMessage('APPLY_UPDATE') }
+// Chromium can stall a takeover asked for while the screen is still loading its images, then
+// force it minutes later, perhaps in the next game. A page in view asks once its screen settles.
+let settling: ReturnType<typeof setTimeout> | undefined
+const applyPwaUpdate = () => {
+  clearTimeout(settling)
+  if (document.visibilityState === 'hidden') askForUpdate()
+  else settling = setTimeout(askForUpdate, 2_000)
+}
+export const followPwaRoute = (pathname: string) => { route = pathname; applyPwaUpdate() }
 export function registerPwa() {
   if (__DEV__ || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+  route = window.location.pathname
   let disposed = false
   let hadController = !!navigator.serviceWorker.controller
   const changed = () => {
@@ -20,8 +35,9 @@ export function registerPwa() {
     else { hadController = true; publish('ready') }
   }
   const check = () => { if (document.visibilityState === 'visible') void registration?.update().catch(() => {}) }
+  const visibility = () => { applyPwaUpdate(); check() }
   navigator.serviceWorker.addEventListener('controllerchange', changed)
-  document.addEventListener('visibilitychange', check)
+  document.addEventListener('visibilitychange', visibility)
   const interval = window.setInterval(check, 60_000)
   publish('downloading')
   void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((result) => {
@@ -48,8 +64,9 @@ export function registerPwa() {
   }).catch(() => { if (!disposed) publish('error') })
   return () => {
     disposed = true
+    clearTimeout(settling)
     navigator.serviceWorker.removeEventListener('controllerchange', changed)
     window.clearInterval(interval)
-    document.removeEventListener('visibilitychange', check)
+    document.removeEventListener('visibilitychange', visibility)
   }
 }
