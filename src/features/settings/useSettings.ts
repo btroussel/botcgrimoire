@@ -15,6 +15,7 @@ export interface LocaleOption {
 
 export interface SettingsView {
   readonly t: Translate
+  readonly locale: Locale
   readonly localeOptions: readonly LocaleOption[]
   readonly setLocale: (locale: Locale) => void
   readonly colourOptions: readonly { readonly key: BoardColour; readonly name: string; readonly selected: boolean }[]
@@ -40,6 +41,7 @@ export const useSettings = (): SettingsView => {
 
   return {
     t,
+    locale: settings.locale,
     localeOptions,
     setLocale,
     colourOptions: boardColours.map((key) => ({ key, name: t(`common.velvet_${key}`), selected: settings.boardColour === key })),

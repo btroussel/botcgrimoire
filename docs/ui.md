@@ -113,6 +113,10 @@ Resume game under your finger. The actions stay on screen without scrolling, pho
 included, and the first-visit prompt covers no control. [App](app.md#search-and-sharing) owns when
 the prompt and the About card appear and what they say.
 
+The badge's row holds one small button and shows only where it fits: About for a first visit,
+Feedback once there are games ([App](app.md#feedback)), so the row is never wider than the badge
+and one button.
+
 ## Settings
 
 Group headings sit one level below the page title for screen readers, and links in About are

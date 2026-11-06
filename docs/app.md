@@ -34,7 +34,7 @@ the setup and day windows and the day timer, so the board never imports those fe
 | `/game/[id]` | `board`, `setup`, `day` | The board; `?draw=` and `?discovery=` hold a player's turn, `?replay=1` the replay |
 | `/history`, `/history/[id]` | `history` | Saved games, optionally one opened |
 | `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters |
-| `/settings` | `settings` | Language, grimoire colour and About |
+| `/settings` | `settings` | Language, grimoire colour, feedback and About |
 
 ## The Storyteller's path
 
@@ -217,6 +217,22 @@ The search text calls it an unofficial grimoire for games at a table, never a fr
 never reads as an alternative to the official one, and nothing mentions a price. About invites
 players to buy a physical Grimoire. The contact address sits in a sentence about the app, so
 nobody takes it for The Pandemonium Institute's. [UI](ui.md#settings) owns the presentation.
+
+## Feedback
+
+Most Storytellers have no GitHub account, so feedback goes by email first: Send feedback opens the
+device's mail app with a subject and, below room to write, the app version, language, screen size,
+installed or tab, and browser. Copy the address serves a device with no mail app set up. A link
+opens GitHub's bug form with the same facts filled in, for those who have an account. The app sends
+nothing itself and has no server for it: the person sees every word in their mail app or on GitHub
+before it leaves, and nothing about a game goes with it.
+
+The version is the build's own, as its service worker names it: the first seven characters of the
+precache version, which changes exactly when the bundled files do. About shows it beside Source
+code. A page no worker controls yet, the very first load, has none, and the email says so.
+
+Home offers Feedback beside the badge to someone who has played, where a first visit gets About
+instead, and opens Settings on its group. Settings always has it.
 
 ## Offline and installation
 

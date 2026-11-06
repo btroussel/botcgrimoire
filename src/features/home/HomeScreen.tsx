@@ -92,7 +92,10 @@ export const HomeScreen = () => {
           {badge ? <View style={styles.badgeRow}>
             <Image source={communityArt['ccc-parchment']} style={styles.badge} resizeMode="contain"
               accessibilityRole="image" accessibilityLabel={t('common.unofficial')} />
-            {home.newcomer ? <AboutButton label={t('home.about')} onPress={openAbout} iconOnly={narrow} /> : null}
+            {/* A first visit learns what the app is; someone who has played can say how it went. Where
+                the row has no room, the feedback is still in Settings. */}
+            {home.newcomer ? <BadgeButton icon="info" label={t('home.about')} onPress={openAbout} iconOnly={narrow} dialog />
+              : <BadgeButton icon="mail" label={t('common.feedback')} onPress={home.openFeedback} iconOnly={narrow} />}
           </View> : null}
         </div>
       </View>
@@ -202,19 +205,21 @@ const NavItem = memo(function NavItem({ icon, title, hint, onPress, divided, com
   )
 })
 
-interface AboutButtonProps {
+interface BadgeButtonProps {
+  readonly icon: IconName
   readonly label: string
   readonly onPress: () => void
   readonly iconOnly: boolean // the narrowest phones keep the glyph, so the row still fits beside the badge
+  readonly dialog?: boolean // opens a dialog rather than another screen
 }
 
-const AboutButton = memo(function AboutButton({ label, onPress, iconOnly }: AboutButtonProps) {
+const BadgeButton = memo(function BadgeButton({ icon, label, onPress, iconOnly, dialog }: BadgeButtonProps) {
   const focusVisible = useFocusVisible()
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} aria-haspopup="dialog" onPress={onPress}
+    <Pressable accessibilityRole="button" accessibilityLabel={label} aria-haspopup={dialog ? 'dialog' : undefined} onPress={onPress}
       style={(state) => [styles.about, { backgroundColor: isHovered(state) ? hoverWash.felt : 'transparent', opacity: state.pressed ? motion.pressedOpacity : 1 },
         focusStyle(palette, isFocused(state) && focusVisible)]}>
-      <Icon name="info" color={palette.accent} size={20} />
+      <Icon name={icon} color={palette.accent} size={20} />
       {iconOnly ? null : <Text style={[type.text.small, { color: palette.text }]}>{label}</Text>}
     </Pressable>
   )

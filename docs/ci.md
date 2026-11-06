@@ -47,8 +47,10 @@ could deploy. The deploy step names this repository, so a fork runs the checks b
 and a renamed repository must update that name or deploys stop while the checks stay green.
 
 Two exports of the same sources are identical, so a push that changes nothing the app bundles
-uploads nothing and installed apps don't update. `wrangler.jsonc`, `public/_redirects` and
-`public/_headers` hold the hosting rules, each with its reasons.
+uploads nothing and installed apps don't update. The build step logs the precache version, and
+Settings shows its first seven characters, so a bug report's version names the deploy it came
+from. A commit hash would not do: it would change the bundle on every push. `wrangler.jsonc`,
+`public/_redirects` and `public/_headers` hold the hosting rules, each with its reasons.
 
 ## What the checks miss
 
