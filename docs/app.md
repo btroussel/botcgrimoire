@@ -156,10 +156,15 @@ allows. The threshold shown is the larger of half the living players, rounded up
 the day's best tally, with a tie once that tally reaches the minimum. It counts living Travellers
 and adjusts for no character.
 
-Mark and Done end the vote and spend the ghost vote of each dead voter who held one. Mark puts a skull on the
-nominee, never an execution: the Storyteller records deaths. Cancelling a nomination gives back
-the ghost votes it spent. The browser tab remembers an open nomination, so a reload reopens it.
-Undoing Done or Mark reopens the vote on its nomination.
+Mark and Done end the vote and spend the ghost vote of each dead voter who held one. Mark puts a
+skull on the nominee, never an execution: the Storyteller records deaths. Cancelling a nomination
+gives back the ghost votes it spent. The browser tab remembers an open nomination, so a reload
+reopens it. Undoing Done or Mark reopens the vote on its nomination.
+
+A Traveller's seat menu calls for their exile, which anyone may do, so it names no caller. The
+exile opens the same vote, where every hand counts and none spends a ghost vote. Its threshold is
+half the living players, rounded up, and it never sets or reaches the execution's threshold or the
+block. It ends with Done alone: the Storyteller records the death.
 
 ### Ending
 

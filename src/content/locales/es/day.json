@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Cancelar nominación: {by} → {of}",
+  "cancelExile": "Cancelar exilio: {of}",
   "mostVotes": "Más votos",
   "votesLabel": {
     "one": "voto",
@@ -8,10 +9,15 @@
   "noVoters": "Ninguna mano anotada.",
   "voted": "Voto anotado",
   "nominationArrow": "{by} nomina a {of}",
+  "exileOf": "Exilio: {of}",
   "manualNight": "Empezar la noche siguiente",
   "manualNomination": {
     "one": "{by} → {of}: {count} voto",
     "other": "{by} → {of}: {count} votos"
+  },
+  "manualExile": {
+    "one": "Exilio: {of}, {count} voto",
+    "other": "Exilio: {of}, {count} votos"
   },
   "timerAdd": "Añadir temporizador de debate",
   "timerAddThirtySeconds": "Añadir 30 segundos",
@@ -32,5 +38,9 @@
   "votesToTieExecute": {
     "one": "{count} voto para empatar, {execute} para ejecutar",
     "other": "{count} votos para empatar, {execute} para ejecutar"
+  },
+  "votesToExile": {
+    "one": "{count} voto para exiliar",
+    "other": "{count} votos para exiliar"
   }
 }

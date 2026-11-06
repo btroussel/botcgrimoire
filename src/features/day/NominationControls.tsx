@@ -8,9 +8,9 @@ import type { IconName } from '../../ui/icons'
 import { usePresence } from '../../ui/motion'
 import { motion, palette, radius, space, touch, type, voteDock } from '../../ui/theme'
 
-export const NominationControls = ({ by, of, count, thresholds, canReset, canMark, onReset, onMark, onDone, t }: {
-  readonly by: string
-  readonly of: string
+export const NominationControls = ({ title, exile, count, thresholds, canReset, canMark, onReset, onMark, onDone, t }: {
+  readonly title: string
+  readonly exile: boolean // an exile has no Mark, since it never touches the execution
   readonly count: number
   readonly thresholds: { readonly execute: number; readonly tie?: number }
   readonly canReset: boolean
@@ -38,15 +38,15 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
   // threshold beside it, drawn on the number alone so it never looks like a control: the
   // Storyteller still marks or ends the vote.
   const reached = count >= thresholds.execute
-  const threshold = thresholds.tie === undefined
-    ? t('day.votesToExecute', { count: thresholds.execute })
+  const threshold = exile ? t('day.votesToExile', { count: thresholds.execute })
+    : thresholds.tie === undefined ? t('day.votesToExecute', { count: thresholds.execute })
     : t('day.votesToTieExecute', { count: thresholds.tie, execute: thresholds.execute })
-  return <Animated.View role="region" accessibilityLabel={t('day.nominationArrow', { by, of })}
+  return <Animated.View role="region" accessibilityLabel={title}
     onLayout={event => setOneRow(event.nativeEvent.layout.width >= 300)}
     style={[styles.card, { opacity, transform: [{ scale }] }]}>
     {/* Docked, the names and the threshold share a line so the card stays inside the status band. */}
     <View style={oneRow ? styles.heading : undefined}>
-      <Text style={[type.text.strong, styles.who]}>{t('day.nominationArrow', { by, of })}</Text>
+      <Text style={[type.text.strong, styles.who]}>{title}</Text>
       <Text style={[type.text.small, styles.threshold]}>{threshold}</Text>
     </View>
     <View style={styles.actions}>
@@ -60,7 +60,7 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
         </Text>
       </View>
       <VoteButton label={t('day.voteReset')} icon="reset" oneRow={oneRow} disabled={!canReset} onPress={onReset} />
-      <VoteButton label={t('day.mark')} icon="skull" colour={palette.accent} ink={palette.onAccent} oneRow={oneRow} disabled={!canMark} onPress={onMark} />
+      {exile ? null : <VoteButton label={t('day.mark')} icon="skull" colour={palette.accent} ink={palette.onAccent} oneRow={oneRow} disabled={!canMark} onPress={onMark} />}
       <VoteButton label={t('common.done')} icon="check" oneRow={oneRow} onPress={onDone} />
     </View>
   </Animated.View>

@@ -17,10 +17,11 @@ log, and an audience that controls nothing ([Model](model.md#one-offline-device)
 - Characters off the ring: `addLoose`, `removeLoose`.
 - Phases: `phase`, `endGame`.
 - The day: `nominate`, `cancelNomination`, `vote`, `unvote`, `setVoteTotal`, `markForExecution`,
-  `execute`.
+  `execute`. A Traveller's exile is a `nominate` flagged `exile`, so it shares the vote edits, and
+  the execution's threshold and block leave it out.
 - Records that change no board field: `setBluffs`, which the store reads back from the log,
-  `override`, a free-text note, and `nightChecklist`, `wake`, `nightProgress`, `info` and `exile`,
-  kept for older games.
+  `override`, a free-text note, and `nightChecklist`, `wake`, `nightProgress`, `info` and the
+  older `exile` record, kept for older games.
 
 Each event does one thing. Changing a character keeps the seat's reminders, a death leaves ghost
 votes alone, a vote does not spend a ghost vote, and marking an execution kills nobody: each of

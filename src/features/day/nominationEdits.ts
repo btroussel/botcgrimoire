@@ -9,8 +9,8 @@ export const resetNominationVotes = (log: readonly Event[], nomination: Nominati
 ]
 
 // Ending a vote records the final tally and ghost-token edits in one undo batch; Mark also puts
-// the nominee on the block, Done leaves the marker where it is. The tally identifies which
-// nomination owns those edits after reload or replay.
+// the nominee on the block, Done leaves the marker where it is. An exile spends no ghost vote and
+// marks no one. The tally identifies which nomination owns those edits after reload or replay.
 export const nominationGhostVotes = (log: readonly Event[], nomination: EventId): ReadonlySet<SeatId> => {
   const confirmations = new Set(log.filter(e => e.kind === 'setVoteTotal' && e.nomination === nomination && e.batch !== undefined).map(e => e.batch))
   const spent = new Set<SeatId>()
@@ -29,12 +29,12 @@ export const confirmNomination = (board: Grimoire, log: readonly Event[], nomina
   const ghostEdits: Payload[] = []
   for (const seat of board.seats) {
     if (spent.has(seat.id) && !nomination.votes.includes(seat.id)) ghostEdits.push({ kind: 'setGhostVote', seat: seat.id, available: true })
-    else if (!seat.alive && seat.ghostVote && nomination.votes.includes(seat.id)) ghostEdits.push({ kind: 'setGhostVote', seat: seat.id, available: false })
+    else if (!nomination.exile && !seat.alive && seat.ghostVote && nomination.votes.includes(seat.id)) ghostEdits.push({ kind: 'setGhostVote', seat: seat.id, available: false })
   }
   return [
     { kind: 'setVoteTotal', nomination: nomination.opened, total: nomination.weight },
     ...ghostEdits,
-    ...(!mark || nomination.of === 'storyteller' ? [] : [{ kind: 'markForExecution' as const, seat: nomination.of }]),
+    ...(!mark || nomination.exile || nomination.of === 'storyteller' ? [] : [{ kind: 'markForExecution' as const, seat: nomination.of }]),
   ]
 }
 

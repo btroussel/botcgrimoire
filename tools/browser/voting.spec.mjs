@@ -102,6 +102,37 @@ test('a seat nominates again and a dead player with no ghost vote still raises a
   await expect(page.getByRole('button', { name: 'Seat 1 → Seat 4: 1 vote. Most votes', exact: true })).toBeVisible()
 })
 
+test('a Traveller\'s exile counts the dead hand, keeps its ghost vote and leaves the block alone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  // Above fifteen seats the shuffle adds one of the script's Travellers.
+  await openDay(page, 16)
+  const traveller = (await page.locator('[data-seat-context-target]').evaluateAll(seats => seats.map(seat =>
+    seat.querySelector('[aria-label]')?.getAttribute('aria-label') ?? '')))
+    .findIndex(label => /Scapegoat|Gunslinger|Beggar|Bureaucrat|Thief/.test(label))
+  expect(traveller).toBeGreaterThanOrEqual(0)
+  const ghost = traveller === 0 ? 1 : 0
+  await seat(page, ghost).tap()
+  const ghostMenu = page.getByRole('group', { name: `Seat ${ghost + 1}`, exact: true })
+  await ghostMenu.getByRole('button', { name: 'Mark dead', exact: true }).tap()
+  await page.keyboard.press('Escape')
+
+  await seat(page, traveller).tap()
+  await page.getByRole('group', { name: `Seat ${traveller + 1}`, exact: true }).getByRole('button', { name: 'Call for exile', exact: true }).tap()
+  const controls = page.getByRole('region', { name: `Exile: Seat ${traveller + 1}`, exact: true })
+  await expect(controls).toContainText('8 votes to exile')
+  await expect(controls.getByRole('button', { name: 'Mark', exact: true })).toHaveCount(0)
+  for (const hand of [ghost, traveller]) await seat(page, hand).tap()
+  await controls.getByRole('button', { name: 'Done', exact: true }).tap()
+  await expect(controls).toHaveCount(0)
+
+  await seat(page, ghost).tap()
+  await expect(ghostMenu.getByRole('button', { name: 'Spend ghost vote', exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await expect(page.getByRole('button', { name: `Exile: Seat ${traveller + 1}, 2 votes`, exact: true })).toBeVisible()
+  expect(await onTheBlock(page)).toEqual([])
+})
+
 // A seat's token and its name, which sits below the token outside the seat's own box.
 const seatBoxes = page => page.locator('[data-seat-context-target]').evaluateAll(seats => seats.map(seat =>
   [seat, ...seat.querySelectorAll('div')].filter(part => part === seat || (part.childElementCount === 0 && part.textContent.trim()))

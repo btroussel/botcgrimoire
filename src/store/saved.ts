@@ -13,7 +13,7 @@ export type GameId = string & { readonly __brand: 'GameId' }
 
 // Increments whenever the shape of SavedGame or of any event changes in a way an older app
 // would misread. Each step from n to n+1 is one function in `migrations`.
-export const SAVED_VERSION = 15
+export const SAVED_VERSION = 16
 
 export type GameMode = 'storyteller' | 'free'
 
@@ -134,7 +134,10 @@ const migrate12to13: Migration = (raw) => ({ ...raw, version: 13 })
 const migrate13to14: Migration = (raw) => ({ ...raw, version: 14 })
 // Older logs need no changes; version 15 adds setNote, rewriting a placed note's text.
 const migrate14to15: Migration = (raw) => ({ ...raw, version: 15 })
-const migrations: Readonly<Record<number, Migration>> = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10, 10: migrate10to11, 11: migrate11to12, 12: migrate12to13, 13: migrate13to14, 14: migrate14to15 }
+// Older logs need no changes; version 16 adds exile ballots, which an older app would count as
+// nominations toward the execution.
+const migrate15to16: Migration = (raw) => ({ ...raw, version: 16 })
+const migrations: Readonly<Record<number, Migration>> = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10, 10: migrate10to11, 11: migrate11to12, 12: migrate12to13, 13: migrate13to14, 14: migrate14to15, 15: migrate15to16 }
 
 export class InvalidSavedGame extends Error {}
 
