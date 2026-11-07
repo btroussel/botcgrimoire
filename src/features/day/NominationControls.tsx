@@ -34,8 +34,9 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
     document.addEventListener('keydown', done)
     return () => document.removeEventListener('keydown', done)
   }, [onDone])
-  // Brass once the hands reach the count that executes, a reference like the threshold beside it:
-  // the Storyteller still marks or ends the vote.
+  // The number turns brass once the hands reach the count that executes, a reference like the
+  // threshold beside it, drawn on the number alone so it never looks like a control: the
+  // Storyteller still marks or ends the vote.
   const reached = count >= thresholds.execute
   const threshold = thresholds.tie === undefined
     ? t('day.votesToExecute', { count: thresholds.execute })
@@ -49,8 +50,9 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
       <Text style={[type.text.small, styles.threshold]}>{threshold}</Text>
     </View>
     <View style={styles.actions}>
-      <View accessibilityLiveRegion="polite" style={[styles.action, oneRow && styles.oneRow, styles.tally, reached && styles.reached]}>
-        {/* One text, so the count and its word are read, and announced, as one phrase. */}
+      {/* Atomic, so a new count is announced with its word, "5 votes", not as a bare number. */}
+      <View accessibilityLiveRegion="polite" aria-atomic style={[styles.action, oneRow && styles.oneRow, styles.tally]}>
+        {/* One text, so the count and its word read as one phrase. */}
         <Text style={styles.tallyText}>
           <Text style={[styles.count, reached && styles.countReached]}>{count}</Text>
           {'\n'}
@@ -90,14 +92,14 @@ const styles = StyleSheet.create({
   heading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'baseline', columnGap: space.sm },
   who: { color: palette.text, textAlign: 'center', paddingTop: 2 },
   threshold: { color: palette.muted, textAlign: 'center', paddingBottom: 2 },
-  // The tally is the number the table watches, so it is the largest thing in the dock; 24 on 26
-  // with its label keeps the docked row at the touch height.
+  // The tally is the number the table watches, so it is the largest thing in the dock. Its 26
+  // point line and the label's 16 fill the docked row's 44 without growing it; the outer text
+  // takes the label's line too, or the browser's default line would add its own height.
   count: { ...type.text.tally, fontSize: 24, lineHeight: 26, color: palette.text, textAlign: 'center' },
   countReached: { color: palette.accent },
   countLabel: { color: palette.muted },
-  tallyText: { textAlign: 'center' },
-  tally: { minHeight: touch, justifyContent: 'center', borderRadius: radius.control, borderWidth: 1, borderColor: 'transparent' },
-  reached: { borderColor: palette.accent },
+  tallyText: { textAlign: 'center', fontSize: 13, lineHeight: 16 },
+  tally: { minHeight: touch, justifyContent: 'center' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   oneRow: { flexBasis: 0 },
   action: { flexGrow: 1, flexBasis: '40%', minWidth: 0 },

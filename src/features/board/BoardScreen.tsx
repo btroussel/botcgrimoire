@@ -86,7 +86,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
   const [phaseOpen, setPhaseOpen] = useState(openSetup)
   const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 50 })
-  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: 62 })
+  // A first guess at the tray, its title included when upright, so the first fit is the last.
+  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height ? 62 : 76 })
   const [clockHeight, setClockHeight] = useState(68)
   const lastReferenceTab = useRef<ReferenceTab>('characters')
   useEffect(() => { if (referenceTab) lastReferenceTab.current = referenceTab }, [referenceTab])
@@ -301,7 +302,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
-              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} />
+              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape} />
               : null}
           </View>
         </View>

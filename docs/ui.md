@@ -142,6 +142,10 @@ below the touch target, and no disc or name overlaps another seat. Only when the
 cannot fit does the seating area scroll, and the controls stay put. The velvet does not dim with
 the phase.
 
+A player's name prints larger under a large token, whose name box then holds the longest default
+name in every language. A small token keeps the label size, so a crowded or short board keeps its
+token size and no default name loses its number.
+
 The seat menu opens beside its token, wherever it covers the fewest other seats, so a neighbour
 stays tappable to nominate. It has no backdrop. Add a reminder comes first, since on a touch screen
 it is the only way to the reminder picker. [App](app.md#board-edits) owns the actions.
