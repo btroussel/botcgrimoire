@@ -1,9 +1,10 @@
 // References reserve board width only when there is room for both. On smaller screens
 // the paper overlays the board, without shrinking the seating circle to an unusable strip.
 import { useKeepAwake } from 'expo-keep-awake'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import type { ViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { emptySeat, scriptName } from '../../content'
@@ -15,7 +16,7 @@ import { Button, IconButton } from '../../ui/Button'
 import { Card } from './Card'
 import { Confirm } from '../../ui/Confirm'
 import { Empty } from '../../ui/Empty'
-import { layerAbove } from '../../ui/focus'
+import { domElement, layerAbove } from '../../ui/focus'
 import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
 import { PaperTexture } from '../../ui/PaperTexture'
@@ -90,6 +91,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height ? 62 : 76 })
   const [clockHeight, setClockHeight] = useState(68)
   const lastReferenceTab = useRef<ReferenceTab>('characters')
+  const tableView = useRef<ViewInstance>(null)
   useEffect(() => { if (referenceTab) lastReferenceTab.current = referenceTab }, [referenceTab])
   const openReference = useCallback(() => { setReferenceTab(lastReferenceTab.current); setPhaseOpen(false) }, [])
   const closeReference = useCallback(() => setReferenceTab(null), [])
@@ -317,7 +319,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
       <View style={[styles.root, { backgroundColor: p.felt }]} accessibilityLabel={scriptName(board.script)}>
         {/* The toolbar, the plaque and the bluffs hold three corners, in replay too. */}
         <Velvet colour={b.boardColour} ornaments={boardOrnaments} />
-        <View style={[styles.root, styles.row]}>
+        <View ref={tableView} style={[styles.root, styles.row]}>
           {table}
         </View>
         <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)}
@@ -353,7 +355,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         }}
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
-        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight}
+        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight} board={tableView}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
           onTabChange={changeReference} onOpen={openReference} onClose={closeReference} onReserve={setReservedWidth} />
@@ -410,6 +412,7 @@ interface ReferenceDrawerProps {
   readonly tab: ReferenceTab | null
   readonly viewport: number // the board's width inside the safe insets
   readonly upright: boolean // a window no wider than it is tall, which docks the drawer sooner
+  readonly board: RefObject<ViewInstance | null> // the table: seats, ring and bluffs, under the drawer
   readonly seatsRight: number // the right edge of the rightmost token, in board coordinates
   readonly top: number
   readonly right: number
@@ -425,15 +428,28 @@ interface ReferenceDrawerProps {
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
 // stays here, and the board hears only the width it gives up: below the docking minimum's width
 // that never changes, so the ring and the corners are left alone while the paper moves.
-const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, top, right, bottom, height, bottomClearance,
+const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, top, right, bottom, height, bottomClearance,
   onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
   const drawer = useReferenceDrawer(tab !== null, viewport, upright, onOpen, onClose, onReserve)
   const { referenceWidth } = boardLayoutFor(viewport, drawer.width, upright)
   const overlapsSeats = seatsRight > viewport - referenceWidth
+  // While the paper covers seats, a tap on the board closes it once the tap has done its own
+  // work, so a seat opens its menu on the first tap instead of the tap going to the drawer, and
+  // the seat cannot move under the finger before it lands. A pan or a pinch makes no click. A
+  // pressable stops its click from bubbling, so the click is heard on the way down and the
+  // drawer closes after its dispatch.
+  const closing = shown && tab !== null && !drawer.dragging && overlapsSeats
+  useEffect(() => {
+    if (!closing) return
+    let pending: ReturnType<typeof setTimeout> | undefined
+    const close = (event: MouseEvent) => {
+      if (domElement(board.current)?.contains(event.target as Node)) pending = setTimeout(onClose, 0)
+    }
+    document.addEventListener('click', close, true)
+    return () => { document.removeEventListener('click', close, true); clearTimeout(pending) }
+  }, [closing, board, onClose])
   if (!shown) return null
   return <>
-    {tab && !drawer.dragging && overlapsSeats ?
-      <div aria-hidden="true" onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 4 }} /> : null}
     <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
       <ReferenceRail tab={tab} width={referenceWidth} bottomClearance={bottomClearance}
         height={height} maximumWidth={drawer.maximum} onExpand={drawer.expand}

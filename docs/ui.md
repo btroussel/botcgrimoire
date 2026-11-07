@@ -152,6 +152,9 @@ it is the only way to the reminder picker. [App](app.md#board-edits) owns the ac
 
 A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
 outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
+Reminders stack toward the inside of the ring, and on a tall ring they lean level with their seat
+rather than pointing straight at the centre, which from a shoulder seat would hang them beside the
+next seat down.
 
 Stacked reminders always show each one's rim and name, and spread out on hover or tap. With a mouse
 or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
@@ -175,8 +178,10 @@ tap on one of its rows opens it full, that once: the next opening keeps the widt
 While the board has width to spare it gives it up to the drawer, down to a minimum, and the paper
 covers the rest of the board without moving the seats. An upright window keeps a 520 point board,
 so from 752 points wide the compact drawer docks whole and covers no seat. A window on its side is
-short and its ring needs the width, or a big game would scroll, so it keeps 760. The ring never
-jumps during a drag, a fully open drawer leaves some board in reach, and nothing dims.
+short and its ring needs the width, or a big game would scroll, so it keeps 760. While the paper
+covers seats, a tap on the board still does its own work, a seat opening its menu, and then closes
+the drawer, so no tap is spent only on closing it. The ring never jumps during a drag, a fully open
+drawer leaves some board in reach, and nothing dims.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
 board itself, with no banner, so the ring does not shift.
