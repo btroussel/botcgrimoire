@@ -5,9 +5,24 @@ description: Grades the whole codebase and the running app on code, UI, UX and p
 
 # Codebase scorecard
 
-Review the whole codebase and the whole app as they are, not recent commits or diffs. Grade each
-category from 0 to 5, whole numbers only. Every score cites evidence (`file:line`, a
-command's output or a screenshot) and says what would raise it by one.
+Review the whole codebase and the whole app as they are, not recent commits or diffs.
+
+Grade each category out of 10, to one decimal. Start from the anchor that matches the worst
+findings, then move within the band by how many there are and how much they cost:
+
+| Grade | Anchor |
+| --- | --- |
+| 10 | Nothing worth changing |
+| 8 | Minor findings only |
+| 6 | One major finding |
+| 4 | Several major findings |
+| 2 | A blocker |
+| 0 | Missing or broken |
+
+A blocker stops a task or loses data, a major finding costs users or maintainers often, a minor
+one is local friction. Be precise: every finding cites an exact `file:line`, a command and its
+output, or a screenshot with its screen and width, and gives numbers where it can (lines, taps,
+milliseconds, kilobytes).
 
 ## Groups
 
@@ -41,7 +56,7 @@ command's output or a screenshot) and says what would raise it by one.
    parallel. Give each its group's categories from above, the app URL, a temporary folder outside
    the repository for screenshots, and these rules: read only, evidence for every finding, answer
    in the format below.
-3. Check each score against its findings, then compute the means.
+3. Check each grade against its anchor and findings, then compute the means.
 4. Give the report in the reply, without saving it to a file, and stop the server.
 
 ## Format
@@ -50,35 +65,35 @@ Keep it short. Each subagent returns one or two sentences on its group (what wor
 back), then one section per category with at most three findings, the most severe first:
 
 ```markdown
-### <Category>: <score>/5
+### <Category>: <grade>/10
 - [blocker|major|minor] <finding> (<evidence>)
 
-To reach <score + 1>: <one line, left out at 5>
+Next step: <the change that would gain the most, left out at 10>
 ```
 
-The report has three parts, in this order: the table of scores, a description per group, then
-the sections per category. A group's score is the mean of its categories and the global score the
+The report has three parts, in this order: the table of grades, a description per group, then
+the sections per category. A group's grade is the mean of its categories and the global grade the
 mean of all categories, both to one decimal.
 
 ```markdown
 # Scorecard: <project>
 
-| Group | Category | Score |
+| Group | Category | Grade |
 | --- | --- | --- |
-| Code | Architecture and layers | 4 |
-| **Code** | | **3.8** |
-| **Global** | | **3.9** |
+| Code | Architecture and layers | 9.5 |
+| **Code** | | **8.4** |
+| **Global** | | **7.9** |
 
-Lowest: <category> (<score>)
+Lowest: <category> (<grade>)
 
 ## Summary
 
-**Code (3.8).** <one or two sentences>
+**Code (8.4).** <one or two sentences>
 
-**UI (4.0).** <one or two sentences>
+**UI (8.0).** <one or two sentences>
 
 ## Details
 
-### <Category>: <score>/5
+### <Category>: <grade>/10
 ...
 ```
