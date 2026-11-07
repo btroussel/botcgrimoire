@@ -65,6 +65,9 @@ export interface Store {
 
 const StoreContext = createContext<Store | undefined>(undefined)
 
+// A change to a session, kept as a function so it can be made again on another window's copy.
+type Change = (s: Session) => Session
+
 // `page` matches the exported HTML; only the initial entry can seed an unset preference.
 export const StoreProvider = ({ children, page }: { readonly children: ReactNode; readonly page?: Locale | undefined }) => {
   const initialPage = useRef(page)
@@ -135,23 +138,29 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     })
   }, [])
 
-  // Windows of the app on one device share the database, and each writes a game whole, so a
-  // window still holding an older copy would put it back over newer edits at its next save, its
-  // play-time checkpoint included (docs/store.md). Every write, delete and import tells the other
-  // windows, and one holding that game takes the stored copy whenever any of it differs, timer,
-  // bag and play time with the log, before it can write again. A write the database refuses as
-  // stale takes the stored copy too, and replays its own edits onto it. `seen` is the copy this
-  // window last read or wrote.
+  // Windows of the app on one device share the database and each writes a game whole, so a window
+  // still holding an older copy must not put it back over newer edits (docs/store.md). A change is
+  // kept as the operation that made it: shown at once, then made again inside the write's own
+  // transaction on whatever copy is stored, so another window's edits, timer, bag and play time
+  // stay. This window's writes and reads run one at a time, and after each the screen is the
+  // stored copy with the changes still waiting made on top. Every write, delete and import tells
+  // the other windows, which read the stored copy the same way.
   const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
-  const seen = useRef<SavedGame | undefined>(undefined)
+  const queue = useRef<Promise<void>>(Promise.resolve())
+  const waiting = useRef<readonly { readonly id: GameId; readonly change: Change }[]>([])
   const announce = useCallback((id: GameId) => otherWindows.current?.postMessage({ saved: id }), [])
-  const adopt = useCallback((game: SavedGame) => {
+  const inTurn = useCallback((task: () => Promise<void>) => {
+    queue.current = queue.current.then(task).catch(() => {})
+  }, [])
+  const settle = useCallback((stored: SavedGame) => {
     const current = live.current
-    seen.current = game
-    if (current?.game.id !== game.id || db.sameRecord(game, current.game)) return
+    if (current?.game.id !== stored.id) return
+    const shown = waiting.current.filter((w) => w.id === stored.id)
+      .reduce<Session>((s, w) => w.change(s), { ...cursor.openSession(stored), redo: current.redo })
+    if (db.sameRecord(shown.game, current.game)) return
     // A look back stays on its step while the log still reaches it.
-    replace({ ...cursor.openSession(game), ...(current.lookingAt !== undefined && current.lookingAt <= game.log.length ? { lookingAt: current.lookingAt } : {}) })
-    setGames((gs) => gs.map((g) => (g.id === game.id ? game : g)))
+    replace({ ...shown, ...(current.lookingAt !== undefined && current.lookingAt <= shown.game.log.length ? { lookingAt: current.lookingAt } : {}) })
+    setGames((gs) => gs.map((g) => (g.id === stored.id ? shown.game : g)))
   }, [replace])
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return
@@ -160,48 +169,59 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     channel.onmessage = (event: MessageEvent<{ readonly saved?: GameId }>) => {
       const id = event.data?.saved
       if (id === undefined || live.current?.game.id !== id) return
-      // A game deleted elsewhere stays on screen here, but its writes are refused from now on.
-      void db.getGame(id).then((game) => { if (game) adopt(game) })
+      // A game deleted elsewhere stays on screen here, and its writes find nothing to change.
+      inTurn(async () => {
+        const stored = await db.getGame(id)
+        if (stored) settle(stored)
+      })
     }
     return () => {
       channel.close()
       otherWindows.current = undefined
     }
-  }, [adopt])
+  }, [inTurn, settle])
 
-  // Every change to the session is written whole and swapped into the games list in place:
+  // Every change to the session is shown at once and swapped into the games list in place:
   // re-reading the database here would hand every other saved game a new identity on each
   // appended event, and the home rows behind the board would reduce their logs again for nothing.
-  // `refresh` is for the writes that change which games exist.
-  // A write refused because another window wrote first takes that window's copy and makes this
-  // window's own new edits again on top of it, so neither window's edits are lost.
-  const recommit = useRef<(next: Session) => void>(() => {})
-  const commit = useCallback(
-    (next: Session) => {
+  // `refresh` is for the writes that change which games exist. While the clock runs, a change
+  // also records play time up to now.
+  const change = useCallback(
+    (make: Change) => {
+      const current = live.current
+      if (!current) return
       const active = activePlay.current
-      if (active?.id === next.game.id) next = { ...next, game: recordPlayTime(next.game, active.start, Date.now()) }
+      const now = Date.now()
+      const made: Change = active?.id === current.game.id
+        ? (s) => { const next = make(s); return { ...next, game: recordPlayTime(next.game, active.start, now) } }
+        : make
+      const next = made(current)
       replace(next)
-      const written = next.game
-      const prior = seen.current?.id === written.id ? seen.current : undefined
-      seen.current = written
-      void db.putGameOver(written, prior).then((refused) => {
-        if (refused === undefined) { announce(written.id); return }
-        if (refused === null) return
-        const replayed = prior ? cursor.replayOnto(refused, prior, written, Date.now()) : undefined
-        adopt(refused)
-        if (replayed && replayed.game.log.length > refused.log.length && live.current?.game.id === written.id) recommit.current(replayed)
-      })
       setGames((gs) => gs.map((g) => (g.id === next.game.id ? next.game : g)).sort((a, b) => b.updatedAt - a.updatedAt))
+      const id = current.game.id
+      const entry = { id, change: made }
+      waiting.current = [...waiting.current, entry]
+      inTurn(async () => {
+        try {
+          const stored = await db.writeGame(id, (game) => made(cursor.openSession(game)).game)
+          waiting.current = waiting.current.filter((w) => w !== entry)
+          if (stored) {
+            announce(id)
+            settle(stored)
+          }
+        } finally {
+          waiting.current = waiting.current.filter((w) => w !== entry)
+        }
+      })
     },
-    [replace, announce, adopt],
+    [replace, inTurn, announce, settle],
   )
-  useEffect(() => { recommit.current = commit }, [commit])
 
   const pause = useCallback(() => {
-    if (activePlay.current && live.current) commit(live.current)
+    if (activePlay.current && live.current) change((s) => s)
     activePlay.current = undefined
     setPlayStartedAt(undefined)
-  }, [commit])
+  }, [change])
 
   const sessionId = session?.game.id
   const phase = session ? gameClock(session.game.log).state : undefined
@@ -220,7 +240,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     // Checkpoints have an end time, never a persisted running clock. An abrupt exit
     // may lose the uncheckpointed tail; it cannot add hours while the app is closed.
     const timer = setInterval(() => {
-      if (activePlay.current && live.current) commit(live.current)
+      if (activePlay.current && live.current) change((s) => s)
     }, 30_000)
     document.addEventListener('visibilitychange', resume)
     window.addEventListener('pagehide', pause)
@@ -232,14 +252,13 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       window.removeEventListener('pagehide', pause)
       window.removeEventListener('pageshow', resume)
     }
-  }, [sessionId, playingId, phase, lookingBack, commit, pause])
+  }, [sessionId, playingId, phase, lookingBack, change, pause])
 
   const open = useCallback(
     async (id: GameId) => {
       pause()
       const game = await db.getGame(id)
       if (!game) return false
-      seen.current = game
       replace(cursor.openSession(game))
       return true
     },
@@ -256,7 +275,6 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       pause()
       const game = newGame(script, Date.now())
       await db.putGame(game)
-      seen.current = game
       await refresh()
       replace(cursor.openSession(game))
       return game.id
@@ -318,36 +336,42 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
 
   const append = useCallback(
     (payload: Payload) => {
-      if (live.current) commit(cursor.append(live.current, payload, Date.now()))
+      const now = Date.now()
+      change((s) => cursor.append(s, payload, now))
     },
-    [commit],
+    [change],
   )
   const appendAll = useCallback(
     (payloads: readonly Payload[]) => {
-      if (live.current) commit(cursor.appendAll(live.current, payloads, Date.now()))
+      const now = Date.now()
+      change((s) => cursor.appendAll(s, payloads, now))
     },
-    [commit],
+    [change],
   )
   const undo = useCallback(() => {
-    if (live.current) commit(cursor.undo(live.current, Date.now()))
-  }, [commit])
+    const now = Date.now()
+    change((s) => cursor.undo(s, now))
+  }, [change])
   const redo = useCallback(() => {
-    if (live.current) commit(cursor.redo(live.current, Date.now()))
-  }, [commit])
+    const now = Date.now()
+    change((s) => cursor.redo(s, now))
+  }, [change])
   const lookAt = useCallback(
     (n: number) => {
       pause()
-      if (live.current?.game.dayTimer) commit(cursor.updateDayTimer(live.current, 'pause', Date.now()))
+      const now = Date.now()
+      if (live.current?.game.dayTimer) change((s) => cursor.updateDayTimer(s, 'pause', now))
       if (live.current) replace(cursor.lookAt(live.current, n))
     },
-    [replace, pause, commit],
+    [replace, pause, change],
   )
   const updateDayTimer = useCallback((action: DayTimerAction) => {
-    if (live.current) commit(cursor.updateDayTimer(live.current, action, Date.now()))
-  }, [commit])
+    const now = Date.now()
+    change((s) => cursor.updateDayTimer(s, action, now))
+  }, [change])
   const setDraw = useCallback((draw: Draw | undefined) => {
-    if (live.current) commit(cursor.setDraw(live.current, draw))
-  }, [commit])
+    change((s) => cursor.setDraw(s, draw))
+  }, [change])
   const returnToPresent = useCallback(() => {
     if (live.current) replace(cursor.returnToPresent(live.current))
   }, [replace])

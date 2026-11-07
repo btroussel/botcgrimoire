@@ -12,7 +12,7 @@ import {
   PURGE_AFTER_MS,
   purgeDeleted,
   putGame,
-  putGameOver,
+  writeGame,
 } from './db'
 import { asCharacterId } from '../content'
 import { InvalidSavedGame, newGame, serialize } from './saved'
@@ -29,48 +29,35 @@ const edited = (game: SavedGame, characters: readonly string[], now: number): Sa
   append(openSession(game), { kind: 'setBluffs', characters: characters.map(asCharacterId) }, now).game
 
 describe('two windows writing one game', () => {
-  test('a stale window cannot write its older copy back, and gets the stored one instead', async () => {
+  test('a change shown on an older copy is made on the stored one, keeping the other window\'s edit and timer', async () => {
     const start = newGame('tb', 1)
     await putGame(start)
-    // Window A marks something; window B, still on the start, then saves a play-time checkpoint.
-    const a = edited(start, ['chef', 'monk', 'saint'], 2)
-    expect(await putGameOver(a, start)).toBeUndefined()
-    const checkpoint = { ...start, playTime: [{ start: 1, end: 3 }] }
-    expect(await putGameOver(checkpoint, start)).toEqual(a)
-    expect(await getGame(start.id)).toEqual(a)
-  })
-
-  test('a window\'s own writes in a row, and a write that adds to the stored copy, go through', async () => {
-    const start = newGame('tb', 1)
-    await putGame(start)
-    const first = edited(start, ['chef', 'monk', 'saint'], 2)
-    const second = edited(first, ['chef', 'monk', 'soldier'], 3)
-    expect(await putGameOver(first, start)).toBeUndefined()
-    // Written before the first write was known to have landed: it still adds to it.
-    expect(await putGameOver(second, start)).toBeUndefined()
-    expect(await getGame(start.id)).toEqual(second)
-    // A play-time checkpoint on the same log is not stale either.
-    const checkpoint = { ...second, playTime: [{ start: 1, end: 4 }] }
-    expect(await putGameOver(checkpoint, first)).toBeUndefined()
-    expect(await getGame(start.id)).toEqual(checkpoint)
-  })
-
-  test('a stale window that adds its own edit is refused too, so it can replay that edit', async () => {
-    const start = newGame('tb', 1)
-    await putGame(start)
-    const a = edited(start, ['chef', 'monk', 'saint'], 2)
-    expect(await putGameOver(a, start)).toBeUndefined()
-    const b = edited(start, ['chef', 'monk', 'soldier'], 3)
-    expect(await putGameOver(b, start)).toEqual(a)
-    expect(await getGame(start.id)).toEqual(a)
+    // Window A records bluffs and starts the timer; window B, still on the start, records others.
+    await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))
+    const timer = { durationMs: 120_000, remainingMs: 90_000, pauseOnNomination: true, nominationPaused: false }
+    await writeGame(start.id, (g) => ({ ...g, dayTimer: timer }))
+    const fromA = await getGame(start.id)
+    const written = await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'soldier'], 4))
+    expect(written?.log).toHaveLength(fromA!.log.length + 1)
+    expect(written?.log.slice(0, fromA!.log.length)).toEqual(fromA!.log)
+    expect(written?.dayTimer).toEqual(fromA!.dayTimer)
+    expect(await getGame(start.id)).toEqual(written)
   })
 
   test('a game deleted in another window is not written back', async () => {
     const start = newGame('tb', 1)
     await putGame(start)
     await deleteGame(start.id)
-    expect(await putGameOver(edited(start, ['chef', 'monk', 'saint'], 2), start)).toBeNull()
+    expect(await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))).toBeUndefined()
     expect(await getGame(start.id)).toBeUndefined()
+  })
+
+  test('a stored game this version cannot read is left as it is', async () => {
+    const start = newGame('tb', 1)
+    const newer = { ...start, version: start.version + 1 }
+    await putGame(newer)
+    expect(await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))).toBeUndefined()
+    await expect(getGame(start.id)).rejects.toThrow()
   })
 })
 
