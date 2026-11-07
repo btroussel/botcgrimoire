@@ -65,9 +65,6 @@ export interface Store {
 
 const StoreContext = createContext<Store | undefined>(undefined)
 
-// A change to a session, kept as a function so it can be made again on another window's copy.
-type Change = (s: Session) => Session
-
 // `page` matches the exported HTML; only the initial entry can seed an unset preference.
 export const StoreProvider = ({ children, page }: { readonly children: ReactNode; readonly page?: Locale | undefined }) => {
   const initialPage = useRef(page)
@@ -139,47 +136,48 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   }, [])
 
   // Windows of the app on one device share the database and each writes a game whole, so a window
-  // still holding an older copy must not put it back over newer edits (docs/store.md). A change is
-  // kept as the operation that made it: shown at once, then made again inside the write's own
-  // transaction on whatever copy is stored, so another window's edits, timer, bag and play time
-  // stay. This window's writes and reads run one at a time, and after each the screen is the
-  // stored copy with the changes still waiting made on top. Every write, delete and import tells
-  // the other windows, which read the stored copy the same way.
+  // still holding an older copy must not put it back over newer edits (docs/store.md). A window's
+  // write lands only while the stored copy is still `base`, the one its screen was built on. When
+  // another window wrote first, that change and every change made after it on the same screen
+  // are dropped, since each carries what this window saw, and the window shows the stored copy:
+  // the Storyteller sees the other window's edits and taps again. Writes and reads run one at a
+  // time. Every write, delete and import tells the other windows, which read the stored copy.
   const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
   const queue = useRef<Promise<void>>(Promise.resolve())
-  const waiting = useRef<readonly { readonly id: GameId; readonly change: Change }[]>([])
+  const base = useRef<SavedGame | undefined>(undefined)
+  const waiting = useRef<readonly { readonly id: GameId; readonly game: SavedGame }[]>([])
   const announce = useCallback((id: GameId) => otherWindows.current?.postMessage({ saved: id }), [])
   const inTurn = useCallback((task: () => Promise<void>) => {
     queue.current = queue.current.then(task).catch(() => {})
   }, [])
-  const settle = useCallback((stored: SavedGame) => {
+  const show = useCallback((stored: SavedGame) => {
+    base.current = stored
     const current = live.current
-    if (current?.game.id !== stored.id) return
-    const shown = waiting.current.filter((w) => w.id === stored.id)
-      .reduce<Session>((s, w) => w.change(s), { ...cursor.openSession(stored), redo: current.redo })
-    if (db.sameRecord(shown.game, current.game)) return
+    if (current?.game.id !== stored.id || db.sameRecord(stored, current.game)) return
     // A look back stays on its step while the log still reaches it.
-    replace({ ...shown, ...(current.lookingAt !== undefined && current.lookingAt <= shown.game.log.length ? { lookingAt: current.lookingAt } : {}) })
-    setGames((gs) => gs.map((g) => (g.id === stored.id ? shown.game : g)))
+    replace({ ...cursor.openSession(stored), ...(current.lookingAt !== undefined && current.lookingAt <= stored.log.length ? { lookingAt: current.lookingAt } : {}) })
+    setGames((gs) => gs.map((g) => (g.id === stored.id ? stored : g)))
   }, [replace])
+  // Reads the stored copy and shows it, unless changes made on the current screen are still to be
+  // written: their writes compare against the old `base` and show the stored copy themselves.
+  const reread = useCallback((id: GameId) => inTurn(async () => {
+    if (live.current?.game.id !== id || waiting.current.some((w) => w.id === id)) return
+    const stored = await db.getGame(id)
+    if (stored && !waiting.current.some((w) => w.id === id)) show(stored)
+  }), [inTurn, show])
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return
     const channel = new BroadcastChannel('botcgrimoire-saved-games')
     otherWindows.current = channel
     channel.onmessage = (event: MessageEvent<{ readonly saved?: GameId }>) => {
       const id = event.data?.saved
-      if (id === undefined || live.current?.game.id !== id) return
-      // A game deleted elsewhere stays on screen here, and its writes find nothing to change.
-      inTurn(async () => {
-        const stored = await db.getGame(id)
-        if (stored) settle(stored)
-      })
+      if (id !== undefined) reread(id)
     }
     return () => {
       channel.close()
       otherWindows.current = undefined
     }
-  }, [inTurn, settle])
+  }, [reread])
 
   // Every change to the session is shown at once and swapped into the games list in place:
   // re-reading the database here would hand every other saved game a new identity on each
@@ -187,34 +185,41 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   // `refresh` is for the writes that change which games exist. While the clock runs, a change
   // also records play time up to now.
   const change = useCallback(
-    (make: Change) => {
+    (make: (s: Session) => Session) => {
       const current = live.current
       if (!current) return
       const active = activePlay.current
-      const now = Date.now()
-      const made: Change = active?.id === current.game.id
-        ? (s) => { const next = make(s); return { ...next, game: recordPlayTime(next.game, active.start, now) } }
-        : make
-      const next = made(current)
+      const made = make(current)
+      const next = active?.id === current.game.id ? { ...made, game: recordPlayTime(made.game, active.start, Date.now()) } : made
+      if (next === current) return
       replace(next)
       setGames((gs) => gs.map((g) => (g.id === next.game.id ? next.game : g)).sort((a, b) => b.updatedAt - a.updatedAt))
       const id = current.game.id
-      const entry = { id, change: made }
+      const entry = { id, game: next.game }
       waiting.current = [...waiting.current, entry]
       inTurn(async () => {
+        // Dropped with an earlier change from the same screen.
+        if (!waiting.current.includes(entry)) return
+        const prior = base.current?.id === id ? base.current : undefined
         try {
-          const stored = await db.writeGame(id, (game) => made(cursor.openSession(game)).game)
-          waiting.current = waiting.current.filter((w) => w !== entry)
-          if (stored) {
+          const outcome = prior ? await db.putGameOn(entry.game, prior) : (await db.putGame(entry.game), { written: true as const })
+          if (outcome.written) {
+            waiting.current = waiting.current.filter((w) => w !== entry)
+            base.current = entry.game
             announce(id)
-            settle(stored)
+            return
           }
-        } finally {
-          waiting.current = waiting.current.filter((w) => w !== entry)
+          waiting.current = waiting.current.filter((w) => w.id !== id)
+          if (outcome.stored) show(outcome.stored)
+        } catch {
+          // The write failed: the screen goes back to what is stored rather than show unsaved edits.
+          waiting.current = waiting.current.filter((w) => w.id !== id)
+          const stored = await db.getGame(id).catch(() => undefined)
+          if (stored) show(stored)
         }
       })
     },
-    [replace, inTurn, announce, settle],
+    [replace, inTurn, announce, show],
   )
 
   const pause = useCallback(() => {
@@ -234,6 +239,8 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
         const start = Date.now()
         activePlay.current = { id: sessionId, start }
         setPlayStartedAt(start)
+        // A window coming back may have missed another window's message.
+        reread(sessionId)
       }
     }
     resume()
@@ -252,17 +259,21 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       window.removeEventListener('pagehide', pause)
       window.removeEventListener('pageshow', resume)
     }
-  }, [sessionId, playingId, phase, lookingBack, change, pause])
+  }, [sessionId, playingId, phase, lookingBack, change, pause, reread])
 
+  // In turn with the writes, so the copy opened is never older than one this window wrote.
   const open = useCallback(
-    async (id: GameId) => {
+    (id: GameId) => {
       pause()
-      const game = await db.getGame(id)
-      if (!game) return false
-      replace(cursor.openSession(game))
-      return true
+      return new Promise<boolean>((resolve) => inTurn(async () => {
+        const game = await db.getGame(id).catch(() => undefined)
+        if (!game) { resolve(false); return }
+        base.current = game
+        replace(cursor.openSession(game))
+        resolve(true)
+      }))
     },
-    [replace, pause],
+    [replace, pause, inTurn],
   )
 
   const close = useCallback(() => {
@@ -275,6 +286,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       pause()
       const game = newGame(script, Date.now())
       await db.putGame(game)
+      base.current = game
       await refresh()
       replace(cursor.openSession(game))
       return game.id

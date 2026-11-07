@@ -28,16 +28,20 @@ Each game is written whole after every append: a log is a few kilobytes. On the 
 store asks the browser for persistent storage; the app works if it says no. Deleting a game is
 permanent, with no trash.
 
+History imports a game file through the same migrations and checks as a load. It keeps its id
+unless this device holds a different game under it, in which case both are kept.
+
 Windows of the app on one device share the database, so a window still holding an older copy of
 a game would put it back over newer edits at its next write, a play-time checkpoint included.
-So a window never writes the copy it holds. It keeps each change as the operation that made it,
-shows it at once, and makes it again inside the write's own transaction on whatever copy is
-stored, migrated as a load would: another window's edits, timer, bag and play time stay. A
-window's writes and reads run one at a time, and after each one it shows the stored copy with
-its changes still waiting made on top. Every write, delete and import tells the other windows
-over a `BroadcastChannel`, and a window holding that game reads it the same way. A game deleted
-in another window is not written back, and one this version cannot read is left as it is. A
-window on a build from before this rule writes as it always did.
+So a window's write lands only while the stored copy is still the one its screen was built on,
+checked in the write's own transaction. When another window wrote first, that change and every
+change made after it on the same screen are dropped, since each carries values this window saw,
+and the window shows the stored copy: the Storyteller sees the other window's edits and taps
+again. Nothing already saved is lost, and nothing is merged. Every write, delete and import tells
+the other windows over a `BroadcastChannel`; a window reads the stored copy then, when it opens a
+game and when it comes back into view. A game deleted in another window is not written back, and
+one this version cannot read is left as it is. A window on a build from before this rule writes
+as it always did.
 
 ## Versions and migrations
 
