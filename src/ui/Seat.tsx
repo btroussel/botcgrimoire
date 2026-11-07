@@ -12,7 +12,8 @@ import type { Alignment } from '../content'
 import { AddBadge, ReminderChip } from './ReminderChip'
 import { AvailableRing, BlockMark, GhostVoteMark, SelectedRing } from './SeatMarks'
 import { Token } from './Token'
-import { motion, palette, seatMetrics, seatNameStyle, space, tokenSize, touch } from './theme'
+import { reminderStack } from './reminderStack'
+import { motion, palette, seatMetrics, seatNameStyle, space, touch } from './theme'
 
 export interface SeatChip {
   readonly key: string
@@ -54,11 +55,6 @@ const nameOverhang = seatMetrics.nameOverhang
 // counts across the top, the setup flower low on the right and the name along the bottom.
 const plusCorners = [-140, -40].map(degrees => ({ x: Math.cos(degrees * Math.PI / 180), y: Math.sin(degrees * Math.PI / 180) }))
 
-// A reminder is three fifths of its seat's token, never under the chip size, so a tablet's or a
-// desktop's big tokens carry reminders whose words read, and never over the token itself, so on
-// a crowded twenty-seat board the reminder never outgrows the seat it belongs to.
-export const reminderSize = (token: number): number => Math.round(Math.min(token, Math.max(tokenSize.chip, token * 0.6)))
-
 export const Seat = ({
   size,
   name,
@@ -84,7 +80,6 @@ export const Seat = ({
   const p = palette
   const nameTop = size + seatMetrics.nameGap
   const nameStyle = seatNameStyle(size)
-  const nameLine = nameStyle.lineHeight ?? 0
   const nameWidth = size + 2 * nameOverhang
 
   const [expanded, setExpanded] = useState(false)
@@ -106,19 +101,9 @@ export const Seat = ({
     document.addEventListener('pointerdown', dismiss)
     return () => document.removeEventListener('pointerdown', dismiss)
   }, [expanded, onRemindersExpanded])
-  const chipSize = reminderSize(size)
-  const chipSlot = { width: chipSize + 2 * space.xs, height: Math.max(touch, chipSize + 2 * space.xs) }
-  const radians = ((angle ?? 270) * Math.PI) / 180
-  const inward = { x: -Math.cos(radians), y: -Math.sin(radians) }
-  // Only downward stacks need room for the name; diagonal stacks clear it to the side.
-  const nameClearance = Math.max(0, inward.y - Math.abs(inward.x)) * (nameLine + space.xxs)
-  const distance = size / 2 + chipSize / 2 + space.xxs + nameClearance
   // Every reminder follows the same inward axis.
-  const step = expanded ? chipSize + space.xxs : chipSize / 2
-  const points = chips.map((_, i) => ({
-    x: inward.x * (distance + i * step),
-    y: inward.y * (distance + i * step),
-  }))
+  const { chipSize, inward, points } = reminderStack(size, angle ?? 270, chips.length, expanded)
+  const chipSlot = { width: chipSize + 2 * space.xs, height: Math.max(touch, chipSize + 2 * space.xs) }
   const minX = Math.min(...points.map(point => point.x)) - chipSlot.width / 2
   const minY = Math.min(...points.map(point => point.y)) - chipSlot.height / 2
   const blockWidth = Math.max(...points.map(point => point.x)) + chipSlot.width / 2 - minX

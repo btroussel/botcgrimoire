@@ -1,4 +1,4 @@
-import { halfway, seatPositions, voteArc, voteArcScale } from './ring'
+import { lean, seatPositions, voteArc, voteArcScale } from './ring'
 
 // A worked example: a 390 x 527 middle band on a 390 x 844 phone, and a margin of 90, gives
 // radii of 105 and 173.5.
@@ -8,11 +8,12 @@ const rx = band.width / 2 - margin
 const ry = band.height / 2 - margin
 
 describe('seat positions on the ring', () => {
-  test('halfway between two directions takes the short way round', () => {
-    expect(halfway(0, 90)).toBeCloseTo(45)
-    expect(halfway(-72, -18)).toBeCloseTo(-45)
-    expect(Math.abs(halfway(170, -170))).toBeCloseTo(180)
-    expect(halfway(100, 100)).toBeCloseTo(100)
+  test('a lean turns part of the way toward another direction, the short way round', () => {
+    expect(lean(0, 90, 0.5)).toBeCloseTo(45)
+    expect(lean(-72, -18, 0.5)).toBeCloseTo(-45)
+    expect(lean(170, -170, 0.5)).toBeCloseTo(180)
+    expect(lean(10, 80, 0)).toBeCloseTo(10)
+    expect(lean(10, 80, 1)).toBeCloseTo(80)
   })
 
   test('the vote arc runs clockwise from the nominee round to an arrowhead back at them', () => {

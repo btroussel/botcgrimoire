@@ -110,5 +110,17 @@ test.describe('with reduced motion', () => {
     await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
     await expect(tab).toHaveAttribute('aria-expanded', 'false')
     await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
+
+    // A reminder takes an edit no undo gives back, so a tap on one with the paper out only puts
+    // the paper away.
+    await page.getByRole('button', { name: 'Add a reminder', exact: true }).tap()
+    await page.getByRole('dialog').getByRole('button', { name: /, / }).first().tap()
+    const chip = seat.locator('[data-chip] [role="button"]')
+    await expect(chip).toHaveCount(1)
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'true')
+    await chip.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await expect(chip).toHaveCount(1)
   })
 })

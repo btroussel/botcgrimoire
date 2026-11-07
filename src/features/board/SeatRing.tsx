@@ -23,7 +23,8 @@ import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { domElement } from '../../ui/focus'
 import { useReducedMotion } from '../../ui/motion'
 import { ReminderChip } from '../../ui/ReminderChip'
-import { reminderSize, Seat } from '../../ui/Seat'
+import { reminderSize } from '../../ui/reminderStack'
+import { Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
 import { hairline, motion, palette, radius, shadows, space, tokenSize, touch } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
@@ -31,7 +32,7 @@ import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
 import { sameSeat } from './board'
 import { centrePanelWidth } from './boardGeometry'
-import { halfway, seatPositions } from './ring'
+import { seatPositions, stackAngle } from './ring'
 import type { RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { placeSeatMenu } from './seatMenu'
@@ -68,7 +69,6 @@ export interface SeatRingProps {
 
 // A lifted reminder is drawn a little larger, raised off the board.
 const liftScale = 1.15
-
 
 export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, t, onAddReminder, onRemoveReminder, onMoveReminder, onEditNote, onGap, onTurn, onArrangeDone,
   readOnly = false, panelDocked = false, deal = false }: SeatRingProps) {
@@ -181,14 +181,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
         {seats.map((seat, i) => {
           const at = positions[i]
           if (!at) return null
-          // Fan the lower stacks apart on wide ovals, leaving room for the top seat's
-          // reminder below its name. Flanks face the centre to clear the names above them. On a
-          // tall oval the line to the centre runs steeply down the ring from a shoulder seat and
-          // would set its reminder as near the next seat as its own, while the oval's normal runs
-          // level and meets the other shoulder's reminder; halfway between keeps it by its seat.
-          const towardCentre = Math.atan2(at.y - centre.y, at.x - centre.x) * 180 / Math.PI
-          const reminderAngle = geometry.rx > geometry.ry && at.y - centre.y > geometry.ry / 2 ? at.angle
-            : geometry.rx > geometry.ry ? towardCentre : halfway(towardCentre, at.angle)
+          const reminderAngle = stackAngle(at, centre, geometry.rx, geometry.ry, { size, chip: chipSize })
           const nominationLabel = isNominationTarget(seat.id) ? t('board.nominatePlayer', { name: seat.name }) : undefined
           const inPick = pick !== undefined || action !== undefined
           const allowed = pick ? pick.allowed.includes(seat.id) : action?.allowed.includes(seat.id) ?? false
