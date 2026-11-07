@@ -52,7 +52,8 @@ back), then one section per category with at most three findings, the most sever
 ```markdown
 ### <Category>: <score>/5
 - [blocker|major|minor] <finding> (<evidence>)
-To reach <score + 1>: <one line>
+
+To reach <score + 1>: <one line, left out at 5>
 ```
 
 The report has three parts, in this order: the table of scores, a description per group, then
