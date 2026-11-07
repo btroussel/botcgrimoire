@@ -13,12 +13,13 @@ import { useEdits } from './useEdits'
 const bluffCount = 3
 
 // The display and picker share one owner, so selecting bluffs stays separate from showing them.
-export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit }: {
+export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit, titled }: {
   readonly board: Grimoire
   readonly bluffs: readonly CharacterId[]
   readonly boardWidth: number // the plaque shares the bottom edge from the far corner
   readonly clockWidth: number
   readonly canEdit: boolean
+  readonly titled: boolean // the title over the wells; a short landscape board keeps its height for the ring
 }) => {
   const e = useEdits()
   const interaction = useBoardInteraction()
@@ -48,8 +49,9 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit }: 
 
   return <>
           <View style={[styles.bluffs, { width: bluffCount * bluffSize + 2 * space.xs + 2 }]} accessibilityLabel={t('board.bluffsTitle')} role="region">
-            {/* Three empty wells say nothing on their own; the region's name already reads it out. */}
-            <Text aria-hidden numberOfLines={1} style={[type.text.label, styles.title]}>{t('board.bluffsTitle')}</Text>
+            {/* Three empty wells say nothing on their own; the region's name already reads it out.
+                The title fits the slack the portrait status band already has over the tray. */}
+            {titled ? <Text aria-hidden numberOfLines={1} style={[type.text.label, styles.title]}>{t('board.bluffsTitle')}</Text> : null}
             <View style={[boardBlock, styles.bluffTokens]}>
               {Array.from({ length: bluffCount }, (_, index) => {
                 const c = bluffs[index]
@@ -83,7 +85,7 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit }: 
   </>
 }
 const styles = StyleSheet.create({
-  bluffs: { flexShrink: 0, alignItems: 'center', gap: space.xxs },
+  bluffs: { flexShrink: 0, alignItems: 'center' },
   title: { color: palette.muted, maxWidth: '100%', textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   bluffTokens: { flexDirection: 'row', alignSelf: 'flex-start', gap: space.xs, borderRadius: 999 },
 })

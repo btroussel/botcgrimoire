@@ -12,7 +12,7 @@ import type { Alignment } from '../content'
 import { AddBadge, ReminderChip } from './ReminderChip'
 import { AvailableRing, BlockMark, GhostVoteMark, SelectedRing } from './SeatMarks'
 import { Token } from './Token'
-import { motion, palette, space, tokenSize, touch, type, seatMetrics } from './theme'
+import { motion, palette, seatMetrics, seatNameStyle, space, tokenSize, touch } from './theme'
 
 export interface SeatChip {
   readonly key: string
@@ -48,7 +48,6 @@ export interface SeatProps {
   readonly accessibilityLabel?: string // the whole seat in words; the name when omitted
 }
 
-const nameLine = type.text.seatName.lineHeight ?? 0
 // The name's box: the token plus a little either side, centred under it.
 const nameOverhang = seatMetrics.nameOverhang
 // The two gaps in the printed rim markers: night leaves at nine and three o'clock, reminder
@@ -84,6 +83,8 @@ export const Seat = ({
 }: SeatProps) => {
   const p = palette
   const nameTop = size + seatMetrics.nameGap
+  const nameStyle = seatNameStyle(size)
+  const nameLine = nameStyle.lineHeight ?? 0
   const nameWidth = size + 2 * nameOverhang
 
   const [expanded, setExpanded] = useState(false)
@@ -167,7 +168,7 @@ export const Seat = ({
         // react-native-web caps a Text at its parent's width, and the parent here is the token's box.
         // A diagonal stack's first disc reaches the end of a long name, so the name is drawn above
         // the seat's reminders and lets their taps through.
-        style={[type.text.seatName, styles.name, { top: nameTop, left: -nameOverhang, width: nameWidth, maxWidth: nameWidth, zIndex: chips.length + 2, color: pickable === false && !selected && !quietPick ? p.muted : p.text }]}
+        style={[nameStyle, styles.name, { top: nameTop, left: -nameOverhang, width: nameWidth, maxWidth: nameWidth, zIndex: chips.length + 2, color: pickable === false && !selected && !quietPick ? p.muted : p.text }]}
         numberOfLines={1}
       >
         {name}
