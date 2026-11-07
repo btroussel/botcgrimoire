@@ -15,7 +15,7 @@ export interface SeatDialogAction {
 }
 
 // These actions finish at the board, with no player-details screen underneath. A closing dialog
-// keeps the seat it was opened for, so Empty seat can fade out after its seat has gone.
+// keeps the seat it was opened for, so Remove the seat can fade out after its seat has gone.
 export const SeatActionDialog = ({ action, visible, onClose }: {
   readonly action: SeatDialogAction
   readonly visible: boolean

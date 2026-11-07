@@ -11,10 +11,15 @@ export const referenceSettledWidth = (width: number, maximum: number, compact: n
   return width < (minimum + maximum) / 2 ? minimum : maximum
 }
 
+// The narrowest board that still gives up width to a drawer. A tablet held upright and a phone
+// on its side keep a ring this wide beside the compact drawer, so the drawer never cuts their
+// seats in half; a phone held upright is narrower and the drawer covers its ring instead.
+const boardMinimum = 520
+
 // Reserve space continuously until the board reaches its readable minimum. Extra paper
 // then overlays it, rather than switching abruptly between docked and floating layouts.
 export const boardLayoutFor = (viewport: number, width: number) => {
   const referenceWidth = Math.max(0, Math.min(width, referenceMaximumWidth(viewport)))
-  const dockable = Math.max(0, viewport - referenceTabWidth - 760)
+  const dockable = Math.max(0, viewport - referenceTabWidth - boardMinimum)
   return { referenceWidth, reservedWidth: referenceTabWidth + Math.min(referenceWidth, dockable) }
 }
