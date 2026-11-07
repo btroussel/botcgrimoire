@@ -1,7 +1,8 @@
 // The React binding (docs/store.md): one context with the session, the derived board, the
 // cursor's operations, the list of saved games, the custom scripts and characters, the settings,
 // and the translator bound to the locale.
-// No global bus, no store library, nothing that is not the session or a view of it.
+// No store library, nothing that is not the session or a view of it; the one channel between
+// windows only says which game was written.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { Homebrew, Locale, Script, Translate, Values } from '../content'
@@ -65,9 +66,6 @@ export interface Store {
 const StoreContext = createContext<Store | undefined>(undefined)
 
 // `page` matches the exported HTML; only the initial entry can seed an unset preference.
-// Two logs are the same game state when they end on the same event at the same length.
-const sameLog = (a: SavedGame['log'], b: SavedGame['log']): boolean => a.length === b.length && a.at(-1)?.id === b.at(-1)?.id
-
 export const StoreProvider = ({ children, page }: { readonly children: ReactNode; readonly page?: Locale | undefined }) => {
   const initialPage = useRef(page)
   const [ready, setReady] = useState(false)
@@ -139,10 +137,21 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
 
   // Windows of the app on one device share the database, and each writes a game whole, so a
   // window still holding an older copy would put it back over newer edits at its next save, its
-  // play-time checkpoint included. Every save tells the other windows, and one holding that game
-  // takes the saved copy when its log differs, before it can save again. Its look back stays
-  // where it was, since the saved log only grows past it.
+  // play-time checkpoint included (docs/store.md). Every write, delete and import tells the other
+  // windows, and one holding that game takes the stored copy whenever any of it differs, timer,
+  // bag and play time with the log, before it can write again. A write the database refuses as
+  // stale takes the stored copy the same way. `seen` is the copy this window last read or wrote.
   const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
+  const seen = useRef<SavedGame | undefined>(undefined)
+  const announce = useCallback((id: GameId) => otherWindows.current?.postMessage({ saved: id }), [])
+  const adopt = useCallback((game: SavedGame) => {
+    const current = live.current
+    seen.current = game
+    if (current?.game.id !== game.id || db.sameRecord(game, current.game)) return
+    // A look back stays on its step while the log still reaches it.
+    replace({ ...cursor.openSession(game), ...(current.lookingAt !== undefined && current.lookingAt <= game.log.length ? { lookingAt: current.lookingAt } : {}) })
+    setGames((gs) => gs.map((g) => (g.id === game.id ? game : g)))
+  }, [replace])
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return
     const channel = new BroadcastChannel('botcgrimoire-saved-games')
@@ -150,18 +159,14 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     channel.onmessage = (event: MessageEvent<{ readonly saved?: GameId }>) => {
       const id = event.data?.saved
       if (id === undefined || live.current?.game.id !== id) return
-      void db.getGame(id).then((game) => {
-        const current = live.current
-        if (!game || current?.game.id !== id || sameLog(game.log, current.game.log)) return
-        replace({ ...cursor.openSession(game), ...(current.lookingAt !== undefined && current.lookingAt <= game.log.length ? { lookingAt: current.lookingAt } : {}) })
-        setGames((gs) => gs.map((g) => (g.id === id ? game : g)))
-      })
+      // A game deleted elsewhere stays on screen here, but its writes are refused from now on.
+      void db.getGame(id).then((game) => { if (game) adopt(game) })
     }
     return () => {
       channel.close()
       otherWindows.current = undefined
     }
-  }, [replace])
+  }, [adopt])
 
   // Every change to the session is written whole and swapped into the games list in place:
   // re-reading the database here would hand every other saved game a new identity on each
@@ -172,11 +177,16 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       const active = activePlay.current
       if (active?.id === next.game.id) next = { ...next, game: recordPlayTime(next.game, active.start, Date.now()) }
       replace(next)
-      const id = next.game.id
-      void db.putGame(next.game).then(() => otherWindows.current?.postMessage({ saved: id }))
+      const written = next.game
+      const prior = seen.current?.id === written.id ? seen.current : undefined
+      seen.current = written
+      void db.putGameOver(written, prior).then((refused) => {
+        if (refused === undefined) announce(written.id)
+        else if (refused !== null) adopt(refused)
+      })
       setGames((gs) => gs.map((g) => (g.id === next.game.id ? next.game : g)).sort((a, b) => b.updatedAt - a.updatedAt))
     },
-    [replace],
+    [replace, announce, adopt],
   )
 
   const pause = useCallback(() => {
@@ -221,6 +231,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       pause()
       const game = await db.getGame(id)
       if (!game) return false
+      seen.current = game
       replace(cursor.openSession(game))
       return true
     },
@@ -237,6 +248,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       pause()
       const game = newGame(script, Date.now())
       await db.putGame(game)
+      seen.current = game
       await refresh()
       replace(cursor.openSession(game))
       return game.id
@@ -247,10 +259,11 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   const remove = useCallback(
     async (id: GameId) => {
       await db.deleteGame(id)
+      announce(id)
       if (live.current?.game.id === id) replace(undefined)
       await refresh()
     },
-    [replace, refresh],
+    [replace, refresh, announce],
   )
 
   const saveScript = useCallback(
@@ -288,10 +301,11 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   const importGame = useCallback(
     async (text: string) => {
       const id = await db.importGame(text)
+      announce(id)
       await refresh()
       return id
     },
-    [refresh],
+    [refresh, announce],
   )
 
   const append = useCallback(

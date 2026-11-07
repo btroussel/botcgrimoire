@@ -12,12 +12,56 @@ import {
   PURGE_AFTER_MS,
   purgeDeleted,
   putGame,
+  putGameOver,
 } from './db'
+import { asCharacterId } from '../content'
 import { InvalidSavedGame, newGame, serialize } from './saved'
+import type { SavedGame } from './saved'
+import { append, openSession } from './session'
 
 beforeEach(async () => {
   await closeDb()
   indexedDB = new IDBFactory()
+})
+
+// One more bluff choice on a game: a board edit that grows the log by one event.
+const edited = (game: SavedGame, characters: readonly string[], now: number): SavedGame =>
+  append(openSession(game), { kind: 'setBluffs', characters: characters.map(asCharacterId) }, now).game
+
+describe('two windows writing one game', () => {
+  test('a stale window cannot write its older copy back, and gets the stored one instead', async () => {
+    const start = newGame('tb', 1)
+    await putGame(start)
+    // Window A marks something; window B, still on the start, then saves a play-time checkpoint.
+    const a = edited(start, ['chef', 'monk', 'saint'], 2)
+    expect(await putGameOver(a, start)).toBeUndefined()
+    const checkpoint = { ...start, playTime: [{ start: 1, end: 3 }] }
+    expect(await putGameOver(checkpoint, start)).toEqual(a)
+    expect(await getGame(start.id)).toEqual(a)
+  })
+
+  test('a window\'s own writes in a row, and a write that adds to the stored copy, go through', async () => {
+    const start = newGame('tb', 1)
+    await putGame(start)
+    const first = edited(start, ['chef', 'monk', 'saint'], 2)
+    const second = edited(first, ['chef', 'monk', 'soldier'], 3)
+    expect(await putGameOver(first, start)).toBeUndefined()
+    // Written before the first write was known to have landed: it still adds to it.
+    expect(await putGameOver(second, start)).toBeUndefined()
+    expect(await getGame(start.id)).toEqual(second)
+    // A play-time checkpoint on the same log is not stale either.
+    const checkpoint = { ...second, playTime: [{ start: 1, end: 4 }] }
+    expect(await putGameOver(checkpoint, first)).toBeUndefined()
+    expect(await getGame(start.id)).toEqual(checkpoint)
+  })
+
+  test('a game deleted in another window is not written back', async () => {
+    const start = newGame('tb', 1)
+    await putGame(start)
+    await deleteGame(start.id)
+    expect(await putGameOver(edited(start, ['chef', 'monk', 'saint'], 2), start)).toBeNull()
+    expect(await getGame(start.id)).toBeUndefined()
+  })
 })
 
 describe('games', () => {

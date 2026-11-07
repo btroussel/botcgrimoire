@@ -31,6 +31,8 @@ test('an edit in a second window of the same game keeps the first window\'s edit
   await other.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
   await other.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
   await expect(seat(other, 0)).toHaveAttribute('aria-label', /^Ana, /)
+  // The first window takes the rename too, so its own write on leaving keeps it.
+  await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
 
   await reload(page)
   await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
