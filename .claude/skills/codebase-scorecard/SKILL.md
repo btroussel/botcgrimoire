@@ -46,8 +46,8 @@ command's output or a screenshot) and says what would raise it by one.
 
 ## Format
 
-Each subagent returns a description of its group in two or three sentences (what works, what
-holds it back), then one section per category:
+Keep it short. Each subagent returns one or two sentences on its group (what works, what holds it
+back), then one section per category with at most three findings, the most severe first:
 
 ```markdown
 ### <Category>: <score>/5
@@ -72,9 +72,9 @@ Lowest: <category> (<score>)
 
 ## Summary
 
-**Code (3.8).** <two or three sentences>
+**Code (3.8).** <one or two sentences>
 
-**UI (4.0).** <two or three sentences>
+**UI (4.0).** <one or two sentences>
 
 ## Details
 
