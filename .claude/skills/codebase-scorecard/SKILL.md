@@ -5,7 +5,8 @@ description: Grades the whole codebase and the running app on code, UI, UX and p
 
 # Codebase scorecard
 
-Grade each category from 0 to 5, whole numbers only. Every score cites evidence (`file:line`, a
+Review the whole codebase and the whole app as they are, not recent commits or diffs. Grade each
+category from 0 to 5, whole numbers only. Every score cites evidence (`file:line`, a
 command's output or a screenshot) and says what would raise it by one.
 
 ## Groups
@@ -34,15 +35,14 @@ command's output or a screenshot) and says what would raise it by one.
 
 ## Steps
 
-1. Note the commit (`git rev-parse --short HEAD`).
-2. If UI, UX or Performance is in scope, build and serve the production app in the background, as
+1. If UI, UX or Performance is in scope, build and serve the production app in the background, as
    the project's docs say, and wait until it answers. If it will not start, mark those groups n/a.
-3. Launch one `general-purpose` subagent per group, all in a single message so they run in
+2. Launch one `general-purpose` subagent per group, all in a single message so they run in
    parallel. Give each its group's categories from above, the app URL, a temporary folder outside
    the repository for screenshots, and these rules: read only, evidence for every finding, answer
    in the format below.
-4. Check each score against its findings, then compute the means.
-5. Give the report in the reply, without saving it to a file, and stop the server.
+3. Check each score against its findings, then compute the means.
+4. Give the report in the reply, without saving it to a file, and stop the server.
 
 ## Format
 
@@ -58,7 +58,7 @@ The report is the table, then the subagents' sections. A group's score is the me
 categories and the global score the mean of all categories, both to one decimal.
 
 ```markdown
-# Scorecard: <project> at <sha>, <date>
+# Scorecard: <project>
 
 | Group | Category | Score |
 | --- | --- | --- |
