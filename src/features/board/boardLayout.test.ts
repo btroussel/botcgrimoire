@@ -39,7 +39,7 @@ describe('room for the board', () => {
   })
 
   it('overlays narrow screens without shrinking the seating area', () => {
-    for (const width of [320, 390, 767, 799]) {
+    for (const width of [320, 390, 480, 559]) {
       for (const requested of [80, 236, 540, 920]) {
         const layout = boardLayoutFor(width, requested)
         expect(layout.reservedWidth).toBe(40)
@@ -49,13 +49,20 @@ describe('room for the board', () => {
   })
 
   it('docks references only when the remaining board has room', () => {
-    expect(boardLayoutFor(800, 236).reservedWidth).toBe(40)
-    expect(boardLayoutFor(1179, 540).reservedWidth).toBe(419)
-    expect(boardLayoutFor(1180, 540).reservedWidth).toBe(420)
-    for (const width of [800, 1024, 1180, 1440, 1920]) {
+    expect(boardLayoutFor(560, 236).reservedWidth).toBe(40)
+    expect(boardLayoutFor(939, 540).reservedWidth).toBe(419)
+    expect(boardLayoutFor(940, 540).reservedWidth).toBe(420)
+    for (const width of [560, 768, 844, 1024, 1180, 1440, 1920]) {
       for (const requested of [80, 236, 540, 920]) {
-        expect(width - boardLayoutFor(width, requested).reservedWidth).toBeGreaterThanOrEqual(760)
+        expect(width - boardLayoutFor(width, requested).reservedWidth).toBeGreaterThanOrEqual(520)
       }
+    }
+  })
+
+  it('gives a tablet held upright and a phone on its side the whole compact drawer', () => {
+    for (const width of [768, 844]) {
+      const compact = referenceCompactWidth(width)
+      expect(boardLayoutFor(width, compact).reservedWidth).toBe(40 + compact)
     }
   })
 

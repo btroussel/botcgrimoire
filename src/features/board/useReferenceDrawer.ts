@@ -120,5 +120,7 @@ export const useReferenceDrawer = (open: boolean, viewport: number, onOpen: () =
     event.preventDefault()
     settle(next)
   }
-  return { width, maximum, dragging, handlers, keyboard }
+  // A tap on the compact paper asks for the rest of the row: the instruction or the ability.
+  const expand = () => settle(maximum)
+  return { width, maximum, dragging, handlers, keyboard, expand }
 }

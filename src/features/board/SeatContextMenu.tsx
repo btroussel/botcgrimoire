@@ -138,7 +138,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     {actions.map(item => row(item))}
     {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
     <View style={styles.rule} />
-    {row({ label: t('board.emptySeat'), icon: 'trash', run: onEmpty })}
+    {row({ label: t('board.removeSeat'), icon: 'trash', run: onEmpty })}
   </div>
 }
 

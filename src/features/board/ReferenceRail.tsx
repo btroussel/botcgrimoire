@@ -31,6 +31,7 @@ export interface ReferenceRailProps {
   readonly dragging: boolean
   readonly dragHandlers: HTMLAttributes<HTMLDivElement>
   readonly onResizeKey: HTMLAttributes<HTMLDivElement>['onKeyDown']
+  readonly onExpand: () => void // open the drawer to its full width
   readonly bottomClearance: number // the status plaque floats over the paper's foot
 }
 
@@ -156,7 +157,7 @@ const NightRow = memo(function NightRow({ label, character: id, marker, instruct
   </View>
 }, sameNightRow)
 
-export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, bottomClearance }: ReferenceRailProps) => {
+export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, onExpand, bottomClearance }: ReferenceRailProps) => {
   const { board, t, settings } = useStore()
   const viewport = useWindowDimensions().width
   const phone = viewport <= 480
@@ -248,9 +249,15 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
       <div style={{ width: 4, height: 52, borderRadius: 4, background: palette.accent,
         boxShadow: '0 0 0 3px #2c211b80', opacity: width === 0 && !gripFocused ? 0 : dragging ? 1 : 0.8, pointerEvents: 'none' }} />
     </div>
+    {/* Compact paper shows names only, so a tap anywhere on it but its controls opens the rest,
+        the way a drag does; a drag's own release never counts as that tap. */}
     <div role="region" aria-label={shownTab === 'characters' ? scriptName(script) : t(tabKeys[shownTab])}
       inert={!tab} aria-hidden={!tab} {...dragHandlers}
-      style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none' }}>
+      onClick={event => {
+        if (row.expansion === 0 && !(event.target as Element).closest('[role="radio"], [role="button"], button, input')) onExpand()
+      }}
+      style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none',
+        cursor: row.expansion === 0 ? 'pointer' : 'auto' }}>
     <View style={[styles.paper, { width: maximumWidth }]}>
       <PaperTexture />
       <View style={styles.binding} pointerEvents="none" />

@@ -166,10 +166,11 @@ The status plaque is also the phase control, in thumb reach at the lower right. 
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.
 
-References are drawers you drag between closed, compact and full. On a narrow screen a drawer
-covers the board without moving the seats; on a wider one the board gives up width down to a
-minimum. The ring never jumps during a drag, a fully open drawer leaves some board in reach, and
-nothing dims.
+References are drawers you drag between closed, compact and full. Compact shows names only, so a
+tap on its paper opens it full. On a phone held upright a drawer covers the board without moving
+the seats; on a wider screen, a tablet held upright or a phone on its side included, the board
+gives up width down to a minimum, so the compact drawer never cuts a seat in half. The ring never
+jumps during a drag, a fully open drawer leaves some board in reach, and nothing dims.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
 board itself, with no banner, so the ring does not shift.
