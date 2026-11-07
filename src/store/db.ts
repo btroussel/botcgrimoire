@@ -6,6 +6,7 @@ import type { SavedCharacter } from './homebrew'
 import { scriptWithCurrentWake, withCurrentWake, withHomebrew } from './homebrew'
 import type { GameId, SavedGame } from './saved'
 import { deserialize, migrate, mintGameId, serialize } from './saved'
+import { startsWith } from './session'
 import type { Settings } from './settings'
 
 // Not 'botc-grimoire': the app this one replaced at botcgrimoire.com left a database of that
@@ -82,10 +83,10 @@ export const putGame = async (game: SavedGame): Promise<void> => {
 // The write of a game a window holds open. Windows of the app share this database and each
 // writes a game whole, so a window still holding an older copy must not put it back. The write
 // is refused when the stored copy is no longer `seen`, the one this window last read or wrote,
-// and either this copy's log is a strict prefix of the stored one, so writing would drop the
-// events another window added, or the game is gone, deleted in another window. A refusal writes
-// nothing and returns the stored copy, or null for a deleted game, for the window to take. Two
-// windows adding different events at the same moment still leave the last write.
+// and either this copy's log does not begin with the stored log, so writing would drop events
+// another window added, or the game is gone, deleted in another window. A refusal writes
+// nothing and returns the stored copy, or null for a deleted game, for the window to take and
+// replay its own new edits onto.
 export const putGameOver = async (game: SavedGame, seen: SavedGame | undefined): Promise<SavedGame | null | undefined> => {
   const db = await openDb()
   const tx = db.transaction('games', 'readwrite')
@@ -97,7 +98,7 @@ export const putGameOver = async (game: SavedGame, seen: SavedGame | undefined):
   read.onsuccess = () => {
     const stored = read.result as SavedGame | undefined
     if (seen !== undefined && stored === undefined) refused = null
-    else if (seen !== undefined && stored !== undefined && !sameRecord(stored, seen) && dropsEvents(game.log, stored.log)) refused = stored
+    else if (seen !== undefined && stored !== undefined && !sameRecord(stored, seen) && !startsWith(game.log, stored.log)) refused = stored
     else store.put(game)
   }
   await done(tx)
@@ -107,9 +108,6 @@ export const putGameOver = async (game: SavedGame, seen: SavedGame | undefined):
 
 // Whole records, as the database returns them: a few kilobytes, compared once per write.
 export const sameRecord = (a: SavedGame, b: SavedGame): boolean => JSON.stringify(a) === JSON.stringify(b)
-
-const dropsEvents = (log: SavedGame['log'], stored: SavedGame['log']): boolean =>
-  log.length < stored.length && JSON.stringify(log) === JSON.stringify(stored.slice(0, log.length))
 
 export const getGame = async (id: GameId): Promise<SavedGame | undefined> => {
   const db = await openDb()

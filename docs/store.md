@@ -36,11 +36,14 @@ Two rules stop that:
   holding that game takes the stored copy whenever any of it differs, the timer, the bag and the
   play time as well as the log.
 - A window's write is refused when another window has written since its last read or write and
-  the write would drop events that one added, or when the game was deleted there. The refused
-  window takes the stored copy instead, and a deleted game stays deleted.
+  the written log does not begin with the stored one, or when the game was deleted there. The
+  refused window takes the stored copy and appends its own new batches again on top of it,
+  moving any reference to one of its own new events past the events the other window added.
+  A deleted game stays deleted.
 
-Two windows adding different events at the same moment still leave the last write, and a window
-on a build from before these rules writes as it always did.
+A refused window's own day timer, bag or play-time change since its last write gives way to the
+stored copy; play time is recorded again at its next checkpoint. A window on a build from before
+these rules writes as it always did.
 
 History imports a game file through the same migrations and checks as a load. It keeps its id
 unless this device holds a different game under it, in which case both are kept.

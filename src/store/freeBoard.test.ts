@@ -5,7 +5,7 @@ import { game, token } from '../engine/testing/board'
 import { describeGame } from './gameSummary'
 import { bluffsOf } from './bluffs'
 import { deserialize, InvalidSavedGame, migrate, newGame, serialize } from './saved'
-import { append, appendAll, boardOf, canUndo, lookAt, openSession, redo, undo, updateDayTimer } from './session'
+import { append, appendAll, boardOf, canUndo, lookAt, openSession, redo, replayOnto, undo, updateDayTimer } from './session'
 
 const alice = asSeatId('alice')
 const bob = asSeatId('bob')
@@ -116,4 +116,26 @@ test('history labels a free board without calculating a winner', () => {
   const row = describeGame(s.game, key => key, 'en')
   expect(row.phase).toBe('board.setup')
   expect(row.winner).toBeUndefined()
+})
+
+test('a window\'s own edits replay onto another window\'s copy, its references moved past the other window\'s events', () => {
+  const seen = start()
+  // The other window marks Alice dead; this one places a reminder on Bob, then takes it off.
+  const stored = append(seen, { kind: 'kill', seat: alice, cause: 'ability' }, 10).game
+  let mine = append(seen, { kind: 'placeToken', seat: bob, token: ['poisoner', 'Poisoned'] }, 11)
+  const placed = mine.game.log.at(-1)!.id
+  mine = append(mine, { kind: 'placeToken', seat: bob, token: ['monk', 'Safe'] }, 12)
+  mine = append(mine, { kind: 'removeToken', placedBy: placed }, 13)
+
+  const replayed = replayOnto(stored, seen.game, mine.game, 20)!
+  expect(replayed.game.log.slice(0, stored.log.length)).toEqual(stored.log)
+  expect(replayed.game.log).toHaveLength(stored.log.length + 3)
+  const remove = replayed.game.log.at(-1)!
+  expect(remove).toMatchObject({ kind: 'removeToken', placedBy: stored.log.length })
+  const board = boardOf(replayed)
+  expect(board.seats.find(seat => seat.id === alice)?.alive).toBe(false)
+  expect(board.seats.find(seat => seat.id === bob)?.tokens.map(placed => placed.def[1])).toEqual(['Safe'])
+
+  // A copy that did not grow from the one this window saw cannot take its edits.
+  expect(replayOnto(start().game, mine.game, mine.game, 20)).toBeUndefined()
 })
