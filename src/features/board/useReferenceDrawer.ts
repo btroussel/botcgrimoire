@@ -8,7 +8,7 @@ import { motion } from '../../ui/theme'
 // Coalescing pointer events avoids rendering every hardware sample.
 // `onReserve` hears the width the board yields in the same update as the drawer's own width,
 // so a screen wide enough to yield redraws once per frame.
-export const useReferenceDrawer = (open: boolean, viewport: number, onOpen: () => void, onClose: () => void,
+export const useReferenceDrawer = (open: boolean, viewport: number, upright: boolean, onOpen: () => void, onClose: () => void,
   onReserve: (width: number) => void) => {
   const maximum = referenceMaximumWidth(viewport)
   const compact = Math.min(referenceCompactWidth(viewport), maximum)
@@ -24,15 +24,15 @@ export const useReferenceDrawer = (open: boolean, viewport: number, onOpen: () =
     if (frame.current !== undefined) cancelAnimationFrame(frame.current)
     frame.current = undefined
   }, [])
-  const board = useRef({ viewport, onReserve })
+  const board = useRef({ viewport, upright, onReserve })
   useLayoutEffect(() => {
-    board.current = { viewport, onReserve }
-    onReserve(boardLayoutFor(viewport, current.current).reservedWidth)
-  }, [viewport, onReserve])
+    board.current = { viewport, upright, onReserve }
+    onReserve(boardLayoutFor(viewport, current.current, upright).reservedWidth)
+  }, [viewport, upright, onReserve])
   const write = useCallback((value: number) => {
     current.current = value
     setWidth(value)
-    board.current.onReserve(boardLayoutFor(board.current.viewport, value).reservedWidth)
+    board.current.onReserve(boardLayoutFor(board.current.viewport, value, board.current.upright).reservedWidth)
   }, [])
   const animate = useCallback((target: number) => {
     stop()
@@ -120,7 +120,8 @@ export const useReferenceDrawer = (open: boolean, viewport: number, onOpen: () =
     event.preventDefault()
     settle(next)
   }
-  // A tap on the compact paper asks for the rest of the row: the instruction or the ability.
-  const expand = () => settle(maximum)
+  // A tap on a compact row asks for the rest of it, the instruction or the ability, this once:
+  // the drawer's next opening keeps the width the Storyteller last dragged it to.
+  const expand = () => { onOpen(); animate(maximum) }
   return { width, maximum, dragging, handlers, keyboard, expand }
 }

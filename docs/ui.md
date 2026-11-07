@@ -171,9 +171,11 @@ hover to show it is a button, so a brass border and a chevron mark it. The float
 a card then More, keep that order in every phase and width, and their first tap always acts.
 
 References are drawers you drag between closed, compact and full. Compact shows names only, so a
-tap on its paper opens it full. On a phone held upright a drawer covers the board without moving
-the seats; on a wider screen, a tablet held upright or a phone on its side included, the board
-gives up width down to a minimum, so the compact drawer never cuts a seat in half. The ring never
+tap on one of its rows opens it full, that once: the next opening keeps the width last dragged to.
+While the board has width to spare it gives it up to the drawer, down to a minimum, and the paper
+covers the rest of the board without moving the seats. An upright window keeps a 520 point board,
+so from 752 points wide the compact drawer docks whole and covers no seat. A window on its side is
+short and its ring needs the width, or a big game would scroll, so it keeps 760. The ring never
 jumps during a drag, a fully open drawer leaves some board in reach, and nothing dims.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the

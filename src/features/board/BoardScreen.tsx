@@ -95,7 +95,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const closeReference = useCallback(() => setReferenceTab(null), [])
   const changeReference = useCallback((tab: ReferenceTab | null) => { setReferenceTab(tab); setPhaseOpen(false) }, [])
   // The drawer keeps its sliding width to itself and reports only what it takes from the board,
-  // which changes on screens wide enough to yield space; on a phone the board never redraws.
+  // which changes on screens wide enough to yield space; on a narrower one the board never redraws.
   const [reservedWidth, setReservedWidth] = useState(referenceTabWidth)
   const [confirmHome, setConfirmHome] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
@@ -353,7 +353,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         }}
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
-        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} seatsRight={geometry.seatsRight}
+        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
           onTabChange={changeReference} onOpen={openReference} onClose={closeReference} onReserve={setReservedWidth} />
@@ -409,6 +409,7 @@ interface ReferenceDrawerProps {
   readonly shown: boolean
   readonly tab: ReferenceTab | null
   readonly viewport: number // the board's width inside the safe insets
+  readonly upright: boolean // a window no wider than it is tall, which docks the drawer sooner
   readonly seatsRight: number // the right edge of the rightmost token, in board coordinates
   readonly top: number
   readonly right: number
@@ -422,12 +423,12 @@ interface ReferenceDrawerProps {
 }
 
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
-// stays here, and the board hears only the width it gives up: on a phone held upright that
-// never changes, so the ring and the corners are left alone while the paper moves.
-const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, seatsRight, top, right, bottom, height, bottomClearance,
+// stays here, and the board hears only the width it gives up: below the docking minimum's width
+// that never changes, so the ring and the corners are left alone while the paper moves.
+const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, top, right, bottom, height, bottomClearance,
   onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
-  const drawer = useReferenceDrawer(tab !== null, viewport, onOpen, onClose, onReserve)
-  const { referenceWidth } = boardLayoutFor(viewport, drawer.width)
+  const drawer = useReferenceDrawer(tab !== null, viewport, upright, onOpen, onClose, onReserve)
+  const { referenceWidth } = boardLayoutFor(viewport, drawer.width, upright)
   const overlapsSeats = seatsRight > viewport - referenceWidth
   if (!shown) return null
   return <>

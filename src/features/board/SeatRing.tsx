@@ -225,7 +225,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
           {...(onAddReminder ? { onReminder: () => { closeContext(); onAddReminder(contextPlayer.id) } } : {})}
           nominateSelfDisabled={!canNominate(day, contextPlayer.id, contextPlayer.id)}
-          onEmpty={() => openSeatAction('remove')}
+          onRemove={() => openSeatAction('remove')}
           onRename={name => e.append(edits.renameSeat(contextPlayer.id, name))}
           onLife={() => e.append(contextPlayer.dead ? edits.revive(contextPlayer.id) : edits.kill(contextPlayer.id))}
           onGhostVote={() => { if (contextPlayer.dead) e.append(edits.setGhostVote(contextPlayer.id, !contextPlayer.ghostVote)) }}

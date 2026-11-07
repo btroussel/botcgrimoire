@@ -72,3 +72,36 @@ test('the phase control on the status plaque stays reachable over the night refe
     await expect(page.getByRole('button', { name: 'Other nights', exact: true })).toHaveAttribute('aria-expanded', 'true')
   }
 })
+
+test.describe('with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' })
+
+  test('a tap on a compact night row opens the reference full, once, and its filter keeps its own taps', async ({ page }) => {
+    await open(page, '/new')
+    await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
+    await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+    await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+    await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
+    await page.getByRole('button', { name: 'Setup', exact: true }).tap()
+    await page.getByRole('button', { name: 'Start the first night', exact: true }).tap()
+    const tab = page.getByRole('button', { name: 'First night', exact: true })
+    const paper = page.getByRole('region', { name: 'First night', exact: true })
+    const width = async () => Math.round((await paper.boundingBox())?.width ?? 0)
+    await expect.poll(width).toBe(168)
+
+    // The filter's word is what a finger lands on, not its hidden radio.
+    await paper.getByText('All', { exact: true }).tap()
+    await expect(page.getByRole('radio', { name: 'All', exact: true })).toBeChecked()
+    expect(await width()).toBe(168)
+
+    await paper.getByText('Dusk', { exact: true }).tap()
+    await expect.poll(width).toBe(382)
+
+    // The widened drawer was for that read: it opens compact again.
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'true')
+    await expect.poll(width).toBe(168)
+  })
+})

@@ -13,7 +13,7 @@ import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuFrame, menuRowHeight, menuStyles } from './popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
-export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, nominateSelfDisabled, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onEmpty, onRename, onLife, onGhostVote }: {
+export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, nominateSelfDisabled, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onRemove, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
   readonly name: string
   readonly alignment: Alignment
@@ -29,7 +29,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly onCharacter: () => void
   readonly onAlignment: () => void
   readonly onNominateSelf?: () => void
-  readonly onEmpty: () => void
+  readonly onRemove: () => void
   readonly onRename: (name: string) => void
   readonly onLife: () => void
   readonly onGhostVote: () => void
@@ -138,7 +138,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     {actions.map(item => row(item))}
     {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
     <View style={styles.rule} />
-    {row({ label: t('board.removeSeat'), icon: 'trash', run: onEmpty })}
+    {row({ label: t('board.removeSeat'), icon: 'trash', run: onRemove })}
   </div>
 }
 

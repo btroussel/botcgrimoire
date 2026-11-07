@@ -249,15 +249,9 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
       <div style={{ width: 4, height: 52, borderRadius: 4, background: palette.accent,
         boxShadow: '0 0 0 3px #2c211b80', opacity: width === 0 && !gripFocused ? 0 : dragging ? 1 : 0.8, pointerEvents: 'none' }} />
     </div>
-    {/* Compact paper shows names only, so a tap anywhere on it but its controls opens the rest,
-        the way a drag does; a drag's own release never counts as that tap. */}
     <div role="region" aria-label={shownTab === 'characters' ? scriptName(script) : t(tabKeys[shownTab])}
       inert={!tab} aria-hidden={!tab} {...dragHandlers}
-      onClick={event => {
-        if (row.expansion === 0 && !(event.target as Element).closest('[role="radio"], [role="button"], button, input')) onExpand()
-      }}
-      style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none',
-        cursor: row.expansion === 0 ? 'pointer' : 'auto' }}>
+      style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none' }}>
     <View style={[styles.paper, { width: maximumWidth }]}>
       <PaperTexture />
       <View style={styles.binding} pointerEvents="none" />
@@ -270,6 +264,10 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
             options={[{ value: 'inPlay', label: t('board.referenceInPlay') }, { value: 'all', label: t('board.referenceAll') }]} />
           <View style={styles.rule} />
         </View> : null}
+        {/* Compact rows show names only, so a tap on one opens the drawer full, the way a drag does;
+            a drag's own release never counts as that tap, and the filter above keeps its taps. */}
+        <div onClick={row.expansion === 0 ? onExpand : undefined}
+          style={{ display: 'flex', flexDirection: 'column', cursor: row.expansion === 0 ? 'pointer' : 'auto' }}>
         {shownTab === 'characters' ? <>
           {sheetTeams.map(team => {
             const rows = list.filter(row => row.team === team)
@@ -294,6 +292,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
           </View> : null}
         </> : entries.map(entry => <NightRow key={entry.id} label={entry.label} character={entry.character} marker={entry.marker}
           instruction={entry.instruction} players={entry.character ? playersOf(entry.character) : []} deadLabel={t('board.dead')} {...row} />)}
+        </div>
       </ScrollView>
     </View>
     </div>
