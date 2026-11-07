@@ -46,7 +46,8 @@ command's output or a screenshot) and says what would raise it by one.
 
 ## Format
 
-Each subagent returns, per category:
+Each subagent returns a description of its group in two or three sentences (what works, what
+holds it back), then one section per category:
 
 ```markdown
 ### <Category>: <score>/5
@@ -54,8 +55,9 @@ Each subagent returns, per category:
 To reach <score + 1>: <one line>
 ```
 
-The report is the table, then the subagents' sections. A group's score is the mean of its
-categories and the global score the mean of all categories, both to one decimal.
+The report has three parts, in this order: the table of scores, a description per group, then
+the sections per category. A group's score is the mean of its categories and the global score the
+mean of all categories, both to one decimal.
 
 ```markdown
 # Scorecard: <project>
@@ -67,4 +69,15 @@ categories and the global score the mean of all categories, both to one decimal.
 | **Global** | | **3.9** |
 
 Lowest: <category> (<score>)
+
+## Summary
+
+**Code (3.8).** <two or three sentences>
+
+**UI (4.0).** <two or three sentences>
+
+## Details
+
+### <Category>: <score>/5
+...
 ```
