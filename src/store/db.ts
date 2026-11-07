@@ -79,36 +79,38 @@ export const putGame = async (game: SavedGame): Promise<void> => {
   askPersistence()
 }
 
-// A change to a game a window holds, made inside one transaction on whatever copy is stored, so
-// a change shown on an older copy keeps every edit, timer, bag and play time another window
-// wrote since. The stored copy is migrated first, as a load would. Returns the copy written, or
-// undefined when the game is gone, deleted in another window, or cannot be read; then nothing
-// is written and a bug cannot lose a log.
-export const writeGame = async (id: GameId, change: (stored: SavedGame) => SavedGame): Promise<SavedGame | undefined> => {
+// A window's write of a game it holds, made against `base`, the stored copy its screen was built
+// on. Inside one transaction: while the stored copy is still `base`, `game` is put. When another
+// window wrote since, nothing is written and the stored copy comes back for the window to show,
+// since `game` carries what that window saw. A deleted game, or one this version cannot read, is
+// left alone and comes back as undefined.
+export const putGameOn = async (game: SavedGame, base: SavedGame): Promise<{ readonly written: true } | { readonly written: false; readonly stored?: SavedGame }> => {
   const db = await openDb()
   const tx = db.transaction('games', 'readwrite')
   const store = tx.objectStore('games')
-  let written: SavedGame | undefined
+  let outcome: { readonly written: true } | { readonly written: false; readonly stored?: SavedGame } = { written: false }
   // The put is made from the read's own callback, inside the same transaction, so no other
-  // window's write can fall between the read and the write.
-  const read = store.get(id)
+  // window's write can fall between the comparison and the write.
+  const read = store.get(game.id)
   read.onsuccess = () => {
     if (read.result === undefined) return
-    try {
-      const next = change(migrate(read.result))
-      store.put(next)
-      written = next
-    } catch {
-      written = undefined
-    }
+    let stored: SavedGame
+    try { stored = migrate(read.result) } catch { return }
+    if (sameRecord(stored, base)) {
+      store.put(game)
+      outcome = { written: true }
+    } else outcome = { written: false, stored }
   }
   await done(tx)
-  if (written) askPersistence()
-  return written
+  if (outcome.written) askPersistence()
+  return outcome
 }
 
-// Whole records, as the database returns them: a few kilobytes, compared once per write.
-export const sameRecord = (a: SavedGame, b: SavedGame): boolean => JSON.stringify(a) === JSON.stringify(b)
+// Whole records, as the database returns them: a few kilobytes, compared once per write. The
+// cheap fields first, since two copies that differ nearly always differ there.
+export const sameRecord = (a: SavedGame, b: SavedGame): boolean =>
+  a === b || (a.updatedAt === b.updatedAt && a.log.length === b.log.length && a.playTime.length === b.playTime.length
+    && JSON.stringify(a) === JSON.stringify(b))
 
 export const getGame = async (id: GameId): Promise<SavedGame | undefined> => {
   const db = await openDb()

@@ -40,61 +40,71 @@ test('an edit in a second window of the same game keeps the first window\'s edit
 })
 
 // A window that misses the other's message, frozen in the background or without the channel,
-// still cannot write its older copy over the newer one: its write is refused, and it makes its
-// own edit again on top of the stored copy.
-test('a second window that never heard of the first window\'s edit keeps both when it edits', async ({ page, context }) => {
+// never writes its older copy over the newer one. Its edit, made on what it saw, is dropped, and it
+// shows the stored copy with the other window's edit, so the Storyteller makes the edit again.
+const renameFirstSeat = async (page) => {
+  await seat(page, 0).click()
+  await page.getByRole('button', { name: 'Rename player', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
+  await page.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
+}
+
+const deafWindow = async (context, url) => {
+  const deaf = await context.newPage()
+  await deaf.addInitScript(() => { delete window.BroadcastChannel })
+  await open(deaf, url)
+  await expect(deaf.locator('[data-seat-context-target]')).toHaveCount(7)
+  return deaf
+}
+
+test('a second window that never heard of the first window\'s edit cannot write over it', async ({ page, context }) => {
   await open(page, '/new')
   await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
   await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
   await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
   await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
   await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
-
-  const deaf = await context.newPage()
-  await deaf.addInitScript(() => { delete window.BroadcastChannel })
-  await open(deaf, page.url())
-  await expect(deaf.locator('[data-seat-context-target]')).toHaveCount(7)
+  const deaf = await deafWindow(context, page.url())
 
   await seat(page, 2).click()
   await page.getByRole('button', { name: 'Mark dead', exact: true }).click()
   await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
   await expect(seat(deaf, 2)).not.toHaveAttribute('aria-label', /, dead, /)
 
-  await seat(deaf, 0).click()
-  await deaf.getByRole('button', { name: 'Rename player', exact: true }).click()
-  await deaf.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
-  await deaf.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
-  // Refused, it takes the stored copy, so the first window's death appears here too.
+  // The rename is made on a copy without the death, so it is dropped and the death shows.
+  await renameFirstSeat(deaf)
   await expect(seat(deaf, 2)).toHaveAttribute('aria-label', /, dead, /)
+  await expect(seat(deaf, 0)).not.toHaveAttribute('aria-label', /^Ana, /)
+  await deaf.keyboard.press('Escape')
+  await renameFirstSeat(deaf)
   await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, /)
-
+  await reload(deaf)
+  await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, /)
   await deaf.close()
+
   await reload(page)
   await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
   await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
 })
 
-// One gesture can be two changes, as the deal is: its tokens, then the bag put away. A window
-// that never heard of an edit makes both on the stored copy, in order, keeping the edit.
-test('a deal in a window that never heard of an edit keeps the edit and puts the bag away once', async ({ page, context }) => {
+// One gesture can be two changes, as the deal is: its tokens, then the bag put away. Made on an
+// older copy, both are dropped together, so the bag is never put away without its deal.
+test('a deal in a window that never heard of an edit is dropped whole, then made once', async ({ page, context }) => {
   await open(page, '/new')
   await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
   await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
   await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Deal at random', exact: true })).toBeVisible()
   await page.keyboard.press('Escape')
+  const deaf = await deafWindow(context, page.url())
 
-  const deaf = await context.newPage()
-  await deaf.addInitScript(() => { delete window.BroadcastChannel })
-  await open(deaf, page.url())
-  await expect(deaf.locator('[data-seat-context-target]')).toHaveCount(7)
-
-  await seat(page, 0).click()
-  await page.getByRole('button', { name: 'Rename player', exact: true }).click()
-  await page.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
-  await page.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
+  await renameFirstSeat(page)
   await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
 
+  await deaf.getByRole('button', { name: 'Setup', exact: true }).click()
+  await deaf.getByRole('button', { name: 'Deal at random', exact: true }).click()
+  // Dropped: the rename shows, the seats are still empty and the bag is still there to deal.
+  await expect(seat(deaf, 0)).toHaveAttribute('aria-label', 'Ana, no character')
   await deaf.getByRole('button', { name: 'Setup', exact: true }).click()
   await deaf.getByRole('button', { name: 'Deal at random', exact: true }).click()
   await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, (?!no character)/)

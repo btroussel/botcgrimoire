@@ -12,7 +12,7 @@ import {
   PURGE_AFTER_MS,
   purgeDeleted,
   putGame,
-  writeGame,
+  putGameOn,
 } from './db'
 import { asCharacterId } from '../content'
 import { InvalidSavedGame, newGame, serialize } from './saved'
@@ -29,35 +29,39 @@ const edited = (game: SavedGame, characters: readonly string[], now: number): Sa
   append(openSession(game), { kind: 'setBluffs', characters: characters.map(asCharacterId) }, now).game
 
 describe('two windows writing one game', () => {
-  test('a change shown on an older copy is made on the stored one, keeping the other window\'s edit and timer', async () => {
+  test('a write lands while the stored copy is the one the window built on, and each landing moves that on', async () => {
     const start = newGame('tb', 1)
     await putGame(start)
-    // Window A records bluffs and starts the timer; window B, still on the start, records others.
-    await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))
-    const timer = { durationMs: 120_000, remainingMs: 90_000, pauseOnNomination: true, nominationPaused: false }
-    await writeGame(start.id, (g) => ({ ...g, dayTimer: timer }))
-    const fromA = await getGame(start.id)
-    const written = await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'soldier'], 4))
-    expect(written?.log).toHaveLength(fromA!.log.length + 1)
-    expect(written?.log.slice(0, fromA!.log.length)).toEqual(fromA!.log)
-    expect(written?.dayTimer).toEqual(fromA!.dayTimer)
-    expect(await getGame(start.id)).toEqual(written)
+    const first = edited(start, ['chef', 'monk', 'saint'], 2)
+    expect(await putGameOn(first, start)).toEqual({ written: true })
+    const second = edited(first, ['chef', 'monk', 'soldier'], 3)
+    expect(await putGameOn(second, first)).toEqual({ written: true })
+    expect(await getGame(start.id)).toEqual(second)
   })
 
-  test('a game deleted in another window is not written back', async () => {
+  test('a window that built on an older copy writes nothing and gets the stored copy back', async () => {
+    const start = newGame('tb', 1)
+    await putGame(start)
+    // Window A records bluffs and a timer; window B, still on the start, records others.
+    const timer = { durationMs: 120_000, remainingMs: 90_000, pauseOnNomination: true, nominationPaused: false }
+    const a = { ...edited(start, ['chef', 'monk', 'saint'], 2), dayTimer: timer }
+    expect(await putGameOn(a, start)).toEqual({ written: true })
+    const b = edited(start, ['chef', 'monk', 'soldier'], 3)
+    expect(await putGameOn(b, start)).toEqual({ written: false, stored: a })
+    expect(await getGame(start.id)).toEqual(a)
+  })
+
+  test('a game deleted in another window, or one this version cannot read, is left alone', async () => {
     const start = newGame('tb', 1)
     await putGame(start)
     await deleteGame(start.id)
-    expect(await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))).toBeUndefined()
+    expect(await putGameOn(edited(start, ['chef', 'monk', 'saint'], 2), start)).toEqual({ written: false })
     expect(await getGame(start.id)).toBeUndefined()
-  })
 
-  test('a stored game this version cannot read is left as it is', async () => {
-    const start = newGame('tb', 1)
-    const newer = { ...start, version: start.version + 1 }
+    const newer = { ...newGame('tb', 1), version: start.version + 1 }
     await putGame(newer)
-    expect(await writeGame(start.id, (g) => edited(g, ['chef', 'monk', 'saint'], 2))).toBeUndefined()
-    await expect(getGame(start.id)).rejects.toThrow()
+    expect(await putGameOn(edited(start, ['chef', 'monk', 'saint'], 2), newer)).toEqual({ written: false })
+    await expect(getGame(newer.id)).rejects.toThrow()
   })
 })
 
