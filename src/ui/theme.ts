@@ -169,8 +169,10 @@ export const boardBlock: ViewStyle = {
   backgroundColor: '#10091760', borderColor: '#ae8a4e8c', borderWidth: 1, borderRadius: 7,
   boxShadow: 'inset 0 0 0 2px #10081338, 0 2px 7px #0003',
 }
+// An empty well's brass edge is all that marks it on dark velvet, so it is drawn firmly enough
+// to find in a dim room.
 export const boardWell: ViewStyle = {
-  borderStyle: 'solid', borderWidth: 1, borderColor: '#b997645c', backgroundColor: '#0d07102b',
+  borderStyle: 'solid', borderWidth: 1, borderColor: '#b99764a6', backgroundColor: '#0d07102b',
   boxShadow: 'inset 0 1px 4px #0005',
 }
 

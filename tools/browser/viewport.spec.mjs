@@ -76,7 +76,7 @@ test('the phase control on the status plaque stays reachable over the night refe
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 
-  test('a tap on a compact night row opens the reference full, once, and its filter keeps its own taps', async ({ page }) => {
+  test('a tap on a compact night row opens the reference full, once, its filter keeps its own taps, and a seat answers at once', async ({ page }) => {
     await open(page, '/new')
     await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
     await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
@@ -103,5 +103,12 @@ test.describe('with reduced motion', () => {
     await tab.tap()
     await expect(tab).toHaveAttribute('aria-expanded', 'true')
     await expect.poll(width).toBe(168)
+
+    // A seat beside the paper answers the first tap, and the drawer steps aside for its menu.
+    const seat = page.locator('[data-seat-context-target]').nth(6)
+    await seat.getByRole('button').first().tap()
+    await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
   })
 })

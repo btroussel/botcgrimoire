@@ -11,6 +11,13 @@ export interface SeatPosition {
   readonly angle: number // degrees of the outward normal, 0 to the right and 90 down, for the piece's outer side
 }
 
+// The direction halfway between two, in degrees. It goes through their unit vectors, so two
+// directions either side of 180 degrees meet on the left rather than turning to the right.
+export const halfway = (a: number, b: number): number => {
+  const r = Math.PI / 180
+  return Math.atan2(Math.sin(a * r) + Math.sin(b * r), Math.cos(a * r) + Math.cos(b * r)) / r
+}
+
 // Enough samples that the arc between two is under a pixel on any screen we lay out for.
 const samples = 720
 
