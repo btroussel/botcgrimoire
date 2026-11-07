@@ -65,15 +65,14 @@ script:
 
 1. Build and serve the production app in the background, as `docs/ci.md` says. If it will not
    start, mark every group but Code n/a.
-2. Launch one `general-purpose` subagent per group in a single message. Give each its categories,
-   the app URL and a temporary folder outside the repository, and tell it to stay read only.
+2. Go through the groups in order, read only, with screenshots in a temporary folder outside the
+   repository. While playing, count taps against the minimum for the frequent tasks.
 3. Check each grade against its anchor, compute the means, give the report in the reply and stop
    the server.
 
 ## Format
 
-Each subagent returns, per category, its grade and at most three findings, the worst first. The
-Game and UX subagents also count taps against the minimum for the frequent tasks.
+Note per category its grade and at most three findings, the worst first.
 
 ```markdown
 ### <Category>: <grade>/10
