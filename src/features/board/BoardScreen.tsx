@@ -421,7 +421,7 @@ interface ReferenceDrawerProps {
 }
 
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
-// stays here, and the board hears only the width it gives up: on screens up to 800 points that
+// stays here, and the board hears only the width it gives up: on a phone held upright that
 // never changes, so the ring and the corners are left alone while the paper moves.
 const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, seatsRight, top, right, bottom, height, bottomClearance,
   onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
@@ -434,7 +434,7 @@ const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, se
       <div aria-hidden="true" onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 4 }} /> : null}
     <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
       <ReferenceRail tab={tab} width={referenceWidth} bottomClearance={bottomClearance}
-        height={height} maximumWidth={drawer.maximum}
+        height={height} maximumWidth={drawer.maximum} onExpand={drawer.expand}
         dragging={drawer.dragging} dragHandlers={drawer.handlers} onResizeKey={drawer.keyboard}
         onTabChange={onTabChange} />
     </View>

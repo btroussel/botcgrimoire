@@ -48,16 +48,17 @@ export interface SeatProps {
   readonly accessibilityLabel?: string // the whole seat in words; the name when omitted
 }
 
-const labelLine = type.text.label.lineHeight ?? 0
+const nameLine = type.text.seatName.lineHeight ?? 0
 // The name's box: the token plus a little either side, centred under it.
 const nameOverhang = seatMetrics.nameOverhang
 // The two gaps in the printed rim markers: night leaves at nine and three o'clock, reminder
 // counts across the top, the setup flower low on the right and the name along the bottom.
 const plusCorners = [-140, -40].map(degrees => ({ x: Math.cos(degrees * Math.PI / 180), y: Math.sin(degrees * Math.PI / 180) }))
 
-// Chips keep their size up to a board-sized token and grow with a larger one, so a tablet's
-// or a desktop's big tokens do not carry small reminders.
-export const reminderSize = (token: number): number => Math.round(tokenSize.chip * Math.max(1, token / tokenSize.board))
+// A reminder is three fifths of its seat's token, never under the chip size, so a tablet's or a
+// desktop's big tokens carry reminders whose words read, and never over the token itself, so on
+// a crowded twenty-seat board the reminder never outgrows the seat it belongs to.
+export const reminderSize = (token: number): number => Math.round(Math.min(token, Math.max(tokenSize.chip, token * 0.6)))
 
 export const Seat = ({
   size,
@@ -109,7 +110,7 @@ export const Seat = ({
   const radians = ((angle ?? 270) * Math.PI) / 180
   const inward = { x: -Math.cos(radians), y: -Math.sin(radians) }
   // Only downward stacks need room for the name; diagonal stacks clear it to the side.
-  const nameClearance = Math.max(0, inward.y - Math.abs(inward.x)) * (labelLine + space.xxs)
+  const nameClearance = Math.max(0, inward.y - Math.abs(inward.x)) * (nameLine + space.xxs)
   const distance = size / 2 + chipSize / 2 + space.xxs + nameClearance
   // Every reminder follows the same inward axis.
   const step = expanded ? chipSize + space.xxs : chipSize / 2
@@ -166,7 +167,7 @@ export const Seat = ({
         // react-native-web caps a Text at its parent's width, and the parent here is the token's box.
         // A diagonal stack's first disc reaches the end of a long name, so the name is drawn above
         // the seat's reminders and lets their taps through.
-        style={[type.text.label, styles.name, { top: nameTop, left: -nameOverhang, width: nameWidth, maxWidth: nameWidth, zIndex: chips.length + 2, color: pickable === false && !selected && !quietPick ? p.muted : p.text }]}
+        style={[type.text.seatName, styles.name, { top: nameTop, left: -nameOverhang, width: nameWidth, maxWidth: nameWidth, zIndex: chips.length + 2, color: pickable === false && !selected && !quietPick ? p.muted : p.text }]}
         numberOfLines={1}
       >
         {name}

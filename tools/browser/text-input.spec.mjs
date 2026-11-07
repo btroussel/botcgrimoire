@@ -60,7 +60,7 @@ test('renaming a low seat moves the menu above the keyboard without moving seats
   await name.fill('Élodie with a long player name')
   await keyboard(page, 350, 80)
   await expectReachable(name)
-  await expectReachable(page.getByRole('button', { name: 'Empty seat', exact: true }))
+  await expectReachable(page.getByRole('button', { name: 'Remove the seat', exact: true }))
   await expect(name).toBeFocused()
   expect(await positions()).toEqual(initial)
   await expectFitted(page)

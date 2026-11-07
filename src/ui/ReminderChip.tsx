@@ -1,4 +1,5 @@
-// A reminder token: a purple disc with large source art and its name curved along the lower rim.
+// A reminder token: a purple disc with large source art and its name curved along the lower rim,
+// edged in a pale ring so the dark disc stands off every velvet.
 // Its fixed footprint lets the ring place reminders without measuring the text. Notes use
 // the same disc, their text clipped to the few lines that fit the disc's slot, so a long note
 // never covers a neighbour; its window holds the whole text. With labels hidden a note shows its
@@ -18,10 +19,10 @@ import { useFocusVisible } from './focus'
 import { Icon } from './icons'
 import { PrintedName } from './Token'
 import { TokenDisc } from './TokenDisc'
-import { border, motion, palette, space, tokenSize, touch, type } from './theme'
+import { border, motion, palette, space, tokenMaterial, tokenSize, touch, type } from './theme'
 
 export interface ReminderChipProps {
-  readonly size?: number // larger discs for browsing; board reminders keep the default footprint
+  readonly size?: number // larger discs for browsing; a board reminder follows its seat's token
   readonly label: string // the reminder's name, or a note's text
   readonly character?: string // the source character's id; a note has none and shows its first letters
   readonly art?: ReactNode // the source art itself, for a character with no saved record yet
@@ -44,6 +45,7 @@ const Disc = ({ size, children }: { readonly size: number; readonly children: Re
       {source !== undefined ? <Art source={source} fit="cover" style={{ position: 'absolute', inset: 0 }} /> : null}
 
       <View style={styles.centre}>{children}</View>
+      <View pointerEvents="none" aria-hidden style={[styles.rim, { borderRadius: size / 2 }]} />
     </TokenDisc>
   )
 }
@@ -94,6 +96,9 @@ const Placed = ({ arrive, children }: { readonly arrive: boolean; readonly child
 
 // Three lines of a note's text fit the disc's height.
 const noteLines = 3
+// A reminder's words are all it says apart from its art, so they print at a fifth of the disc,
+// 10 px on a phone's board, and run nearly to the disc's equator before a long one shrinks.
+const reminderPrint = { share: 0.2, endDegrees: 6 } as const
 
 // The face depends only on these values, so a stack redrawn for its seat leaves each disc's
 // art and printed name alone.
@@ -115,7 +120,7 @@ const ReminderFace = memo(function ReminderFace({ size, label, noteWidth, charac
         </View>
       ) : null}
       {showLabel && (character !== undefined || art !== undefined) ? (
-        <PrintedName name={label} size={size} fontSize={size / 6} color={p.text} />
+        <PrintedName name={label} size={size} fontSize={size * reminderPrint.share} endDegrees={reminderPrint.endDegrees} color={p.text} />
       ) : null}
     </Disc>
     {character === undefined && art === undefined ? <View style={styles.centre}>
@@ -194,5 +199,6 @@ const styles = StyleSheet.create({
   badgeSlot: { width: touch, height: touch, borderRadius: touch / 2, alignItems: 'center', justifyContent: 'center' },
   empty: { borderWidth: border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
   badge: { width: badge, height: badge, borderRadius: badge / 2, borderWidth: border, alignItems: 'center', justifyContent: 'center' },
+  rim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, boxShadow: tokenMaterial.reminderRim },
   note: { textAlign: 'center', textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
 })

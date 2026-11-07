@@ -114,7 +114,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   ]
   const row = (item: { label: string; icon: IconName; run: () => void; disabled?: boolean }) =>
     <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} disabled={item.disabled} />
-  return <div ref={menu} role="group" aria-label={name} data-layer style={{ ...menuFrame, position: 'absolute', width, background: `${palette.ink}eb`,
+  return <div ref={menu} role="group" aria-label={name} data-layer style={{ ...menuFrame, position: 'absolute', width,
     maxHeight: Math.max(0, viewport.height - space.sm * 2), overflowY: 'auto', zIndex: 30 }}>
     {renaming ? <TextInput autoFocus selectTextOnFocus value={draft} onChangeText={setDraft}
       maxLength={80} accessibilityLabel={t('board.playerName')} returnKeyType="done"
@@ -138,7 +138,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     {actions.map(item => row(item))}
     {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
     <View style={styles.rule} />
-    {row({ label: t('board.emptySeat'), icon: 'trash', run: onEmpty })}
+    {row({ label: t('board.removeSeat'), icon: 'trash', run: onEmpty })}
   </div>
 }
 

@@ -121,8 +121,9 @@ underlined. [App](app.md#attribution) owns what About says.
 ## Setup
 
 Each team's band fills toward the usual count for the chosen number of players. The counts are
-advisory. Shuffle and Open grimoire float at the bottom of the sheet, under the thumb wherever you
-have scrolled.
+advisory. A chosen character comes to full strength and carries a brass check on its icon, as in
+the pickers, since a faded row alone is easy to misread in a dim room. Shuffle and Open grimoire
+float at the bottom of the sheet, under the thumb wherever you have scrolled.
 
 Discovery hands the phone from player to player, so it must never leak a role. The neutral back is
 the same for everyone. Hiding removes the face at once, with no closing animation that could leave
@@ -145,6 +146,9 @@ The seat menu opens beside its token, wherever it covers the fewest other seats,
 stays tappable to nominate. It has no backdrop. Add a reminder comes first, since on a touch screen
 it is the only way to the reminder picker. [App](app.md#board-edits) owns the actions.
 
+A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
+outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
+
 Stacked reminders always show each one's rim and name, and spread out on hover or tap. With a mouse
 or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
 it.
@@ -162,17 +166,19 @@ The status plaque is also the phase control, in thumb reach at the lower right. 
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.
 
-References are drawers you drag between closed, compact and full. On a narrow screen a drawer
-covers the board without moving the seats; on a wider one the board gives up width down to a
-minimum. The ring never jumps during a drag, a fully open drawer leaves some board in reach, and
-nothing dims.
+References are drawers you drag between closed, compact and full. Compact shows names only, so a
+tap on its paper opens it full. On a phone held upright a drawer covers the board without moving
+the seats; on a wider screen, a tablet held upright or a phone on its side included, the board
+gives up width down to a minimum, so the compact drawer never cuts a seat in half. The ring never
+jumps during a drag, a fully open drawer leaves some board in reach, and nothing dims.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
 board itself, with no banner, so the ring does not shift.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
-voter is covered. The count's route and the most-votes highlight are references only: they never
-advance, count or decide anything.
+voter is covered. The tally turns brass once the hands reach the count that executes. That colour,
+the count's route and the most-votes highlight are references only: they never advance, count or
+decide anything.
 
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only.

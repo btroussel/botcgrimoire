@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { CharacterId } from '../../content'
 import type { Grimoire } from '../../engine'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import type { PickerGroup } from '../../ui/Picker'
 import { Picker } from '../../ui/Picker'
 import { Token } from '../../ui/Token'
-import { boardBlock, boardWell, palette, space, touch } from '../../ui/theme'
+import { boardBlock, boardWell, palette, space, touch, type } from '../../ui/theme'
 import { bluffChoices, edits, pickerGroups } from './seat'
 import { useEdits } from './useEdits'
 
@@ -48,6 +48,8 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit }: 
 
   return <>
           <View style={[styles.bluffs, { width: bluffCount * bluffSize + 2 * space.xs + 2 }]} accessibilityLabel={t('board.bluffsTitle')} role="region">
+            {/* Three empty wells say nothing on their own; the region's name already reads it out. */}
+            <Text aria-hidden numberOfLines={1} style={[type.text.label, styles.title]}>{t('board.bluffsTitle')}</Text>
             <View style={[boardBlock, styles.bluffTokens]}>
               {Array.from({ length: bluffCount }, (_, index) => {
                 const c = bluffs[index]
@@ -81,6 +83,7 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit }: 
   </>
 }
 const styles = StyleSheet.create({
-  bluffs: { flexShrink: 0, alignItems: 'center', gap: space.xs },
+  bluffs: { flexShrink: 0, alignItems: 'center', gap: space.xxs },
+  title: { color: palette.muted, maxWidth: '100%', textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   bluffTokens: { flexDirection: 'row', alignSelf: 'flex-start', gap: space.xs, borderRadius: 999 },
 })
