@@ -1,6 +1,6 @@
 ---
-name: codebase-scorecard
-description: Scores the app on its UI and UX as a Storyteller running a real game uses it, then its performance and code, and replies with a scorecard. Use when asked to score the app, review the UI or UX, or grade the app's overall quality. Not for a single diff or pull request.
+name: app-scorecard
+description: Scores the app's UI and UX as a Storyteller uses it in a real game. Use to score the app or review its UI.
 context: fork
 agent: general-purpose
 ---
