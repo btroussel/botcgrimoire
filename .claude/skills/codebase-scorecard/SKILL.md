@@ -39,8 +39,8 @@ command's output or a screenshot) and says what would raise it by one.
    the project's docs say, and wait until it answers. If it will not start, mark those groups n/a.
 3. Launch one `general-purpose` subagent per group, all in a single message so they run in
    parallel. Give each its group's categories from above, the app URL, a temporary folder outside
-   the repository for screenshots,
-   and these rules: read only, evidence for every finding, answer in the format below.
+   the repository for screenshots, and these rules: read only, evidence for every finding, answer
+   in the format below.
 4. Check each score against its findings, then compute the means.
 5. Give the report in the reply, without saving it to a file, and stop the server.
 
