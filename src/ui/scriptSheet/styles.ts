@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native'
-import { border, hairline, layout, radius, space, touch, type } from '../theme'
+import { border, hairline, layout, radius, shadows, space, touch, type } from '../theme'
 
 // Fixed measures of the sheet's own parts, named once.
 const bandHeight = type.display.band.lineHeight! + 2 * space.sm
@@ -46,6 +46,10 @@ export const styles = StyleSheet.create({
   rowBody: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingRight: space.xs },
   rowAction: { gap: space.xxs, borderRadius: radius.tile },
   dimmed: { opacity: 0.45 },
+  // The chosen row's check sits on the icon's upper right, inside its tap target, as the picker's does.
+  check: { position: 'absolute', top: 2, right: 2, width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    boxShadow: shadows.card },
+  compactCheck: { top: -2, right: -4, width: 20, height: 20, borderRadius: 10 },
   iconHit: { width: rowIcon, height: rowIcon, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: rowIcon / 2 },
   rowText: { flex: 1, gap: space.xxs, paddingTop: space.xxs },
   below: { gap: space.xxs }, // the row text's gap, kept between the pieces hung under it
