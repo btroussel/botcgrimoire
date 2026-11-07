@@ -61,39 +61,33 @@ milliseconds, kilobytes).
 
 ## Format
 
-Keep it short. Each subagent returns one or two sentences on its group (what works, what holds it
-back), then one section per category with at most three findings, the most severe first:
+Each subagent returns, per category, its grade and at most three findings, the most severe first,
+each with the fix that would gain the most:
 
 ```markdown
 ### <Category>: <grade>/10
-- [blocker|major|minor] <finding> (<evidence>)
-
-Next step: <the change that would gain the most, left out at 10>
+- [blocker|major|minor] <finding> (<evidence>). Fix: <one line>
 ```
 
-The report has three parts, in this order: the table of grades, a description per group, then
-the sections per category. A group's grade is the mean of its categories and the global grade the
-mean of all categories, both to one decimal.
+The report has two parts: a grid of grades with one column per group, then the findings to fix
+first. A group's grade is the mean of its categories and the global grade the mean of all
+categories, both to one decimal. Use short category names in the grid and bold grades under 7.
+"Fix first" holds every blocker and major finding, then the minor findings that would gain the
+most, up to eight items, ranked by severity and then by gain.
 
 ```markdown
-# Scorecard: <project>
+# <project>: <global>/10
 
-| Group | Category | Grade |
-| --- | --- | --- |
-| Code | Architecture and layers | 9.5 |
-| **Code** | | **8.4** |
-| **Global** | | **7.9** |
+| Code 8.3 | UI 8.0 | UX 7.2 | Performance 8.3 |
+| --- | --- | --- | --- |
+| Architecture 9.4 | Visual identity 9.5 | Home 8.6 | Performance and offline 8.3 |
+| Readability **5.8** | Design system 8.4 | Setup 8.1 | |
+| Robustness 8.2 | Responsive **6.2** | Game **5.6** | |
+| Tests 8.5 | Accessibility 7.8 | Texts **6.4** | |
+| Documentation 9.6 | | | |
 
-Lowest: <category> (<grade>)
+## Fix first
 
-## Summary
-
-**Code (8.4).** <one or two sentences>
-
-**UI (8.0).** <one or two sentences>
-
-## Details
-
-### <Category>: <grade>/10
-...
+1. **<finding>.** <Severity>, <category> (<evidence>). <fix>
+2. ...
 ```
