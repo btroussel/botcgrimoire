@@ -38,3 +38,38 @@ test('an edit in a second window of the same game keeps the first window\'s edit
   await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
   await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
 })
+
+// A window that misses the other's message, frozen in the background or without the channel,
+// still cannot write its older copy over the newer one: its write is refused, and it makes its
+// own edit again on top of the stored copy.
+test('a second window that never heard of the first window\'s edit keeps both when it edits', async ({ page, context }) => {
+  await open(page, '/new')
+  await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
+  await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+  await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+  await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
+  await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
+
+  const deaf = await context.newPage()
+  await deaf.addInitScript(() => { delete window.BroadcastChannel })
+  await open(deaf, page.url())
+  await expect(deaf.locator('[data-seat-context-target]')).toHaveCount(7)
+
+  await seat(page, 2).click()
+  await page.getByRole('button', { name: 'Mark dead', exact: true }).click()
+  await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
+  await expect(seat(deaf, 2)).not.toHaveAttribute('aria-label', /, dead, /)
+
+  await seat(deaf, 0).click()
+  await deaf.getByRole('button', { name: 'Rename player', exact: true }).click()
+  await deaf.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
+  await deaf.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
+  // Refused, it takes the stored copy, so the first window's death appears here too.
+  await expect(seat(deaf, 2)).toHaveAttribute('aria-label', /, dead, /)
+  await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, /)
+
+  await deaf.close()
+  await reload(page)
+  await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
+  await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
+})

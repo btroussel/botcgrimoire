@@ -55,6 +55,16 @@ describe('two windows writing one game', () => {
     expect(await getGame(start.id)).toEqual(checkpoint)
   })
 
+  test('a stale window that adds its own edit is refused too, so it can replay that edit', async () => {
+    const start = newGame('tb', 1)
+    await putGame(start)
+    const a = edited(start, ['chef', 'monk', 'saint'], 2)
+    expect(await putGameOver(a, start)).toBeUndefined()
+    const b = edited(start, ['chef', 'monk', 'soldier'], 3)
+    expect(await putGameOver(b, start)).toEqual(a)
+    expect(await getGame(start.id)).toEqual(a)
+  })
+
   test('a game deleted in another window is not written back', async () => {
     const start = newGame('tb', 1)
     await putGame(start)

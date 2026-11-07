@@ -140,7 +140,8 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   // play-time checkpoint included (docs/store.md). Every write, delete and import tells the other
   // windows, and one holding that game takes the stored copy whenever any of it differs, timer,
   // bag and play time with the log, before it can write again. A write the database refuses as
-  // stale takes the stored copy the same way. `seen` is the copy this window last read or wrote.
+  // stale takes the stored copy too, and replays its own edits onto it. `seen` is the copy this
+  // window last read or wrote.
   const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
   const seen = useRef<SavedGame | undefined>(undefined)
   const announce = useCallback((id: GameId) => otherWindows.current?.postMessage({ saved: id }), [])
@@ -172,6 +173,9 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   // re-reading the database here would hand every other saved game a new identity on each
   // appended event, and the home rows behind the board would reduce their logs again for nothing.
   // `refresh` is for the writes that change which games exist.
+  // A write refused because another window wrote first takes that window's copy and makes this
+  // window's own new edits again on top of it, so neither window's edits are lost.
+  const recommit = useRef<(next: Session) => void>(() => {})
   const commit = useCallback(
     (next: Session) => {
       const active = activePlay.current
@@ -181,13 +185,17 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       const prior = seen.current?.id === written.id ? seen.current : undefined
       seen.current = written
       void db.putGameOver(written, prior).then((refused) => {
-        if (refused === undefined) announce(written.id)
-        else if (refused !== null) adopt(refused)
+        if (refused === undefined) { announce(written.id); return }
+        if (refused === null) return
+        const replayed = prior ? cursor.replayOnto(refused, prior, written, Date.now()) : undefined
+        adopt(refused)
+        if (replayed && replayed.game.log.length > refused.log.length && live.current?.game.id === written.id) recommit.current(replayed)
       })
       setGames((gs) => gs.map((g) => (g.id === next.game.id ? next.game : g)).sort((a, b) => b.updatedAt - a.updatedAt))
     },
     [replace, announce, adopt],
   )
+  useEffect(() => { recommit.current = commit }, [commit])
 
   const pause = useCallback(() => {
     if (activePlay.current && live.current) commit(live.current)
