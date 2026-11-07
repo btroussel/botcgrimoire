@@ -1,6 +1,6 @@
 ---
 name: codebase-scorecard
-description: Grades the whole codebase and the running app on code, UI, UX and performance, with one subagent per group, and writes a dated scorecard to compare over time. Use when asked to review, audit, grade or score the overall quality of the codebase or the app. Not for a single diff or pull request.
+description: Grades the whole codebase and the running app on code, UI, UX and performance, with one subagent per group, and writes a scorecard of its current state. Use when asked to review, audit, grade or score the overall quality of the codebase or the app. Not for a single diff or pull request.
 ---
 
 # Codebase scorecard
@@ -34,15 +34,14 @@ command's output or a screenshot) and says what would raise it by one.
 
 ## Steps
 
-1. Note the commit (`git rev-parse --short HEAD`). Do not read earlier reports yet, so old scores
-   do not pull the new ones.
+1. Note the commit (`git rev-parse --short HEAD`). Grade the code as it is now, without reading
+   earlier reports.
 2. If UI, UX or Performance is in scope, build and serve the production app in the background, as
    the project's docs say, and wait until it answers. If it will not start, mark those groups n/a.
 3. Launch one `general-purpose` subagent per group, all in a single message so they run in
    parallel. Give each its group's categories from above, the app URL, a folder for screenshots,
    and these rules: read only, evidence for every finding, answer in the format below.
-4. Check each score against its findings, then compute the means. Only now open the latest report
-   in `.claude/reviews/` to fill the change column.
+4. Check each score against its findings, then compute the means.
 5. Write `.claude/reviews/<YYYY-MM-DD>-<sha>.md`, show the table in the reply, and stop the server.
 
 ## Format
@@ -61,9 +60,11 @@ categories and the global score the mean of all categories, both to one decimal.
 ```markdown
 # Scorecard: <project> at <sha>, <date>
 
-| Group | Category | Score | Change |
-| --- | --- | --- | --- |
-| Code | Architecture and layers | 4 | +1 |
-| **Code** | | **3.8** | |
-| **Global** | | **3.9** | Lowest: <category> (<score>) |
+| Group | Category | Score |
+| --- | --- | --- |
+| Code | Architecture and layers | 4 |
+| **Code** | | **3.8** |
+| **Global** | | **3.9** |
+
+Lowest: <category> (<score>)
 ```
