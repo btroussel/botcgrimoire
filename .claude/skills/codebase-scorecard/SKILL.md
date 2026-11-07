@@ -1,12 +1,18 @@
 ---
 name: codebase-scorecard
 description: Scores the app on its UI and UX as a Storyteller running a real game uses it, then its performance and code, and replies with a scorecard. Use when asked to score the app, review the UI or UX, or grade the app's overall quality. Not for a single diff or pull request.
+context: fork
+agent: general-purpose
 ---
 
 # App scorecard
 
 Judge the app as it is, as the tool a Storyteller runs a live game from: a phone in one hand, a dim
 room, players close enough to see the screen.
+
+It runs as its own subagent, so the long review stays out of the main conversation and only the
+report comes back. That subagent sees no conversation history: everything it needs is in this file
+and the repository.
 
 Grade each category out of 10, to one decimal, from the anchor that matches the worst findings,
 then within the band by how many there are:
