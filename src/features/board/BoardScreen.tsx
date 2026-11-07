@@ -356,6 +356,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
         <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight} board={tableView}
+          seatTapsAct={!choosingSeats && !arranging}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
           onTabChange={changeReference} onOpen={openReference} onClose={closeReference} onReserve={setReservedWidth} />
@@ -413,6 +414,7 @@ interface ReferenceDrawerProps {
   readonly viewport: number // the board's width inside the safe insets
   readonly upright: boolean // a window no wider than it is tall, which docks the drawer sooner
   readonly board: RefObject<ViewInstance | null> // the table: seats, ring and bluffs, under the drawer
+  readonly seatTapsAct: boolean // a seat tap only opens its menu: no vote, pick or arrangement is running
   readonly seatsRight: number // the right edge of the rightmost token, in board coordinates
   readonly top: number
   readonly right: number
@@ -428,26 +430,44 @@ interface ReferenceDrawerProps {
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
 // stays here, and the board hears only the width it gives up: below the docking minimum's width
 // that never changes, so the ring and the corners are left alone while the paper moves.
-const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, top, right, bottom, height, bottomClearance,
-  onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
+const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, seatTapsAct, top, right, bottom, height,
+  bottomClearance, onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
   const drawer = useReferenceDrawer(tab !== null, viewport, upright, onOpen, onClose, onReserve)
   const { referenceWidth } = boardLayoutFor(viewport, drawer.width, upright)
   const overlapsSeats = seatsRight > viewport - referenceWidth
-  // While the paper covers seats, a tap on the board closes it once the tap has done its own
-  // work, so a seat opens its menu on the first tap instead of the tap going to the drawer, and
-  // the seat cannot move under the finger before it lands. A pan or a pinch makes no click. A
-  // pressable stops its click from bubbling, so the click is heard on the way down and the
-  // drawer closes after its dispatch.
+  // While the paper covers seats, a tap on the board closes it. A plain tap on a seat, the reason
+  // to reach past the paper, also opens that seat's menu, so it is not spent on the drawer. Any
+  // other tap only closes it: a reminder, a gap, a panel's button or a seat while a vote, a pick,
+  // the arrangement or another seat's menu is open would record an edit, and a tap meant to put
+  // the paper away must not. The click is heard on the way down, since a pressable stops its
+  // bubbling, and the drawer closes after its dispatch, so the seat cannot move under the finger
+  // first. A pan, a pinch or a dragged reminder ends far from where it began and leaves it open.
   const closing = shown && tab !== null && !drawer.dragging && overlapsSeats
   useEffect(() => {
     if (!closing) return
     let pending: ReturnType<typeof setTimeout> | undefined
+    let down = { x: 0, y: 0 }
+    const press = (event: PointerEvent) => { down = { x: event.clientX, y: event.clientY } }
     const close = (event: MouseEvent) => {
-      if (domElement(board.current)?.contains(event.target as Node)) pending = setTimeout(onClose, 0)
+      const table = domElement(board.current)
+      const target = event.target as Element
+      if (!table?.contains(target)) return
+      // A keyboard or assistive click has no pointer, so it is never a drag.
+      if (event.detail > 0 && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 10) return
+      // An open seat menu is a window of its own, so its rows act as ever.
+      const acts = !!target.closest('[data-layer]') || (seatTapsAct && !!target.closest('[data-seat-context-target]')
+        && !target.closest('[data-chip]') && !table.querySelector('[role="group"][data-layer]'))
+      if (!acts) { event.stopPropagation(); event.preventDefault() }
+      pending = setTimeout(onClose, 0)
     }
+    document.addEventListener('pointerdown', press, true)
     document.addEventListener('click', close, true)
-    return () => { document.removeEventListener('click', close, true); clearTimeout(pending) }
-  }, [closing, board, onClose])
+    return () => {
+      document.removeEventListener('pointerdown', press, true)
+      document.removeEventListener('click', close, true)
+      clearTimeout(pending)
+    }
+  }, [closing, seatTapsAct, board, onClose])
   if (!shown) return null
   return <>
     <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
@@ -494,7 +514,7 @@ const styles = StyleSheet.create({
     borderWidth: hairline, borderColor: palette.accent, boxShadow: shadows.sheet },
   endHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   root: { flex: 1 },
-  // Above the reference's outside-click catcher, so the first tap on a toolbar control acts.
+  // Above the reference, so the first tap on a toolbar control acts while the paper is out.
   floatingToolbar: { position: 'absolute', zIndex: 6 },
   referenceRail: { position: 'absolute' },
   row: { flexDirection: 'row' },
