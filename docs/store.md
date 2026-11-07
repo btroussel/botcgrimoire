@@ -28,6 +28,11 @@ Each game is written whole after every append: a log is a few kilobytes. On the 
 store asks the browser for persistent storage; the app works if it says no. Deleting a game is
 permanent, with no trash.
 
+Windows of the app on one device share the database, so a window still holding an older copy of
+a game would put it back over newer edits at its next write, a play-time checkpoint included.
+Every write tells the other windows over a `BroadcastChannel`, and a window holding that game
+takes the saved copy whenever its log differs, before it can write again.
+
 History imports a game file through the same migrations and checks as a load. It keeps its id
 unless this device holds a different game under it, in which case both are kept.
 

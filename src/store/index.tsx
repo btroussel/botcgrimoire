@@ -65,6 +65,9 @@ export interface Store {
 const StoreContext = createContext<Store | undefined>(undefined)
 
 // `page` matches the exported HTML; only the initial entry can seed an unset preference.
+// Two logs are the same game state when they end on the same event at the same length.
+const sameLog = (a: SavedGame['log'], b: SavedGame['log']): boolean => a.length === b.length && a.at(-1)?.id === b.at(-1)?.id
+
 export const StoreProvider = ({ children, page }: { readonly children: ReactNode; readonly page?: Locale | undefined }) => {
   const initialPage = useRef(page)
   const [ready, setReady] = useState(false)
@@ -134,6 +137,32 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     })
   }, [])
 
+  // Windows of the app on one device share the database, and each writes a game whole, so a
+  // window still holding an older copy would put it back over newer edits at its next save, its
+  // play-time checkpoint included. Every save tells the other windows, and one holding that game
+  // takes the saved copy when its log differs, before it can save again. Its look back stays
+  // where it was, since the saved log only grows past it.
+  const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return
+    const channel = new BroadcastChannel('botcgrimoire-saved-games')
+    otherWindows.current = channel
+    channel.onmessage = (event: MessageEvent<{ readonly saved?: GameId }>) => {
+      const id = event.data?.saved
+      if (id === undefined || live.current?.game.id !== id) return
+      void db.getGame(id).then((game) => {
+        const current = live.current
+        if (!game || current?.game.id !== id || sameLog(game.log, current.game.log)) return
+        replace({ ...cursor.openSession(game), ...(current.lookingAt !== undefined && current.lookingAt <= game.log.length ? { lookingAt: current.lookingAt } : {}) })
+        setGames((gs) => gs.map((g) => (g.id === id ? game : g)))
+      })
+    }
+    return () => {
+      channel.close()
+      otherWindows.current = undefined
+    }
+  }, [replace])
+
   // Every change to the session is written whole and swapped into the games list in place:
   // re-reading the database here would hand every other saved game a new identity on each
   // appended event, and the home rows behind the board would reduce their logs again for nothing.
@@ -143,7 +172,8 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       const active = activePlay.current
       if (active?.id === next.game.id) next = { ...next, game: recordPlayTime(next.game, active.start, Date.now()) }
       replace(next)
-      void db.putGame(next.game)
+      const id = next.game.id
+      void db.putGame(next.game).then(() => otherWindows.current?.postMessage({ saved: id }))
       setGames((gs) => gs.map((g) => (g.id === next.game.id ? next.game : g)).sort((a, b) => b.updatedAt - a.updatedAt))
     },
     [replace],
