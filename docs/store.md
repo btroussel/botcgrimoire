@@ -30,8 +30,17 @@ permanent, with no trash.
 
 Windows of the app on one device share the database, so a window still holding an older copy of
 a game would put it back over newer edits at its next write, a play-time checkpoint included.
-Every write tells the other windows over a `BroadcastChannel`, and a window holding that game
-takes the saved copy whenever its log differs, before it can write again.
+Two rules stop that:
+
+- Every write, delete and import tells the other windows over a `BroadcastChannel`. A window
+  holding that game takes the stored copy whenever any of it differs, the timer, the bag and the
+  play time as well as the log.
+- A window's write is refused when another window has written since its last read or write and
+  the write would drop events that one added, or when the game was deleted there. The refused
+  window takes the stored copy instead, and a deleted game stays deleted.
+
+Two windows adding different events at the same moment still leave the last write, and a window
+on a build from before these rules writes as it always did.
 
 History imports a game file through the same migrations and checks as a load. It keeps its id
 unless this device holds a different game under it, in which case both are kept.
