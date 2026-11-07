@@ -73,3 +73,39 @@ test('a second window that never heard of the first window\'s edit keeps both wh
   await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
   await expect(seat(page, 2)).toHaveAttribute('aria-label', /, dead, /)
 })
+
+// One gesture can be two changes, as the deal is: its tokens, then the bag put away. A window
+// that never heard of an edit makes both on the stored copy, in order, keeping the edit.
+test('a deal in a window that never heard of an edit keeps the edit and puts the bag away once', async ({ page, context }) => {
+  await open(page, '/new')
+  await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
+  await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+  await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Deal at random', exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  const deaf = await context.newPage()
+  await deaf.addInitScript(() => { delete window.BroadcastChannel })
+  await open(deaf, page.url())
+  await expect(deaf.locator('[data-seat-context-target]')).toHaveCount(7)
+
+  await seat(page, 0).click()
+  await page.getByRole('button', { name: 'Rename player', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Player name', exact: true }).fill('Ana')
+  await page.getByRole('textbox', { name: 'Player name', exact: true }).press('Enter')
+  await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, /)
+
+  await deaf.getByRole('button', { name: 'Setup', exact: true }).click()
+  await deaf.getByRole('button', { name: 'Deal at random', exact: true }).click()
+  await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, (?!no character)/)
+  await reload(deaf)
+  await expect(seat(deaf, 0)).toHaveAttribute('aria-label', /^Ana, (?!no character)/)
+  await deaf.close()
+
+  await reload(page)
+  await expect(seat(page, 0)).toHaveAttribute('aria-label', /^Ana, (?!no character)/)
+  await expect(page.locator('[data-seat-context-target]').getByRole('button', { name: /, no character$/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Setup', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Start the first night', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Deal at random', exact: true })).toHaveCount(0)
+})

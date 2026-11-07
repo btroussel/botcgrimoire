@@ -6,7 +6,6 @@ import type { SavedCharacter } from './homebrew'
 import { scriptWithCurrentWake, withCurrentWake, withHomebrew } from './homebrew'
 import type { GameId, SavedGame } from './saved'
 import { deserialize, migrate, mintGameId, serialize } from './saved'
-import { startsWith } from './session'
 import type { Settings } from './settings'
 
 // Not 'botc-grimoire': the app this one replaced at botcgrimoire.com left a database of that
@@ -80,30 +79,32 @@ export const putGame = async (game: SavedGame): Promise<void> => {
   askPersistence()
 }
 
-// The write of a game a window holds open. Windows of the app share this database and each
-// writes a game whole, so a window still holding an older copy must not put it back. The write
-// is refused when the stored copy is no longer `seen`, the one this window last read or wrote,
-// and either this copy's log does not begin with the stored log, so writing would drop events
-// another window added, or the game is gone, deleted in another window. A refusal writes
-// nothing and returns the stored copy, or null for a deleted game, for the window to take and
-// replay its own new edits onto.
-export const putGameOver = async (game: SavedGame, seen: SavedGame | undefined): Promise<SavedGame | null | undefined> => {
+// A change to a game a window holds, made inside one transaction on whatever copy is stored, so
+// a change shown on an older copy keeps every edit, timer, bag and play time another window
+// wrote since. The stored copy is migrated first, as a load would. Returns the copy written, or
+// undefined when the game is gone, deleted in another window, or cannot be read; then nothing
+// is written and a bug cannot lose a log.
+export const writeGame = async (id: GameId, change: (stored: SavedGame) => SavedGame): Promise<SavedGame | undefined> => {
   const db = await openDb()
   const tx = db.transaction('games', 'readwrite')
   const store = tx.objectStore('games')
-  let refused: SavedGame | null | undefined
+  let written: SavedGame | undefined
   // The put is made from the read's own callback, inside the same transaction, so no other
-  // window's write can fall between the check and the write.
-  const read = store.get(game.id)
+  // window's write can fall between the read and the write.
+  const read = store.get(id)
   read.onsuccess = () => {
-    const stored = read.result as SavedGame | undefined
-    if (seen !== undefined && stored === undefined) refused = null
-    else if (seen !== undefined && stored !== undefined && !sameRecord(stored, seen) && !startsWith(game.log, stored.log)) refused = stored
-    else store.put(game)
+    if (read.result === undefined) return
+    try {
+      const next = change(migrate(read.result))
+      store.put(next)
+      written = next
+    } catch {
+      written = undefined
+    }
   }
   await done(tx)
-  if (refused === undefined) askPersistence()
-  return refused
+  if (written) askPersistence()
+  return written
 }
 
 // Whole records, as the database returns them: a few kilobytes, compared once per write.

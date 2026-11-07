@@ -30,23 +30,14 @@ permanent, with no trash.
 
 Windows of the app on one device share the database, so a window still holding an older copy of
 a game would put it back over newer edits at its next write, a play-time checkpoint included.
-Two rules stop that:
-
-- Every write, delete and import tells the other windows over a `BroadcastChannel`. A window
-  holding that game takes the stored copy whenever any of it differs, the timer, the bag and the
-  play time as well as the log.
-- A window's write is refused when another window has written since its last read or write and
-  the written log does not begin with the stored one, or when the game was deleted there. The
-  refused window takes the stored copy and appends its own new batches again on top of it,
-  moving any reference to one of its own new events past the events the other window added.
-  A deleted game stays deleted.
-
-A refused window's own day timer, bag or play-time change since its last write gives way to the
-stored copy; play time is recorded again at its next checkpoint. A window on a build from before
-these rules writes as it always did.
-
-History imports a game file through the same migrations and checks as a load. It keeps its id
-unless this device holds a different game under it, in which case both are kept.
+So a window never writes the copy it holds. It keeps each change as the operation that made it,
+shows it at once, and makes it again inside the write's own transaction on whatever copy is
+stored, migrated as a load would: another window's edits, timer, bag and play time stay. A
+window's writes and reads run one at a time, and after each one it shows the stored copy with
+its changes still waiting made on top. Every write, delete and import tells the other windows
+over a `BroadcastChannel`, and a window holding that game reads it the same way. A game deleted
+in another window is not written back, and one this version cannot read is left as it is. A
+window on a build from before this rule writes as it always did.
 
 ## Versions and migrations
 

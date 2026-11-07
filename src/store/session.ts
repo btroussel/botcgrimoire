@@ -64,39 +64,6 @@ export const appendAll = (s: Session, payloads: readonly Payload[], now: number)
   return { game: withLog(s, [...s.game.log, ...events], now), redo: [] }
 }
 
-// Whether `log` begins with every event of `head`, in order.
-export const startsWith = (log: readonly Event[], head: readonly Event[]): boolean =>
-  log.length >= head.length && JSON.stringify(log.slice(0, head.length)) === JSON.stringify(head)
-
-// A payload names an earlier event by its place in the log in these fields.
-const eventFields = ['nomination', 'placedBy', 'grantedBy'] as const
-
-// The edits a window made after `seen`, the copy it last read or wrote, made again on top of
-// `stored`, another window's copy that grew from the same `seen`. Each batch is appended anew,
-// and a reference to one of the window's own new events moves by the events the other window
-// added; a reference to an older event keeps its place, which `stored` shares. Undefined when
-// either copy did not grow from `seen`, where no reference could be trusted.
-export const replayOnto = (stored: SavedGame, seen: SavedGame, mine: SavedGame, now: number): Session | undefined => {
-  if (!startsWith(stored.log, seen.log) || !startsWith(mine.log, seen.log)) return undefined
-  const from = seen.log.length
-  const shift = stored.log.length - from
-  const batches: Event[][] = []
-  for (const event of mine.log.slice(from)) {
-    const last = batches.at(-1)
-    if (last && event.batch !== undefined && last[0]!.batch === event.batch) last.push(event)
-    else batches.push([event])
-  }
-  return batches.reduce<Session>((session, batch) => appendAll(session, batch.map((event) => {
-    const { id: _id, audience: _audience, recordedAt: _at, batch: _batch, decisionsHandled: _handled, manual: _manual, ...payload } = event
-    const moved: Record<string, unknown> = { ...payload }
-    for (const field of eventFields) {
-      const ref = moved[field]
-      if (typeof ref === 'number' && ref >= from) moved[field] = asEventId(ref + shift)
-    }
-    return moved as Payload
-  }), now), openSession(stored))
-}
-
 export const append = (s: Session, payload: Payload, now: number): Session =>
   appendAll(s, [payload], now)
 
