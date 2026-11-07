@@ -166,13 +166,14 @@ const TokenFace = memo(function TokenFace({ size, id, alignment, name, named, sh
 
 // The name on an SVG arc along the lower rim, read left to right with the letters' tops toward
 // the centre, as printed. A name too long for the arc prints smaller rather than spilling.
-export const PrintedName = memo(function PrintedName({ name, size, color, outline, fontSize }: { readonly name: string; readonly size: number; readonly color: string; readonly outline?: string; readonly fontSize?: number }) {
+// A reminder's art sits higher and smaller, so its words may run further up the rim.
+export const PrintedName = memo(function PrintedName({ name, size, color, outline, fontSize, endDegrees = arc.endDegrees }: { readonly name: string; readonly size: number; readonly color: string; readonly outline?: string; readonly fontSize?: number; readonly endDegrees?: number }) {
   // useId's punctuation is legal in an href but not worth testing in every browser.
   const pathId = `arc${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   const printed = printedName(size)
   const centre = size / 2
   const r = size * arc.radius
-  const a = (arc.endDegrees * Math.PI) / 180
+  const a = (endDegrees * Math.PI) / 180
   const y = centre + r * Math.sin(a)
   const x0 = centre - r * Math.cos(a)
   const x1 = centre + r * Math.cos(a)

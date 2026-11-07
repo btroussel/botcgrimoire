@@ -6,11 +6,7 @@ import { layerAbove, useFocusVisible } from '../../ui/focus'
 import { Icon } from '../../ui/icons'
 import type { IconName } from '../../ui/icons'
 import { usePresence } from '../../ui/motion'
-import { motion, palette, radius, space, tabular, touch, type } from '../../ui/theme'
-
-// Brass marks the one action that records the count; the rest share the dark fitting.
-const brass = '#89651f'
-const fitting = '#302c29'
+import { motion, palette, radius, space, touch, type, voteDock } from '../../ui/theme'
 
 export const NominationControls = ({ by, of, count, thresholds, canReset, canMark, onReset, onMark, onDone, t }: {
   readonly by: string
@@ -38,6 +34,9 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
     document.addEventListener('keydown', done)
     return () => document.removeEventListener('keydown', done)
   }, [onDone])
+  // Brass once the hands reach the count that executes, a reference like the threshold beside it:
+  // the Storyteller still marks or ends the vote.
+  const reached = count >= thresholds.execute
   const threshold = thresholds.tie === undefined
     ? t('day.votesToExecute', { count: thresholds.execute })
     : t('day.votesToTieExecute', { count: thresholds.tie, execute: thresholds.execute })
@@ -50,22 +49,28 @@ export const NominationControls = ({ by, of, count, thresholds, canReset, canMar
       <Text style={[type.text.small, styles.threshold]}>{threshold}</Text>
     </View>
     <View style={styles.actions}>
-      <View accessibilityLiveRegion="polite" style={[styles.action, oneRow && styles.oneRow, styles.tally]}>
-        <Text style={[type.text.strong, tabular, styles.count]}>{count}{oneRow ? '' : ` ${t('day.votesLabel', { count })}`}</Text>
-        {oneRow ? <Text style={[type.text.small, styles.count, styles.stackedLabel]}>{t('day.votesLabel', { count })}</Text> : null}
+      <View accessibilityLiveRegion="polite" style={[styles.action, oneRow && styles.oneRow, styles.tally, reached && styles.reached]}>
+        {/* One text, so the count and its word are read, and announced, as one phrase. */}
+        <Text style={styles.tallyText}>
+          <Text style={[styles.count, reached && styles.countReached]}>{count}</Text>
+          {'\n'}
+          <Text style={[type.text.small, styles.stackedLabel, styles.countLabel]}>{t('day.votesLabel', { count })}</Text>
+        </Text>
       </View>
       <VoteButton label={t('day.voteReset')} icon="reset" oneRow={oneRow} disabled={!canReset} onPress={onReset} />
-      <VoteButton label={t('day.mark')} icon="skull" colour={brass} oneRow={oneRow} disabled={!canMark} onPress={onMark} />
+      <VoteButton label={t('day.mark')} icon="skull" colour={palette.accent} ink={palette.onAccent} oneRow={oneRow} disabled={!canMark} onPress={onMark} />
       <VoteButton label={t('common.done')} icon="check" oneRow={oneRow} onPress={onDone} />
     </View>
   </Animated.View>
 }
 
-const VoteButton = ({ label, icon, colour = fitting, oneRow, disabled, onPress }: {
+// Brass marks the one action that records the count; the rest share the dark fitting.
+const VoteButton = ({ label, icon, colour = voteDock.fitting, ink = palette.text, oneRow, disabled, onPress }: {
   readonly label: string
   readonly oneRow: boolean
   readonly icon: IconName
   readonly colour?: string
+  readonly ink?: string
   readonly disabled?: boolean
   readonly onPress: () => void
 }) => {
@@ -74,19 +79,25 @@ const VoteButton = ({ label, icon, colour = fitting, oneRow, disabled, onPress }
     style={state => [styles.action, oneRow && styles.oneRow, styles.button, oneRow && styles.stacked, { backgroundColor: colour,
       opacity: disabled ? motion.disabledOpacity : state.pressed ? motion.pressedOpacity : 1 },
       focusStyle(palette, focusVisible && isFocused(state))]}>
-    <View style={styles.icon}><Icon name={icon} size={18} color={palette.text} /></View>
-    <Text style={[type.text.strong, styles.buttonLabel, oneRow && styles.stackedLabel]}>{label}</Text>
+    <View style={styles.icon}><Icon name={icon} size={18} color={ink} /></View>
+    <Text style={[type.text.strong, styles.buttonLabel, { color: ink }, oneRow && styles.stackedLabel]}>{label}</Text>
   </Pressable>
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', padding: space.xs, gap: space.xs, backgroundColor: '#171310',
-    borderColor: '#776343', borderWidth: 1, borderRadius: radius.control },
+  card: { width: '100%', padding: space.xs, gap: space.xs, backgroundColor: voteDock.surface,
+    borderColor: voteDock.edge, borderWidth: 1, borderRadius: radius.control },
   heading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'baseline', columnGap: space.sm },
   who: { color: palette.text, textAlign: 'center', paddingTop: 2 },
   threshold: { color: palette.muted, textAlign: 'center', paddingBottom: 2 },
-  count: { color: palette.text, textAlign: 'center', fontSize: 18 },
-  tally: { minHeight: touch, justifyContent: 'center' },
+  // The tally is the number the table watches, so it is the largest thing in the dock; 24 on 26
+  // with its label keeps the docked row at the touch height.
+  count: { ...type.text.tally, fontSize: 24, lineHeight: 26, color: palette.text, textAlign: 'center' },
+  countReached: { color: palette.accent },
+  countLabel: { color: palette.muted },
+  tallyText: { textAlign: 'center' },
+  tally: { minHeight: touch, justifyContent: 'center', borderRadius: radius.control, borderWidth: 1, borderColor: 'transparent' },
+  reached: { borderColor: palette.accent },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   oneRow: { flexBasis: 0 },
   action: { flexGrow: 1, flexBasis: '40%', minWidth: 0 },

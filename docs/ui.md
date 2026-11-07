@@ -121,8 +121,9 @@ underlined. [App](app.md#attribution) owns what About says.
 ## Setup
 
 Each team's band fills toward the usual count for the chosen number of players. The counts are
-advisory. Shuffle and Open grimoire float at the bottom of the sheet, under the thumb wherever you
-have scrolled.
+advisory. A chosen character comes to full strength and carries a brass check on its icon, as in
+the pickers, since a faded row alone is easy to misread in a dim room. Shuffle and Open grimoire
+float at the bottom of the sheet, under the thumb wherever you have scrolled.
 
 Discovery hands the phone from player to player, so it must never leak a role. The neutral back is
 the same for everyone. Hiding removes the face at once, with no closing animation that could leave
@@ -144,6 +145,9 @@ the phase.
 The seat menu opens beside its token, wherever it covers the fewest other seats, so a neighbour
 stays tappable to nominate. It has no backdrop. Add a reminder comes first, since on a touch screen
 it is the only way to the reminder picker. [App](app.md#board-edits) owns the actions.
+
+A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
+outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
 
 Stacked reminders always show each one's rim and name, and spread out on hover or tap. With a mouse
 or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
@@ -171,8 +175,9 @@ A card fills the screen and hides the grimoire. A card that needs a player lets 
 board itself, with no banner, so the ring does not shift.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
-voter is covered. The count's route and the most-votes highlight are references only: they never
-advance, count or decide anything.
+voter is covered. The tally turns brass once the hands reach the count that executes. That colour,
+the count's route and the most-votes highlight are references only: they never advance, count or
+decide anything.
 
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only.
