@@ -40,8 +40,8 @@ and the window shows the stored copy: the Storyteller sees the other window's ed
 again. Nothing already saved is lost, and nothing is merged. Every write, delete and import tells
 the other windows over a `BroadcastChannel`; a window reads the stored copy then, when it opens a
 game, and when the board comes back into view while its clock runs. A game deleted in another
-window is not written back, and one this version cannot read is left as it is: a window whose
-write finds either leaves the game. A window on a build from before this rule writes as it
+window is not written back, and one this version cannot read is left as it is: a window leaves
+the game when its write finds either, or when it reads the stored copy and the game is gone. A window on a build from before this rule writes as it
 always did.
 
 ## Versions and migrations
