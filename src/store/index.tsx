@@ -144,14 +144,15 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   // time. Every write, delete and import tells the other windows, which read the stored copy.
   const otherWindows = useRef<BroadcastChannel | undefined>(undefined)
   const queue = useRef<Promise<void>>(Promise.resolve())
-  const base = useRef<SavedGame | undefined>(undefined)
+  // Per game, so a write for one game never compares against another's copy.
+  const base = useRef(new Map<GameId, SavedGame>())
   const waiting = useRef<readonly { readonly id: GameId; readonly game: SavedGame }[]>([])
   const announce = useCallback((id: GameId) => otherWindows.current?.postMessage({ saved: id }), [])
   const inTurn = useCallback((task: () => Promise<void>) => {
     queue.current = queue.current.then(task).catch(() => {})
   }, [])
   const show = useCallback((stored: SavedGame) => {
-    base.current = stored
+    base.current.set(stored.id, stored)
     const current = live.current
     if (current?.game.id !== stored.id || db.sameRecord(stored, current.game)) return
     // A look back stays on its step while the log still reaches it.
@@ -200,21 +201,26 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       inTurn(async () => {
         // Dropped with an earlier change from the same screen.
         if (!waiting.current.includes(entry)) return
-        const prior = base.current?.id === id ? base.current : undefined
+        // Without a copy to compare against there is nothing safe to write over: the stored one shows.
+        const prior = base.current.get(id)
         try {
-          const outcome = prior ? await db.putGameOn(entry.game, prior) : (await db.putGame(entry.game), { written: true as const })
+          const outcome = prior ? await db.putGameOn(entry.game, prior) : { written: false as const, stored: await db.getGame(id) }
           if (outcome.written) {
             waiting.current = waiting.current.filter((w) => w !== entry)
-            base.current = entry.game
+            base.current.set(id, entry.game)
             announce(id)
             return
           }
           waiting.current = waiting.current.filter((w) => w.id !== id)
           if (outcome.stored) show(outcome.stored)
+          // Deleted in another window, or saved by a newer version: this window leaves the game.
+          else if (live.current?.game.id === id) replace(undefined)
         } catch {
           // The write failed: the screen goes back to what is stored rather than show unsaved edits.
           waiting.current = waiting.current.filter((w) => w.id !== id)
           const stored = await db.getGame(id).catch(() => undefined)
+          // A tap made while that read was out built on the unsaved screen too.
+          waiting.current = waiting.current.filter((w) => w.id !== id)
           if (stored) show(stored)
         }
       })
@@ -268,7 +274,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       return new Promise<boolean>((resolve) => inTurn(async () => {
         const game = await db.getGame(id).catch(() => undefined)
         if (!game) { resolve(false); return }
-        base.current = game
+        base.current.set(id, game)
         replace(cursor.openSession(game))
         resolve(true)
       }))
@@ -286,7 +292,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       pause()
       const game = newGame(script, Date.now())
       await db.putGame(game)
-      base.current = game
+      base.current.set(game.id, game)
       await refresh()
       replace(cursor.openSession(game))
       return game.id

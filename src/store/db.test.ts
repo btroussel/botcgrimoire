@@ -60,7 +60,7 @@ describe('two windows writing one game', () => {
 
     const newer = { ...newGame('tb', 1), version: start.version + 1 }
     await putGame(newer)
-    expect(await putGameOn(edited(start, ['chef', 'monk', 'saint'], 2), newer)).toEqual({ written: false })
+    expect(await putGameOn(edited({ ...newer, version: start.version }, ['chef', 'monk', 'saint'], 2), newer)).toEqual({ written: false })
     await expect(getGame(newer.id)).rejects.toThrow()
   })
 })
