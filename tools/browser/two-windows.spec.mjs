@@ -134,13 +134,13 @@ test('a game deleted in one window leaves the other window\'s board', async ({ p
   await expect(other.locator('[data-seat-context-target]')).toHaveCount(7)
 
   await open(page, '/history')
-  await page.getByRole('button', { name: /^Show details for / }).click()
-  await page.getByRole('button', { name: /^Delete / }).click()
+  await page.getByRole('button', { name: 'Show details for Trouble Brewing', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete Trouble Brewing', exact: true }).click()
   await page.getByRole('button', { name: 'Delete this game', exact: true }).click()
   await expect(page.getByRole('article')).toHaveCount(0)
 
   // Within moments of the delete: the play-time checkpoint every 30 seconds would find the game
-  // gone too, so a longer wait could pass without the message.
+  // gone too, so a longer wait could pass on the checkpoint alone.
   await expect(other.getByText('This game is not on this device. It may have been deleted.', { exact: true })).toBeVisible({ timeout: 3_000 })
   await expect(other.locator('[data-seat-context-target]')).toHaveCount(0)
 })
