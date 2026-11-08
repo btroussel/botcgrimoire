@@ -31,6 +31,7 @@ export interface ReferenceRailProps {
   readonly dragging: boolean
   readonly dragHandlers: HTMLAttributes<HTMLDivElement>
   readonly onResizeKey: HTMLAttributes<HTMLDivElement>['onKeyDown']
+  readonly onExpand: () => void // open the drawer to its full width
   readonly bottomClearance: number // the status plaque floats over the paper's foot
 }
 
@@ -156,7 +157,7 @@ const NightRow = memo(function NightRow({ label, character: id, marker, instruct
   </View>
 }, sameNightRow)
 
-export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, bottomClearance }: ReferenceRailProps) => {
+export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, onExpand, bottomClearance }: ReferenceRailProps) => {
   const { board, t, settings } = useStore()
   const viewport = useWindowDimensions().width
   const phone = viewport <= 480
@@ -263,6 +264,10 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
             options={[{ value: 'inPlay', label: t('board.referenceInPlay') }, { value: 'all', label: t('board.referenceAll') }]} />
           <View style={styles.rule} />
         </View> : null}
+        {/* Compact rows show names only, so a tap on one opens the drawer full, the way a drag does;
+            a drag's own release never counts as that tap, and the filter above keeps its taps. */}
+        <div onClick={row.expansion === 0 ? onExpand : undefined}
+          style={{ display: 'flex', flexDirection: 'column', cursor: row.expansion === 0 ? 'pointer' : 'auto' }}>
         {shownTab === 'characters' ? <>
           {sheetTeams.map(team => {
             const rows = list.filter(row => row.team === team)
@@ -287,6 +292,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
           </View> : null}
         </> : entries.map(entry => <NightRow key={entry.id} label={entry.label} character={entry.character} marker={entry.marker}
           instruction={entry.instruction} players={entry.character ? playersOf(entry.character) : []} deadLabel={t('board.dead')} {...row} />)}
+        </div>
       </ScrollView>
     </View>
     </div>

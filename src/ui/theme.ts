@@ -110,8 +110,10 @@ export const font = {
 // Wherever a count is shown: tallies, the count table, the elapsed time, ledger numbering.
 export const tabular: TextStyle = { fontVariant: ['tabular-nums'] }
 
-// The label's line height is also a board measure (the seat name under a token), so it is named.
+// The label's and the seat name's line heights are also board measures (the name under a
+// token), so they are named.
 const labelLine = 14
+const seatNameLine = 16
 
 const style = (fontFamily: string, fontSize: number, lineHeight: number, rest: TextStyle = {}): TextStyle => ({
   fontFamily,
@@ -136,8 +138,12 @@ export const type = {
     strong: style(font.body.bold, 16, 22),
     // Meta text, timestamps, footnotes, the count table.
     small: style(font.body.regular, 13, 18),
-    // Seat names and ordinary labels; token print has its own smaller scale inside the disc.
+    // Ordinary labels, and the player's name under a small seat; token print has its own
+    // smaller scale inside the disc.
     label: style(font.body.bold, 12, labelLine),
+    // The player's name under a seat of `seatMetrics.largeName.from` and more, read from arm's
+    // length across a dim table: the board's most read words, so a size above the labels.
+    seatName: style(font.body.bold, 14, seatNameLine),
     // The vote tally against its threshold.
     tally: style(font.body.bold, 28, 32, tabular),
   },
@@ -145,8 +151,10 @@ export const type = {
 
 // The name on the arc of a token at `show` size and above: 22 px on a 200 token. The one Grenze
 // use under 24, allowed because it is the token's own print, not text set in the interface.
+// A small seat on a phone keeps a floor, a larger share of its disc, so a short name such as
+// IMP or SPY still reads; a long one is fitted to the arc either way.
 export const printedName = (tokenDiameter: number): TextStyle => {
-  const fontSize = Math.round(tokenDiameter * 0.11)
+  const fontSize = Math.round(Math.max(tokenDiameter * 0.11, Math.min(9, tokenDiameter * 0.16)))
   return { fontFamily: font.display.bold, fontSize, letterSpacing: fontSize * 0.08, textTransform: 'uppercase' }
 }
 
@@ -161,10 +169,16 @@ export const boardBlock: ViewStyle = {
   backgroundColor: '#10091760', borderColor: '#ae8a4e8c', borderWidth: 1, borderRadius: 7,
   boxShadow: 'inset 0 0 0 2px #10081338, 0 2px 7px #0003',
 }
+// An empty well's brass edge is all that marks it on dark velvet, so it is drawn firmly enough
+// to find in a dim room.
 export const boardWell: ViewStyle = {
-  borderStyle: 'solid', borderWidth: 1, borderColor: '#b997645c', backgroundColor: '#0d07102b',
+  borderStyle: 'solid', borderWidth: 1, borderColor: '#b99764a6', backgroundColor: '#0d07102b',
   boxShadow: 'inset 0 1px 4px #0005',
 }
+
+// The vote dock: a near-black card edged in dull brass, its buttons a dark fitting, so Mark is
+// its one brass button.
+export const voteDock = { surface: '#171310', edge: '#776343', fitting: '#302c29' } as const
 
 // Quiet surfaces keep the chosen fabric visible behind navigation.
 export const velvetPanel: ViewStyle = { backgroundColor: '#10091799', borderColor: '#ac874e65', borderWidth: 1 }
@@ -230,6 +244,9 @@ export const tokenMaterial = {
   edge: '#655342',
   edgeShade: '#302820',
   rim: 'inset 0 1px 1px rgba(255,250,223,0.45), inset 0 -1px 2px #24150877',
+  // A reminder's dark disc sits on dark velvet; a pale inner ring, the colour of the cream print,
+  // draws its edge so it never melts into the cloth.
+  reminderRim: 'inset 0 0 0 1.5px #efe6d280, inset 0 0 0 3px #0000004d',
   // A dead token fades rather than turning fully grey: alignment is the tint, and the Storyteller
   // still needs to tell a dead good player from a dead evil one.
   dead: 'saturate(0.3) brightness(0.78)',
@@ -275,9 +292,17 @@ export const seatMetrics = {
   nameOverhang: space.sm,
   nameGap: space.xxs,
   nameHeight: labelLine,
+  // From a 64 point token the name prints at the seat name size: its box, the token and an
+  // overhang either side, then holds the longest default name in every language, "Asiento 20".
+  // A smaller token keeps the label size, so crowded and short boards keep their token size.
+  largeName: { from: 64, height: seatNameLine },
   padding: space.md,
   gap: space.xs,
 } as const
+
+// The name under a token of this diameter, as the board measures and draws it.
+export const seatNameStyle = (token: number): TextStyle =>
+  token >= seatMetrics.largeName.from ? type.text.seatName : type.text.label
 
 // ---------------------------------------------------------------------------------------------
 // Breakpoints, by width and never by device: a phone turned sideways and a narrow window get the

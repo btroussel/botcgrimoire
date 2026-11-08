@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { AbilityText } from '../AbilityText'
 import { IconButton, focusStyle, isFocused } from '../Button'
 import { CharacterIcon } from '../CharacterIcon'
+import { Icon } from '../icons'
 import { useFocusVisible } from '../focus'
 import { PaperTexture } from '../PaperTexture'
 import type { Palette } from '../theme'
@@ -47,7 +48,8 @@ export const Band = ({ group, color, p }: { readonly group: ScriptSheetTeam; rea
 
 // ---------------------------------------------------------------------------------------------
 // One character: the icon (its own tap), the name in the team's colour, the ability, and when
-// selected in compose or deal mode, the art and text come to full opacity without extra marks.
+// selected in compose or deal mode, the art and text come to full opacity and the icon takes a
+// brass check, so the choice never rests on how faded a row looks.
 // Compose draws the reader's compact row, so the draft looks like the sheet it saves; the deal
 // keeps large art because the icon is its tap target.
 
@@ -71,7 +73,13 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
   const compact = mode !== 'deal'
   const dim = mode !== 'read' && !selected
   const longPress = onLongPress ? { onLongPress: () => onLongPress(row.id) } : {}
-  const portrait = <Portrait row={row} size={compact ? readRowIcon : rowIcon * 0.9} lazy={mode === 'compose'} dim={dim} />
+  const checked = mode !== 'read' && selected
+  const portrait = <>
+    <Portrait row={row} size={compact ? readRowIcon : rowIcon * 0.9} lazy={mode === 'compose'} dim={dim} />
+    {checked ? <View aria-hidden style={[styles.check, compact ? styles.compactCheck : null, { backgroundColor: p.accent }]}>
+      <Icon name="check" color={p.onAccent} size={compact ? 14 : 16} />
+    </View> : null}
+  </>
   const name = <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 4 }}>
           <Text id={`script-sheet-name-${row.id}`} style={[type.text.strong, { color }]}>{row.name}{inBag !== undefined ? ` ×${inBag}` : ''}</Text>
           {jinxPartners && jinxPartners.length > 0 ? (

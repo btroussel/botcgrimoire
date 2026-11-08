@@ -31,6 +31,19 @@ permanent, with no trash.
 History imports a game file through the same migrations and checks as a load. It keeps its id
 unless this device holds a different game under it, in which case both are kept.
 
+Windows of the app on one device share the database, so a window still holding an older copy of
+a game would put it back over newer edits at its next write, a play-time checkpoint included.
+So a window's write lands only while the stored copy is still the one its screen was built on,
+checked in the write's own transaction. When another window wrote first, that change and every
+change made after it on the same screen are dropped, since each carries values this window saw,
+and the window shows the stored copy: the Storyteller sees the other window's edits and taps
+again. Nothing already saved is lost, and nothing is merged. Every write, delete and import tells
+the other windows over a `BroadcastChannel`; a window reads the stored copy then, when it opens a
+game, and when the board comes back into view while its clock runs. A game deleted in another
+window is not written back, and one this version cannot read is left as it is: a window leaves
+the game when its write finds either, or when it reads the stored copy and the game is gone. A
+window on a build from before this rule writes as it always did.
+
 ## Versions and migrations
 
 Every saved game stays readable, whatever version saved it. `version` goes up whenever `SavedGame`

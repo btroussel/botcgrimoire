@@ -15,14 +15,15 @@ const board = (measures: Partial<BoardMeasures>): BoardMeasures => ({
 // Each seat's token and name in board coordinates, as the ring draws them under the top band.
 const seatBoxes = (g: ReturnType<typeof boardGeometry>) => g.ring.positions.map(at => ({
   left: at.x - g.ring.size / 2 - 8, right: at.x + g.ring.size / 2 + 8,
-  top: g.topBandHeight + at.y - g.ring.size / 2, bottom: g.topBandHeight + at.y + g.ring.size / 2 + 2 + 14,
+  top: g.topBandHeight + at.y - g.ring.size / 2, bottom: g.topBandHeight + at.y + g.ring.size / 2 + 2 + 16,
 }))
 const clear = (box: ReturnType<typeof seatBoxes>[number], control: { left: number; top: number; width: number; height: number }) =>
   box.right <= control.left || box.left >= control.left + control.width || box.bottom <= control.top || box.top >= control.top + control.height
 
 test('a phone in portrait clears the toolbar and keeps the status band whole', () => {
   for (const seats of [5, 20]) {
-    const g = boardGeometry(board({ seats }))
+    // Upright, the tray carries its title.
+    const g = boardGeometry(board({ seats, bluffs: { width: 190, height: 76 } }))
     expect(g.fitted).toBe(true)
     expect(g.columnWidth).toBe(350)
     const toolbar = { left: 390 - 12 - 94, top: 12, width: 94, height: 50 }

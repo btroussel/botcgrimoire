@@ -1,9 +1,10 @@
 // References reserve board width only when there is room for both. On smaller screens
 // the paper overlays the board, without shrinking the seating circle to an unusable strip.
 import { useKeepAwake } from 'expo-keep-awake'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import type { ViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { emptySeat, scriptName } from '../../content'
@@ -15,7 +16,7 @@ import { Button, IconButton } from '../../ui/Button'
 import { Card } from './Card'
 import { Confirm } from '../../ui/Confirm'
 import { Empty } from '../../ui/Empty'
-import { layerAbove } from '../../ui/focus'
+import { domElement, layerAbove } from '../../ui/focus'
 import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
 import { PaperTexture } from '../../ui/PaperTexture'
@@ -86,15 +87,17 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
   const [phaseOpen, setPhaseOpen] = useState(openSetup)
   const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 50 })
-  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: 62 })
+  // A first guess at the tray, its title included when upright, so the first fit is the last.
+  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height ? 62 : 76 })
   const [clockHeight, setClockHeight] = useState(68)
   const lastReferenceTab = useRef<ReferenceTab>('characters')
+  const tableView = useRef<ViewInstance>(null)
   useEffect(() => { if (referenceTab) lastReferenceTab.current = referenceTab }, [referenceTab])
   const openReference = useCallback(() => { setReferenceTab(lastReferenceTab.current); setPhaseOpen(false) }, [])
   const closeReference = useCallback(() => setReferenceTab(null), [])
   const changeReference = useCallback((tab: ReferenceTab | null) => { setReferenceTab(tab); setPhaseOpen(false) }, [])
   // The drawer keeps its sliding width to itself and reports only what it takes from the board,
-  // which changes on screens wide enough to yield space; on a phone the board never redraws.
+  // which changes on screens wide enough to yield space; on a narrower one the board never redraws.
   const [reservedWidth, setReservedWidth] = useState(referenceTabWidth)
   const [confirmHome, setConfirmHome] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
@@ -301,7 +304,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
-              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} />
+              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape} />
               : null}
           </View>
         </View>
@@ -316,7 +319,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
       <View style={[styles.root, { backgroundColor: p.felt }]} accessibilityLabel={scriptName(board.script)}>
         {/* The toolbar, the plaque and the bluffs hold three corners, in replay too. */}
         <Velvet colour={b.boardColour} ornaments={boardOrnaments} />
-        <View style={[styles.root, styles.row]}>
+        <View ref={tableView} style={[styles.root, styles.row]}>
           {table}
         </View>
         <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)}
@@ -352,7 +355,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         }}
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
-        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} seatsRight={geometry.seatsRight}
+        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight} board={tableView}
+          seatTapsAct={!choosingSeats && !arranging}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
           onTabChange={changeReference} onOpen={openReference} onClose={closeReference} onReserve={setReservedWidth} />
@@ -408,6 +412,9 @@ interface ReferenceDrawerProps {
   readonly shown: boolean
   readonly tab: ReferenceTab | null
   readonly viewport: number // the board's width inside the safe insets
+  readonly upright: boolean // a window no wider than it is tall, which docks the drawer sooner
+  readonly board: RefObject<ViewInstance | null> // the table: seats, ring and bluffs, under the drawer
+  readonly seatTapsAct: boolean // a seat tap only opens its menu: no vote, pick or arrangement is running
   readonly seatsRight: number // the right edge of the rightmost token, in board coordinates
   readonly top: number
   readonly right: number
@@ -421,20 +428,51 @@ interface ReferenceDrawerProps {
 }
 
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
-// stays here, and the board hears only the width it gives up: on screens up to 800 points that
-// never changes, so the ring and the corners are left alone while the paper moves.
-const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, seatsRight, top, right, bottom, height, bottomClearance,
-  onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
-  const drawer = useReferenceDrawer(tab !== null, viewport, onOpen, onClose, onReserve)
-  const { referenceWidth } = boardLayoutFor(viewport, drawer.width)
+// stays here, and the board hears only the width it gives up: below the docking minimum's width
+// that never changes, so the ring and the corners are left alone while the paper moves.
+const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, seatTapsAct, top, right, bottom, height,
+  bottomClearance, onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
+  const drawer = useReferenceDrawer(tab !== null, viewport, upright, onOpen, onClose, onReserve)
+  const { referenceWidth } = boardLayoutFor(viewport, drawer.width, upright)
   const overlapsSeats = seatsRight > viewport - referenceWidth
+  // While the paper covers seats, a tap on the board closes it. A plain tap on a seat, the reason
+  // to reach past the paper, also opens that seat's menu, so it is not spent on the drawer. Any
+  // other tap only closes it: a reminder, a gap, a panel's button or a seat while a vote, a pick,
+  // the arrangement or another seat's menu is open would record an edit, and a tap meant to put
+  // the paper away must not. The click is heard on the way down, since a pressable stops its
+  // bubbling, and the drawer closes after its dispatch, so the seat cannot move under the finger
+  // first. A pan, a pinch or a dragged reminder ends far from where it began and leaves it open.
+  const closing = shown && tab !== null && !drawer.dragging && overlapsSeats
+  useEffect(() => {
+    if (!closing) return
+    let pending: ReturnType<typeof setTimeout> | undefined
+    let down = { x: 0, y: 0 }
+    const press = (event: PointerEvent) => { down = { x: event.clientX, y: event.clientY } }
+    const close = (event: MouseEvent) => {
+      const table = domElement(board.current)
+      const target = event.target as Element
+      if (!table?.contains(target)) return
+      // A keyboard or assistive click has no pointer, so it is never a drag.
+      if (event.detail > 0 && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 10) return
+      // An open seat menu is a window of its own, so its rows act as ever.
+      const acts = !!target.closest('[data-layer]') || (seatTapsAct && !!target.closest('[data-seat-context-target]')
+        && !target.closest('[data-chip]') && !table.querySelector('[role="group"][data-layer]'))
+      if (!acts) { event.stopPropagation(); event.preventDefault() }
+      pending = setTimeout(onClose, 0)
+    }
+    document.addEventListener('pointerdown', press, true)
+    document.addEventListener('click', close, true)
+    return () => {
+      document.removeEventListener('pointerdown', press, true)
+      document.removeEventListener('click', close, true)
+      clearTimeout(pending)
+    }
+  }, [closing, seatTapsAct, board, onClose])
   if (!shown) return null
   return <>
-    {tab && !drawer.dragging && overlapsSeats ?
-      <div aria-hidden="true" onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 4 }} /> : null}
     <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
       <ReferenceRail tab={tab} width={referenceWidth} bottomClearance={bottomClearance}
-        height={height} maximumWidth={drawer.maximum}
+        height={height} maximumWidth={drawer.maximum} onExpand={drawer.expand}
         dragging={drawer.dragging} dragHandlers={drawer.handlers} onResizeKey={drawer.keyboard}
         onTabChange={onTabChange} />
     </View>
@@ -476,7 +514,7 @@ const styles = StyleSheet.create({
     borderWidth: hairline, borderColor: palette.accent, boxShadow: shadows.sheet },
   endHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   root: { flex: 1 },
-  // Above the reference's outside-click catcher, so the first tap on a toolbar control acts.
+  // Above the reference, so the first tap on a toolbar control acts while the paper is out.
   floatingToolbar: { position: 'absolute', zIndex: 6 },
   referenceRail: { position: 'absolute' },
   row: { flexDirection: 'row' },

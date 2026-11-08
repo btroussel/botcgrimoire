@@ -1,4 +1,4 @@
-import { centreBoxes, fitRing, fitRingAroundControls } from './ringLayout'
+import { centreBoxes, fitRing, fitRingAroundControls, nameHeightAt } from './ringLayout'
 
 const metrics = { maximum: 104, minimum: 44, nameOverhang: 8, nameGap: 2, nameHeight: 14, padding: 12, gap: 4 }
 
@@ -26,6 +26,28 @@ describe('fitted seating ring', () => {
               const nearestY = Math.max(top, Math.min(top + 14, disc.y))
               expect(Math.hypot(disc.x - nearestX, disc.y - nearestY)).toBeGreaterThanOrEqual(size / 2 + 4)
             }
+          }
+        }
+      }
+    }
+  })
+
+  test('measures a large token\'s taller name and a small token\'s label line', () => {
+    const scaled = { ...metrics, largeName: { from: 64, height: 16 } }
+    expect(nameHeightAt(scaled, 60)).toBe(14)
+    expect(nameHeightAt(scaled, 64)).toBe(16)
+    expect(nameHeightAt(metrics, 100)).toBe(14)
+    for (const [width, height] of [[395, 566], [1000, 650]]) {
+      for (let count = 5; count <= 20; count++) {
+        const { size, positions } = fitRing({ width: width!, height: height! }, count, scaled)
+        const nameHeight = nameHeightAt(scaled, size)
+        for (const label of positions) {
+          for (const disc of positions) {
+            if (disc === label) continue
+            const top = label.y + size / 2 + 2
+            const nearestX = Math.max(label.x - size / 2 - 8, Math.min(label.x + size / 2 + 8, disc.x))
+            const nearestY = Math.max(top, Math.min(top + nameHeight, disc.y))
+            expect(Math.hypot(disc.x - nearestX, disc.y - nearestY)).toBeGreaterThanOrEqual(size / 2 + 4)
           }
         }
       }

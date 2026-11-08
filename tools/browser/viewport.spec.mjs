@@ -72,3 +72,55 @@ test('the phase control on the status plaque stays reachable over the night refe
     await expect(page.getByRole('button', { name: 'Other nights', exact: true })).toHaveAttribute('aria-expanded', 'true')
   }
 })
+
+test.describe('with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' })
+
+  test('a tap on a compact night row opens the reference full, once, its filter keeps its own taps, and a seat answers at once', async ({ page }) => {
+    await open(page, '/new')
+    await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
+    await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+    await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+    await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
+    await page.getByRole('button', { name: 'Setup', exact: true }).tap()
+    await page.getByRole('button', { name: 'Start the first night', exact: true }).tap()
+    const tab = page.getByRole('button', { name: 'First night', exact: true })
+    const paper = page.getByRole('region', { name: 'First night', exact: true })
+    const width = async () => Math.round((await paper.boundingBox())?.width ?? 0)
+    await expect.poll(width).toBe(168)
+
+    // The filter's word is what a finger lands on, not its hidden radio.
+    await paper.getByText('All', { exact: true }).tap()
+    await expect(page.getByRole('radio', { name: 'All', exact: true })).toBeChecked()
+    expect(await width()).toBe(168)
+
+    await paper.getByText('Dusk', { exact: true }).tap()
+    await expect.poll(width).toBe(382)
+
+    // The widened drawer was for that read: it opens compact again.
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'true')
+    await expect.poll(width).toBe(168)
+
+    // A seat beside the paper answers the first tap, and the drawer steps aside for its menu.
+    const seat = page.locator('[data-seat-context-target]').nth(6)
+    await seat.getByRole('button').first().tap()
+    await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByRole('group', { name: 'Seat 7', exact: true })).toBeVisible()
+
+    // A reminder takes an edit no undo gives back, so a tap on one with the paper out only puts
+    // the paper away.
+    await page.getByRole('button', { name: 'Add a reminder', exact: true }).tap()
+    await page.getByRole('dialog').getByRole('button', { name: /, / }).first().tap()
+    const chip = seat.locator('[data-chip] [role="button"]')
+    await expect(chip).toHaveCount(1)
+    await tab.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'true')
+    await chip.tap()
+    await expect(tab).toHaveAttribute('aria-expanded', 'false')
+    await expect(chip).toHaveCount(1)
+  })
+})

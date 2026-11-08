@@ -23,7 +23,8 @@ import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { domElement } from '../../ui/focus'
 import { useReducedMotion } from '../../ui/motion'
 import { ReminderChip } from '../../ui/ReminderChip'
-import { reminderSize, Seat } from '../../ui/Seat'
+import { reminderSize } from '../../ui/reminderStack'
+import { Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
 import { hairline, motion, palette, radius, shadows, space, tokenSize, touch } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
@@ -31,7 +32,7 @@ import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
 import { sameSeat } from './board'
 import { centrePanelWidth } from './boardGeometry'
-import { seatPositions } from './ring'
+import { seatPositions, stackAngle } from './ring'
 import type { RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { placeSeatMenu } from './seatMenu'
@@ -180,10 +181,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
         {seats.map((seat, i) => {
           const at = positions[i]
           if (!at) return null
-          // Fan the lower stacks apart on wide ovals, leaving room for the top seat's
-          // reminder below its name. Flanks face the centre to clear the names above them.
-          const reminderAngle = geometry.rx > geometry.ry && at.y - centre.y > geometry.ry / 2
-            ? at.angle : Math.atan2(at.y - centre.y, at.x - centre.x) * 180 / Math.PI
+          const reminderAngle = stackAngle(at, centre, geometry.rx, geometry.ry, { size, chip: chipSize })
           const nominationLabel = isNominationTarget(seat.id) ? t('board.nominatePlayer', { name: seat.name }) : undefined
           const inPick = pick !== undefined || action !== undefined
           const allowed = pick ? pick.allowed.includes(seat.id) : action?.allowed.includes(seat.id) ?? false
@@ -225,7 +223,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
           {...(onAddReminder ? { onReminder: () => { closeContext(); onAddReminder(contextPlayer.id) } } : {})}
           nominateSelfDisabled={!canNominate(day, contextPlayer.id, contextPlayer.id)}
-          onEmpty={() => openSeatAction('remove')}
+          onRemove={() => openSeatAction('remove')}
           onRename={name => e.append(edits.renameSeat(contextPlayer.id, name))}
           onLife={() => e.append(contextPlayer.dead ? edits.revive(contextPlayer.id) : edits.kill(contextPlayer.id))}
           onGhostVote={() => { if (contextPlayer.dead) e.append(edits.setGhostVote(contextPlayer.id, !contextPlayer.ghostVote)) }}

@@ -7,15 +7,21 @@ export interface SeatMetrics {
   readonly nameOverhang: number
   readonly nameGap: number
   readonly nameHeight: number
+  readonly largeName?: { readonly from: number; readonly height: number } // a taller name under large tokens
   readonly padding: number
   readonly gap: number
 }
 
+// The name's line under a token of this size, the same rule Seat draws it by.
+export const nameHeightAt = (metrics: Pick<SeatMetrics, 'nameHeight' | 'largeName'>, size: number) =>
+  metrics.largeName && size >= metrics.largeName.from ? metrics.largeName.height : metrics.nameHeight
+
 // Check circular tokens and rectangular labels separately so diagonal neighbours can
 // use the space beside a disc without covering its name.
 export const fitRing = (viewport: Size, count: number, metrics: SeatMetrics) => {
-  const { maximum, minimum, nameOverhang, nameGap, nameHeight, padding, gap } = metrics
+  const { maximum, minimum, nameOverhang, nameGap, padding, gap } = metrics
   const candidate = (band: Size, size: number) => {
+    const nameHeight = nameHeightAt(metrics, size)
     const halfWidth = size / 2 + nameOverhang
     const below = size / 2 + nameGap + nameHeight
     const ry = Math.max(0, band.height / 2 - below - padding)
@@ -51,7 +57,7 @@ export const fitRing = (viewport: Size, count: number, metrics: SeatMetrics) => 
   // On short screens keep seats readable and let the seating area scroll vertically.
   // Keep the opposite sides far enough apart even in a very narrow viewport.
   let width = Math.max(viewport.width, 2 * (minimum + 2 * nameOverhang) + gap + 2 * padding)
-  let height = Math.max(viewport.height, minimum + nameGap + nameHeight + 2 * padding)
+  let height = Math.max(viewport.height, minimum + nameGap + nameHeightAt(metrics, minimum) + 2 * padding)
   for (;;) {
     const result = candidate({ width, height }, minimum)
     if (result.fits) return result
@@ -79,7 +85,7 @@ export const fitRingAroundControls = (viewport: Size, count: number, metrics: Se
     const geometry = fitRing(band, count, metrics)
     if (geometry.band.width > band.width || geometry.band.height > band.height) return undefined
     const halfWidth = geometry.size / 2 + metrics.nameOverhang
-    const below = geometry.size / 2 + metrics.nameGap + metrics.nameHeight
+    const below = geometry.size / 2 + metrics.nameGap + nameHeightAt(metrics, geometry.size)
     const overlaps = (bounds: readonly BoardControlBounds[]) => geometry.positions.some(at => bounds.some(control =>
       at.x + halfWidth + metrics.gap > control.left &&
       at.x - halfWidth - metrics.gap < control.left + control.width &&
@@ -112,7 +118,7 @@ export const centreBoxes = (geometry: Pick<RingGeometry, 'band' | 'size' | 'posi
   const seats = positions.map(p => ({
     reach: Math.abs(p.x - cx) - size / 2 - metrics.nameOverhang - metrics.gap, // the half-width that first touches it
     top: p.y - size / 2 - metrics.gap,
-    bottom: p.y + size / 2 + metrics.nameGap + metrics.nameHeight + metrics.gap,
+    bottom: p.y + size / 2 + metrics.nameGap + nameHeightAt(metrics, size) + metrics.gap,
   })).sort((a, b) => a.top - b.top)
   const widest = Math.min(maxWidth, band.width) / 2
   const reaches = [...new Set([widest, ...seats.map(seat => seat.reach).filter(reach => reach > 0 && reach < widest)])]

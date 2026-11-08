@@ -8,6 +8,7 @@
 // stays tappable to nominate.
 import { seatMetrics, space } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
+import { nameHeightAt } from './ringLayout'
 
 export interface Point {
   readonly x: number
@@ -41,7 +42,7 @@ export const placeSeatMenu = ({ at, size, centre, room, others, menu }: {
   const y = (top: number) => Math.max(room.top + gap, Math.min(room.bottom - menu.height - gap, top))
   const beside = y(at.y - menu.height / 2)
   // Below clears the player's name as well as the token.
-  const below = y(at.y + size / 2 + seatMetrics.nameGap + seatMetrics.nameHeight + gap)
+  const below = y(at.y + size / 2 + seatMetrics.nameGap + nameHeightAt(seatMetrics, size) + gap)
   const above = y(at.y - size / 2 - gap - menu.height)
   const inward = at.y <= centre.y ? [below, above] : [above, below]
   const places: readonly SeatMenuPlace[] = [
