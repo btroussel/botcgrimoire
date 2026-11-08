@@ -159,8 +159,8 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     replace({ ...cursor.openSession(stored), ...(current.lookingAt !== undefined && current.lookingAt <= stored.log.length ? { lookingAt: current.lookingAt } : {}) })
     setGames((gs) => gs.map((g) => (g.id === stored.id ? stored : g)))
   }, [replace])
-  // Deleted in another window, or saved by a newer version: nothing here may be written over it,
-  // so the window lets the game go and lists what is stored.
+  // The game is deleted, here or in another window, or saved by a newer version: nothing here may
+  // be written over it, so the window lets the game go and lists what is stored.
   const leave = useCallback((id: GameId) => {
     base.current.delete(id)
     if (live.current?.game.id === id) replace(undefined)
