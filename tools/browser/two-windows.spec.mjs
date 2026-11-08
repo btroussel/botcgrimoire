@@ -119,3 +119,26 @@ test('a deal in a window that never heard of an edit is dropped whole, then made
   await expect(page.getByRole('button', { name: 'Start the first night', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Deal at random', exact: true })).toHaveCount(0)
 })
+
+// A game deleted in one window is gone from the other at once, before its next tap could show an
+// edit that has nowhere to land.
+test('a game deleted in one window leaves the other window\'s board', async ({ page, context }) => {
+  await open(page, '/new')
+  await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
+  await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+  await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+  await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
+  await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
+  const other = await context.newPage()
+  await open(other, page.url())
+  await expect(other.locator('[data-seat-context-target]')).toHaveCount(7)
+
+  await open(page, '/history')
+  await page.locator('.history-summary').first().click()
+  await page.getByRole('button', { name: /^Delete /, exact: false }).first().click()
+  await page.getByRole('button', { name: 'Delete this game', exact: true }).click()
+  await expect(page.getByRole('article')).toHaveCount(0)
+
+  await expect(other.getByText('This game is not on this device. It may have been deleted.', { exact: true })).toBeVisible()
+  await expect(other.locator('[data-seat-context-target]')).toHaveCount(0)
+})
