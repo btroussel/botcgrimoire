@@ -3,7 +3,7 @@ import type { Translate } from '../../content'
 import { Clock } from './Clock'
 import type { ClockProps } from './Clock'
 import { useReducedMotion } from '../../ui/motion'
-import { MenuItem, menuClass, menuSurface, togglePopover } from './popover'
+import { MenuItem, menuClass, menuSurface, togglePopover } from '../../ui/popover'
 
 // The status plaque is the phase control: the reading of where the game stands is what the
 // Storyteller taps, at the thumb end of a phone. Night still takes two taps to reach day,

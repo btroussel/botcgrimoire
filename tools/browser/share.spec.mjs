@@ -108,7 +108,16 @@ test('New game and the library lead to each other', async ({ page }) => {
   // Every toolbar control stays on the paper at phone width.
   const toolbar = page.locator('#script-sheet-toolbar')
   expect(await toolbar.evaluate(bar => bar.scrollWidth <= bar.clientWidth)).toBe(true)
-  await expect(toolbar.getByRole('button', { name: 'Print', exact: true })).toBeVisible()
+  // A phone has no hover to name a glyph, so the copy and Print are written out in More.
+  await expect(toolbar.getByRole('button', { name: 'Print', exact: true })).toHaveCount(0)
+  // A mouse reads a glyph's name in its tooltip, which sits on a wrapper around the button.
+  await expect(toolbar.locator('[title="Share"]').getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+  await toolbar.getByRole('button', { name: 'More', exact: true }).click()
+  const more = page.locator(':popover-open')
+  await expect(more.getByRole('button', { name: 'Edit a copy', exact: true })).toBeVisible()
+  await expect(more.getByRole('button', { name: 'Print', exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(more).toHaveCount(0)
 
   // The sheet starts a game on its script, on the bag, and Back returns to the sheet.
   await button('New game').click()

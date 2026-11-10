@@ -5,7 +5,7 @@ import { EdgeButton } from '../../ui/EdgeButton'
 import type { IconName } from '../../ui/icons'
 import { useReducedMotion } from '../../ui/motion'
 import { hairline, palette, radius, shadows, space } from '../../ui/theme'
-import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from './popover'
+import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from '../../ui/popover'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
   onLoose, looseDisabled, onEnd, endDisabled, onReplay, onHome }: {
