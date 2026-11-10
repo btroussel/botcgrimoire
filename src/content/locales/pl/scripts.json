@@ -37,6 +37,8 @@
   "ofTarget": "{have} z {of}",
   "print": "Drukuj",
   "edit": "Edytuj",
+  "editCopy": "Edytuj kopię",
+  "copyName": "{name} (kopia)",
   "export": "Eksportuj do pliku",
   "share": "Udostępnij",
   "shareTitle": "Udostępnij ten skrypt",

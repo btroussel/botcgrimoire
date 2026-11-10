@@ -35,6 +35,8 @@
   "ofTarget": "{have} von {of}",
   "print": "Drucken",
   "edit": "Bearbeiten",
+  "editCopy": "Kopie bearbeiten",
+  "copyName": "{name} (Kopie)",
   "export": "Als Datei exportieren",
   "share": "Teilen",
   "shareTitle": "Dieses Skript teilen",

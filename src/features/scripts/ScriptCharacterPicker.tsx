@@ -20,7 +20,7 @@ import { durationFor, useReducedMotion } from '../../ui/motion'
 import { PaperTexture } from '../../ui/PaperTexture'
 import { motion, palette, radius, space, touch, type } from '../../ui/theme'
 import { useViewport } from '../../ui/Viewport'
-import { matchesSearch } from './compose'
+import { searchCharacters, searchPick } from './compose'
 import { useSheetWords } from './useScripts'
 
 interface Props {
@@ -72,11 +72,11 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
     }
   }, [visible, wide, onClose])
-  const shown = useMemo(() => roster.filter(c =>
+  const search = useMemo(() => searchCharacters(roster.filter(c =>
     (team === 'all' || c.team === team) &&
-    (edition === 'all' || (c.homebrew ? 'homebrew' : characters.get(c.id)?.edition) === edition) &&
-    matchesSearch(c, query),
-  ), [roster, team, edition, query])
+    (edition === 'all' || (c.homebrew ? 'homebrew' : characters.get(c.id)?.edition) === edition),
+  ), query), [roster, team, edition, query])
+  const { shown } = search
   const anyHomebrew = useMemo(() => roster.some(c => c.homebrew), [roster])
   const selectedIds = useMemo(() => new Set(selected), [selected])
   const pinned = !viewport.height || viewport.height >= pinFrom
@@ -105,7 +105,7 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
             <TextInput ref={searchRef} value={query} onChangeText={setQuery} accessibilityLabel={t('scripts.searchCharacters')}
               placeholder={t('scripts.searchCharacters')} placeholderTextColor={p.inkMuted} returnKeyType="search"
               // Enter on a single match adds it, so typing a name and Enter builds a script quickly.
-              onSubmitEditing={() => { if (shown.length === 1) { onToggle(shown[0]!.id); setQuery('') } }} blurOnSubmit={false}
+              onSubmitEditing={() => { const pick = searchPick(search); if (pick) { onToggle(pick.id); setQuery('') } }} blurOnSubmit={false}
               onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
               style={[type.text.body, styles.searchInput, { color: p.ink }]} />
             {query !== '' ? <IconButton icon="close" label={t('scripts.clearSearch')} onPress={() => { setQuery(''); searchRef.current?.focus() }} surface="paper" /> : null}

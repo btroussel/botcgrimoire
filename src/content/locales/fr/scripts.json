@@ -35,6 +35,8 @@
   "ofTarget": "{have} sur {of}",
   "print": "Imprimer",
   "edit": "Modifier",
+  "editCopy": "Modifier une copie",
+  "copyName": "{name} (copie)",
   "export": "Exporter en fichier",
   "share": "Partager",
   "shareTitle": "Partager ce script",

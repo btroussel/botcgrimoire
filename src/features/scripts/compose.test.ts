@@ -1,9 +1,9 @@
-import type { CustomScript, Homebrew } from '../../content'
+import type { CustomScript, Homebrew, ScriptId } from '../../content'
 import { asCharacterId, character, parseScript } from '../../content'
 import type { SavedScript, SavedScriptId } from '../../store'
 import { serializeScript } from '../../store'
 import { everyCharacter, listed, unknownIds } from '../../store/scriptSheet'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftOf, draftProblem, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, minCharacters, orderIds, recordsOf, toggleId } from './compose'
+import { composeRoster, copyOf, draftIds, draftNeedsBootlegger, draftOf, draftProblem, editionDraft, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, maxName, minCharacters, orderIds, recordsOf, searchCharacters, searchPick, toggleId } from './compose'
 
 const id = asCharacterId
 const teensyIds = ['imp', 'poisoner', 'washerwoman', 'librarian', 'chef', 'butler', 'drunk', 'spy', 'empath', 'fortuneteller', 'undertaker'].map(id)
@@ -56,6 +56,42 @@ describe('draftOf', () => {
   })
 })
 
+describe('a copy to edit', () => {
+  const named = (name: string) => `${name} (copy)`
+
+  test('of a saved script keeps everything but its id, so saving makes a second script', () => {
+    const baker: Homebrew = { id: 'bakerq1', name: 'Baker', team: 'outsider', ability: 'You bake.' }
+    const script: CustomScript = {
+      kind: 'custom',
+      name: 'Home',
+      items: [{ id: '_meta', name: 'Home', author: 'Bob', background: 'https://example.com/bg.png', bootlegger: ['No whispers.'] }, 'imp', baker, 'chef'],
+    }
+    const copy = copyOf(draftOf({ id: 's1' as SavedScriptId, script, updatedAt: 1 }), named)
+    expect(copy).toEqual({
+      name: 'Home (copy)', author: 'Bob', kept: { background: 'https://example.com/bg.png' }, rules: ['No whispers.'],
+      ids: ['imp', 'bakerq1', 'chef'], homebrew: [baker],
+    })
+  })
+
+  test('of an edition lists every character its sheet shows, Travellers included', () => {
+    const copy = copyOf(editionDraft('tb' as ScriptId, 'Trouble Brewing', 'en'), named)
+    expect(copy.name).toBe('Trouble Brewing (copy)')
+    expect(copy.id).toBeUndefined()
+    expect(draftProblem(copy)).toBeUndefined()
+    expect(copy.ids).toEqual(listed('tb' as ScriptId, 'en').map((c) => c.id))
+    expect(copy.ids).toContain('washerwoman')
+    expect(copy.ids.some((x) => character(x).team === 'traveller')).toBe(true)
+    expect(listed(fileOf(copy), 'en').map((c) => c.id).sort()).toEqual([...copy.ids].sort())
+  })
+
+  test('cuts the original name, never the pattern, to stay within the schema', () => {
+    const long = copyOf({ ...emptyDraft, name: 'A'.repeat(48) }, named)
+    expect(long.name).toBe(`${'A'.repeat(maxName - ' (copy)'.length)} (copy)`)
+    expect([...long.name]).toHaveLength(maxName)
+    expect(copyOf({ ...emptyDraft, name: `${'B'.repeat(42)} word` }, named).name).toBe(`${'B'.repeat(42)} (copy)`)
+  })
+})
+
 describe('homebrew characters in a draft', () => {
   const baker: Homebrew = { id: 'bakerq1', name: 'Baker', team: 'outsider', ability: 'You bake.', reminders: ['Bread'], firstNight: 30.5 }
   const alchemist: Homebrew = { id: 'alchq2', name: 'Alchemist Two', team: 'townsfolk', ability: 'You brew.' }
@@ -69,6 +105,16 @@ describe('homebrew characters in a draft', () => {
   test('the copy in the Storyteller\'s list replaces the one the script carried', () => {
     const file = fileOf({ ...draft, homebrew: [{ ...baker, ability: 'Old text.' }] }, [baker, alchemist])
     expect(file.items).toContainEqual(baker)
+  })
+
+  test('one carried only by the script is still offered and opens with its record, until an own copy replaces it', () => {
+    const carried = recordsOf([baker], [alchemist])
+    expect(carried.get('bakerq1')).toBe(baker)
+    expect(composeRoster('en', carried).some((c) => c.id === 'bakerq1')).toBe(true)
+    const edited = { ...baker, ability: 'You bake twice.' }
+    const own = recordsOf([baker], [alchemist, edited])
+    expect(own.get('bakerq1')).toBe(edited)
+    expect(composeRoster('en', own).find((c) => c.id === 'bakerq1')?.ability).toBe('You bake twice.')
   })
 
   test('an id with no record anywhere stays as it came, like an official id this build does not know', () => {
@@ -178,5 +224,54 @@ describe('the picker search', () => {
     expect(matchesSearch(fortuneTeller, ' fortune  tel ')).toBe(true)
     expect(matchesSearch(fortuneTeller, 'fortune imp')).toBe(false)
     expect(matchesSearch(fortuneTeller, '   ')).toBe(true)
+  })
+
+  const english = everyCharacter('en')
+  const ids = (query: string, roster = english) => searchCharacters(roster, query).shown.map(c => c.id)
+
+  test('lists the name matches first, then the characters whose ability holds every word', () => {
+    const found = ids('poison')
+    expect(found[0]).toBe('poisoner')
+    expect(found.length).toBeGreaterThan(1)
+    const rest = english.filter(c => c.id !== 'poisoner' && c.ability.toLowerCase().includes('poison')).map(c => c.id)
+    expect(found.slice(1)).toEqual(rest)
+    // A word can come from the name and another from the ability.
+    expect(ids('poisoner tomorrow')).toEqual(['poisoner'])
+  })
+
+  test('one or two letters match names only', () => {
+    expect(ids('po')).toEqual(english.filter(c => matchesSearch(c, 'po')).map(c => c.id))
+    expect(ids(' p ')).toEqual(english.filter(c => matchesSearch(c, 'p')).map(c => c.id))
+    expect(ids('dr')).toEqual(english.filter(c => matchesSearch(c, 'dr')).map(c => c.id))
+    expect(ids('dru').length).toBeGreaterThan(english.filter(c => matchesSearch(c, 'dru')).length)
+  })
+
+  test('folds case and accents in abilities too', () => {
+    const roster = [
+      { id: 'a', name: 'Chef', englishName: 'Chef', ability: 'Tu apprends combien de paires de joueurs Maléfiques il y a.' },
+      { id: 'b', name: 'Baker', englishName: 'Baker', ability: 'Nothing here.' },
+    ]
+    expect(searchCharacters(roster, 'MALEFIQUES').shown.map(c => c.id)).toEqual(['a'])
+  })
+
+  test('the English name still matches in another locale', () => {
+    expect(ids('fortune teller', everyCharacter('fr'))[0]).toBe('fortuneteller')
+  })
+
+  test('Enter takes the one name match, else the one result, else nothing', () => {
+    const pick = (query: string) => searchPick(searchCharacters(english, query))?.id
+    expect(pick('chef')).toBe('chef')
+    expect(pick('poisoner')).toBe('poisoner')
+    expect(pick('librarian')).toBeUndefined() // the Librarian and Hell's Librarian
+    expect(pick('po')).toBeUndefined()
+    const abilityOnly = searchCharacters([{ id: 'a', name: 'Chef', englishName: 'Chef', ability: 'Learn pairs.' }], 'pairs')
+    expect(searchPick(abilityOnly)?.id).toBe('a')
+  })
+
+  test('every official name typed in full adds that character, unless it is part of another name', () => {
+    for (const c of english) {
+      const named = english.filter(other => matchesSearch(other, c.englishName))
+      expect(searchPick(searchCharacters(english, c.englishName))?.id).toBe(named.length === 1 ? c.id : undefined)
+    }
   })
 })

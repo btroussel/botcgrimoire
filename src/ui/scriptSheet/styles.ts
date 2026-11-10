@@ -52,6 +52,7 @@ export const styles = StyleSheet.create({
   compactCheck: { top: -2, right: -4, width: 20, height: 20, borderRadius: 10 },
   iconHit: { width: rowIcon, height: rowIcon, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: rowIcon / 2 },
   rowText: { flex: 1, gap: space.xxs, paddingTop: space.xxs },
+  rowControls: { gap: space.xxs },
   below: { gap: space.xxs }, // the row text's gap, kept between the pieces hung under it
   jinx: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.sm },
   jinxPair: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 0 },
