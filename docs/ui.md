@@ -173,8 +173,9 @@ the seats are being arranged, a panel or a vote is asking for seats, or in repla
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.
-Undo and Redo are the first rows of More, not buttons: the toolbar's width comes out of the ring
-on a phone. Redo shows under Undo only while there is something to redo.
+Undo is a small arrow alone in the top left corner, the one corner with no other control, so a
+tap aimed at Show a card or More never lands on it. The ring keeps clear of it as it does of the
+toolbar. The corner's gold ornament shows in replay, where there is no Undo.
 
 References are drawers you drag between closed, compact and full. Compact shows names only, so a
 tap on one of its rows opens it full, that once: the next opening keeps the width last dragged to.

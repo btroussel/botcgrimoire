@@ -29,7 +29,7 @@ export type { Draw, DrawToken } from './draw'
 export type { SavedCharacter } from './homebrew'
 export { mintCharacterId } from './homebrew'
 export type { GameId, SavedGame } from './saved'
-export { boardOf, canRedo, canUndo, inLocale } from './session'
+export { boardOf, canUndo, inLocale } from './session'
 
 export interface Store {
   readonly ready: boolean

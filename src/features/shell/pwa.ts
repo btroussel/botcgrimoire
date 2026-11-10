@@ -12,7 +12,7 @@ const serverSnapshot = (): Status => 'unavailable'
 export const usePwa = () => useSyncExternalStore(subscribe, snapshot, serverSnapshot)
 // A new build reloads every window it takes over. A game in view keeps the build it has until the
 // Storyteller leaves it or the page is hidden: a reload there would close a card being shown to a
-// player, drop an open sheet and empty the redo history. Nothing saved is at risk either way.
+// player and drop an open sheet. Nothing saved is at risk either way.
 let route = ''
 const quiet = () => document.visibilityState === 'hidden' || !route.startsWith('/game/')
 const askForUpdate = () => { if (quiet()) registration?.waiting?.postMessage('APPLY_UPDATE') }

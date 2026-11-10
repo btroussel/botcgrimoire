@@ -13,6 +13,7 @@ import type { EventId, SeatId } from '../../engine'
 import { BoardInteractionProvider, useBoardInteraction } from '../../ui/BoardInteraction'
 import { boardLayoutFor, referenceTabWidth } from './boardLayout'
 import { Button, IconButton } from '../../ui/Button'
+import { EdgeButton } from '../../ui/EdgeButton'
 import { Card } from './Card'
 import { Confirm } from '../../ui/Confirm'
 import { Empty } from '../../ui/Empty'
@@ -63,8 +64,10 @@ export interface BoardScreenProps {
 const maxSeats = 20
 // The result never runs wider than this, however much room the ring leaves.
 const resultWidth = 560
-// The toolbar, the plaque and the bluffs hold the other three corners.
-const boardOrnaments = ['topLeft'] as const
+// Undo, the toolbar, the plaque and the bluffs hold the four corners of a live board. Replay has
+// no undo, so its corner keeps the ornament.
+const replayOrnaments = ['topLeft'] as const
+const noOrnaments = [] as const
 // A control measured again at the same size keeps the board's layout as it was.
 const sameSize = (next: Size) => (previous: Size) => previous.width === next.width && previous.height === next.height ? previous : next
 
@@ -138,24 +141,22 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     document.addEventListener('keydown', dismiss)
     return () => document.removeEventListener('keydown', dismiss)
   }, [choosingSeats, pick, cancelRequest])
-  // Ctrl or Cmd with Z undoes, with Shift or as Y redoes. In a field the keys keep to its text,
-  // and under a window they do nothing, so an edit never changes behind what is being read.
-  const { undo, redo } = b
+  // Ctrl or Cmd with Z undoes. In a field the keys keep to its text, and under a window they do
+  // nothing, so an edit never changes behind what is being read.
+  const { undo } = b
   useEffect(() => {
-    if (!undo && !redo) return
+    if (!undo) return
     const keys = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase()
-      if (!(event.ctrlKey || event.metaKey) || event.altKey || (key !== 'z' && key !== 'y')) return
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'z') return
       const target = event.target
       if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return
       if (layerAbove()) return
       event.preventDefault()
-      if (key === 'y' || event.shiftKey) redo?.()
-      else undo?.()
+      undo()
     }
     document.addEventListener('keydown', keys)
     return () => document.removeEventListener('keydown', keys)
-  }, [undo, redo])
+  }, [undo])
   // Arranging the seats ends on a click anywhere but its own controls, or Escape.
   useEffect(() => {
     if (!arranging) return
@@ -265,7 +266,6 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     onLoose={openLoose} looseDisabled={looseChoices(board.script).length === 0}
     onEnd={openEnd} endDisabled={over}
     onReplay={over ? b.enterReplay : undefined} onHome={askHome}
-    onUndo={undo} onRedo={redo}
     />
 
   const table = (
@@ -336,8 +336,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   return (
     <PageEnter>
       <View style={[styles.root, { backgroundColor: p.felt }]} accessibilityLabel={scriptName(board.script)}>
-        {/* The toolbar, the plaque and the bluffs hold three corners, in replay too. */}
-        <Velvet colour={b.boardColour} ornaments={boardOrnaments} />
+        <Velvet colour={b.boardColour} ornaments={live ? noOrnaments : replayOrnaments} />
         <View ref={tableView} style={[styles.root, styles.row]}>
           {table}
         </View>
@@ -373,6 +372,11 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           setToolbarSize(sameSize({ width, height }))
         }}
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
+        {/* Alone in its corner, away from Show a card and More: nothing puts an undone action
+            back, so a tap aimed at another control must never land here. */}
+        {live ? <View style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
+          <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo} />
+        </View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
         <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight} board={tableView}
           seatTapsAct={!choosingSeats && !arranging}
@@ -535,6 +539,9 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   // Above the reference, so the first tap on a toolbar control acts while the paper is out.
   floatingToolbar: { position: 'absolute', zIndex: 6 },
+  // The toolbar's frame around one control.
+  undo: { padding: space.xxs, borderRadius: radius.control, backgroundColor: palette.ink, borderWidth: hairline,
+    borderColor: palette.inkMuted, boxShadow: shadows.lifted },
   referenceRail: { position: 'absolute' },
   row: { flexDirection: 'row' },
   column: { flex: 1, minWidth: 0 },

@@ -151,12 +151,12 @@ End game asks who won, good or evil. The app never detects a win.
 ## Saved games and replay
 
 Every edit saves at once. Undo takes back the last action, whatever it was: an edit, a hand, a
-phase, the deal or the ending. It stops at the table the game opened with. Redo puts an undone
-action back until the next edit or a reload. Most mistakes are fixed faster with another edit, so
-the two sit in More and not on the board ([UI](ui.md#the-board)); they are for what no edit
-reaches, a phase begun too early or the wrong winner. On a keyboard, Ctrl or Cmd with Z undoes,
-with Shift redoes, except in a text field or under an open window.
-[Store](store.md#the-cursor) owns the operations.
+phase, the deal or the ending, and stops at the table the game opened with. It is there for what
+no other edit reaches, a phase begun too early or the wrong winner. There is no Redo: stepping
+back and forth through a game is an easy way to lose track of it, so an undone action is made
+again by hand. That makes a stray Undo costly, which is why the control stands apart from the
+others ([UI](ui.md#the-board)). On a keyboard, Ctrl or Cmd with Z undoes, except in a text field
+or under an open window. [Store](store.md#the-cursor) owns the operations.
 
 History reads recorded edits only: deaths, side changes, nominations and votes, each in its
 phase, nothing inferred from an ability. A game resumes or replays in one tap, and game files
@@ -232,9 +232,8 @@ and no account. Installing is left to the browser's own controls.
 The app checks for an update on launch, when it becomes visible and every minute while visible.
 A fully downloaded build waits, with no prompt, until a window of the app is hidden or not on a
 game, then takes over and refreshes every open window. Every edit is already saved, but a reload in
-the middle of a game would close a card being shown to a player, an open sheet and the redo
-history. A second window open beside the game can still let the build in. A failed download keeps
-the current build.
+the middle of a game would close a card being shown to a player or an open sheet. A second window
+open beside the game can still let the build in. A failed download keeps the current build.
 [Store](store.md#offline-build-recovery) owns caches and recovery.
 
 ## Language

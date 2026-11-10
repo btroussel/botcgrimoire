@@ -6,15 +6,11 @@ test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true
 
 const button = (page, name) => page.getByRole('button', { name, exact: true })
 const seat = (page, index) => page.locator('[data-seat-context-target]').nth(index).getByRole('button').first()
-const fromMore = async (page, name) => {
-  await button(page, 'More').tap()
-  await button(page, name).tap()
-}
 const onTheBlock = page => page.locator('[data-seat-context-target]').evaluateAll(seats => seats
   .map((seat, index) => seat.querySelector('[aria-label]')?.getAttribute('aria-label')?.includes('On the block') ? index + 1 : undefined)
   .filter(Boolean))
 
-// A new device opens on seven seats, with the setup window up over the toolbar.
+// A new device opens on seven seats, with the setup window up.
 const openTable = async page => {
   await open(page, '/new')
   await button(page, 'Trouble Brewing').tap()
@@ -23,29 +19,18 @@ const openTable = async page => {
   await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
 }
 
-test('undoing the deal puts the bag back, Redo deals it again, and the opening table stays', async ({ page }) => {
+test('undoing the deal puts the bag back, and the opening table stays', async ({ page }) => {
   await openTable(page)
   await button(page, 'Close').tap()
-  await button(page, 'More').tap()
   await expect(button(page, 'Undo')).toBeDisabled()
-  await expect(button(page, 'Redo')).toHaveCount(0)
-  await page.keyboard.press('Escape')
 
   await button(page, 'Setup').tap()
   await button(page, 'Deal at random').tap()
-  await fromMore(page, 'Undo')
+  await button(page, 'Undo').tap()
+  await expect(button(page, 'Undo')).toBeDisabled()
   await button(page, 'Setup').tap()
   await expect(page.getByText('0 of 7 characters assigned', { exact: true })).toBeVisible()
   await expect(button(page, 'Deal at random')).toBeVisible()
-  await button(page, 'Close').tap()
-
-  await fromMore(page, 'Redo')
-  await button(page, 'More').tap()
-  await expect(button(page, 'Redo')).toHaveCount(0)
-  await page.keyboard.press('Escape')
-  await button(page, 'Setup').tap()
-  await expect(page.getByText('7 of 7 characters assigned', { exact: true })).toBeVisible()
-  await expect(button(page, 'Deal at random')).toHaveCount(0)
 })
 
 test('undoing Mark reopens the vote, and undoing the ending resumes the game', async ({ page }) => {
@@ -64,20 +49,38 @@ test('undoing Mark reopens the vote, and undoing the ending resumes the game', a
   await expect(vote).toHaveCount(0)
   expect(await onTheBlock(page)).toEqual([3])
 
-  await fromMore(page, 'Undo')
+  await button(page, 'Undo').tap()
   await expect(vote).toContainText('4 votes')
   expect(await onTheBlock(page)).toEqual([])
   // One more takes back the last hand, as it would have before Mark.
-  await fromMore(page, 'Undo')
+  await button(page, 'Undo').tap()
   await expect(vote).toContainText('3 votes')
   await button(page, 'Done').tap()
 
-  await fromMore(page, 'End game')
+  await button(page, 'More').tap()
+  await button(page, 'End game').tap()
   await page.getByRole('dialog', { name: 'End game' }).getByRole('button', { name: 'Evil wins', exact: true }).tap()
   await expect(page.getByText('Evil wins', { exact: true }).first()).toBeVisible()
-  await fromMore(page, 'Undo')
+  await button(page, 'Undo').tap()
   await expect(page.getByText('Evil wins', { exact: true })).toHaveCount(0)
   await expect(button(page, 'Day 1')).toBeVisible()
-  await button(page, 'More').tap()
-  await expect(button(page, 'End game')).toBeEnabled()
+})
+
+test('a full table keeps every seat clear of Undo', async ({ page }) => {
+  await open(page, '/new')
+  await button(page, 'Trouble Brewing').tap()
+  const count = page.getByText(/^\d+ players?$/).first()
+  while (Number((await count.textContent()).match(/\d+/)[0]) !== 20) await button(page, 'More players').tap()
+  // With no characters chosen there is no bag, so the board opens with no window over it.
+  await button(page, 'Open grimoire').tap()
+  await expect(page.locator('[data-seat-context-target]')).toHaveCount(20)
+  const undo = await button(page, 'Undo').boundingBox()
+  const seats = await page.locator('[data-seat-context-target]').evaluateAll(all => all.map(seat => {
+    const { left, top, right, bottom } = seat.getBoundingClientRect()
+    return { left, top, right, bottom }
+  }))
+  expect(seats).toHaveLength(20)
+  for (const box of seats) {
+    expect(box.right <= undo.x || box.left >= undo.x + undo.width || box.bottom <= undo.y || box.top >= undo.y + undo.height).toBe(true)
+  }
 })

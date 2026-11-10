@@ -85,7 +85,8 @@ you look back, and every screen reads that one board from the React context in `
   that bag so undoing the deal puts it back. Like the redo stack it is not saved, so after a
   reload undoing a deal only clears the seats.
 - `undo` takes off the last batch and `redo` puts it back. Undo never removes the batch that set
-  up the table, a table of one seat included.
+  up the table, a table of one seat included. No control calls `redo`
+  ([App](app.md#saved-games-and-replay) says why); the operation and its tests stay.
 - `lookAt` and `returnToPresent` move the cursor and write nothing. While you look back, nothing
   can be appended, undone or redone.
 

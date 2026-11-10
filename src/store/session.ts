@@ -111,10 +111,8 @@ export const undo = (s: Session, now: number): Session => {
   return { ...s, game: { ...game, ...bag }, redo: [...s.redo, ...removed.reverse()] }
 }
 
-export const canRedo = (s: Session): boolean => !isLookingBack(s) && s.redo.length > 0
-
 export const redo = (s: Session, now: number): Session => {
-  if (!canRedo(s)) return s
+  if (isLookingBack(s) || s.redo.length === 0) return s
   const from = lastGroupStart(s.redo)
   const restored = s.redo.slice(from).reverse()
   const { draw, ...game } = withLog(s, [...s.game.log, ...restored], now)
