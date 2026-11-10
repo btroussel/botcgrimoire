@@ -69,6 +69,7 @@ export interface ScriptSheetNameField {
   readonly label: string // the field's accessibility label
   readonly onChange: (value: string) => void
   readonly onBlur?: () => void
+  readonly maxLength?: number // caps typing only, so a longer value already given stays whole
 }
 
 export interface ScriptSheetProps {

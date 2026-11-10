@@ -37,6 +37,8 @@ test('the character search reads abilities after names, and Enter still adds a t
 
 test('a script being composed comes back after a reload and goes once discarded', async ({ page }) => {
   await compose(page, 'Midnight Bakery', ['Chef', 'Empath'])
+  // The schema's limit for a script name, so the saved file stays valid for other tools.
+  await expect(page.getByRole('textbox', { name: 'Script name', exact: true })).toHaveAttribute('maxlength', '50')
   await reload(page)
   await expectDraft(page, 'Midnight Bakery', ['Chef', 'Empath'])
 

@@ -24,7 +24,7 @@ import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import { ScriptCharacterPicker } from './ScriptCharacterPicker'
 import type { Draft } from './compose'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxRules, recordsOf, toggleId } from './compose'
+import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, recordsOf, toggleId } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepScript, useKept } from './drafts'
 import { useSheetWords } from './useScripts'
@@ -132,6 +132,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
             value: draft.name,
             placeholder: defaultName,
             label: t('scripts.nameLabel'),
+            maxLength: maxName,
             onChange: (name) => setDraft((d) => ({ ...d, name })),
             onBlur: () => setDraft((d) => ({ ...d, name: d.name.trim() || defaultName })),
           }}

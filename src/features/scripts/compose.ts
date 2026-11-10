@@ -28,6 +28,9 @@ export const emptyDraft: Draft = { name: '', author: '', ids: [] }
 // The schema prints ten rules at most, so the composer offers no more.
 export const maxRules = 10
 
+// The schema's `_meta.name` allows fifty characters, so a longer name makes a file other tools reject.
+export const maxName = 50
+
 export const logoOf = (script: CustomScript): string | undefined => scriptMeta(script)?.logo
 
 // The draft a saved script opens as: every character it lists, the homebrew ones with the
