@@ -79,6 +79,7 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
   ), [roster, team, edition, query])
   const anyHomebrew = useMemo(() => roster.some(c => c.homebrew), [roster])
   const selectedIds = useMemo(() => new Set(selected), [selected])
+  const pinned = !viewport.height || viewport.height >= pinFrom
   const selectStyle = {
     backgroundColor: 'transparent', color: p.ink, border: `1px solid ${p.parchmentShade}`,
     borderRadius: radius.control, fontFamily: type.text.body.fontFamily, fontSize: type.text.body.fontSize, minHeight: touch, padding: space.sm,
@@ -95,7 +96,10 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
         <Button label={t('common.done')} onPress={onClose} surface="paper" variant="text" />
       </View>
       <ScrollView style={styles.grow} contentContainerStyle={styles.roster} keyboardShouldPersistTaps="handled">
-        <View style={styles.filters}>
+        {/* Search and the count stick under the header so they stay in reach down the list. In a
+            window too short for them and two rows, they scroll away with the rest instead. */}
+        <View style={[styles.filters, pinned ? [styles.pinned, { backgroundColor: p.parchment }] : null]}>
+          {pinned ? <PaperTexture /> : null}
           <View style={[styles.search, focusStyle(p, searchFocused && focusVisible, 'paper')]}>
             <Icon name="search" size={20} color={p.inkMuted} />
             <TextInput ref={searchRef} value={query} onChangeText={setQuery} accessibilityLabel={t('scripts.searchCharacters')}
@@ -106,6 +110,9 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
               style={[type.text.body, styles.searchInput, { color: p.ink }]} />
             {query !== '' ? <IconButton icon="close" label={t('scripts.clearSearch')} onPress={() => { setQuery(''); searchRef.current?.focus() }} surface="paper" /> : null}
           </View>
+          <Text accessibilityLiveRegion="polite" style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.pickerCount', { shown: shown.length, selected: selected.length })}</Text>
+        </View>
+        <View style={[styles.filters, styles.more]}>
           <View style={styles.filterRow}>
             <View style={styles.grow}>
               <select aria-label={t('scripts.filterTeam')} value={team} onChange={event => onTeamChange(event.target.value as Team | 'all')} style={selectStyle}>
@@ -123,7 +130,6 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
             </View>
           </View>
           <Button label={t('scripts.createCharacter')} icon="add" onPress={onCreate} surface="paper" />
-          <Text accessibilityLiveRegion="polite" style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.pickerCount', { shown: shown.length, selected: selected.length })}</Text>
         </View>
         {shown.length === 0 ? (
           <View style={styles.empty}>
@@ -149,6 +155,10 @@ export const ScriptCharacterPicker = ({ visible, wide, roster, selected, team, o
   )
 }
 
+// The window height that fits the header and the pinned search and count, about 150 points, with
+// two rows of 74 to 92 below them. A phone on its side just fits; a keyboard over one does not.
+const pinFrom = 320
+
 const PickerRow = memo(function PickerRow({ character, selected, label, onToggle }: {
   readonly character: Listed
   readonly selected: boolean
@@ -173,10 +183,17 @@ const styles = StyleSheet.create({
   panel: { flex: 1, minHeight: 0, minWidth: 0 },
   grow: { flex: 1, minWidth: 0, minHeight: 0 },
   header: { minHeight: touch, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, paddingVertical: space.sm },
-  filters: { paddingHorizontal: space.xs, paddingBottom: space.md, gap: space.sm },
+  // The top padding keeps the search's focus ring inside the scroll area.
+  filters: { paddingHorizontal: space.xs, paddingTop: space.sm, gap: space.sm },
+  // It spans the list's side padding too, so no row shows beside it. React Native's types lack
+  // sticky, which only the web draws.
+  pinned: { position: 'sticky', top: 0, zIndex: 1, paddingBottom: space.sm, marginHorizontal: -space.sm, paddingHorizontal: space.sm + space.xs } as object,
+  more: { paddingTop: space.xs, paddingBottom: space.md },
   filterRow: { flexDirection: 'row', gap: space.sm },
   search: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: touch, paddingLeft: space.md, borderRadius: radius.control, backgroundColor: palette.paperInset, borderWidth: 1, borderColor: palette.parchmentShade },
-  searchInput: { flex: 1, minWidth: 0, minHeight: touch, paddingVertical: 0, outlineWidth: 0 },
+  // The browser's own ring on a focused input has style auto, which ignores a zero width, so the
+  // style is set too and only the pill's ring shows.
+  searchInput: { flex: 1, minWidth: 0, minHeight: touch, paddingVertical: 0, outlineStyle: 'solid', outlineWidth: 0 },
   roster: { paddingHorizontal: space.sm, paddingBottom: space.lg, gap: space.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm, borderRadius: radius.control },
   empty: { alignItems: 'center', padding: space.lg, gap: space.sm },
