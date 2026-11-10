@@ -81,13 +81,16 @@ you look back, and every screen reads that one board from the React context in `
 
 - `appendAll` adds one gesture as one batch: one undo step and one write. Confirming a nomination,
   for example, batches its total with the ghost votes it spends.
+- `deal` is `appendAll` for the deal: the same write also empties the bag, and the session keeps
+  that bag so undoing the deal puts it back. Like the redo stack it is not saved, so after a
+  reload undoing a deal only clears the seats.
 - `undo` takes off the last batch and `redo` puts it back. Undo never removes the batch that set
-  up the table.
+  up the table, a table of one seat included.
 - `lookAt` and `returnToPresent` move the cursor and write nothing. While you look back, nothing
   can be appended, undone or redone.
 
-No control calls undo or redo today ([App](app.md#saved-games-and-replay)), but the operations
-and their tests stay so the controls can come back.
+The discussion timer is not an action. A phase change removes it, and undoing that change does
+not bring it back. [App](app.md#saved-games-and-replay) owns where the controls are.
 
 ## Recorded time
 

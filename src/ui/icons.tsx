@@ -18,6 +18,8 @@ export type IconName =
   | 'chevronDown'
   | 'chevronUp'
   | 'history'
+  | 'undo'
+  | 'redo'
   | 'addSeat'
   | 'turnLeft'
   | 'turnRight'
@@ -74,6 +76,9 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   chevronDown: { d: ['M5 9l7 7 7-7'] },
   chevronUp: { d: ['M5 15l7-7 7 7'] },
   history: { d: ['M3 10a9 9 0 1 1 1 7', 'M3 4v6h6', 'M12 7v6l4 2'] },
+  // An arrow that turns back on itself, and its mirror.
+  undo: { d: ['M9 14 4 9l5-5', 'M4 9h10a6 6 0 0 1 0 12h-3'] },
+  redo: { d: ['M15 14l5-5-5-5', 'M20 9H10a6 6 0 0 0 0 12h3'] },
   // A seat ring with a plus for the gap.
   addSeat: { d: ['M12 15v6', 'M9 18h6', 'M5.5 15a7.5 7.5 0 1 1 13 0'] },
   // Most of a circle with its arrowhead: the ring turning one place either way.

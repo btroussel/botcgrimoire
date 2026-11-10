@@ -138,6 +138,24 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     document.addEventListener('keydown', dismiss)
     return () => document.removeEventListener('keydown', dismiss)
   }, [choosingSeats, pick, cancelRequest])
+  // Ctrl or Cmd with Z undoes, with Shift or as Y redoes. In a field the keys keep to its text,
+  // and under a window they do nothing, so an edit never changes behind what is being read.
+  const { undo, redo } = b
+  useEffect(() => {
+    if (!undo && !redo) return
+    const keys = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase()
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || (key !== 'z' && key !== 'y')) return
+      const target = event.target
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return
+      if (layerAbove()) return
+      event.preventDefault()
+      if (key === 'y' || event.shiftKey) redo?.()
+      else undo?.()
+    }
+    document.addEventListener('keydown', keys)
+    return () => document.removeEventListener('keydown', keys)
+  }, [undo, redo])
   // Arranging the seats ends on a click anywhere but its own controls, or Escape.
   useEffect(() => {
     if (!arranging) return
@@ -247,6 +265,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     onLoose={openLoose} looseDisabled={looseChoices(board.script).length === 0}
     onEnd={openEnd} endDisabled={over}
     onReplay={over ? b.enterReplay : undefined} onHome={askHome}
+    onUndo={undo} onRedo={redo}
     />
 
   const table = (

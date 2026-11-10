@@ -8,6 +8,8 @@
   "contact": "Kysyttävää sovelluksesta? {link}",
   "cancel": "Peru",
   "more": "Valikko",
+  "undo": "Kumoa",
+  "redo": "Tee uudelleen",
   "done": "Valmis",
   "back": "Takaisin",
   "loading": "Ladataan",

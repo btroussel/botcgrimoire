@@ -10,7 +10,7 @@ import { canDiscover } from './discovery'
 import { bagContents, dealDraw, dealTaken, drawTurns, nextDrawer, refillBag } from './draw'
 
 export const SetupPanel = () => {
-  const { board, session, settings, t, appendAll, setDraw } = useStore()
+  const { board, session, settings, t, deal, setDraw } = useStore()
   const visibility = useContext(PanelVisibilityContext)
   const router = useRouter()
   const [picking, setPicking] = useState(false)
@@ -29,17 +29,13 @@ export const SetupPanel = () => {
   const status = t('setup.assignedCount', { have: board.seats.length - empty.length, of: board.seats.length })
   return <Panel title={t('board.setup')} status={status}
     footer={<Button surface="paper" variant="primary" label={t('setup.startFirstNight')} disabled={!live}
-      onPress={() => {
-        appendAll([...(draw ? dealTaken(board, draw, roles) : []), { kind: 'phase', to: 'night', night: 1 }])
-        if (draw) setDraw(undefined)
-      }} />}>
+      onPress={() => deal([...(draw ? dealTaken(board, draw, roles) : []), { kind: 'phase', to: 'night', night: 1 }])} />}>
     {bag ? <>
       <Button surface="paper" icon="players" label={t(started ? 'setup.drawResume' : 'setup.drawBegin')}
         onPress={() => router.setParams({ draw: 'ready' })} />
       {/* The window steps aside so the Storyteller watches the tokens land. */}
       <Button surface="paper" icon="shuffle" label={t('setup.dealRandom')} onPress={() => {
-        appendAll(dealDraw(board, bag, Math.random, roles))
-        setDraw(undefined)
+        deal(dealDraw(board, bag, Math.random, roles))
         visibility?.onClose()
       }} />
     </> : null}

@@ -173,6 +173,8 @@ the seats are being arranged, a panel or a vote is asking for seats, or in repla
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.
+Undo and Redo are the first rows of More, not buttons: the toolbar's width comes out of the ring
+on a phone. Redo shows under Undo only while there is something to redo.
 
 References are drawers you drag between closed, compact and full. Compact shows names only, so a
 tap on one of its rows opens it full, that once: the next opening keeps the width last dragged to.
@@ -182,8 +184,9 @@ so from 752 points wide the compact drawer docks whole and covers no seat. A win
 short and its ring needs the width, or a big game would scroll, so it keeps 760. While the paper
 covers seats, a tap on the board closes the drawer, and a plain tap on a seat also opens its menu,
 so reaching past the paper costs no extra tap. A tap that would record something, on a reminder, a
-gap or a seat during a vote, only closes the drawer, since there is no undo. The ring never jumps during a drag, a fully open
-drawer leaves some board in reach, and nothing dims.
+gap or a seat during a vote, only closes the drawer: a tap meant for the paper must not change
+the game. The ring never jumps during a drag, a fully open drawer leaves some board in reach, and
+nothing dims.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
 board itself, with no banner, so the ring does not shift.

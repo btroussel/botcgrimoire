@@ -8,7 +8,7 @@ import { hairline, palette, radius, shadows, space } from '../../ui/theme'
 import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from './popover'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
-  onLoose, looseDisabled, onEnd, endDisabled, onReplay, onHome }: {
+  onLoose, looseDisabled, onEnd, endDisabled, onReplay, onHome, onUndo, onRedo }: {
   readonly t: Translate
   readonly arranging: boolean
   readonly arrangeDisabled: boolean
@@ -20,6 +20,8 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   readonly endDisabled: boolean
   readonly onReplay?: (() => void) | undefined // once the game has ended
   readonly onHome: () => void
+  readonly onUndo?: (() => void) | undefined // while there is an action to take back
+  readonly onRedo?: (() => void) | undefined // once one was taken back
 }) {
   const trigger = useRef<HTMLDivElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -42,6 +44,9 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
     </View>
     <div ref={menu} popover="auto" aria-label={t('common.more')}
       onToggle={(event) => setMenuOpen(event.newState === 'open')} className={menuClass} style={menuSurface(176)}>
+      {item({ icon: 'undo', label: t('common.undo'), action: () => onUndo?.(), disabled: !onUndo })}
+      {onRedo ? item({ icon: 'redo', label: t('common.redo'), action: onRedo }) : null}
+      <View style={menuStyles.rule} />
       {item({ icon: 'addSeat', label: t('board.arrangeSeats'), action: onArrange, disabled: arrangeDisabled, armed: arranging })}
       {item({ icon: 'add', label: t('board.looseTitle'), action: onLoose, disabled: looseDisabled })}
       {/* Leaving the game sits apart from the tools for the board. */}

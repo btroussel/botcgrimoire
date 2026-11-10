@@ -14,6 +14,8 @@ export interface Session {
   readonly game: SavedGame
   readonly redo: readonly Event[] // reversed removed events, next to restore last; emptied by append
   readonly lookingAt?: number // when set, the board shows reduce(log.slice(0, lookingAt))
+  // The bag the deal emptied and the log length it was dealt at. Like redo, it is not saved.
+  readonly dealt?: { readonly at: number; readonly draw: Draw }
 }
 
 export const openSession = (game: SavedGame): Session => ({ game, redo: [] })
@@ -58,14 +60,24 @@ export const appendAll = (s: Session, payloads: readonly Payload[], now: number)
     record(payload)
   }
   if (events.length === 0) return s
-  if (events.length > 1) {
+  // A table opened with one seat is a batch too, which tells it from a seat added right after.
+  if (events.length > 1 || (from === 0 && events[0]!.kind === 'addSeat')) {
     for (let i = 0; i < events.length; i++) events[i] = { ...events[i]!, batch: asEventId(from) }
   }
-  return { game: withLog(s, [...s.game.log, ...events], now), redo: [] }
+  // An action recorded where the deal was undone replaces it, so its bag is no longer owed.
+  return { game: withLog(s, [...s.game.log, ...events], now), redo: [], ...(s.dealt && s.dealt.at < from ? { dealt: s.dealt } : {}) }
 }
 
 export const append = (s: Session, payload: Payload, now: number): Session =>
   appendAll(s, [payload], now)
+
+// The deal's edits and the bag they empty are one action, so undoing the deal puts the bag back.
+export const deal = (s: Session, payloads: readonly Payload[], now: number): Session => {
+  const next = appendAll(s, payloads, now)
+  const { draw, ...game } = next.game
+  if (!draw) return next
+  return next === s ? { ...s, game } : { ...next, game, dealt: { at: s.game.log.length, draw } }
+}
 
 // The redo stack stores a removed batch backwards. Contiguous equal ids identify its
 // boundary in either direction, without grouping older events that have no batch id.
@@ -94,14 +106,21 @@ export const undo = (s: Session, now: number): Session => {
   if (!canUndo(s)) return s
   const from = lastGroupStart(s.game.log)
   const removed = s.game.log.slice(from)
-  return { game: withLog(s, s.game.log.slice(0, from), now), redo: [...s.redo, ...removed.reverse()] }
+  const game = withLog(s, s.game.log.slice(0, from), now)
+  const bag = s.dealt?.at === from ? { draw: s.dealt.draw } : {}
+  return { ...s, game: { ...game, ...bag }, redo: [...s.redo, ...removed.reverse()] }
 }
 
+export const canRedo = (s: Session): boolean => !isLookingBack(s) && s.redo.length > 0
+
 export const redo = (s: Session, now: number): Session => {
-  if (isLookingBack(s) || s.redo.length === 0) return s
+  if (!canRedo(s)) return s
   const from = lastGroupStart(s.redo)
   const restored = s.redo.slice(from).reverse()
-  return { game: withLog(s, [...s.game.log, ...restored], now), redo: s.redo.slice(0, from) }
+  const { draw, ...game } = withLog(s, [...s.game.log, ...restored], now)
+  // Redoing the deal empties the bag again.
+  const bag = draw && s.dealt?.at !== s.game.log.length ? { draw } : {}
+  return { ...s, game: { ...game, ...bag }, redo: s.redo.slice(0, from) }
 }
 
 export const lookAt = (s: Session, n: number): Session => ({

@@ -29,7 +29,7 @@ export type { Draw, DrawToken } from './draw'
 export type { SavedCharacter } from './homebrew'
 export { mintCharacterId } from './homebrew'
 export type { GameId, SavedGame } from './saved'
-export { boardOf, inLocale } from './session'
+export { boardOf, canRedo, canUndo, inLocale } from './session'
 
 export interface Store {
   readonly ready: boolean
@@ -54,6 +54,7 @@ export interface Store {
   readonly importGame: (text: string) => Promise<GameId>
   readonly append: (payload: Payload) => void
   readonly appendAll: (payloads: readonly Payload[]) => void // one commit
+  readonly deal: (payloads: readonly Payload[]) => void // one commit that also empties the bag
   readonly undo: () => void
   readonly redo: () => void
   readonly lookAt: (n: number) => void
@@ -373,6 +374,13 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
     },
     [change],
   )
+  const deal = useCallback(
+    (payloads: readonly Payload[]) => {
+      const now = Date.now()
+      change((s) => cursor.deal(s, payloads, now))
+    },
+    [change],
+  )
   const undo = useCallback(() => {
     const now = Date.now()
     change((s) => cursor.undo(s, now))
@@ -433,6 +441,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       importGame,
       append,
       appendAll,
+      deal,
       undo,
       redo,
       lookAt,
@@ -463,6 +472,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       importGame,
       append,
       appendAll,
+      deal,
       undo,
       redo,
       lookAt,

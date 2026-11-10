@@ -142,6 +142,7 @@ living Travellers and adjusts for no character.
 Mark and Done end the vote and spend the dead voters' ghost votes. Mark puts a skull on the
 nominee, never an execution: the Storyteller records deaths. Cancelling a nomination gives back
 the ghost votes it spent. The browser tab remembers an open nomination, so a reload reopens it.
+Undoing Done or Mark reopens the vote on its nomination.
 
 ### Ending
 
@@ -149,8 +150,13 @@ End game asks who won, good or evil. The app never detects a win.
 
 ## Saved games and replay
 
-Every edit saves at once. Undo and redo are paused: no control calls them, so a mistake is fixed
-with another edit, and [Store](store.md#the-cursor) keeps the operations so they can come back.
+Every edit saves at once. Undo takes back the last action, whatever it was: an edit, a hand, a
+phase, the deal or the ending. It stops at the table the game opened with. Redo puts an undone
+action back until the next edit or a reload. Most mistakes are fixed faster with another edit, so
+the two sit in More and not on the board ([UI](ui.md#the-board)); they are for what no edit
+reaches, a phase begun too early or the wrong winner. On a keyboard, Ctrl or Cmd with Z undoes,
+with Shift redoes, except in a text field or under an open window.
+[Store](store.md#the-cursor) owns the operations.
 
 History reads recorded edits only: deaths, side changes, nominations and votes, each in its
 phase, nothing inferred from an ability. A game resumes or replays in one tap, and game files
