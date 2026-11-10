@@ -1,7 +1,7 @@
 import type { Homebrew, Team } from '../../content'
 import { asCharacterId, character, homebrewArt, nightMarkers, t, teams } from '../../content'
 import {
-  after, anchorOf, characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, nightMoments, nightSteps,
+  after, anchorOf, canAddReminder, characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, nightMoments, nightSteps,
   shownImage, teamWords,
 } from './character'
 import { fitWithin, hasTransparency, visibleBounds } from './image'
@@ -34,6 +34,14 @@ describe('the character draft', () => {
     expect(saved.name).toHaveLength(limits.name)
     expect(saved.ability).toHaveLength(limits.ability)
     expect(saved.reminders?.[0]).toHaveLength(limits.reminder)
+  })
+
+  test('offers reminder tokens up to the schema\'s twenty and keeps a record that carries more', () => {
+    expect(canAddReminder(Array.from({ length: limits.reminders - 1 }, () => 'r'))).toBe(true)
+    expect(canAddReminder(Array.from({ length: limits.reminders }, () => 'r'))).toBe(false)
+    const many = Array.from({ length: 25 }, (_, i) => `r${i}`)
+    expect(canAddReminder(many)).toBe(false)
+    expect(characterOf({ ...draftOfCharacter(), name: 'Baker', ability: 'x', reminders: many }, 'x').reminders).toEqual(many)
   })
 
   test('editing a record keeps what the form does not show and drops a removed image', () => {

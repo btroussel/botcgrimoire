@@ -35,6 +35,8 @@
   "ofTarget": "{have} av {of}",
   "print": "Skriv ut",
   "edit": "Rediger",
+  "editCopy": "Rediger en kopi",
+  "copyName": "{name} (kopi)",
   "export": "Eksporter som fil",
   "share": "Del",
   "shareTitle": "Del dette manuskriptet",

@@ -1,5 +1,5 @@
 // The binding between the store and the scripts screen: the editions, the custom scripts and the
-// Storyteller's own characters as rows in the UI locale, saving, importing, exporting and
+// Storyteller's own characters as rows in the UI locale, saving, keeping, exporting and
 // deleting a custom script, and the words the ScriptSheet piece is handed. The pure work is in store/scriptSheet.ts and
 // compose.ts; this hook only calls the store and translates.
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
@@ -13,7 +13,7 @@ import { minuteClock, relativeTime } from './relativeTime'
 import type { ScriptSheetLabels } from '../../ui/ScriptSheet'
 import { teamWords } from './character'
 import type { Draft } from './compose'
-import { fileName, fileOf, importText } from './compose'
+import { fileName, fileOf } from './compose'
 import { downloadText } from '../../store/browser'
 import type { CountRowLabels, TeamLabels } from '../../store/scriptSheet'
 import { listed, sheetLabels, sheetTeams, teamLabels } from '../../store/scriptSheet'
@@ -46,7 +46,6 @@ export interface Scripts {
   readonly editions: readonly EditionRow[]
   readonly custom: readonly CustomRow[]
   readonly save: (draft: Draft) => Promise<SavedScript>
-  readonly importFile: (text: string) => Promise<{ readonly errors: readonly string[] } | { readonly saved: SavedScript }>
   readonly keep: (script: CustomScript) => Promise<SavedScript> // a script read from a file or a link
   readonly remove: (id: SavedScriptId) => Promise<void>
   readonly exportFile: (saved: SavedScript) => void
@@ -112,15 +111,6 @@ export const useScripts = (): Scripts => {
     [saveScript],
   )
 
-  const importFile = useCallback(
-    async (text: string) => {
-      const read = importText(text)
-      if ('errors' in read) return read
-      return { saved: await keep(read.script) }
-    },
-    [keep],
-  )
-
   const characterRows = useMemo(() => {
     const teamWord = teamWords(t)
     const carriedBy = (id: string) => store.scripts.filter((s) => s.script.items.some((item) => typeof item !== 'string' && item.id === id)).length
@@ -132,8 +122,8 @@ export const useScripts = (): Scripts => {
   const exportFile = useCallback((saved: SavedScript) => downloadText(fileName(saved.script.name), serializeScript(saved.script)), [])
 
   return useMemo(
-    () => ({ locale, t, editions: editionRows, custom, save, importFile, keep, remove: removeScript, exportFile, characters: characterRows, saveCharacter, removeCharacter }),
-    [locale, t, editionRows, custom, save, importFile, keep, removeScript, exportFile, characterRows, saveCharacter, removeCharacter],
+    () => ({ locale, t, editions: editionRows, custom, save, keep, remove: removeScript, exportFile, characters: characterRows, saveCharacter, removeCharacter }),
+    [locale, t, editionRows, custom, save, keep, removeScript, exportFile, characterRows, saveCharacter, removeCharacter],
   )
 }
 

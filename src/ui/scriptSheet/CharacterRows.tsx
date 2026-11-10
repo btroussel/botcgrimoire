@@ -63,10 +63,12 @@ interface RowProps extends ScriptSheetRow {
   readonly onLongPress: ((id: string) => void) | undefined
   readonly onRemove: ((id: string) => void) | undefined
   readonly removeLabel: string | undefined
+  readonly onEdit: ((id: string) => void) | undefined
+  readonly editLabel: string | undefined
 }
 
 // Group counts change on every pick. Individual row fields let unchanged rows skip that render.
-export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTap, onTapIcon, onLongPress, onRemove, removeLabel, ...row }: RowProps) {
+export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTap, onTapIcon, onLongPress, onRemove, removeLabel, onEdit, editLabel, ...row }: RowProps) {
   const p = palette
   const focusVisible = useFocusVisible()
   const inBag = mode === 'deal' && row.inBag !== undefined && row.inBag >= 2 ? row.inBag : undefined
@@ -130,7 +132,11 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
           {row.below ? <View style={[styles.below, stepBack]}>{row.below}</View> : null}
         </View>
       </View>
-      {onRemove && !row.implied ? <IconButton icon="close" label={removeLabel ?? row.name} onPress={() => onRemove(row.id)} surface="paper" /> : null}
+      {/* Stacked, the two controls leave the ability its width on a phone. */}
+      {(onEdit && row.homebrew) || (onRemove && !row.implied) ? <View style={styles.rowControls}>
+        {onEdit && row.homebrew ? <IconButton icon="edit" label={editLabel ?? row.name} onPress={() => onEdit(row.id)} surface="paper" /> : null}
+        {onRemove && !row.implied ? <IconButton icon="close" label={removeLabel ?? row.name} onPress={() => onRemove(row.id)} surface="paper" /> : null}
+      </View> : null}
     </View>
   )
 })

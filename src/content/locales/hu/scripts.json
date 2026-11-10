@@ -35,6 +35,8 @@
   "ofTarget": "{have} / {of}",
   "print": "Nyomtatás",
   "edit": "Szerkesztés",
+  "editCopy": "Másolat szerkesztése",
+  "copyName": "{name} (másolat)",
   "export": "Exportálás fájlba",
   "share": "Megosztás",
   "shareTitle": "Szkript megosztása",

@@ -49,7 +49,7 @@ the bag can hold fewer tokens than seats, or none. Fabled, Loric and Lil' Monsta
 New game and the script library link to each other. New game lists the scripts as the library
 does and, for a script it does not have, opens the library on its import window. The script
 sheet starts a game on the script it shows, an edition or one saved on the device, straight on
-its bag; a script from a link is saved first. New game stays its own page because it is walked
+its bag; a script from a link or a file is saved first. New game stays its own page because it is walked
 at the table, two taps from Home to the bag, with nothing on it to compose or delete.
 
 Shuffle is optional. From five to fifteen seats it starts from the standard team counts and
@@ -173,8 +173,14 @@ Unsaved scripts and characters survive a reload or a closed tab ([Store](store.m
 leaving with changes asks first. Custom scripts live on the device
 ([Store](store.md#custom-scripts-and-settings)). An account may come later; nothing may assume it.
 
+Most custom scripts are variants of another, so an edition or a saved script opens as a copy to
+edit: every character its sheet shows, an edition's Travellers included, and a saved script's
+homebrew records, rules and kept `_meta`. The copy is unsaved under the original's name marked as a
+copy, and saving it adds a script beside the original. A script received and not yet saved has
+no copy, since saving it is the first step.
+
 Import takes a link, pasted JSON, a QR code or a file. Links from this app and from the official
-Script Tool carry the whole script, so they open offline. A linked script opens unsaved, and
+Script Tool carry the whole script, so they open offline. An imported script opens unsaved, and
 opening the same one twice keeps one copy. The paste field and the scanner exist because on an
 iPhone a tapped link opens in Safari, whose storage is not the installed app's.
 
@@ -185,13 +191,16 @@ Editions have no Share, since every device already has them.
 
 ### Homebrew characters
 
-A Storyteller can write their own characters, with art, reminders, a setup mark and night wakes.
-A character can carry a second image for the side opposite its team, since the tint of the art is
-the only mark of alignment on the board ([UI](ui.md#tokens-and-art)). Saving one updates the
-scripts that carry it; games keep their own copy. Each night offers three moments around its fixed
-points, on one rule: whatever makes a player drunk or poisoned wakes before the characters it can
-disable, and information wakes after all of it. The Storyteller can also pick an exact place in the
-official order.
+A Storyteller can write their own characters, with art, reminders, a setup mark and night wakes. A
+character can carry a second image for the side opposite its team, since the tint of the art is the
+only mark of alignment on the board ([UI](ui.md#tokens-and-art)). Saving one updates the scripts
+that carry it; games keep their own copy. A homebrew character on a script being composed opens from
+its row, so a typo is fixed without leaving the script. Saving it there puts it in the Storyteller's
+list under the same id, so one that came inside an imported script, or was deleted from the list
+while a script kept it, becomes theirs and is offered on every script. Each night offers three
+moments around its fixed points, on one rule: whatever makes a player drunk or poisoned wakes before
+the characters it can disable, and information wakes after all of it. The Storyteller can also pick
+an exact place in the official order.
 
 ## Search and sharing
 
