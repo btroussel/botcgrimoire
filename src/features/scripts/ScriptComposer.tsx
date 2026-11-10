@@ -1,8 +1,9 @@
 // The sheet is the draft: selected characters and their jinxes. The catalogue stays separate
 // so adding several characters never hides the script among the whole roster. A changed draft
 // is kept on the device until it is saved or discarded, and leaving it in the app asks first.
-// A homebrew character written from the catalogue is saved to the Storyteller's list and joins
-// the draft.
+// A homebrew character written from the catalogue, or opened from its row on the sheet, is saved
+// to the Storyteller's list. A new one joins the draft; an edited one keeps its id, so the draft
+// and every saved script carrying it show the new words.
 import { useCallback, useMemo, useState } from 'react'
 import { Modal, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -19,10 +20,11 @@ import { ScriptSheet } from '../../ui/ScriptSheet'
 import { PageVelvet } from '../../ui/Velvet'
 import { useViewport } from '../../ui/Viewport'
 import { gutter, layout, palette, radius, shadows, space, touch, type } from '../../ui/theme'
+import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import { ScriptCharacterPicker } from './ScriptCharacterPicker'
 import type { Draft } from './compose'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxRules, recordsOf, toggleId } from './compose'
+import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, recordsOf, toggleId } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepScript, useKept } from './drafts'
 import { useSheetWords } from './useScripts'
@@ -30,7 +32,7 @@ import { useSheetWords } from './useScripts'
 export interface ScriptComposerProps {
   readonly initial: Draft
   readonly resume?: Draft // the kept draft to go on with, changed from initial
-  readonly resumeCharacter?: KeptCharacter // a character being written from the catalogue
+  readonly resumeCharacter?: KeptCharacter // a character being written from the catalogue or the sheet
   readonly onBack: () => void
   readonly onSave: (draft: Draft) => Promise<unknown>
 }
@@ -52,14 +54,16 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   const [team, setTeam] = useState<Team | 'all'>('all')
   const openPicker = useCallback((team: Team | 'all') => { setTeam(team); setPicking(true) }, [])
   const closePicker = useCallback(() => setPicking(false), [])
-  const [creating, setCreating] = useState(resumeCharacter !== undefined)
-  const [resumed, setResumed] = useState(resumeCharacter)
-  const openCreator = useCallback(() => setCreating(true), [])
-  const closeCreator = () => { setCreating(false); setResumed(undefined) }
-  const create = (character: Homebrew) => saveCharacter(character).then(() => {
+  // The character editor: blank for a new character, or on the record of one already on the draft.
+  const [writing, setWriting] = useState<{ readonly initial?: Homebrew; readonly resume?: CharacterDraft } | undefined>(
+    () => resumeCharacter && { resume: resumeCharacter.draft, ...(resumeCharacter.initial ? { initial: resumeCharacter.initial } : {}) },
+  )
+  const openCreator = useCallback(() => setWriting({}), [])
+  const closeWriter = () => setWriting(undefined)
+  const keepWritten = (character: Homebrew) => saveCharacter(character).then(() => {
     const id = character.id as CharacterId
     setDraft((d) => (d.ids.includes(id) ? d : { ...d, ids: [...d.ids, id] }))
-    closeCreator()
+    closeWriter()
   })
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
@@ -67,6 +71,10 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   const own = useMemo(() => characters.map((c) => c.character), [characters])
   const carried = draft.homebrew
   const records = useMemo(() => recordsOf(carried, own), [carried, own])
+  const openEditor = useCallback((id: string) => {
+    const initial = records.get(id)
+    if (initial) setWriting({ initial })
+  }, [records])
   const roster = useMemo(() => composeRoster(locale, records), [locale, records])
   // Homebrew characters or rules bring the Bootlegger, which stays while they do.
   const shown = useMemo(() => draftIds(draft, records), [draft, records])
@@ -124,6 +132,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
             value: draft.name,
             placeholder: defaultName,
             label: t('scripts.nameLabel'),
+            maxLength: maxName,
             onChange: (name) => setDraft((d) => ({ ...d, name })),
             onBlur: () => setDraft((d) => ({ ...d, name: d.name.trim() || defaultName })),
           }}
@@ -143,6 +152,8 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
           labels={words.labels}
           onRemoveCharacter={remove}
           removeLabel={name => t('scripts.removeCharacter', { name })}
+          onEditCharacter={openEditor}
+          editLabel={name => t('scripts.editCharacterNamed', { name })}
           onBack={back}
           backLabel={t('common.back')}
         />
@@ -177,12 +188,13 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
       {/* Escape does not close it: the editor's own back asks before a written character is lost.
           Web modals stack in the order they mount, so the editor mounts only when it opens, above
           the phone catalogue. */}
-      {creating ? (
+      {writing ? (
         <Modal visible animationType="fade" onRequestClose={() => {}}>
           <CharacterEditor
-            {...(resumed ? { resume: resumed.draft, ...(resumed.initial ? { initial: resumed.initial } : {}) } : {})}
-            onBack={closeCreator}
-            onSave={create}
+            {...(writing.initial ? { initial: writing.initial } : {})}
+            {...(writing.resume ? { resume: writing.resume } : {})}
+            onBack={closeWriter}
+            onSave={keepWritten}
           />
         </Modal>
       ) : null}

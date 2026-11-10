@@ -2,12 +2,12 @@
 // sheet edits, the official script file it saves as, and the read of a pasted or picked file.
 // Saving writes the same shape an import produces, so a composed script is the object an
 // imported one is and exporting either is `serializeScript`.
-import type { CharacterId, CustomScript, CustomScriptItem, Homebrew, Locale, ScriptMeta } from '../../content'
+import type { CharacterId, CustomScript, CustomScriptItem, Homebrew, Locale, ScriptId, ScriptMeta } from '../../content'
 import { asCharacterId, characters, parseScript, scriptHomebrew, scriptMeta } from '../../content'
 import type { SavedScript, SavedScriptId } from '../../store'
 import { linkedScriptText } from '../../store/scriptLink'
 import type { Listed } from '../../store/scriptSheet'
-import { everyCharacter, listHomebrew, sheetTeams } from '../../store/scriptSheet'
+import { everyCharacter, listed, listHomebrew, sheetTeams } from '../../store/scriptSheet'
 
 // The `_meta` fields of an imported script that the composer does not edit, kept through an edit.
 export type KeptMeta = Pick<ScriptMeta, 'almanac' | 'background' | 'hideTitle'>
@@ -27,6 +27,9 @@ export const emptyDraft: Draft = { name: '', author: '', ids: [] }
 
 // The schema prints ten rules at most, so the composer offers no more.
 export const maxRules = 10
+
+// The schema's `_meta.name` allows fifty characters, so a longer name makes a file other tools reject.
+export const maxName = 50
 
 export const logoOf = (script: CustomScript): string | undefined => scriptMeta(script)?.logo
 
@@ -49,6 +52,20 @@ export const draftOf = (saved: SavedScript): Draft => {
     ids: saved.script.items.flatMap((item) => (typeof item === 'string' ? [asCharacterId(item)] : item.id === '_meta' ? [] : [asCharacterId(item.id)])),
     homebrew: scriptHomebrew(saved.script),
   }
+}
+
+// An edition as a draft: every character its sheet shows, Travellers included, so a copy of it
+// reads as the same sheet.
+export const editionDraft = (edition: ScriptId, name: string, locale: Locale): Draft =>
+  ({ ...emptyDraft, name, ids: listed(edition, locale).map((c) => c.id) })
+
+// A copy to edit: the source without its id, so saving makes a second script and leaves the
+// source as it was. `named` is the copy's name pattern; the source's part of the name is cut,
+// never the pattern's, so the whole fits the schema.
+export const copyOf = (source: Draft, named: (name: string) => string): Draft => {
+  const { id: _id, ...copy } = source
+  const room = Math.max(maxName - [...named('')].length, 0)
+  return { ...copy, name: named([...source.name.trim()].slice(0, room).join('').trimEnd()) }
 }
 
 // The homebrew records a draft can name: the script's own, then the Storyteller's list, which
@@ -169,6 +186,34 @@ export const matchesSearch = (character: { readonly name: string; readonly engli
   const names = `${folded(character.name)} ${folded(character.englishName)}`
   return words.every(word => names.includes(word))
 }
+
+// People building a script often look for an effect ("poison", "drunk"), so the search also
+// reads abilities: the name matches first, then the rest whose name or ability holds every word,
+// each in roster order. One or two letters narrow by name only, rather than flooding the list.
+export interface CharacterSearch<T> {
+  readonly shown: readonly T[]
+  readonly named: number // how many of `shown`, from the start, match by name
+}
+
+export const searchCharacters = <T extends { readonly name: string; readonly englishName: string; readonly ability: string }>(
+  roster: readonly T[], query: string,
+): CharacterSearch<T> => {
+  const named = roster.filter(c => matchesSearch(c, query))
+  if (folded(query).trim().length < 3) return { shown: named, named: named.length }
+  const words = folded(query).split(/\s+/).filter(word => word !== '')
+  const byName = new Set(named)
+  const byAbility = roster.filter(c => {
+    if (byName.has(c)) return false
+    const text = `${folded(c.name)} ${folded(c.englishName)} ${folded(c.ability)}`
+    return words.every(word => text.includes(word))
+  })
+  return { shown: [...named, ...byAbility], named: named.length }
+}
+
+// What Enter adds: the one name match, else the one result, so typing a name and Enter still
+// adds it when its ability tier brings others along.
+export const searchPick = <T>({ shown, named }: CharacterSearch<T>): T | undefined =>
+  named === 1 || shown.length === 1 ? shown[0] : undefined
 
 // The download's name: the script's name as a file system likes it.
 export const fileName = (name: string): string => {

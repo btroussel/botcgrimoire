@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { focusStyle } from './Button'
+import { fieldCount } from './fieldCount'
 import { useFocusVisible } from './focus'
-import { palette, radius, space, touch, type } from './theme'
+import { palette, radius, space, tabular, touch, type } from './theme'
 
 export interface FieldProps {
   readonly label: string
@@ -18,8 +19,16 @@ export interface FieldProps {
 export const Field = ({ label, value, onChange, multiline, lines, maxLength, autoFocus }: FieldProps) => {
   const focusVisible = useFocusVisible()
   const [focused, setFocused] = useState(false)
+  const count = maxLength !== undefined ? fieldCount(value.length, maxLength) : 'hidden'
   return <View style={styles.wrap}>
-    <Text style={[type.text.small, { color: palette.inkMuted }]}>{label}</Text>
+    <View style={styles.labelRow}>
+      <Text style={[type.text.small, styles.label, { color: palette.inkMuted }]}>{label}</Text>
+      {/* Plain text, not a live region: a screen reader finds it when it reads the form, rather
+          than hearing a number after every keystroke. */}
+      {count !== 'hidden'
+        ? <Text style={[type.text.small, tabular, { color: count === 'full' ? palette.danger : palette.inkMuted }]}>{`${value.length}/${maxLength}`}</Text>
+        : null}
+    </View>
     <View style={[styles.field, multiline ? styles.tall : null, focusStyle(palette, focused && focusVisible, 'paper')]}>
       <TextInput value={value} onChangeText={onChange} accessibilityLabel={label}
         multiline={multiline} autoFocus={autoFocus}
@@ -34,6 +43,8 @@ const lineHeight = type.text.body.lineHeight ?? 22
 
 const styles = StyleSheet.create({
   wrap: { gap: space.xs, minWidth: 0 },
+  labelRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
+  label: { flex: 1, minWidth: 0 },
   field: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: touch, paddingHorizontal: space.md, borderRadius: radius.control, backgroundColor: palette.paperInset, borderWidth: 1, borderColor: palette.parchmentShade },
   tall: { alignItems: 'flex-start', paddingVertical: space.sm },
   input: { flex: 1, minWidth: 0, minHeight: touch, paddingVertical: 0, outlineWidth: 0, color: palette.ink },

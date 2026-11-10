@@ -1,12 +1,6 @@
 {
   "addCopy": "Dodaj żeton: {name}",
   "assignedCount": "Przydzielone postacie: {have} z {of}",
-  "charactersCount": {
-    "one": "{count} postać",
-    "few": "{count} postacie",
-    "many": "{count} postaci",
-    "other": "{count} postaci"
-  },
   "createError": "Nie udało się zapisać gry. Spróbuj ponownie.",
   "fillBag": "Napełnij worek",
   "fillBagSave": {

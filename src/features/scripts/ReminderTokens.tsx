@@ -1,7 +1,7 @@
 // A homebrew character's reminder tokens as the board will show them: each a reminder disc with
 // the character's art and its words on the rim, typed underneath, with a small remove badge on
-// the disc. The dashed slot adds one and puts the cursor in it; a token left blank is dropped when
-// the character is saved.
+// the disc. The dashed slot adds one and puts the cursor in it, until the schema's twenty; a token
+// left blank is dropped when the character is saved.
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
@@ -11,7 +11,7 @@ import { useFocusVisible } from '../../ui/focus'
 import { Icon } from '../../ui/icons'
 import { AddSlot, ReminderChip } from '../../ui/ReminderChip'
 import { motion, palette, radius, space, touch, type } from '../../ui/theme'
-import { limits } from './character'
+import { canAddReminder, limits } from './character'
 
 const disc = 64
 const badge = 26
@@ -48,9 +48,11 @@ export const ReminderTokens = ({ reminders, art, words, onChange }: ReminderToke
             style={[type.text.small, styles.input, { borderColor: focused === i ? palette.ink : palette.parchmentShade }]} />
         </View>
       ))}
-      <View style={styles.item}>
-        <AddSlot size={disc} label={words.add} onPress={() => { setAdded(reminders.length); onChange([...reminders, '']) }} />
-      </View>
+      {canAddReminder(reminders) ? (
+        <View style={styles.item}>
+          <AddSlot size={disc} label={words.add} onPress={() => { setAdded(reminders.length); onChange([...reminders, '']) }} />
+        </View>
+      ) : null}
     </View>
   )
 }

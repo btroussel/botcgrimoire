@@ -1,10 +1,6 @@
 {
   "addCopy": "Add a {name} token",
   "assignedCount": "{have} of {of} characters assigned",
-  "charactersCount": {
-    "one": "{count} character",
-    "other": "{count} characters"
-  },
   "createError": "The game could not be saved. Try again.",
   "fillBag": "Fill the bag",
   "fillBagSave": {

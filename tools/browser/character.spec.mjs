@@ -26,17 +26,37 @@ test('a homebrew character keeps its own image for the other side', async ({ pag
   const [good, same] = await sideImages(page)
   expect(same).toBe(good)
   await choose(page, 'Choose the image for the evil side', 'chef_e.webp')
+  // The editor decodes and re-encodes a picked file, so its image shows a moment after the pick.
+  await expect.poll(async () => (await sideImages(page))[1]).not.toBe(good)
   const [kept, evil] = await sideImages(page)
   expect(kept).toBe(good)
-  expect(evil).not.toBe(good)
 
   await page.getByRole('radio', { name: 'Good', exact: true }).check()
   await expect(page.getByRole('button', { name: 'Remove both images', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Save character', exact: true }).click()
 
   await page.getByRole('button', { name: 'Edit Lamplighter', exact: true }).click()
-  expect(await sideImages(page)).toEqual([good, evil])
+  await expect.poll(() => sideImages(page)).toEqual([good, evil])
   await page.getByRole('radio', { name: 'Evil', exact: true }).check()
   await page.getByRole('button', { name: 'Use one image for both sides', exact: true }).click()
-  expect(await sideImages(page)).toEqual([good, good])
+  await expect.poll(() => sideImages(page)).toEqual([good, good])
+})
+
+test('the character editor shows a field\'s limit and stops at twenty reminder tokens', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+  const ability = page.getByRole('textbox', { name: 'Ability', exact: true })
+  // A short ability carries no count; near the limit it shows, and a longer paste stops at it.
+  await ability.fill('a'.repeat(100))
+  await expect(page.getByText('100/250', { exact: true })).toHaveCount(0)
+  await ability.fill('a'.repeat(231))
+  await expect(page.getByText('231/250', { exact: true })).toBeVisible()
+  await ability.fill('a'.repeat(300))
+  await expect(ability).toHaveValue('a'.repeat(250))
+  await expect(page.getByText('250/250', { exact: true })).toBeVisible()
+
+  const add = page.getByRole('button', { name: 'Add a reminder token', exact: true })
+  for (let n = 1; n <= 20; n++) await add.click()
+  await expect(page.getByRole('textbox', { name: 'Reminder token 20', exact: true })).toBeVisible()
+  await expect(add).toHaveCount(0)
 })

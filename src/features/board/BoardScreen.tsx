@@ -68,6 +68,8 @@ const resultWidth = 560
 // no undo, so its corner keeps the ornament.
 const replayOrnaments = ['topLeft'] as const
 const noOrnaments = [] as const
+// A landscape board this tall has room for the bluff tray's title; a phone on its side does not.
+const tallBoard = 600
 // A control measured again at the same size keeps the board's layout as it was.
 const sameSize = (next: Size) => (previous: Size) => previous.width === next.width && previous.height === next.height ? previous : next
 
@@ -90,8 +92,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
   const [phaseOpen, setPhaseOpen] = useState(openSetup)
   const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 50 })
-  // A first guess at the tray, its title included when upright, so the first fit is the last.
-  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height ? 62 : 76 })
+  // A first guess at the tray, its title included where it shows, so the first fit is the last.
+  const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height && window.height < tallBoard ? 62 : 76 })
   const [clockHeight, setClockHeight] = useState(68)
   const lastReferenceTab = useRef<ReferenceTab>('characters')
   const tableView = useRef<ViewInstance>(null)
@@ -323,7 +325,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
-              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape} />
+              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} />
               : null}
           </View>
         </View>

@@ -78,6 +78,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
               placeholder={nameField.placeholder}
               placeholderTextColor={p.inkMuted}
               accessibilityLabel={nameField.label}
+              {...(nameField.maxLength !== undefined ? { maxLength: nameField.maxLength } : {})}
               selectTextOnFocus
               onFocus={() => setNameFocused(true)}
               onBlur={() => { setNameFocused(false); nameField.onBlur?.() }}
@@ -168,6 +169,8 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
                       onLongPress={props.onLongPressCharacter}
                       onRemove={props.onRemoveCharacter}
                       removeLabel={props.removeLabel?.(row.name)}
+                      onEdit={props.onEditCharacter}
+                      editLabel={props.editLabel?.(row.name)}
                     />
                   </View>
                 )

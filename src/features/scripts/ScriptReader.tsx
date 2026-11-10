@@ -1,7 +1,8 @@
 // The script sheet in read mode (docs/app.md, Scripts): an edition or a custom script as the
 // printed player sheet, on parchment within the velvet frame. Character art stays static.
-// The toolbar prints the paper and, for a saved custom script, shares or edits it; a script
-// opened from a link offers to save it instead.
+// The toolbar starts a game on the script, prints the paper and, for a saved custom script,
+// shares or edits it; an edition or a saved script also opens as a copy to edit. A script opened
+// from a link or a file offers to save it first.
 import { useMemo, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -27,18 +28,21 @@ const canPrint = isWeb && typeof window.print === 'function'
 export interface ScriptReaderProps {
   readonly script: Script
   readonly onBack: () => void
+  readonly onPlay?: () => void // a script on this device: a new game on it
   readonly onExport?: () => void // a saved custom script: the file download, in the share window
   readonly onEdit?: () => void // a saved custom script: open it in compose
+  readonly onCopy?: () => void // an edition or a saved custom script: compose a copy of it
   readonly onSave?: () => void // a script opened from a link: keep it on this device
   readonly saveFailed?: boolean // the last Save could not write
 }
 
-export const ScriptReader = ({ script, onBack, onExport, onEdit, onSave, saveFailed }: ScriptReaderProps) => {
+export const ScriptReader = ({ script, onBack, onPlay, onExport, onEdit, onCopy, onSave, saveFailed }: ScriptReaderProps) => {
   const { t, settings } = useStore()
   const locale = settings.locale
   const p = palette
   const insets = useSafeAreaInsets()
-  const pad = usePhone() ? gutter.phone : gutter.tablet
+  const phone = usePhone()
+  const pad = phone ? gutter.phone : gutter.tablet
   const words = useSheetWords()
   const [sharing, setSharing] = useState(false)
 
@@ -80,7 +84,18 @@ export const ScriptReader = ({ script, onBack, onExport, onEdit, onSave, saveFai
             <View style={styles.actions}>
               {saveFailed ? <Text accessibilityRole="alert" style={[type.text.small, styles.failed, { color: p.danger }]}>{t('scripts.saveFailed')}</Text> : null}
               {onSave ? <Button label={t('scripts.saveShared')} accessibilityLabel={t('scripts.saveSharedLabel')} icon="add" onPress={onSave} variant="primary" surface="paper" /> : null}
-              {onEdit ? <Button label={t('scripts.edit')} icon="edit" onPress={onEdit} variant="text" surface="paper" /> : null}
+              {/* In the toolbar and not floating at the foot, where the next page has Open grimoire: a
+                  second tap landing there would open a board nobody dealt. It is the glyph Open
+                  grimoire and Resume game carry, with no words, so the paper stays the heaviest
+                  thing on a page meant for reading. On a phone Edit is a glyph too, or the row
+                  outgrows the paper in the longer languages. */}
+              {onPlay ? <IconButton icon="play" label={t('common.newGame')} onPress={onPlay} surface="paper" /> : null}
+              {onEdit ? phone ? <IconButton icon="edit" label={t('scripts.edit')} onPress={onEdit} surface="paper" />
+                : <Button label={t('scripts.edit')} icon="edit" onPress={onEdit} variant="text" surface="paper" /> : null}
+              {/* The copy keeps its words only where it is the one way to edit, on an edition, and
+                  the window has room for them. */}
+              {onCopy ? onEdit || phone ? <IconButton icon="copy" label={t('scripts.editCopy')} onPress={onCopy} surface="paper" />
+                : <Button label={t('scripts.editCopy')} icon="copy" onPress={onCopy} variant="text" surface="paper" /> : null}
               {onExport && isCustom(script) ? <IconButton icon="share" label={t('scripts.share')} onPress={() => setSharing(true)} surface="paper" /> : null}
               {canPrint ? <IconButton icon="print" label={t('scripts.print')} onPress={() => window.print()} surface="paper" /> : null}
             </View>
