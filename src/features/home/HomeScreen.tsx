@@ -31,10 +31,15 @@ export const HomeScreen = () => {
   const short = measured && !beside && height < 720
   // A game to resume adds a row of actions, so the shortest windows shrink the fan further.
   const tight = short && (height < 600 || (home.current !== undefined && height < 680))
-  const fanScale = tight ? 0.45 : short ? 0.8 : 1
+  // The shortest windows, a phone with its browser bars or on its side, also pack the actions down
+  // to the touch target with a one-line label, and give the fan and the title less again.
+  const cramped = measured && height < (home.current ? (beside ? 380 : 550) : (beside ? 360 : 480))
+  // Beside the actions the fan gives up width rather than height, so a long Resume label fits.
+  const fanScale = cramped ? (beside ? 0.8 : 0.35) : tight ? 0.45 : short ? 0.8 : 1
   // The badge goes under the actions only where it fits without making Home scroll. A game to
   // resume adds a row, so then only tall windows have the room; Settings always shows the badge.
-  const badge = home.current ? !beside && height >= 800 : !tight && !(beside && height < 360)
+  // It goes before the fan shrinks any further, so a first visit gives it up below 640 points.
+  const badge = home.current ? !beside && height >= 800 : !measured || height >= (beside ? 360 : 640)
   const narrow = measured && width < 360
   // The tagline says what the app is to a first visit from a search, so a game to resume leaves
   // it out. It needs a portrait window at least 780 points tall, so a long language still fits on
@@ -63,30 +68,32 @@ export const HomeScreen = () => {
   const nudging = nudge && home.newcomer && ready && dealt !== undefined
   const followNudge = useCallback(() => { setNudge(false); about.current?.showModal() }, [])
   const dismissNudge = useCallback(() => setNudge(false), [])
-  const newGame = <HeroButton icon="add" label={t('common.newGame')} onPress={home.newGame} quiet={home.current !== undefined} narrow={narrow} />
+  const newGame = <HeroButton icon="add" label={t('common.newGame')} onPress={home.newGame} quiet={home.current !== undefined}
+    narrow={narrow || cramped} dense={cramped} />
   return (
     <Screen contentMax={beside ? 860 : 460}>
       <style>{entranceCss}</style>
       <View style={[styles.group, beside && styles.groupBeside, tight && styles.groupTight]}>
-        <View style={[styles.identity, beside && styles.column, tight && styles.identityTight]}>
+        <View style={[styles.identity, beside && (cramped && home.current ? styles.columnCramped : styles.column), tight && styles.identityTight]}>
           {home.artwork ? <HomeFan characters={home.artwork.characters} visit={home.artwork.visit} dealt={dealt === visit}
             scale={fanScale} artworkRef={artwork} /> : <FanSpace scale={fanScale} />}
           <View style={styles.name}>
-            <Text accessibilityRole="header" style={[styles.title, (width < 760 || short || beside) && styles.compactTitle, tight && styles.tightTitle]}>{t('common.appName')}</Text>
+            <Text accessibilityRole="header" style={[styles.title, (width < 760 || short || beside) && styles.compactTitle, tight && styles.tightTitle,
+              cramped && styles.crampedTitle]}>{t('common.appName')}</Text>
             {tagline ? <Text id="home-tagline" style={[type.text.body, styles.tagline]}>{t('common.tagline')}</Text> : null}
           </View>
         </View>
         {/* The actions wait for the saved games, so the next action is never New game for a moment
             and then Resume under a finger. They hold their place meanwhile and rise in once known. */}
-        <div className={home.ready ? 'home-rise' : undefined} style={{ ...actionsCss, ...(beside ? { flex: '1 1 0', maxWidth: 400, gap: space.sm } : {}),
-          ...(home.ready ? {} : { visibility: 'hidden' }) }}>
+        <div className={home.ready ? 'home-rise' : undefined} style={{ ...actionsCss, ...(beside ? { flex: '1 1 0', maxWidth: 400 } : {}),
+          ...(beside || cramped ? { gap: space.sm } : {}), ...(home.ready ? {} : { visibility: 'hidden' }) }}>
           {home.current ? <HeroButton icon="play" label={t('common.resumeGame')} detail={home.current.detail}
-            accessibilityLabel={`${t('common.resumeGame')}, ${home.current.a11y}`} onPress={home.resume} narrow={narrow} /> : newGame}
+            accessibilityLabel={`${t('common.resumeGame')}, ${home.current.a11y}`} onPress={home.resume} narrow={narrow || cramped} dense={cramped} /> : newGame}
           {home.current ? newGame : null}
           <View style={[styles.navigation, { backgroundColor: velvetPanel.backgroundColor, borderColor: velvetPanel.borderColor }]}>
-            <NavItem icon="script" title={t('common.scripts')} hint={t('common.scriptsHint')} onPress={home.openScripts} compact={short || beside} divided />
-            <NavItem icon="history" title={t('common.history')} hint={t('common.historyHint')} onPress={home.openHistory} compact={short || beside} divided />
-            <NavItem icon="settings" title={t('common.settings')} hint={t('common.settingsHint')} onPress={home.openSettings} compact={short || beside} />
+            <NavItem icon="script" title={t('common.scripts')} hint={t('common.scriptsHint')} onPress={home.openScripts} compact={short || beside} dense={cramped} divided />
+            <NavItem icon="history" title={t('common.history')} hint={t('common.historyHint')} onPress={home.openHistory} compact={short || beside} dense={cramped} divided />
+            <NavItem icon="settings" title={t('common.settings')} hint={t('common.settingsHint')} onPress={home.openSettings} compact={short || beside} dense={cramped} />
           </View>
           {/* A first visit can read what the app is from the badge's row, so Home grows no taller. */}
           {badge ? <View style={styles.badgeRow}>
@@ -139,16 +146,17 @@ interface HeroButtonProps {
   readonly detail?: string
   readonly accessibilityLabel?: string
   readonly quiet?: boolean // an open face on the velvet, when another action is the one to take
-  readonly narrow?: boolean // the narrowest phones: a smaller label and no chevron, so French fits
+  readonly narrow?: boolean // narrow phones and columns: a smaller label and no chevron, so French fits one line
+  readonly dense?: boolean // the shortest windows: down to the touch target
 }
 
 // The one action to take next: parchment with a brass edge whose shallow lower edge sinks under
 // a press. When a game is waiting, New game steps back to an open face so Resume leads.
-const HeroButton = memo(function HeroButton({ icon, label, onPress, detail, accessibilityLabel, quiet, narrow }: HeroButtonProps) {
+const HeroButton = memo(function HeroButton({ icon, label, onPress, detail, accessibilityLabel, quiet, narrow, dense }: HeroButtonProps) {
   const focusVisible = useFocusVisible()
   const ink = quiet ? palette.text : palette.ink
   return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} onPress={onPress}
-    style={state => [styles.hero, quiet ? styles.heroQuiet : null,
+    style={state => [styles.hero, quiet ? styles.heroQuiet : null, dense ? (quiet ? styles.heroQuietDense : styles.heroDense) : null,
       quiet
         ? { backgroundColor: isHovered(state) ? hoverWash.felt : velvetPanel.backgroundColor }
         : { backgroundColor: isHovered(state) ? palette.text : palette.parchment,
@@ -174,9 +182,10 @@ interface NavItemProps {
   readonly onPress: () => void
   readonly divided?: boolean
   readonly compact?: boolean // the title alone, where height is short
+  readonly dense?: boolean // the shortest windows: down to the touch target
 }
 
-const NavItem = memo(function NavItem({ icon, title, hint, onPress, divided, compact }: NavItemProps) {
+const NavItem = memo(function NavItem({ icon, title, hint, onPress, divided, compact, dense }: NavItemProps) {
   const p = palette
   const focusVisible = useFocusVisible()
   return (
@@ -187,6 +196,7 @@ const NavItem = memo(function NavItem({ icon, title, hint, onPress, divided, com
       style={(state) => [
         styles.navItem,
         compact && styles.navItemCompact,
+        dense && styles.navItemDense,
         { borderBottomWidth: divided ? 1 : 0, borderBottomColor: velvetPanel.borderColor, backgroundColor: isHovered(state) ? hoverWash.felt : 'transparent', opacity: state.pressed ? motion.pressedOpacity : 1 },
         // Drawn inside the row, since the shared surface clips anything outside it.
         isFocused(state) && focusVisible ? [focusStyle(p, true), { outlineOffset: -(focusRing.width + focusRing.offset) }] : null,
@@ -253,15 +263,21 @@ const styles = StyleSheet.create({
   identity: { alignItems: 'center', gap: space.lg },
   identityTight: { gap: space.md },
   column: { flex: 1, maxWidth: 400 },
+  // As wide as the fan or the title, so Resume beside it gets the rest. A first visit keeps half
+  // the width, which the prompt over the fan needs to stay clear of New game.
+  columnCramped: { flexGrow: 0, flexShrink: 0 },
   title: { fontFamily: font.display.semibold, fontSize: 54, lineHeight: 58, textAlign: 'center', color: palette.text },
   compactTitle: { fontSize: 46, lineHeight: 50 },
   tightTitle: { fontSize: 40, lineHeight: 44 },
+  crampedTitle: { fontSize: 36, lineHeight: 40 },
   name: { alignItems: 'center', gap: space.xs },
   tagline: { maxWidth: 360, textAlign: 'center', color: palette.muted },
   hero: { width: '100%', minHeight: 72, flexDirection: 'row', alignItems: 'center',
     gap: space.md, paddingVertical: space.md, paddingLeft: space.md, paddingRight: space.lg,
     borderRadius: radius.tile, borderWidth: 1, borderColor: palette.accent, overflow: 'hidden' },
   heroQuiet: { minHeight: 60, paddingVertical: space.sm },
+  heroDense: { minHeight: 56, paddingVertical: space.sm },
+  heroQuietDense: { minHeight: touch, paddingVertical: space.xxs },
   heroIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   // The play triangle's weight sits left of its box; nudge it to look centred.
   playIcon: { paddingLeft: 3 },
@@ -271,6 +287,7 @@ const styles = StyleSheet.create({
   navigation: { width: '100%', borderRadius: radius.tile, borderWidth: 1, overflow: 'hidden' },
   navItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingLeft: space.md, paddingRight: space.lg, paddingVertical: space.sm, minHeight: 64 },
   navItemCompact: { minHeight: 52 },
+  navItemDense: { minHeight: touch, paddingVertical: space.xxs },
   navText: { flex: 1, minWidth: 0, gap: space.xxs },
   badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md, alignSelf: 'center' },
   badge: { width: 120, height: 45 },
