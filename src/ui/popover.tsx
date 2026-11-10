@@ -1,15 +1,16 @@
-// The board's three menus, More, Start day and the seat menu, share one look: an ink card with
-// the brass hairline of the board's compartments, a cloth shadow that reads on velvet, and
-// compact rows that grow to a touch target on touch screens.
+// The app's menus, the board's More, Start day and seat menu and the script sheet's More on a
+// phone, share one look: an ink card with the brass hairline of the board's compartments, a cloth
+// shadow that reads on velvet and on paper, and compact rows that grow to a touch target on touch
+// screens.
 import type { CSSProperties } from 'react'
 import { Pressable, StyleSheet, Text } from 'react-native'
 
-import { focusStyle, isFocused, isHovered } from '../../ui/Button'
-import { useFocusVisible } from '../../ui/focus'
-import { Icon } from '../../ui/icons'
-import type { IconName } from '../../ui/icons'
-import { durationFor } from '../../ui/motion'
-import { boardBlock, hoverWash, motion, palette, radius, shadows, space, touch, type } from '../../ui/theme'
+import { focusStyle, isFocused, isHovered } from './Button'
+import { useFocusVisible } from './focus'
+import { Icon } from './icons'
+import type { IconName } from './icons'
+import { durationFor } from './motion'
+import { boardBlock, hoverWash, motion, palette, radius, shadows, space, touch, type } from './theme'
 
 export const menuFrame: CSSProperties = { boxSizing: 'border-box', padding: space.xs, border: `1px solid ${String(boardBlock.borderColor)}`,
   borderRadius: radius.control, background: palette.ink, color: palette.text, boxShadow: shadows.lifted }
@@ -52,7 +53,7 @@ export const MenuItem = ({ icon, label, onPress, disabled = false, armed = false
   </Pressable></>
 }
 
-// Opens a board menu against the edge of its control nearest the board's centre: below a
+// Opens a menu against the edge of its control nearest the board's centre: below a
 // toolbar button, above the status plaque. Both align to the control's right edge.
 export const togglePopover = (popup: HTMLDivElement | null, anchorElement: HTMLDivElement | null,
   { above = false, reduced }: { readonly above?: boolean; readonly reduced: boolean }) => {

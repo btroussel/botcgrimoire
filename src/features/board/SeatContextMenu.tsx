@@ -10,7 +10,7 @@ import { durationFor, useReducedMotion } from '../../ui/motion'
 import { hoverWash, motion, palette, space, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { useViewport } from '../../ui/Viewport'
-import { MenuItem, menuClass, menuFrame, menuStyles } from './popover'
+import { MenuItem, menuClass, menuFrame, menuStyles } from '../../ui/popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
 export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, nominateSelfDisabled, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onRemove, onRename, onLife, onGhostVote }: {

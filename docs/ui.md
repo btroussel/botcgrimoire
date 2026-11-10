@@ -231,6 +231,12 @@ below the characters, since paper's upside-down column is meant for turning the 
 sits in the toolbar and never floats at the foot, where the bag it opens has Open grimoire: a
 second tap landing there would open a board nobody dealt.
 
+The toolbar is glyphs, named by their tooltips, so the paper stays the heaviest thing on the page.
+Only Save on a received script keeps its word, as the one thing that page asks. The pencil edits a
+saved script and, on an edition, edits a copy, its only way to edit. A phone has no hover to name a
+glyph, so there a saved script's copy and Print go in a More menu that writes them out; New game,
+the pencil and Share stay in the bar.
+
 A script is listed the same way wherever it is listed, its author then its character count, so
 the list to play from and the library read as one list.
 

@@ -3,7 +3,7 @@
 // The toolbar starts a game on the script, prints the paper and, for a saved custom script,
 // shares or edits it; an edition or a saved script also opens as a copy to edit. A script opened
 // from a link or a file offers to save it first.
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -15,6 +15,9 @@ import { isWeb } from '../../store/browser'
 import { isTeensyville, countTable, djinnText, jinxesAmong, listed, nightOrders, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
 import { Button, IconButton } from '../../ui/Button'
+import type { IconName } from '../../ui/icons'
+import { useReducedMotion } from '../../ui/motion'
+import { MenuItem, menuClass, menuSurface, togglePopover } from '../../ui/popover'
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { gutter, layout, palette, radius, type } from '../../ui/theme'
 import { PageVelvet } from '../../ui/Velvet'
@@ -45,6 +48,19 @@ export const ScriptReader = ({ script, onBack, onPlay, onExport, onEdit, onCopy,
   const pad = phone ? gutter.phone : gutter.tablet
   const words = useSheetWords()
   const [sharing, setSharing] = useState(false)
+  const trigger = useRef<HTMLDivElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
+  const reduced = useReducedMotion()
+  const choose = (action: () => void) => {
+    menu.current?.hidePopover()
+    trigger.current?.querySelector<HTMLElement>('[role="button"]')?.focus()
+    action()
+  }
+  // A saved script's copy and the print dialog: what a game at the table rarely needs.
+  const more: readonly { readonly icon: IconName; readonly label: string; readonly onPress: () => void }[] = [
+    ...(onEdit && onCopy ? [{ icon: 'copy' as const, label: t('scripts.editCopy'), onPress: onCopy }] : []),
+    ...(canPrint ? [{ icon: 'print' as const, label: t('scripts.print'), onPress: () => window.print() }] : []),
+  ]
 
   const list = useMemo(() => listed(script, locale), [script, locale])
   const teams = useMemo(() => sheetGroups(list, words.teams), [list, words])
@@ -85,19 +101,22 @@ export const ScriptReader = ({ script, onBack, onPlay, onExport, onEdit, onCopy,
               {saveFailed ? <Text accessibilityRole="alert" style={[type.text.small, styles.failed, { color: p.danger }]}>{t('scripts.saveFailed')}</Text> : null}
               {onSave ? <Button label={t('scripts.saveShared')} accessibilityLabel={t('scripts.saveSharedLabel')} icon="add" onPress={onSave} variant="primary" surface="paper" /> : null}
               {/* In the toolbar and not floating at the foot, where the next page has Open grimoire: a
-                  second tap landing there would open a board nobody dealt. It is the glyph Open
-                  grimoire and Resume game carry, with no words, so the paper stays the heaviest
-                  thing on a page meant for reading. On a phone Edit is a glyph too, or the row
-                  outgrows the paper in the longer languages. */}
+                  second tap landing there would open a board nobody dealt. */}
               {onPlay ? <IconButton icon="play" label={t('common.newGame')} onPress={onPlay} surface="paper" /> : null}
-              {onEdit ? phone ? <IconButton icon="edit" label={t('scripts.edit')} onPress={onEdit} surface="paper" />
-                : <Button label={t('scripts.edit')} icon="edit" onPress={onEdit} variant="text" surface="paper" /> : null}
-              {/* The copy keeps its words only where it is the one way to edit, on an edition, and
-                  the window has room for them. */}
-              {onCopy ? onEdit || phone ? <IconButton icon="copy" label={t('scripts.editCopy')} onPress={onCopy} surface="paper" />
-                : <Button label={t('scripts.editCopy')} icon="copy" onPress={onCopy} variant="text" surface="paper" /> : null}
+              {/* An edition's one way to edit is a copy, so it takes the pencil. */}
+              {onEdit ? <IconButton icon="edit" label={t('scripts.edit')} onPress={onEdit} surface="paper" />
+                : onCopy ? <IconButton icon="edit" label={t('scripts.editCopy')} onPress={onCopy} surface="paper" /> : null}
               {onExport && isCustom(script) ? <IconButton icon="share" label={t('scripts.share')} onPress={() => setSharing(true)} surface="paper" /> : null}
-              {canPrint ? <IconButton icon="print" label={t('scripts.print')} onPress={() => window.print()} surface="paper" /> : null}
+              {/* A phone has no hover to name a glyph, so the rarer actions go in a menu that
+                  writes them out. One alone stays a glyph. */}
+              {phone && more.length > 1 ? <>
+                <div ref={trigger}>
+                  <IconButton icon="more" label={t('common.more')} onPress={() => togglePopover(menu.current, trigger.current, { reduced })} surface="paper" />
+                </div>
+                <div ref={menu} popover="auto" aria-label={t('common.more')} className={menuClass} style={menuSurface(176)}>
+                  {more.map(item => <MenuItem key={item.icon} icon={item.icon} label={item.label} onPress={() => choose(item.onPress)} />)}
+                </div>
+              </> : more.map(item => <IconButton key={item.icon} icon={item.icon} label={item.label} onPress={item.onPress} surface="paper" />)}
             </View>
           }
         />
