@@ -9,8 +9,12 @@ export const teamWords = (t: Translate): Readonly<Record<Team, string>> => ({
   demon: t('scripts.demon'), traveller: t('scripts.travellerOne'), fabled: t('scripts.fabled'), loric: t('scripts.loric'),
 })
 
-// The schema's limits, so a saved file stays valid for every other tool.
-export const limits = { name: 30, ability: 250, reminder: 30, instruction: 500 } as const
+// The schema's limits, so a saved file stays valid for every other tool. `reminders` counts tokens.
+export const limits = { name: 30, ability: 250, reminder: 30, instruction: 500, reminders: 20 } as const
+
+// The editor offers another reminder token only below the schema's count. A record that already
+// carries more keeps them all: only adding stops.
+export const canAddReminder = (reminders: readonly string[]): boolean => reminders.length < limits.reminders
 
 export interface CharacterDraft {
   readonly name: string

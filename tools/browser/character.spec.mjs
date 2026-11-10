@@ -40,3 +40,22 @@ test('a homebrew character keeps its own image for the other side', async ({ pag
   await page.getByRole('button', { name: 'Use one image for both sides', exact: true }).click()
   expect(await sideImages(page)).toEqual([good, good])
 })
+
+test('the character editor shows a field\'s limit and stops at twenty reminder tokens', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+  const ability = page.getByRole('textbox', { name: 'Ability', exact: true })
+  // A short ability carries no count; near the limit it shows, and a longer paste stops at it.
+  await ability.fill('a'.repeat(100))
+  await expect(page.getByText('100/250', { exact: true })).toHaveCount(0)
+  await ability.fill('a'.repeat(231))
+  await expect(page.getByText('231/250', { exact: true })).toBeVisible()
+  await ability.fill('a'.repeat(300))
+  await expect(ability).toHaveValue('a'.repeat(250))
+  await expect(page.getByText('250/250', { exact: true })).toBeVisible()
+
+  const add = page.getByRole('button', { name: 'Add a reminder token', exact: true })
+  for (let n = 1; n <= 20; n++) await add.click()
+  await expect(page.getByRole('textbox', { name: 'Reminder token 20', exact: true })).toBeVisible()
+  await expect(add).toHaveCount(0)
+})
