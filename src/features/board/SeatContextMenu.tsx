@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import type { Alignment, Translate } from '../../content'
 import { focusStyle, isFocused, isHovered } from '../../ui/Button'
@@ -10,7 +10,7 @@ import { durationFor, useReducedMotion } from '../../ui/motion'
 import { hoverWash, motion, palette, space, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { useViewport } from '../../ui/Viewport'
-import { MenuItem, menuFrame, menuRowHeight, menuStyles } from './popover'
+import { MenuItem, menuClass, menuFrame, menuStyles } from './popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
 export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, nominateSelfDisabled, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onRemove, onRename, onLife, onGhostVote }: {
@@ -48,8 +48,6 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   }
   const focusVisible = useFocusVisible()
   const reduced = useReducedMotion()
-  const screen = useWindowDimensions()
-  const rowHeight = menuRowHeight(screen.width, screen.height)
   // Placed from its measured size on every render, since renaming, a death or a wrapped
   // translation changes it, within the part of the band the screen shows, which a scrolled
   // ring or a software keyboard cuts short.
@@ -114,7 +112,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   ]
   const row = (item: { label: string; icon: IconName; run: () => void; disabled?: boolean }) =>
     <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} disabled={item.disabled} />
-  return <div ref={menu} role="group" aria-label={name} data-layer style={{ ...menuFrame, position: 'absolute', width,
+  return <div ref={menu} role="group" aria-label={name} data-layer className={menuClass} style={{ ...menuFrame, position: 'absolute', width,
     maxHeight: Math.max(0, viewport.height - space.sm * 2), overflowY: 'auto', zIndex: 30 }}>
     {renaming ? <TextInput autoFocus selectTextOnFocus value={draft} onChangeText={setDraft}
       maxLength={80} accessibilityLabel={t('board.playerName')} returnKeyType="done"
@@ -127,17 +125,17 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
           setRenaming(false)
         }
       }}
-      style={[type.text.strong, styles.nameInput, { minHeight: rowHeight }]} />
+      style={[type.text.strong, styles.nameInput]} />
       : <Pressable accessibilityRole="button" accessibilityLabel={t('board.renamePlayer')}
         onPress={() => { setDraft(name); editing.current = true; setRenaming(true) }}
-        style={state => [menuStyles.row, { minHeight: rowHeight }, isHovered(state) ? { backgroundColor: hoverWash.felt } : null,
+        style={state => [menuStyles.row, isHovered(state) ? { backgroundColor: hoverWash.felt } : null,
           focusStyle(palette, isFocused(state) && focusVisible)]}>
         <Text numberOfLines={1} style={[type.text.strong, styles.heading]}>{name}</Text>
         <Icon name="edit" size={16} color={palette.parchmentShade} />
       </Pressable>}
     {actions.map(item => row(item))}
     {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
-    <View style={styles.rule} />
+    <View style={menuStyles.rule} />
     {row({ label: t('board.removeSeat'), icon: 'trash', run: onRemove })}
   </div>
 }
@@ -146,5 +144,4 @@ const styles = StyleSheet.create({
   heading: { color: palette.parchmentShade, flexShrink: 1, fontSize: 14, lineHeight: 20 },
   nameInput: { color: palette.text, minWidth: 0, paddingHorizontal: space.xs, paddingVertical: space.xxs,
     borderBottomWidth: 1, borderBottomColor: palette.accent },
-  rule: { height: 1, marginHorizontal: space.xs, marginVertical: space.xxs, backgroundColor: palette.inkMuted },
 })

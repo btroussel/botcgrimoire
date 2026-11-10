@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { open } from './app.mjs'
+import { editionName, longestIn, stringsIn } from './locales.mjs'
 
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, serviceWorkers: 'block' })
 
@@ -122,5 +123,38 @@ test.describe('with reduced motion', () => {
     await chip.tap()
     await expect(tab).toHaveAttribute('aria-expanded', 'false')
     await expect(chip).toHaveCount(1)
+  })
+})
+
+// Run in the language whose Home labels run longest; shorter labels fit where these do.
+const homeLabels = locale => {
+  const { common } = stringsIn(locale)
+  return [common.resumeGame, common.newGame, common.scripts, common.history, common.settings]
+}
+const homeLocale = longestIn(homeLabels)
+
+test.describe(`${homeLocale} Home`, () => {
+  test.use({ locale: homeLocale })
+
+  test('keeps every action on the shortest windows without scrolling, with a game to resume', async ({ page }) => {
+    const { setup } = stringsIn(homeLocale)
+    const [resume, ...others] = homeLabels(homeLocale)
+    await open(page, '/new')
+    for (const name of [editionName(homeLocale, 'tb', 'Trouble Brewing'), setup.shuffleBag, setup.manualOpen, setup.dealRandom]) {
+      await page.getByRole('button', { name, exact: true }).click()
+    }
+    await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
+    // A phone on its side, and a small phone in portrait under its browser bars.
+    for (const viewport of [{ width: 568, height: 320 }, { width: 320, height: 460 }]) {
+      await page.setViewportSize(viewport)
+      await open(page, '/')
+      // Each action sits wholly inside the window, so none needs a scroll. Resume's name carries
+      // the game after its label.
+      for (const action of [page.getByRole('button', { name: new RegExp(`^${resume}, `) }),
+        ...others.map(name => page.getByRole('button', { name, exact: true }))]) {
+        await expect(action).toBeInViewport({ ratio: 1 })
+        expect((await action.boundingBox()).height).toBeGreaterThanOrEqual(44)
+      }
+    }
   })
 })
