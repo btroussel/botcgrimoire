@@ -45,8 +45,7 @@ export const DrawScreen = ({ id, cursor }: { readonly id: string; readonly curso
   const short = permitted ? drawRunsShort(permitted.board, permitted.draw) : false
   const deal = () => {
     if (!permitted) return
-    store.appendAll(dealDraw(permitted.board, permitted.draw, Math.random, roles))
-    store.setDraw(undefined)
+    store.deal(dealDraw(permitted.board, permitted.draw, Math.random, roles))
     router.setParams({ draw: '', deal: '1' })
   }
 

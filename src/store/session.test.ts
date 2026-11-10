@@ -45,8 +45,18 @@ describe('the initial table is the undo boundary', () => {
     expect(boardOf(redo(current, 1020)).seats[0]?.name).toBe('Ann')
   })
 
+  test('a table opened with one seat keeps that seat, and a seat added right after can be undone', () => {
+    const initial = append(start(), seats[0]!, 1001)
+    expect(canUndo(initial)).toBe(false)
+    const added = append(initial, seats[1]!, 1002)
+    expect(canUndo(openSession(deserialize(serialize(added.game))))).toBe(true)
+    expect(undo(added, 1003).game.log).toEqual(initial.game.log)
+    expect(canUndo(undo(added, 1003))).toBe(false)
+  })
+
   test('legacy opening seats are protected while a later added seat can be undone', () => {
-    const initial = append(append(start(), seats[0]!, 1001), seats[1]!, 1002)
+    const unbatched = append(append(start(), seats[0]!, 1001), seats[1]!, 1002)
+    const initial = openSession({ ...unbatched.game, log: unbatched.game.log.map(({ batch: _batch, ...event }) => event) })
     expect(canUndo(initial)).toBe(false)
     const renamed = append(initial, { kind: 'renameSeat', seat: asSeatId('Alice'), name: 'Ann' }, 1003)
     const added = append(renamed, { ...seats[0]!, seat: asSeatId('Charlie'), name: 'Charlie', at: 2 }, 1004)

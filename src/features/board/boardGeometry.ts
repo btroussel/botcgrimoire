@@ -2,7 +2,7 @@
 // status row and the loose tokens, and the ring fitted around the corner controls. Fitting the
 // ring tries every token size at every margin step, so the board computes this only when one
 // of these measures changes, never on a tap or an edit that leaves them alone.
-import { layout, seatMetrics, space } from '../../ui/theme'
+import { hairline, layout, seatMetrics, space, touch } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { fitRing, fitRingAroundControls } from './ringLayout'
 
@@ -11,6 +11,8 @@ export const tokenStripHeight = 64
 export const tokenStripSlotWidth = 60
 // The toolbar's band across the top of the board.
 export const toolbarHeight = 68
+// Undo stands alone in the top left corner: one touch square in the toolbar's frame.
+export const undoSize = touch + 2 * (space.xxs + hairline)
 
 // The centre panel fills the gap between the flanking tokens, within these bounds. A ring too
 // narrow for the minimum docks the panel at the board's foot, so it never covers a voter.
@@ -47,6 +49,7 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
   const aroundControls = live
     ? fitRingAroundControls({ width: columnWidth, height: height - (landscape ? 0 : statusHeight) }, seats, seatMetrics, {
       top: [
+        { left: space.md, top: space.md, width: undoSize, height: undoSize },
         { left: width - space.md - toolbar.width, top: space.md, ...toolbar },
         ...(strip > 0 ? [{ left: columnWidth - space.md - utilitiesWidth, top: toolbarHeight,
           width: utilitiesWidth, height: tokenStripHeight }] : []),

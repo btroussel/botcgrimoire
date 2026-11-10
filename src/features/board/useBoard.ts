@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { BoardColour, Translate } from '../../content'
 import type { Grimoire } from '../../engine'
 import type { GameId } from '../../store'
-import { useStore } from '../../store'
+import { canUndo, useStore } from '../../store'
 import { homePath } from '../../ui/homePath'
 import type { BoardView } from './board'
 import { boardView } from './board'
@@ -26,6 +26,7 @@ export interface BoardBinding {
   readonly elapsedMs?: number
   readonly elapsedStartedAt?: number
   readonly lookingBack: boolean // every appending control is disabled while set
+  readonly undo?: () => void // while the live game has an action after its opening table
   readonly returnToPresent: () => void
   readonly enterReplay: () => void
   readonly goHome: () => void
@@ -111,6 +112,7 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
     ...(elapsedMs !== undefined ? { elapsedMs } : {}),
     ...(elapsedStartedAt !== undefined ? { elapsedStartedAt } : {}),
     lookingBack,
+    ...(open && session && canUndo(session) ? { undo: store.undo } : {}),
     returnToPresent,
     enterReplay,
     goHome,

@@ -42,6 +42,14 @@ export const DayPanel = () => {
   const { cancelRequest, setSeatAction, setNominate, setCenterPanel, setVoteArc } = interaction
   useEffect(() => cancelRequest, [cancelRequest])
   const nominations = useMemo(() => board ? today(board)?.nominations ?? [] : [], [board])
+  // Undoing Done or Mark gives the ballot back unconfirmed, so its controls reopen on it.
+  const log = session?.game.log
+  const [seen, setSeen] = useState(log)
+  if (log !== seen) {
+    setSeen(log)
+    const undone = log && seen && log.length < seen.length ? seen.slice(log.length).find(e => e.kind === 'setVoteTotal') : undefined
+    if (undone?.kind === 'setVoteTotal' && nominations.some(n => n.opened === undone.nomination)) setActiveId(undone.nomination)
+  }
   const current = nominations.find(n => n.opened === activeId)
   const replaying = session?.lookingAt !== undefined
   const name = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.name ?? t('board.storyteller'), [board, t])

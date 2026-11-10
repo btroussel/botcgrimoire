@@ -6,8 +6,8 @@ import { useReducedMotion } from '../../ui/motion'
 import { MenuItem, menuClass, menuSurface, togglePopover } from './popover'
 
 // The status plaque is the phase control: the reading of where the game stands is what the
-// Storyteller taps, at the thumb end of a phone. Night still takes two taps to reach day,
-// since a phase change has no undo.
+// Storyteller taps, at the thumb end of a phone. Night still takes two taps to reach day, so a
+// stray tap on the plaque never ends a night.
 export const PhasePlaque = ({ t, clock, onPhase, onStartDay, windowOpen }: {
   readonly t: Translate
   readonly clock: ClockProps
