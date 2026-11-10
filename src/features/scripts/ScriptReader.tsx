@@ -15,7 +15,7 @@ import { isTeensyville, countTable, djinnText, jinxesAmong, listed, nightOrders,
 import { usePhone } from '../../ui/breakpoint'
 import { Button, IconButton } from '../../ui/Button'
 import { ScriptSheet } from '../../ui/ScriptSheet'
-import { gutter, layout, palette, radius, space, type } from '../../ui/theme'
+import { gutter, layout, palette, radius, type } from '../../ui/theme'
 import { PageVelvet } from '../../ui/Velvet'
 import { logoOf } from './compose'
 import { ShareScript } from './ShareScript'
@@ -83,10 +83,11 @@ export const ScriptReader = ({ script, onBack, onPlay, onExport, onEdit, onSave,
               {saveFailed ? <Text accessibilityRole="alert" style={[type.text.small, styles.failed, { color: p.danger }]}>{t('scripts.saveFailed')}</Text> : null}
               {onSave ? <Button label={t('scripts.saveShared')} accessibilityLabel={t('scripts.saveSharedLabel')} icon="add" onPress={onSave} variant="primary" surface="paper" /> : null}
               {/* In the toolbar and not floating at the foot, where the next page has Open grimoire: a
-                  second tap landing there would open a board nobody dealt. A phone's toolbar has
-                  room for one label, so New game keeps its words and gives up its glyph, Edit the
-                  reverse, and on the narrowest phones the label wraps before a control leaves. */}
-              {onPlay ? <Button style={styles.play} label={t('common.newGame')} {...(phone ? {} : { icon: 'play' as const })} onPress={onPlay} variant="primary" surface="paper" /> : null}
+                  second tap landing there would open a board nobody dealt. It is the glyph Open
+                  grimoire and Resume game carry, with no words, so the paper stays the heaviest
+                  thing on a page meant for reading. On a phone Edit is a glyph too, or the row
+                  outgrows the paper in the longer languages. */}
+              {onPlay ? <IconButton icon="play" label={t('common.newGame')} onPress={onPlay} surface="paper" /> : null}
               {onEdit ? phone ? <IconButton icon="edit" label={t('scripts.edit')} onPress={onEdit} surface="paper" />
                 : <Button label={t('scripts.edit')} icon="edit" onPress={onEdit} variant="text" surface="paper" /> : null}
               {onExport && isCustom(script) ? <IconButton icon="share" label={t('scripts.share')} onPress={() => setSharing(true)} surface="paper" /> : null}
@@ -104,7 +105,6 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   // The setup page's paper cap, so the toolbar stays near the text on a wide window.
   paper: { flex: 1, width: '100%', maxWidth: layout.contentMax, alignSelf: 'center', borderRadius: radius.tile, overflow: 'hidden' },
-  actions: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minWidth: 0 },
-  play: { flexShrink: 1, minWidth: 0, marginVertical: space.xs },
+  actions: { flexDirection: 'row', alignItems: 'center' },
   failed: { flexShrink: 1 },
 })
