@@ -2,9 +2,10 @@ import { memo, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import type { Translate } from '../../content'
 import { EdgeButton } from '../../ui/EdgeButton'
+import type { IconName } from '../../ui/icons'
 import { useReducedMotion } from '../../ui/motion'
 import { hairline, palette, radius, shadows, space } from '../../ui/theme'
-import { MenuItem, menuSurface, togglePopover } from './popover'
+import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from './popover'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
   onLoose, looseDisabled, onEnd, endDisabled, onReplay, onHome }: {
@@ -29,6 +30,9 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
     trigger.current?.querySelector<HTMLButtonElement>('[role="button"]')?.focus()
     action()
   }
+  const item = ({ icon, label, action, disabled = false, armed = false }: {
+    icon: IconName; label: string; action: () => void; disabled?: boolean; armed?: boolean }) =>
+    <MenuItem icon={icon} label={label} onPress={() => choose(action)} disabled={disabled} armed={armed} />
   return <>
     <View style={styles.edge}>
       <EdgeButton icon="show" label={t('board.show')} onPress={onShow} />
@@ -37,15 +41,14 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
       </div>
     </View>
     <div ref={menu} popover="auto" aria-label={t('common.more')}
-      onToggle={(event) => setMenuOpen(event.newState === 'open')} style={menuSurface(176)}>
-      {([
-        { icon: 'addSeat', label: t('board.arrangeSeats'), action: onArrange, disabled: arrangeDisabled, armed: arranging },
-        { icon: 'add', label: t('board.looseTitle'), action: onLoose, disabled: looseDisabled },
-        { icon: 'check', label: t('board.endGame'), action: onEnd, disabled: endDisabled },
-        ...(onReplay ? [{ icon: 'history', label: t('history.replay'), action: onReplay }] as const : []),
-        { icon: 'home', label: t('common.home'), action: onHome },
-      ] as const).map((item) => <MenuItem key={item.icon} icon={item.icon} label={item.label} onPress={() => choose(item.action)}
-        disabled={'disabled' in item && item.disabled} armed={'armed' in item && item.armed} />)}
+      onToggle={(event) => setMenuOpen(event.newState === 'open')} className={menuClass} style={menuSurface(176)}>
+      {item({ icon: 'addSeat', label: t('board.arrangeSeats'), action: onArrange, disabled: arrangeDisabled, armed: arranging })}
+      {item({ icon: 'add', label: t('board.looseTitle'), action: onLoose, disabled: looseDisabled })}
+      {/* Leaving the game sits apart from the tools for the board. */}
+      <View style={menuStyles.rule} />
+      {item({ icon: 'check', label: t('board.endGame'), action: onEnd, disabled: endDisabled })}
+      {onReplay ? item({ icon: 'history', label: t('history.replay'), action: onReplay }) : null}
+      {item({ icon: 'home', label: t('common.home'), action: onHome })}
     </div>
   </>
 })

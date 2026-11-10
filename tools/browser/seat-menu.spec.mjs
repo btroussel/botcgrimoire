@@ -35,8 +35,11 @@ test.describe('seat menu on touch screens', () => {
         const menu = page.getByRole('group', { name: `Seat ${index + 1}`, exact: true })
         await expect(menu).toBeVisible()
         expect(overlap(await menu.boundingBox(), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
-        for (const height of await menu.getByRole('button').evaluateAll(rows => rows.map(row => row.getBoundingClientRect().height))) {
+        // A row takes a tap across the whole menu, not only on its words.
+        const inner = await menu.evaluate(element => element.clientWidth - 2 * parseFloat(getComputedStyle(element).paddingLeft))
+        for (const { height, width } of await menu.getByRole('button').evaluateAll(rows => rows.map(row => row.getBoundingClientRect().toJSON()))) {
           expect(height).toBeGreaterThanOrEqual(44)
+          expect(width).toBeCloseTo(inner, 0)
         }
         await page.keyboard.press('Escape')
         await expect(menu).toHaveCount(0)
