@@ -30,10 +30,10 @@ the setup and day windows and the day timer, so the board never imports those fe
 | Route | Feature | What it is |
 | --- | --- | --- |
 | `/`, `/[lang]` | `home` | Resume or start a game, scripts, history, settings; `/fr` and the like for search |
-| `/new` | `setup` | Script, seat count and optional bag |
+| `/new` | `setup` | Script, seat count and optional bag; `?script=` opens on that script's bag |
 | `/game/[id]` | `board`, `setup`, `day` | The board; `?draw=` and `?discovery=` hold a player's turn, `?replay=1` the replay |
 | `/history`, `/history/[id]` | `history` | Saved games, optionally one opened |
-| `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters |
+| `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters; `?import=1` opens the import window |
 | `/settings` | `settings` | Language, grimoire colour and About |
 
 ## The Storyteller's path
@@ -45,6 +45,12 @@ The screen stays awake while a game is open.
 Pick an edition or a saved custom script, choose its roles and set one to twenty seats. Nothing
 blocks a manual setup: no distribution, adjacency or disguise rule. Any character can repeat, and
 the bag can hold fewer tokens than seats, or none. Fabled, Loric and Lil' Monsta take no seat.
+
+New game and the script library link to each other. New game lists the scripts as the library
+does and, for a script it does not have, opens the library on its import window. The script
+sheet starts a game on the script it shows, an edition or one saved on the device, straight on
+its bag; a script from a link is saved first. New game stays its own page because it is walked
+at the table, two taps from Home to the bag, with nothing on it to compose or delete.
 
 Shuffle is optional. From five to fifteen seats it starts from the standard team counts and
 applies the setup changes of the characters it picks:

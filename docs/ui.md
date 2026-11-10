@@ -221,7 +221,12 @@ compose; the board's reference lists them the same way. The Fabled and Loric tak
 rules keep the sheet's width.
 
 On screen, team headers stick while their team scrolls past. The night orders become two lists
-below the characters, since paper's upside-down column is meant for turning the page.
+below the characters, since paper's upside-down column is meant for turning the page. New game
+sits in the toolbar and never floats at the foot, where the bag it opens has Open grimoire: a
+second tap landing there would open a board nobody dealt.
+
+A script is listed the same way wherever it is listed, its author then its character count, so
+the list to play from and the library read as one list.
 
 The share QR code is black on white with the standard quiet zone, whatever the velvet, because a
 camera reads contrast. A custom script's web logo shows only when the network reaches it; otherwise

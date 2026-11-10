@@ -1,10 +1,6 @@
 {
   "addCopy": "Ein {name}-Plättchen hinzufügen",
   "assignedCount": "{have} von {of} Charakteren zugewiesen",
-  "charactersCount": {
-    "one": "{count} Charakter",
-    "other": "{count} Charaktere"
-  },
   "createError": "Das Spiel konnte nicht gespeichert werden. Versuche es erneut.",
   "fillBag": "Beutel füllen",
   "fillBagSave": {

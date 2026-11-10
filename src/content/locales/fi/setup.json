@@ -1,10 +1,6 @@
 {
   "addCopy": "Lisää {name} -merkki",
   "assignedCount": "{have} / {of} hahmoa jaettu",
-  "charactersCount": {
-    "one": "{count} hahmo",
-    "other": "{count} hahmoa"
-  },
   "createError": "Pelin tallennus epäonnistui. Yritä uudelleen.",
   "fillBag": "Täytä pussi",
   "fillBagSave": {

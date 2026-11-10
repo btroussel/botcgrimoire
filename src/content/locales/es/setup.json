@@ -1,10 +1,6 @@
 {
   "addCopy": "Añadir una ficha de {name}",
   "assignedCount": "{have} de {of} personajes asignados",
-  "charactersCount": {
-    "one": "{count} personaje",
-    "other": "{count} personajes"
-  },
   "createError": "No se ha podido guardar la partida. Vuelve a intentarlo.",
   "fillBag": "Llenar la bolsa",
   "fillBagSave": {

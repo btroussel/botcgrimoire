@@ -13,6 +13,11 @@ import { motion, palette, radius, scriptListLogo, shadows, space, type } from '.
 // Secondary actions are siblings of the main target, never buttons nested in that target.
 // A character in the library has its token where a script has its logo. The main target's hover
 // and focus outline the whole ticket, a secondary action included, since the ticket reads as one.
+// The lines under a script's name, the same wherever it is listed: who wrote it, then how many
+// characters it has.
+export const scriptDetails = (author: string | undefined, count: string): { readonly detail: string; readonly detail2?: string } =>
+  author ? { detail: author, detail2: count } : { detail: count }
+
 export const ScriptListRow = ({ logo, leading, name, detail, detail2, accessibilityLabel, onPress, onLongPress, right }: {
   readonly logo?: number | undefined
   readonly leading?: ReactNode // drawn in place of a logo

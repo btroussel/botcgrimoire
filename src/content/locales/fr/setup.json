@@ -1,10 +1,6 @@
 {
   "addCopy": "Ajouter un jeton {name}",
   "assignedCount": "{have} rôles attribués sur {of}",
-  "charactersCount": {
-    "one": "{count} rôle",
-    "other": "{count} rôles"
-  },
   "createError": "La partie n’a pas pu être enregistrée. Réessayez.",
   "fillBag": "Remplir le sac",
   "fillBagSave": {
