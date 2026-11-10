@@ -26,17 +26,18 @@ test('a homebrew character keeps its own image for the other side', async ({ pag
   const [good, same] = await sideImages(page)
   expect(same).toBe(good)
   await choose(page, 'Choose the image for the evil side', 'chef_e.webp')
+  // The editor decodes and re-encodes a picked file, so its image shows a moment after the pick.
+  await expect.poll(async () => (await sideImages(page))[1]).not.toBe(good)
   const [kept, evil] = await sideImages(page)
   expect(kept).toBe(good)
-  expect(evil).not.toBe(good)
 
   await page.getByRole('radio', { name: 'Good', exact: true }).check()
   await expect(page.getByRole('button', { name: 'Remove both images', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Save character', exact: true }).click()
 
   await page.getByRole('button', { name: 'Edit Lamplighter', exact: true }).click()
-  expect(await sideImages(page)).toEqual([good, evil])
+  await expect.poll(() => sideImages(page)).toEqual([good, evil])
   await page.getByRole('radio', { name: 'Evil', exact: true }).check()
   await page.getByRole('button', { name: 'Use one image for both sides', exact: true }).click()
-  expect(await sideImages(page)).toEqual([good, good])
+  await expect.poll(() => sideImages(page)).toEqual([good, good])
 })
