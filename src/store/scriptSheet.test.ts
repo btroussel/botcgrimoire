@@ -125,6 +125,15 @@ describe('sheetGroups', () => {
     expect(groups[0]?.count).toEqual({ have: 6, of: 6, label: '6 of 6' })
     expect(groups[4]?.count).toBeUndefined()
   })
+
+  test('marks the homebrew rows, which the composer lets the Storyteller open', () => {
+    const script: CustomScript = { kind: 'custom', name: 'Home', items: [{ id: '_meta', name: 'Home' }, 'imp', 'butler', { id: 'baker', name: 'Baker', team: 'outsider', ability: 'You bake.' }] }
+    const outsiders = sheetGroups(listed(script, 'en'), teamWords).find((g) => g.team === 'outsider')
+    expect(outsiders?.rows).toEqual([
+      { id: 'butler', team: 'outsider', name: 'Butler', ability: expect.any(String) },
+      { id: 'baker', team: 'outsider', name: 'Baker', ability: 'You bake.', homebrew: true },
+    ])
+  })
 })
 
 describe('composeTarget', () => {

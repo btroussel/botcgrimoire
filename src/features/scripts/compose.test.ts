@@ -71,6 +71,16 @@ describe('homebrew characters in a draft', () => {
     expect(file.items).toContainEqual(baker)
   })
 
+  test('one carried only by the script is still offered and opens with its record, until an own copy replaces it', () => {
+    const carried = recordsOf([baker], [alchemist])
+    expect(carried.get('bakerq1')).toBe(baker)
+    expect(composeRoster('en', carried).some((c) => c.id === 'bakerq1')).toBe(true)
+    const edited = { ...baker, ability: 'You bake twice.' }
+    const own = recordsOf([baker], [alchemist, edited])
+    expect(own.get('bakerq1')).toBe(edited)
+    expect(composeRoster('en', own).find((c) => c.id === 'bakerq1')?.ability).toBe('You bake twice.')
+  })
+
   test('an id with no record anywhere stays as it came, like an official id this build does not know', () => {
     const file = fileOf(draft, [alchemist])
     expect(file.items.slice(1)).toEqual(['chef', alchemist, 'drunk', 'imp', 'bootlegger', 'bakerq1'])

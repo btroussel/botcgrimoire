@@ -12,6 +12,7 @@ export interface ScriptSheetRow {
   readonly inBag?: number // deal mode: copies in the bag; from two, the count follows the name
   readonly below?: ReactNode // what the feature hangs under a row: a deal-mode choice, a setup instruction
   readonly implied?: boolean // compose: the rest of the script brings it, so it has no remove control
+  readonly homebrew?: boolean // its record is the Storyteller's to rewrite, so compose gives it an edit control
 }
 
 export interface ScriptSheetTeam {
@@ -95,6 +96,8 @@ export interface ScriptSheetProps {
   readonly onLongPressCharacter?: (id: string) => void // deal mode: another token of the character
   readonly onRemoveCharacter?: (id: string) => void
   readonly removeLabel?: (name: string) => string
+  readonly onEditCharacter?: (id: string) => void // compose: opens a homebrew row's record
+  readonly editLabel?: (name: string) => string
   readonly onBack?: () => void
   readonly backLabel?: string
   readonly actions?: ReactNode // the header's right: print, share

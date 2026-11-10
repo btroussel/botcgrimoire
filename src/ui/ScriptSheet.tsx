@@ -168,6 +168,8 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
                       onLongPress={props.onLongPressCharacter}
                       onRemove={props.onRemoveCharacter}
                       removeLabel={props.removeLabel?.(row.name)}
+                      onEdit={props.onEditCharacter}
+                      editLabel={props.editLabel?.(row.name)}
                     />
                   </View>
                 )

@@ -32,6 +32,7 @@ export interface SheetRow {
   readonly team: Team
   readonly name: string
   readonly ability: string
+  readonly homebrew?: boolean
 }
 
 export interface SheetTeam {
@@ -142,6 +143,7 @@ const toRow = (c: Listed): SheetRow => ({
   team: c.team,
   name: c.name,
   ability: c.ability,
+  ...(c.homebrew ? { homebrew: true } : {}),
 })
 
 export type TeamLabels = Readonly<Record<Team, string>>
