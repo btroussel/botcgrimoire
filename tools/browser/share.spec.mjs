@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { open } from './app.mjs'
+import { open, reload } from './app.mjs'
 
 const script = (name) => [
   { id: '_meta', name, author: 'Camille', bootlegger: ['Dead players may whisper.'] },
@@ -55,4 +55,46 @@ test('a copied link opens the script on another device, which saves it once', as
     await sender.context.close()
     await receiver.context.close()
   }
+})
+
+test('New game and the library lead to each other', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const button = (name) => page.getByRole('button', { name, exact: true })
+  // The pages under this one stay in the document, hidden, and text is found there too.
+  const shown = (text) => page.getByText(text, { exact: true }).filter({ visible: true })
+  await open(page, '/new')
+  // A script New game does not list is one tap from the library's import window.
+  await button('Import a script').click()
+  await expect(button('Choose a file')).toBeVisible()
+  await expect(page).toHaveURL(/\/scripts$/)
+  const chooser = page.waitForEvent('filechooser')
+  await button('Choose a file').click()
+  await (await chooser).setFiles({ name: 'script.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(script('Table Script'))) })
+  await expect(page.getByRole('heading', { name: 'Table Script', exact: true })).toBeVisible()
+  // Every toolbar control stays on the paper at phone width.
+  const toolbar = page.locator('#script-sheet-toolbar')
+  expect(await toolbar.evaluate(bar => bar.scrollWidth <= bar.clientWidth)).toBe(true)
+  await expect(toolbar.getByRole('button', { name: 'Print', exact: true })).toBeVisible()
+
+  // The sheet starts a game on its script, on the bag, and Back returns to the sheet.
+  await button('New game').click()
+  await expect(page).toHaveURL(/\/new\?script=\w+$/)
+  await expect(button('Open grimoire')).toBeVisible()
+  await expect(shown('Table Script')).toBeVisible()
+  await button('Back').click()
+  await expect(button('Share')).toBeVisible()
+  await button('New game').click()
+  await button('Open grimoire').click()
+  await expect(page).toHaveURL(/\/game\/\w+$/)
+
+  // An edition's sheet does the same, and a reload keeps the script.
+  await open(page, '/scripts')
+  await button('Open Bad Moon Rising').click()
+  await button('New game').click()
+  await expect(page).toHaveURL(/\/new\?script=bmr$/)
+  await expect(shown('Bad Moon Rising')).toBeVisible()
+  await expect(button('Open grimoire')).toBeVisible()
+  await reload(page)
+  await expect(button('Open grimoire')).toBeVisible()
+  await expect(shown('Bad Moon Rising')).toBeVisible()
 })

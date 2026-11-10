@@ -1,10 +1,6 @@
 {
   "addCopy": "Lägg till en {name}-bricka",
   "assignedCount": "{have} av {of} roller tilldelade",
-  "charactersCount": {
-    "one": "{count} roll",
-    "other": "{count} roller"
-  },
   "createError": "Spelet kunde inte sparas. Försök igen.",
   "fillBag": "Fyll påsen",
   "fillBagSave": {

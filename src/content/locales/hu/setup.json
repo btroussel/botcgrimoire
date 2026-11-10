@@ -1,10 +1,6 @@
 {
   "addCopy": "Egy {name} jelölő hozzáadása",
   "assignedCount": "{have} / {of} karakter kiosztva",
-  "charactersCount": {
-    "one": "{count} karakter",
-    "other": "{count} karakter"
-  },
   "createError": "A játékot nem sikerült menteni. Próbáld újra.",
   "fillBag": "Zsák megtöltése",
   "fillBagSave": {

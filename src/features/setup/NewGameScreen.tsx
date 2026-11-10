@@ -1,27 +1,40 @@
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { StyleSheet, Text } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { CharacterId, Script, ScriptId } from '../../content'
 import { editionAuthor, editions, gameText, scriptAuthor } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import type { SavedGame } from '../../store'
 import { boardOf, useStore } from '../../store'
 import { artIds, listed } from '../../store/scriptSheet'
+import { Button } from '../../ui/Button'
 import { Enter } from '../../ui/Enter'
 import { backOrHome } from '../../ui/homePath'
 import { preloadArt } from '../../ui/preloadArt'
 import { Screen } from '../../ui/Screen'
-import { ScriptListRow } from '../../ui/ScriptListRow'
+import { ScriptListRow, scriptDetails } from '../../ui/ScriptListRow'
 import { palette, space, type } from '../../ui/theme'
 import { SetupScriptSheet } from './SetupScriptSheet'
 import { chosenTokens, fillBag } from './draw'
 import { looseEvents, openingEvents, scriptLoose, trimBag } from './setup'
 
+// The script sheet's New game names its script in the address, an edition by its id and a saved
+// script by its own, and this page then opens on that script's bag. It waits for the store: a
+// saved script is only there once the store has loaded, and the first render has to match the
+// exported page, which is the list.
 export const NewGameScreen = () => {
+  const { ready, scripts } = useStore()
+  const { script: named } = useLocalSearchParams<{ script?: string }>()
+  const preset: Script | undefined = !ready || !named ? undefined
+    : editions.some(e => e.id === named) ? named as ScriptId : scripts.find(saved => saved.id === named)?.script
+  return <NewGame key={preset ? named : ''} {...(preset ? { preset } : {})} />
+}
+
+const NewGame = ({ preset }: { readonly preset?: Script }) => {
   const store = useStore()
   const { t } = store
   const router = useRouter()
-  const [script, setScript] = useState<Script>()
+  const [script, setScript] = useState(preset)
   const locale = store.settings.locale
   const savedScripts = store.scripts
   const games = store.games
@@ -37,20 +50,21 @@ export const NewGameScreen = () => {
   }, [games])
   const [chosenCount, setCount] = useState<number>()
   const count = chosenCount ?? lastTable
-  const [bag, setBag] = useState<readonly CharacterId[]>([])
+  // A script's Fabled and Loric are its rules, so they start selected for the board.
+  const [bag, setBag] = useState<readonly CharacterId[]>(() => preset ? scriptLoose(listed(preset, locale)) : [])
   const [shows, setShows] = useState<ReadonlyMap<CharacterId, CharacterId>>(new Map())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
   const opening = useRef(false)
   const text = gameText(store.settings.locale)
-  const back = () => { if (script) { setScript(undefined); setBag([]); setShows(new Map()); setError(false) } else backOrHome(router, locale) }
+  // Back from a script chosen here returns to the list; from one the script sheet named, to that sheet.
+  const back = () => { if (script && !preset) { setScript(undefined); setBag([]); setShows(new Map()); setError(false) } else backOrHome(router, locale) }
   const show = (character: CharacterId, shown: CharacterId | undefined) => setShows(current => {
     const next = new Map(current)
     if (shown) next.set(character, shown)
     else next.delete(character)
     return next
   })
-  // A script's Fabled and Loric are its rules, so they start selected for the board.
   const choose = (next: Script) => { setScript(next); setBag(scriptLoose(listed(next, locale))) }
   const open = async () => {
     if (!script || opening.current) return
@@ -73,25 +87,28 @@ export const NewGameScreen = () => {
     </Enter>
   </Screen>
   return <Screen title={t('setup.scriptStep')} onBack={back} backLabel={t('common.back')}>
-    <Enter style={styles.list}>
-      {store.scripts.length > 0 ? <Text accessibilityRole="header" aria-level={2} style={[type.text.strong, { color: palette.muted }]}>{t('scripts.editions')}</Text> : null}
-      {editions.map(e => <ScriptListRow key={e.id} name={text.edition(e.id).name} logo={editionArt[e.id]}
-        detail={editionAuthor}
-        detail2={t('setup.charactersCount', { count: listed(e.id as ScriptId, locale).length })}
-        accessibilityLabel={text.edition(e.id).name} onPress={() => choose(e.id as ScriptId)} />)}
-      {store.scripts.length > 0 ? <Text accessibilityRole="header" aria-level={2} style={[type.text.strong, styles.custom, { color: palette.muted, borderTopColor: palette.line }]}>{t('scripts.yourScripts')}</Text> : null}
-      {store.scripts.map(saved => {
-        const author = scriptAuthor(saved.script)
-        const countLabel = t('setup.charactersCount', { count: listed(saved.script, locale).length })
-        return <ScriptListRow key={saved.id} name={saved.script.name} logo={editionArt.custom}
-          detail={author || countLabel} {...(author ? { detail2: countLabel } : {})}
-          accessibilityLabel={saved.script.name} onPress={() => choose(saved.script)} />
-      })}
+    <Enter style={styles.sections}>
+      <Text accessibilityRole="header" aria-level={2} style={[type.text.strong, { color: palette.muted }]}>{t('scripts.editions')}</Text>
+      <View style={styles.list}>
+        {editions.map(e => <ScriptListRow key={e.id} name={text.edition(e.id).name} logo={editionArt[e.id]}
+          {...scriptDetails(editionAuthor, t('scripts.charactersCount', { count: listed(e.id as ScriptId, locale).length }))}
+          accessibilityLabel={text.edition(e.id).name} onPress={() => choose(e.id as ScriptId)} />)}
+      </View>
+      <Text accessibilityRole="header" aria-level={2} style={[type.text.strong, styles.label, { color: palette.muted }]}>{t('scripts.yourScripts')}</Text>
+      {store.scripts.length > 0 ? <View style={styles.list}>
+        {store.scripts.map(saved => <ScriptListRow key={saved.id} name={saved.script.name} logo={editionArt.custom}
+          {...scriptDetails(scriptAuthor(saved.script), t('scripts.charactersCount', { count: listed(saved.script, locale).length }))}
+          accessibilityLabel={saved.script.name} onPress={() => choose(saved.script)} />)}
+      </View> : null}
+      {/* A script that is not here yet arrives through the library's import, whose sheet starts the game. */}
+      <Button label={t('scripts.import')} icon="script" onPress={() => router.push({ pathname: '/scripts', params: { import: '1' } })} />
     </Enter>
   </Screen>
 }
 
 const styles = StyleSheet.create({
-  list: { flex: 0, gap: space.md },
-  custom: { marginTop: space.md, paddingTop: space.lg, borderTopWidth: 1 },
+  // The library's spacing, so the same list reads the same in both places.
+  sections: { flex: 0, gap: space.lg },
+  list: { gap: space.md },
+  label: { marginTop: space.md },
 })

@@ -1,10 +1,6 @@
 {
   "addCopy": "Legg til en {name}-brikke",
   "assignedCount": "{have} av {of} roller tildelt",
-  "charactersCount": {
-    "one": "{count} rolle",
-    "other": "{count} roller"
-  },
   "createError": "Spillet kunne ikke lagres. Prøv igjen.",
   "fillBag": "Fyll posen",
   "fillBagSave": {
