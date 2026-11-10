@@ -1,9 +1,9 @@
-import type { CustomScript, Homebrew } from '../../content'
+import type { CustomScript, Homebrew, ScriptId } from '../../content'
 import { asCharacterId, character, parseScript } from '../../content'
 import type { SavedScript, SavedScriptId } from '../../store'
 import { serializeScript } from '../../store'
 import { everyCharacter, listed, unknownIds } from '../../store/scriptSheet'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftOf, draftProblem, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, minCharacters, orderIds, recordsOf, searchCharacters, searchPick, toggleId } from './compose'
+import { composeRoster, copyOf, draftIds, draftNeedsBootlegger, draftOf, draftProblem, editionDraft, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, maxName, minCharacters, orderIds, recordsOf, searchCharacters, searchPick, toggleId } from './compose'
 
 const id = asCharacterId
 const teensyIds = ['imp', 'poisoner', 'washerwoman', 'librarian', 'chef', 'butler', 'drunk', 'spy', 'empath', 'fortuneteller', 'undertaker'].map(id)
@@ -53,6 +53,42 @@ describe('draftOf', () => {
     }
     const saved: SavedScript = { id: 's1' as SavedScriptId, script, updatedAt: 1 }
     expect(draftOf(saved)).toEqual({ id: 's1', name: 'Home', author: 'Bob', ids: ['imp', 'baker', 'chef'], homebrew: [baker] })
+  })
+})
+
+describe('a copy to edit', () => {
+  const named = (name: string) => `${name} (copy)`
+
+  test('of a saved script keeps everything but its id, so saving makes a second script', () => {
+    const baker: Homebrew = { id: 'bakerq1', name: 'Baker', team: 'outsider', ability: 'You bake.' }
+    const script: CustomScript = {
+      kind: 'custom',
+      name: 'Home',
+      items: [{ id: '_meta', name: 'Home', author: 'Bob', background: 'https://example.com/bg.png', bootlegger: ['No whispers.'] }, 'imp', baker, 'chef'],
+    }
+    const copy = copyOf(draftOf({ id: 's1' as SavedScriptId, script, updatedAt: 1 }), named)
+    expect(copy).toEqual({
+      name: 'Home (copy)', author: 'Bob', kept: { background: 'https://example.com/bg.png' }, rules: ['No whispers.'],
+      ids: ['imp', 'bakerq1', 'chef'], homebrew: [baker],
+    })
+  })
+
+  test('of an edition lists every character its sheet shows, Travellers included', () => {
+    const copy = copyOf(editionDraft('tb' as ScriptId, 'Trouble Brewing', 'en'), named)
+    expect(copy.name).toBe('Trouble Brewing (copy)')
+    expect(copy.id).toBeUndefined()
+    expect(draftProblem(copy)).toBeUndefined()
+    expect(copy.ids).toEqual(listed('tb' as ScriptId, 'en').map((c) => c.id))
+    expect(copy.ids).toContain('washerwoman')
+    expect(copy.ids.some((x) => character(x).team === 'traveller')).toBe(true)
+    expect(listed(fileOf(copy), 'en').map((c) => c.id).sort()).toEqual([...copy.ids].sort())
+  })
+
+  test('cuts the original name, never the pattern, to stay within the schema', () => {
+    const long = copyOf({ ...emptyDraft, name: 'A'.repeat(48) }, named)
+    expect(long.name).toBe(`${'A'.repeat(maxName - ' (copy)'.length)} (copy)`)
+    expect([...long.name]).toHaveLength(maxName)
+    expect(copyOf({ ...emptyDraft, name: `${'B'.repeat(42)} word` }, named).name).toBe(`${'B'.repeat(42)} (copy)`)
   })
 })
 

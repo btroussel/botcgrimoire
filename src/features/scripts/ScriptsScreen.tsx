@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import type { CustomScript, Homebrew, Script } from '../../content'
-import { editionAuthor, scriptAuthor } from '../../content'
+import { editionAuthor, gameText, isCustom, scriptAuthor } from '../../content'
 import type { SavedScript } from '../../store'
 import { serializeScript, useStore } from '../../store'
 import { isWeb, pickTextFile } from '../../store/browser'
@@ -28,7 +28,7 @@ import { palette, radius, space, type } from '../../ui/theme'
 import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import type { Draft } from './compose'
-import { draftOf, emptyDraft, importLink, importText } from './compose'
+import { copyOf, draftOf, editionDraft, emptyDraft, importLink, importText } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepCharacter, readKept } from './drafts'
 import { ImportScript } from './ImportScript'
@@ -36,12 +36,14 @@ import { ScriptComposer } from './ScriptComposer'
 import { ScriptReader } from './ScriptReader'
 import { useScripts } from './useScripts'
 
+type Reading = { readonly kind: 'read'; readonly script: Script; readonly saved?: SavedScript }
+
 type Open =
   | { readonly kind: 'list' }
-  | { readonly kind: 'read'; readonly script: Script; readonly saved?: SavedScript }
+  | Reading
   | { readonly kind: 'received'; readonly script: CustomScript } // from a share link or a file, until it is kept or left
   // from: the reader it was opened in. resume: the kept draft, with a character being written in it.
-  | { readonly kind: 'compose'; readonly draft: Draft; readonly from?: SavedScript; readonly resume?: Draft; readonly character?: KeptCharacter }
+  | { readonly kind: 'compose'; readonly draft: Draft; readonly from?: Reading; readonly resume?: Draft; readonly character?: KeptCharacter }
   | { readonly kind: 'character'; readonly character?: Homebrew; readonly resume?: CharacterDraft } // a saved one to edit, or a new one
 
 // A share link's fragment goes once its script is kept or left, so a reload or Back does not
@@ -91,9 +93,16 @@ export const ScriptsScreen = () => {
   const show = (next: Open) => { setImportErrors([]); setKeepFailed(false); setOpen(next) }
   const list = () => show({ kind: 'list' })
   const readSaved = (saved: SavedScript) => show({ kind: 'read', script: saved.script, saved })
-  const edit = (saved: SavedScript, fromReader = false) => show({ kind: 'compose', draft: draftOf(saved), ...(fromReader ? { from: saved } : {}) })
+  const edit = (saved: SavedScript, fromReader = false) =>
+    show({ kind: 'compose', draft: draftOf(saved), ...(fromReader ? { from: { kind: 'read', script: saved.script, saved } } : {}) })
   // A new game on the script being read: an edition by its id, a saved script by its own.
   const play = (id: string) => router.push({ pathname: '/new', params: { script: id } })
+  // A copy of an edition or a saved script, to compose from. Back returns to the reader it came from.
+  const copyFrom = (from: Reading): (() => void) | undefined => {
+    const named = (name: string) => t('scripts.copyName', { name })
+    const source = from.saved ? draftOf(from.saved) : isCustom(from.script) ? undefined : editionDraft(from.script, gameText(locale).edition(from.script).name, locale)
+    return source ? () => show({ kind: 'compose', draft: copyOf(source, named), from }) : undefined
+  }
 
   const invalid = (errors: readonly string[]) => [t('scripts.invalidScript'), ...errors.map(error => error === 'not JSON' ? t('scripts.notJson') : error)]
 
@@ -180,7 +189,12 @@ export const ScriptsScreen = () => {
           script={same?.script ?? shared}
           onBack={leave}
           {...(same
-            ? { onPlay: () => { forgetLink(); play(same.id) }, onExport: () => scripts.exportFile(same), onEdit: () => { forgetLink(); edit(same, true) } }
+            ? {
+                onPlay: () => { forgetLink(); play(same.id) },
+                onExport: () => scripts.exportFile(same),
+                onEdit: () => { forgetLink(); edit(same, true) },
+                onCopy: () => { forgetLink(); copyFrom({ kind: 'read', script: same.script, saved: same })?.() },
+              }
             : keeping ? {} : { onSave: keep, saveFailed: keepFailed })}
         />
       </Enter>
@@ -189,6 +203,7 @@ export const ScriptsScreen = () => {
 
   if (open.kind === 'read') {
     const saved = open.saved
+    const copy = copyFrom(open)
     return (
       <Enter key={`read-${saved?.id ?? String(open.script)}`}>
         <ScriptReader
@@ -196,6 +211,7 @@ export const ScriptsScreen = () => {
           onBack={list}
           onPlay={() => play(saved?.id ?? String(open.script))}
           {...(saved ? { onExport: () => scripts.exportFile(saved), onEdit: () => edit(saved, true) } : {})}
+          {...(copy ? { onCopy: copy } : {})}
         />
       </Enter>
     )
@@ -244,7 +260,7 @@ export const ScriptsScreen = () => {
           initial={open.draft}
           {...(open.resume ? { resume: open.resume } : {})}
           {...(open.character ? { resumeCharacter: open.character } : {})}
-          onBack={from ? () => readSaved(from) : list}
+          onBack={from ? () => show(from) : list}
           onSave={(draft) => scripts.save(draft).then(readSaved)}
         />
       </Enter>

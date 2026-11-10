@@ -173,6 +173,12 @@ Unsaved scripts and characters survive a reload or a closed tab ([Store](store.m
 leaving with changes asks first. Custom scripts live on the device
 ([Store](store.md#custom-scripts-and-settings)). An account may come later; nothing may assume it.
 
+Most custom scripts are variants of another, so an edition or a saved script opens as a copy to
+edit: every character its sheet shows, an edition's Travellers included, and a saved script's
+homebrew records, rules and kept `_meta`. The copy is unsaved under the original's name marked as a
+copy, and saving it adds a script beside the original. A script received and not yet saved has
+no copy, since saving it is the first step.
+
 Import takes a link, pasted JSON, a QR code or a file. Links from this app and from the official
 Script Tool carry the whole script, so they open offline. An imported script opens unsaved, and
 opening the same one twice keeps one copy. The paste field and the scanner exist because on an

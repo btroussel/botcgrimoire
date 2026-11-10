@@ -34,6 +34,7 @@ export type IconName =
   | 'pause'
   | 'reset'
   | 'edit'
+  | 'copy'
   | 'character'
   | 'skull'
   | 'vote'
@@ -58,6 +59,8 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   pause: { d: ['M7 4h3v16H7z', 'M14 4h3v16h-3z'] },
   reset: { d: ['M3 10a9 9 0 1 1 1 7', 'M3 4v6h6'] },
   edit: { d: ['M14 5l5 5', 'M4 20l1-6L16 3a2 2 0 0 1 3 0l2 2a2 2 0 0 1 0 3L10 19z'] },
+  // A sheet laid over another.
+  copy: { d: ['M10 9h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1z', 'M15 9V4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4'] },
   character: { d: ['M4 4c5 2 11 2 16 0v7c0 5-4 9-8 11-4-2-8-6-8-11Z', 'M7 10h2', 'M15 10h2', 'M8 14c2 3 6 3 8 0'] },
   skull: { d: ['M8 21v-4H5v-6a7 7 0 0 1 14 0v6h-3v4Z', 'M8 10h1v2H8Z', 'M15 10h1v2h-1Z', 'M11 15h2', 'M11 18v3', 'M14 18v3'] },
   vote: { circle: [12, 12, 9], d: ['M8 12l3 3 5-6'] },

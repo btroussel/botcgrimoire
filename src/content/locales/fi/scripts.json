@@ -35,6 +35,8 @@
   "ofTarget": "{have} / {of}",
   "print": "Tulosta",
   "edit": "Muokkaa",
+  "editCopy": "Muokkaa kopiota",
+  "copyName": "{name} (kopio)",
   "export": "Vie tiedostoksi",
   "share": "Jaa",
   "shareTitle": "Jaa tämä kässäri",
