@@ -28,7 +28,7 @@ import { palette, radius, space, type } from '../../ui/theme'
 import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import type { Draft } from './compose'
-import { draftOf, emptyDraft, importLink } from './compose'
+import { draftOf, emptyDraft, importLink, importText } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepCharacter, readKept } from './drafts'
 import { ImportScript } from './ImportScript'
@@ -39,7 +39,7 @@ import { useScripts } from './useScripts'
 type Open =
   | { readonly kind: 'list' }
   | { readonly kind: 'read'; readonly script: Script; readonly saved?: SavedScript }
-  | { readonly kind: 'received'; readonly script: CustomScript } // from a share link, until it is kept or left
+  | { readonly kind: 'received'; readonly script: CustomScript } // from a share link or a file, until it is kept or left
   // from: the reader it was opened in. resume: the kept draft, with a character being written in it.
   | { readonly kind: 'compose'; readonly draft: Draft; readonly from?: SavedScript; readonly resume?: Draft; readonly character?: KeptCharacter }
   | { readonly kind: 'character'; readonly character?: Homebrew; readonly resume?: CharacterDraft } // a saved one to edit, or a new one
@@ -141,34 +141,28 @@ export const ScriptsScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- words are settled once the store is ready
   }, [ready])
 
+  // A picked file opens unsaved in the reader, as a link does, so importing it twice keeps one copy.
   const importScript = async () => {
     setImportErrors([])
     setImporting(true)
+    let text: string | undefined
     try {
-      let text: string | undefined
-      try {
-        text = await pickTextFile()
-      } catch {
-        setImportErrors([t('scripts.fileUnreadable')])
-        return
-      }
-      if (text === undefined) return
-      const result = await scripts.importFile(text)
-      if ('errors' in result) {
-        setImportErrors(invalid(result.errors))
-      } else {
-        readSaved(result.saved)
-      }
+      text = await pickTextFile()
     } catch {
-      setImportErrors([t('scripts.saveFailed')])
+      setImportErrors([t('scripts.fileUnreadable')])
+      return
     } finally {
       setImporting(false)
     }
+    if (text === undefined) return
+    const read = importText(text)
+    if ('errors' in read) setImportErrors(invalid(read.errors))
+    else show({ kind: 'received', script: read.script })
   }
 
   if (open.kind === 'received') {
-    // The same script already on this device reads as that one, so a link opened twice or a
-    // double tap on Save keeps one copy.
+    // The same script already on this device reads as that one, so a link or file opened twice
+    // or a double tap on Save keeps one copy.
     const shared = open.script
     const same = scripts.custom.find((c) => serializeScript(c.saved.script) === serializeScript(shared))?.saved
     const leave = () => {

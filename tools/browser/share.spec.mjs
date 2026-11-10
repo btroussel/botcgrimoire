@@ -21,12 +21,42 @@ const importFile = async (page, items) => {
   await (await chooser).setFiles({ name: 'script.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(items)) })
 }
 
+// A picked file opens unsaved, so saving it is its own step.
+const importAndSave = async (page, items) => {
+  await importFile(page, items)
+  await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+}
+
+test('a file imported twice is kept once', async ({ browser, baseURL }) => {
+  const { context, page } = await device(browser, baseURL)
+  try {
+    await open(page, '/scripts')
+    await importFile(page, script('Filed Script'))
+    await expect(page.getByRole('heading', { name: 'Filed Script', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Back', exact: true }).first().click()
+    await expect(page.getByRole('button', { name: 'Open Filed Script', exact: true })).toHaveCount(1)
+
+    // The same file again reads as the saved script rather than offering a second copy.
+    await importFile(page, script('Filed Script'))
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Save to your scripts', exact: true })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Back', exact: true }).first().click()
+    await expect(page.getByRole('button', { name: 'Open Filed Script', exact: true })).toHaveCount(1)
+  } finally {
+    await context.close()
+  }
+})
+
 test('a copied link opens the script on another device, which saves it once', async ({ browser, baseURL }) => {
   const sender = await device(browser, baseURL, ['clipboard-read', 'clipboard-write'])
   const receiver = await device(browser, baseURL)
   try {
     await open(sender.page, '/scripts')
-    await importFile(sender.page, script('Shared Script'))
+    await importAndSave(sender.page, script('Shared Script'))
     await sender.page.getByRole('button', { name: 'Share', exact: true }).click()
     await expect(sender.page.getByRole('img', { name: 'QR code for Shared Script' })).toBeVisible()
     await sender.page.getByRole('button', { name: 'Copy the link', exact: true }).click()
@@ -71,6 +101,10 @@ test('New game and the library lead to each other', async ({ page }) => {
   await button('Choose a file').click()
   await (await chooser).setFiles({ name: 'script.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(script('Table Script'))) })
   await expect(page.getByRole('heading', { name: 'Table Script', exact: true })).toBeVisible()
+  // A file opens unsaved, and only a script on the device starts a game.
+  await expect(button('New game')).toHaveCount(0)
+  await button('Save to your scripts').click()
+  await expect(button('New game')).toBeVisible()
   // Every toolbar control stays on the paper at phone width.
   const toolbar = page.locator('#script-sheet-toolbar')
   expect(await toolbar.evaluate(bar => bar.scrollWidth <= bar.clientWidth)).toBe(true)

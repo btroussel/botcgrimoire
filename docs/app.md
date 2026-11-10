@@ -49,7 +49,7 @@ the bag can hold fewer tokens than seats, or none. Fabled, Loric and Lil' Monsta
 New game and the script library link to each other. New game lists the scripts as the library
 does and, for a script it does not have, opens the library on its import window. The script
 sheet starts a game on the script it shows, an edition or one saved on the device, straight on
-its bag; a script from a link is saved first. New game stays its own page because it is walked
+its bag; a script from a link or a file is saved first. New game stays its own page because it is walked
 at the table, two taps from Home to the bag, with nothing on it to compose or delete.
 
 Shuffle is optional. From five to fifteen seats it starts from the standard team counts and
@@ -174,7 +174,7 @@ leaving with changes asks first. Custom scripts live on the device
 ([Store](store.md#custom-scripts-and-settings)). An account may come later; nothing may assume it.
 
 Import takes a link, pasted JSON, a QR code or a file. Links from this app and from the official
-Script Tool carry the whole script, so they open offline. A linked script opens unsaved, and
+Script Tool carry the whole script, so they open offline. An imported script opens unsaved, and
 opening the same one twice keeps one copy. The paste field and the scanner exist because on an
 iPhone a tapped link opens in Safari, whose storage is not the installed app's.
 
