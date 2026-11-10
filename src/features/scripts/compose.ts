@@ -170,6 +170,34 @@ export const matchesSearch = (character: { readonly name: string; readonly engli
   return words.every(word => names.includes(word))
 }
 
+// People building a script often look for an effect ("poison", "drunk"), so the search also
+// reads abilities: the name matches first, then the rest whose name or ability holds every word,
+// each in roster order. One or two letters narrow by name only, rather than flooding the list.
+export interface CharacterSearch<T> {
+  readonly shown: readonly T[]
+  readonly named: number // how many of `shown`, from the start, match by name
+}
+
+export const searchCharacters = <T extends { readonly name: string; readonly englishName: string; readonly ability: string }>(
+  roster: readonly T[], query: string,
+): CharacterSearch<T> => {
+  const named = roster.filter(c => matchesSearch(c, query))
+  if (folded(query).trim().length < 3) return { shown: named, named: named.length }
+  const words = folded(query).split(/\s+/).filter(word => word !== '')
+  const byName = new Set(named)
+  const byAbility = roster.filter(c => {
+    if (byName.has(c)) return false
+    const text = `${folded(c.name)} ${folded(c.englishName)} ${folded(c.ability)}`
+    return words.every(word => text.includes(word))
+  })
+  return { shown: [...named, ...byAbility], named: named.length }
+}
+
+// What Enter adds: the one name match, else the one result, so typing a name and Enter still
+// adds it when its ability tier brings others along.
+export const searchPick = <T>({ shown, named }: CharacterSearch<T>): T | undefined =>
+  named === 1 || shown.length === 1 ? shown[0] : undefined
+
 // The download's name: the script's name as a file system likes it.
 export const fileName = (name: string): string => {
   const slug = folded(name)

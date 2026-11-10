@@ -22,6 +22,19 @@ const expectDraft = async (page, name, characters) => {
   for (const character of characters) await expect(page.getByRole('button', { name: `Remove ${character}`, exact: true }).first()).toBeAttached()
 }
 
+test('the character search reads abilities after names, and Enter still adds a typed name', async ({ page }) => {
+  await compose(page, 'Poison Garden', [])
+  const search = page.getByRole('textbox', { name: 'Search characters', exact: true })
+  const rows = page.locator('#script-character-picker').getByRole('checkbox')
+  await search.fill('poison')
+  await expect(rows.first()).toHaveAccessibleName('Add Poisoner')
+  expect(await rows.count()).toBeGreaterThan(1)
+  await search.fill('Chef')
+  await search.press('Enter')
+  await expect(search).toHaveValue('')
+  await expect(page.getByRole('button', { name: 'Remove Chef', exact: true }).first()).toBeAttached()
+})
+
 test('a script being composed comes back after a reload and goes once discarded', async ({ page }) => {
   await compose(page, 'Midnight Bakery', ['Chef', 'Empath'])
   await reload(page)

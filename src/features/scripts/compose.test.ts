@@ -3,7 +3,7 @@ import { asCharacterId, character, parseScript } from '../../content'
 import type { SavedScript, SavedScriptId } from '../../store'
 import { serializeScript } from '../../store'
 import { everyCharacter, listed, unknownIds } from '../../store/scriptSheet'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftOf, draftProblem, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, minCharacters, orderIds, recordsOf, toggleId } from './compose'
+import { composeRoster, draftIds, draftNeedsBootlegger, draftOf, draftProblem, emptyDraft, fileName, fileOf, importLink, importText, matchesSearch, minCharacters, orderIds, recordsOf, searchCharacters, searchPick, toggleId } from './compose'
 
 const id = asCharacterId
 const teensyIds = ['imp', 'poisoner', 'washerwoman', 'librarian', 'chef', 'butler', 'drunk', 'spy', 'empath', 'fortuneteller', 'undertaker'].map(id)
@@ -178,5 +178,54 @@ describe('the picker search', () => {
     expect(matchesSearch(fortuneTeller, ' fortune  tel ')).toBe(true)
     expect(matchesSearch(fortuneTeller, 'fortune imp')).toBe(false)
     expect(matchesSearch(fortuneTeller, '   ')).toBe(true)
+  })
+
+  const english = everyCharacter('en')
+  const ids = (query: string, roster = english) => searchCharacters(roster, query).shown.map(c => c.id)
+
+  test('lists the name matches first, then the characters whose ability holds every word', () => {
+    const found = ids('poison')
+    expect(found[0]).toBe('poisoner')
+    expect(found.length).toBeGreaterThan(1)
+    const rest = english.filter(c => c.id !== 'poisoner' && c.ability.toLowerCase().includes('poison')).map(c => c.id)
+    expect(found.slice(1)).toEqual(rest)
+    // A word can come from the name and another from the ability.
+    expect(ids('poisoner tomorrow')).toEqual(['poisoner'])
+  })
+
+  test('one or two letters match names only', () => {
+    expect(ids('po')).toEqual(english.filter(c => matchesSearch(c, 'po')).map(c => c.id))
+    expect(ids(' p ')).toEqual(english.filter(c => matchesSearch(c, 'p')).map(c => c.id))
+    expect(ids('dr')).toEqual(english.filter(c => matchesSearch(c, 'dr')).map(c => c.id))
+    expect(ids('dru').length).toBeGreaterThan(english.filter(c => matchesSearch(c, 'dru')).length)
+  })
+
+  test('folds case and accents in abilities too', () => {
+    const roster = [
+      { id: 'a', name: 'Chef', englishName: 'Chef', ability: 'Tu apprends combien de paires de joueurs Maléfiques il y a.' },
+      { id: 'b', name: 'Baker', englishName: 'Baker', ability: 'Nothing here.' },
+    ]
+    expect(searchCharacters(roster, 'MALEFIQUES').shown.map(c => c.id)).toEqual(['a'])
+  })
+
+  test('the English name still matches in another locale', () => {
+    expect(ids('fortune teller', everyCharacter('fr'))[0]).toBe('fortuneteller')
+  })
+
+  test('Enter takes the one name match, else the one result, else nothing', () => {
+    const pick = (query: string) => searchPick(searchCharacters(english, query))?.id
+    expect(pick('chef')).toBe('chef')
+    expect(pick('poisoner')).toBe('poisoner')
+    expect(pick('librarian')).toBeUndefined() // the Librarian and Hell's Librarian
+    expect(pick('po')).toBeUndefined()
+    const abilityOnly = searchCharacters([{ id: 'a', name: 'Chef', englishName: 'Chef', ability: 'Learn pairs.' }], 'pairs')
+    expect(searchPick(abilityOnly)?.id).toBe('a')
+  })
+
+  test('every official name typed in full adds that character, unless it is part of another name', () => {
+    for (const c of english) {
+      const named = english.filter(other => matchesSearch(other, c.englishName))
+      expect(searchPick(searchCharacters(english, c.englishName))?.id).toBe(named.length === 1 ? c.id : undefined)
+    }
   })
 })
