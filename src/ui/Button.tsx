@@ -153,27 +153,31 @@ export interface IconButtonProps {
   readonly style?: StyleProp<ViewStyle>
 }
 
-// A 44 square with a 24 glyph, for the board's edge, the corners and every sheet header.
+// A 44 square with a 24 glyph, for the board's edge, the corners and every sheet header. The
+// label is also the mouse's tooltip. react-native-web drops `title` from a Pressable, so it sits
+// on a wrapper that takes no box.
 export const IconButton = ({ icon, label, onPress, surface = 'felt', disabled, style }: IconButtonProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
   const color = surface === 'paper' ? p.ink : p.text
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={onPress}
-      style={(state) => [
-        styles.icon,
-        isHovered(state) && !disabled ? { backgroundColor: hoverWash[surface] } : null,
-        focusStyle(p, isFocused(state) && focusVisible, surface),
-        { opacity: disabled ? motion.disabledOpacity : state.pressed ? motion.pressedOpacity : 1 },
-        style,
-      ]}
-    >
-      <Icon name={icon} color={color} />
-    </Pressable>
+    <div title={label} style={{ display: 'contents' }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        disabled={disabled}
+        onPress={onPress}
+        style={(state) => [
+          styles.icon,
+          isHovered(state) && !disabled ? { backgroundColor: hoverWash[surface] } : null,
+          focusStyle(p, isFocused(state) && focusVisible, surface),
+          { opacity: disabled ? motion.disabledOpacity : state.pressed ? motion.pressedOpacity : 1 },
+          style,
+        ]}
+      >
+        <Icon name={icon} color={color} />
+      </Pressable>
+    </div>
   )
 }
 
