@@ -14,7 +14,7 @@ import { CharacterIcon } from './CharacterIcon'
 import { PaperTexture } from './PaperTexture'
 import { Band, JinxLine, Row } from './scriptSheet/CharacterRows'
 import { fitPrintedRoles, printCss } from './scriptSheet/print'
-import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetArt } from './scriptSheet/Reference'
+import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetLogo } from './scriptSheet/Reference'
 import { RuleList, Rules } from './scriptSheet/Rules'
 import { styles } from './scriptSheet/styles'
 import type { ScriptSheetProps, ScriptSheetRow } from './scriptSheet/types'
@@ -68,7 +68,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     <View key="head" id="script-sheet-head" style={styles.head}>
       <View style={styles.identity}>
         {logo !== undefined ? (
-          <View id="script-sheet-logo"><SheetArt source={logo} width={88} height={56} /></View>
+          <View id="script-sheet-logo"><SheetLogo source={logo} /></View>
         ) : null}
         <View style={styles.identityText}>
           {nameField ? (
