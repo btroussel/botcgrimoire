@@ -33,6 +33,7 @@
   "disguiseClear": "Fjern valget",
   "disguiseTitle": "Hva {name} ser",
   "drawIntro": "Send enheten rundt bordet i seterekkefølge. Hver spiller sjekker navnet sitt, trykker på en av brikkene med forsiden ned for å se rollen sin og skjuler den før enheten sendes videre.",
+  "drawHint": "Trykk på en brikke for å ta den.",
   "drawTake": "Ta brikke {n} med forsiden ned",
   "drawComplete": "Alle har trukket en brikke.",
   "drawEmptied": "Alle brikkene er trukket.",

@@ -25,9 +25,13 @@ test('each player takes a token from the open bag, and the Storyteller deals wha
     await expect(page.getByText(`${player} of 5`, { exact: true })).toBeVisible()
     // A token taken by an earlier player is gone from the bag.
     await expect(faceDown(page)).toHaveCount(6 - player)
+    // The turn says how to take a token, until one is taken.
+    const hint = page.getByText('Tap a token to take it.', { exact: true })
+    await expect(hint).toBeVisible()
     // The heap overlaps, so a tap takes the highest token under the finger.
     await faceDown(page).first().click({ force: true })
     await expect(faceDown(page)).toHaveCount(0)
+    await expect(hint).toBeHidden()
     await button(page, player < 5 ? 'Hide and pass to next player' : 'Hide and finish').click()
   }
 

@@ -33,6 +33,7 @@
   "disguiseClear": "Wahl aufheben",
   "disguiseTitle": "Was {name} sieht",
   "drawIntro": "Gebt das Gerät in Sitzreihenfolge um den Tisch. Jeder prüft seinen Namen, tippt auf eines der verdeckten Plättchen, um seinen Charakter zu sehen, und verdeckt ihn wieder, bevor er das Gerät weitergibt.",
+  "drawHint": "Tippe auf ein Plättchen, um es zu nehmen.",
   "drawTake": "Verdecktes Plättchen {n} nehmen",
   "drawComplete": "Alle haben ein Plättchen gezogen.",
   "drawEmptied": "Alle Plättchen sind gezogen.",

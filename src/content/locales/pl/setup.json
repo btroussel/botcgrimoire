@@ -35,6 +35,7 @@
   "disguiseClear": "Wyczyść wybór",
   "disguiseTitle": "Co widzi: {name}",
   "drawIntro": "Urządzenie krąży wokół stołu w kolejności miejsc. Każdy gracz sprawdza swoje imię, dotyka jednego z zakrytych żetonów, by zobaczyć postać, i ukrywa ją, zanim poda urządzenie dalej.",
+  "drawHint": "Dotknij żetonu, by go wziąć.",
   "drawTake": "Weź zakryty żeton {n}",
   "drawComplete": "Wszyscy wylosowali żeton.",
   "drawEmptied": "Wszystkie żetony zostały wylosowane.",

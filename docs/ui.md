@@ -135,7 +135,8 @@ The draw is the same turn with a bag of face-down tokens first. Nothing on the b
 or an alignment, and a token's place in the bag says nothing, since the bag is shuffled when it is
 filled. Twenty tokens stay big enough to tap. Shaking the phone shakes the bag, past a threshold
 that handing the phone over stays under; iPhone allows motion only after a tap, so the start button
-asks.
+asks. Only the Storyteller reads the introduction, so each turn says under the name how to take a
+token, in the place the pass button takes once the token is turned.
 
 ## The board
 

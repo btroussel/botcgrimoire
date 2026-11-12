@@ -33,6 +33,7 @@
   "disguiseClear": "Effacer le choix",
   "disguiseTitle": "Ce que voit {name}",
   "drawIntro": "Faites passer l’appareil autour de la table, dans l’ordre des places. Chacun vérifie son nom, touche un des jetons face cachée pour voir son rôle, puis le masque avant de passer l’appareil.",
+  "drawHint": "Touchez un jeton pour le prendre.",
   "drawTake": "Prendre le jeton face cachée {n}",
   "drawComplete": "Tout le monde a pioché un jeton.",
   "drawEmptied": "Tous les jetons ont été piochés.",

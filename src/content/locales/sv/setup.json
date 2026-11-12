@@ -33,6 +33,7 @@
   "disguiseClear": "Rensa valet",
   "disguiseTitle": "Vad {name} ser",
   "drawIntro": "Skicka enheten runt bordet i sittordning. Varje spelare kontrollerar sitt namn, trycker på en av de nedvända brickorna för att se sin roll och döljer den sedan innan enheten skickas vidare.",
+  "drawHint": "Tryck på en bricka för att ta den.",
   "drawTake": "Ta nedvänd bricka {n}",
   "drawComplete": "Alla har dragit en bricka.",
   "drawEmptied": "Alla brickor är dragna.",
