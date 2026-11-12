@@ -36,6 +36,7 @@ reference. The tests check a few things:
 
 - Every language has exactly the same keys as English, so a new string needs a value in each one.
   If you can't write some of them, say which in the pull request.
+- A plural has exactly the forms its language's plural rule picks, plus `other`.
 - No em or en dashes in strings: use a comma, colon or period.
 - The browser tests find buttons by their English labels. If you reword one, search
   `tools/browser/` for the old text and update it too.
@@ -54,7 +55,8 @@ npm start
 `npm ci` prints a few warnings you can ignore. Don't run `npm audit fix --force`: it would
 downgrade Expo, whose packages get upgraded together by hand.
 
-- `npm run check` is the quick loop, about a minute: links, types, lint and unit tests.
+- `npm run check` is the quick loop, about a minute: links, generated files, types, lint and unit
+  tests.
 - `npm run verify` is the full run before a pull request, about five minutes: it also builds the
   site and tests it offline and in a browser. Install that browser once with
   `npx playwright install --only-shell chromium`.
