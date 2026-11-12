@@ -31,9 +31,9 @@ the setup and day windows and the day timer, so the board never imports those fe
 | --- | --- | --- |
 | `/`, `/[lang]` | `home` | Resume or start a game, scripts, history, settings; `/fr` and the like for search |
 | `/new` | `setup` | Script, seat count and optional bag; `?script=` opens on that script's bag |
-| `/game/[id]` | `board`, `setup`, `day` | The board; `?draw=` and `?discovery=` hold a player's turn, `?replay=1` the replay |
+| `/game/[id]` | `board`, `setup`, `day` | The board; `?draw=` and `?discovery=` hold a player's turn, `?replay=1` the replay, where the older `/game/[id]/history` address redirects |
 | `/history`, `/history/[id]` | `history` | Saved games, optionally one opened |
-| `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters; `?import=1` opens the import window |
+| `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters; `?import=1` opens the import window, a `#script=` link opens its script |
 | `/settings` | `settings` | Language, grimoire colour and About |
 
 ## The Storyteller's path
@@ -49,8 +49,8 @@ the bag can hold fewer tokens than seats, or none. Fabled, Loric and Lil' Monsta
 New game and the script library link to each other. New game lists the scripts as the library
 does and, for a script it does not have, opens the library on its import window. The script
 sheet starts a game on the script it shows, an edition or one saved on the device, straight on
-its bag; a script from a link or a file is saved first. New game stays its own page because it is walked
-at the table, two taps from Home to the bag, with nothing on it to compose or delete.
+its bag; a script from a link or a file is saved first. New game stays its own page because it is
+walked at the table, two taps from Home to the bag, with nothing on it to compose or delete.
 
 Shuffle is optional. From five to fifteen seats it starts from the standard team counts and
 applies the setup changes of the characters it picks:
@@ -72,19 +72,19 @@ keeps the old selection when no bag fits. Other jinxes, alignments, seating and 
 stay with the Storyteller, and setup notes flag the roles that need a decision.
 
 The Drunk, Lunatic and Marionette never see their own token. The bag gives the Drunk and
-Marionette a Townsfolk not in play to show, and the Lunatic a Demon in play, never two disguises
-alike. A Marionette is shown the Huntsman only when the Damsel is in play, as their jinx asks.
-While choosing the characters, under the setup note of each one in the bag, the Storyteller may
-pick what it shows instead: a Townsfolk not in the bag, or for the Lunatic any Demon. Left alone,
-the bag picks. The setup window only deals the bag: a refill there keeps a choice while the new bag
-leaves it free, and lets the bag pick for a new disguise. The deal records the disguise as a paper
-grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
+Marionette a Townsfolk not in play to show, and the Lunatic a Demon in play, and no two disguises
+show the same character. A Marionette is shown the Huntsman only when the Damsel is in play, as
+their jinx asks. While choosing the characters, the Storyteller may pick what each disguise in the
+bag shows, under its setup note: a Townsfolk not in the bag, or for the Lunatic any Demon. Left
+alone, the bag picks. The setup window offers no such choice: refilling the bag there keeps a
+choice the new bag still leaves free, and the bag picks for any new disguise. The deal records the
+disguise as a paper grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
 
 Open grimoire saves the game with every seat empty and the bag face down. Let players draw has
 each player tap a token that is then theirs, so nobody feels the Storyteller chose for them; the
-Storyteller deals the drawn tokens after the last player. Deal at random keeps what players drew
-and spreads the rest.
-Dealt Minions and Demons start evil, everyone else good.
+Storyteller deals the drawn tokens after the last player. A refill replaces only the face-down
+tokens, since a player who drew has seen theirs. Deal at random keeps what players drew and
+spreads the rest. Dealt Minions and Demons start evil, everyone else good.
 
 Discovery is for boards set by hand: each player in turn sees their token and its side, the shown
 character when one is saved. A seat sitting as the token its player believes in shows that
@@ -97,12 +97,14 @@ Start the first night is never blocked, whatever the bag, deal or bluffs.
 
 The Storyteller adds, renames and removes seats, gives or clears characters, sets alignment and
 life, spends and restores ghost votes, places reminders and notes, chooses bluffs and adds Fabled
-and Loric. Changing a character keeps its alignment. Alignment, life and ghost vote edits keep the
-seat menu open for the next one, and removing a seat asks first. Nothing edits a shown character
-or an ability annotation; old ones stay readable.
+and Loric. A seat's character comes from the script and its Travellers, an edition's own included.
+Changing a character keeps its alignment. Alignment, life and ghost vote edits keep the seat menu
+open for the next one, and removing a seat asks first. No board control edits a shown character
+or an ability annotation: only the deal records the first, nothing records the second, and those
+already saved stay readable.
 
-Arrange the seats, in More, is the only way to move seats. It turns the whole ring one place at a
-time, so every player keeps their neighbours.
+Arrange the seats, in More, is where seats are added and the only way to move them. It turns the
+whole ring one place at a time, so every player keeps their neighbours.
 
 A placed reminder or note moves to another seat by dragging it. The move is one action that takes
 it off and places it again, with no new kind of edit, so one undo puts it back where it was.
@@ -112,20 +114,24 @@ characters first, with no ability source to pick. A note needs text, and this ga
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
 players unless saved, since the Demon gets none there.
 
-The cards are the six info tokens the night sheet names, the character tokens alone, which it asks
-for more often than any of them, and a written note. A homebrew character's own card text, from its
-script, adds one more card with its token ([Content](content.md#homebrew-characters)). A side goes
-with You are, as the official app sends it with a thumb, so no card tells a side on its own. You are
-starts from the character its player believes and shows it in the side they believe, read from the
-board, so a side that changes is recorded before it is shown. This player is starts from the seat's
-character, or from nothing on a disguised seat, since the Demon must learn a real Marionette or
-Lunatic while a Drunk's real token must never go out on a hasty tap. Every other card keeps each
-token in its team's colours, as the printed token is, so no card tells one player another's side.
+The cards are the six info tokens the night sheet names, the character tokens alone, which the
+sheet asks for more often than any of them, and a written note. A homebrew character's own card
+text, from its script, adds one more card with its token
+([Content](content.md#homebrew-characters)).
+
+Only You are tells a side, as the official app sends one with a thumb. It starts from the
+character its player believes and shows the side they believe, read from the board, so a side
+change is recorded before the card goes out. Every other card keeps each token in its team's
+colours, as the printed token is, so no card tells one player another's side. This player is
+starts from the seat's character, or from nothing on a disguised seat: the Demon must learn a real
+Marionette or Lunatic, but a Drunk's real token must never go out on a hasty tap.
+
 The Storyteller can change or add to any card's characters, since a poisoned player may be shown
-something false, and a card about characters takes as many as they pick. The not-in-play card starts
-from the saved bluffs and offers the good characters in play last, which its shuffle never picks,
-since a Lunatic may be shown any good characters. A card's tokens leave out the night and reminder
-marks, as the setup reveal does. Showing a card records nothing.
+something false, and a card about characters takes as many as they pick. The not-in-play card
+takes up to three and starts from the saved bluffs. It lists the good characters in play last,
+since a Lunatic may be shown any good characters, and its shuffle never picks them. A card's
+tokens leave out the night and reminder marks, as the setup reveal does. Showing a card records
+nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)).
@@ -133,17 +139,17 @@ display choice, never a game event ([UI](ui.md#the-board)).
 ### Night
 
 The night references follow the bundled night order and show what is in play by default, dead
-seats and loose characters included, or the whole script. Below seven players, Travellers not
-counted, the Minion and Demon info rows drop out; an empty seat counts as a player. There is no
-checklist: reading a row records nothing.
+seats, loose characters and recorded characters off the script included, or the whole script.
+Below seven players, Travellers not counted, the Minion and Demon info rows drop out; an empty
+seat counts as a player. There is no checklist: reading a row records nothing.
 
 ### Day
 
-Tap the nominator, then the nominee. A seat nominates once and is nominated once per day, with no
-ability or life check. Hands toggle in any order, with no countdown, and a dead player votes only
-with a ghost vote left. The threshold shown is the larger of half the living players, rounded up,
-and one more than the day's best tally, with a tie once that tally reaches the minimum. It counts
-living Travellers and adjusts for no character.
+Tap the nominator, then the nominee; a player nominates themselves from their seat menu. A seat
+nominates once and is nominated once per day, with no ability or life check. Hands toggle in any
+order, with no countdown, and a dead player votes only with a ghost vote left. The threshold shown
+is the larger of half the living players, rounded up, and one more than the day's best tally, with a
+tie once that tally reaches the minimum. It counts living Travellers and adjusts for no character.
 
 Mark and Done end the vote and spend the dead voters' ghost votes. Mark puts a skull on the
 nominee, never an execution: the Storyteller records deaths. Cancelling a nomination gives back
@@ -164,17 +170,18 @@ again by hand. That makes a stray Undo costly, which is why the control stands a
 others ([UI](ui.md#the-board)). On a keyboard, Ctrl or Cmd with Z undoes, except in a text field
 or under an open window. [Store](store.md#the-cursor) owns the operations.
 
-History reads recorded edits only: deaths, side changes, nominations and votes, each in its
-phase, nothing inferred from an ability. A game resumes or replays in one tap, and game files
-import as JSON. Deleting a game asks first and has no undo in the app ([Store](store.md) owns
-recovery). Replay never changes the saved log ([UI](ui.md#replay)). The clock runs only while
-the live board is open and visible ([Store](store.md#recorded-time)).
+History reads recorded edits only: deaths and revivals, character and side changes, seats added
+and removed, nominations and votes, each in its phase, nothing inferred from an ability. A game
+resumes or replays in one tap, and game files import as JSON. Deleting a game asks first and is
+permanent ([Store](store.md#where-it-lives)). Replay never changes the saved log
+([Store](store.md#the-cursor)). The clock runs only while the live board is open and visible
+([Store](store.md#recorded-time)).
 
 ## Scripts
 
 The script sheet reads, composes, imports, shares and prints scripts ([UI](ui.md#the-script-sheet)).
-A custom script can use every character the app knows, homebrew ones included, and up to ten
-homebrew rules, in the official order within each team ([Content](content.md#script-data)).
+A custom script can use every character the app knows, homebrew ones included, listed in the
+official order within each team, and up to ten homebrew rules ([Content](content.md#script-data)).
 Unsaved scripts and characters survive a reload or a closed tab ([Store](store.md#drafts)), and
 leaving with changes asks first. Custom scripts live on the device
 ([Store](store.md#custom-scripts-and-settings)). An account may come later; nothing may assume it.
@@ -191,8 +198,8 @@ opening the same one twice keeps one copy. The paste field and the scanner exist
 iPhone a tapped link opens in Safari, whose storage is not the installed app's.
 
 Sharing gives a QR code, a link, the share sheet or a file. The link holds the script in the URL
-fragment, which the browser never sends to the host: nothing is uploaded and no server is
-involved ([Store](store.md#script-links)). The link drops embedded art, which the file keeps.
+fragment, which the browser never sends to the host, so nothing is uploaded
+([Store](store.md#script-links)). The link drops embedded art, which the file keeps.
 Editions have no Share, since every device already has them.
 
 ### Homebrew characters
@@ -201,12 +208,13 @@ A Storyteller can write their own characters, with art, reminders, a setup mark 
 character can carry a second image for the side opposite its team, since the tint of the art is the
 only mark of alignment on the board ([UI](ui.md#tokens-and-art)). Saving one updates the scripts
 that carry it; games keep their own copy. A homebrew character on a script being composed opens from
-its row, so a typo is fixed without leaving the script. Saving it there puts it in the Storyteller's
-list under the same id, so one that came inside an imported script, or was deleted from the list
-while a script kept it, becomes theirs and is offered on every script. Each night offers three
-moments around its fixed points, on one rule: whatever makes a player drunk or poisoned wakes before
-the characters it can disable, and information wakes after all of it. The Storyteller can also pick
-an exact place in the official order.
+its row, so a typo is fixed without leaving the script. Saving it there adds it to the
+Storyteller's list under the same id. A character that came inside an imported script, or was
+deleted from the list while a script kept it, then becomes theirs to use on every script.
+
+Each night offers three moments around its fixed points, on one rule: whatever makes a player
+drunk or poisoned wakes before the characters it can disable, and information wakes after all of
+it. The Storyteller can also pick an exact place in the official order.
 
 ## Search and sharing
 
@@ -231,9 +239,10 @@ own way gives that name as an alternate.
 
 ## Attribution
 
-The app is unofficial and non-commercial. Home ends with the official Community Created Content
-badge. About, in Settings, says the app is not affiliated with The Pandemonium Institute, and that
-Steven Medway and The Pandemonium Institute own the game, its characters, art and ability text.
+The app is unofficial and non-commercial. The official Community Created Content badge ends Home
+where it fits and always shows in About, in Settings. About says the app is not affiliated with
+The Pandemonium Institute, and that Steven Medway and The Pandemonium Institute own the game, its
+characters, art and ability text.
 The search text calls it an unofficial grimoire for games at a table, never a free app, so it
 never reads as an alternative to the official one, and nothing mentions a price. About invites
 players to buy a physical Grimoire. The contact address sits in a sentence about the app, so
@@ -253,8 +262,8 @@ open beside the game can still let the build in. A failed download keeps the cur
 
 ## Language
 
-The language chosen in Settings wins on every screen, whatever the URL. On first use a language's
-own Home sets it, or else the browser's language, then English. That first choice is saved, and
-only Settings changes it. Spanish outside Spain gets the Latin American translation, any Norwegian
-Bokmål. Game text falls back to English where an upstream translation is missing.
-[Content](content.md#ui-strings) owns the translations.
+The language chosen in Settings wins on every screen, whatever the URL. On first use a translated
+Home sets it; anywhere else, the root included, the browser's language does, or else English. That
+first choice is saved, and only Settings changes it. Spanish outside Spain gets the Latin American
+translation, any Norwegian Bokmål. Game text falls back to English where an upstream translation is
+missing. [Content](content.md#ui-strings) owns the translations.

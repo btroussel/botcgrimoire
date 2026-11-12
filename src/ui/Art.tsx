@@ -12,11 +12,12 @@ export interface ArtProps {
   readonly source: ArtSource
   readonly fit?: CSSProperties['objectFit'] // contain when omitted
   readonly style?: CSSProperties // size and placement; fills its parent when omitted
+  readonly onError?: () => void // the image failed to load, as only a web address can
 }
 
 export const artUri = (source: ArtSource): string => (source as { readonly uri: string }).uri
 
-export const Art = ({ source, fit = 'contain', style }: ArtProps) => (
-  <img src={artUri(source)} alt="" aria-hidden draggable={false} decoding="sync"
+export const Art = ({ source, fit = 'contain', style, onError }: ArtProps) => (
+  <img src={artUri(source)} alt="" aria-hidden draggable={false} decoding="sync" onError={onError}
     style={{ display: 'block', width: '100%', height: '100%', objectFit: fit, pointerEvents: 'none', ...style }} />
 )

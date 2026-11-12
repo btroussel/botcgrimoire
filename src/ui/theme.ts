@@ -2,7 +2,8 @@
 // line: a dark baize table lit from the middle, parchment tokens on it, and a sheet of paper
 // beside it for everything the Storyteller reads. Felt is where things sit, paper is where
 // things are read, brass is what you tap next, wax is what you cannot take back. Each value
-// carries its reason; a piece reads these names and never a hex of its own.
+// carries its reason; a piece reads these names and never a hex of its own. Only a drawing, such
+// as the board's frame or the bag, keeps the colours it is made of beside it.
 import type { TextStyle, ViewStyle } from 'react-native'
 import { Easing } from 'react-native'
 

@@ -59,3 +59,31 @@ test('paper lists the Travellers, Fabled and Loric beside the night orders, not 
   await expect(foot).toContainText('The Pandemonium Institute')
   await expect(foot).toContainText('* Not the first night.')
 })
+
+// A custom script's own logo is a web address, the only art the app fetches. At a table with no
+// signal it never arrives, and the sheet has to show the bundled logo rather than an empty box.
+const logoScript = (address) => scriptLink([{ id: '_meta', name: 'Logo Test', logo: address }, 'washerwoman', 'imp'])
+const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+
+test('a script logo the network cannot reach gives way to the bundled one, on screen and on paper', async ({ page }) => {
+  const address = 'https://logo.test/lost.png'
+  await page.route(address, (route) => route.abort())
+  await open(page, logoScript(address))
+  await expect(page.getByRole('heading', { name: 'Logo Test', exact: true })).toBeVisible()
+
+  const logo = page.locator('#script-sheet-logo img')
+  await expect.poll(() => drawn(logo)).toBe(true)
+  await expect(logo).not.toHaveAttribute('src', address)
+  await page.emulateMedia({ media: 'print' })
+  await expect.poll(() => drawn(logo)).toBe(true)
+})
+
+test('a script logo the network reaches is the one drawn', async ({ page }) => {
+  const address = 'https://logo.test/reached.png'
+  await page.route(address, (route) => route.fulfill({ contentType: 'image/png', body: pixel }))
+  await open(page, logoScript(address))
+
+  const logo = page.locator('#script-sheet-logo img')
+  await expect.poll(() => drawn(logo)).toBe(true)
+  await expect(logo).toHaveAttribute('src', address)
+})

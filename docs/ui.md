@@ -33,8 +33,8 @@ and clocks use its tabular figures.
 
 Wherever an ability shows, its setup change in square brackets, like the Baron's `[+2 Outsiders]`,
 is bold with its brackets, as the official Script Tool prints it, so the Storyteller sees what to
-change before play. Nothing else in an ability is bold, and the bold is only how it looks: no code
-reads the brackets.
+change before play. Nothing else in an ability is bold, and the bold is only how it looks: no rule
+is read from the brackets.
 
 ## Controls
 
@@ -103,9 +103,10 @@ Loading art never delays navigation or holds a screen until its images arrive.
 ## Shared pieces
 
 Editions and custom scripts share one presentation. A shared piece gets its choices and callbacks
-from the feature: it never reads a character id, checks impairment or previews a consequence, as
-[Model](model.md) explains. A piece only one feature uses starts in that feature and moves to `ui/`
-when a second one needs it.
+from the feature: it never checks impairment, previews a consequence or reads a character id for a
+rule, as [Model](model.md) explains. The script sheet names two ids, the Djinn and the Bootlegger,
+only to put the jinxes and the homebrew rules under them. A piece only one feature uses starts in
+that feature and moves to `ui/` when a second one needs it.
 
 ## Home
 
@@ -155,14 +156,13 @@ it is the only way to the reminder picker. [App](app.md#board-edits) owns the ac
 
 A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
 outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
-Reminders stack toward the inside of the ring. On a tall ring a stack leans from the line to the
-centre toward level, most on the flanks and not at all at the ends, and only as far as keeps it on
-its own side of the ring: pointing straight at the centre from a shoulder seat would hang it beside
-the next seat down.
+Reminders stack toward the inside of the ring, nearer their own seat than any other and on their own
+side of the ring. On a tall ring the line to the centre runs steeply down from a shoulder seat, so a
+stack there leans toward level rather than hang beside the next seat down.
 
-Stacked reminders always show each one's rim and name, and spread out on hover or tap. With a mouse
-or keyboard, a plus for adding a reminder appears on the seat you point at. Touch screens never show
-it.
+Stacked reminders always show each one's rim and name, or for a note under another its first two
+letters, and spread out on hover or tap. With a mouse or keyboard, a plus for adding a reminder
+appears on the seat you point at. Touch screens never show it.
 
 A note's text stays within its disc's slot, three lines at most, on the board and in the picker, so
 a long note never runs over a neighbour or a name. A tap opens the whole text in its window.
@@ -178,19 +178,22 @@ hover to show it is a button, so a brass border and a chevron mark it. The float
 a card then More, keep that order in every phase and width, and their first tap always acts.
 Undo is a small arrow alone in the top left corner, the one corner with no other control, so a
 tap aimed at Show a card or More never lands on it. The ring keeps clear of it as it does of the
-toolbar. The corner's gold ornament shows in replay, where there is no Undo.
+toolbar.
 
 References are drawers you drag between closed, compact and full. Compact shows names only, so a
-tap on one of its rows opens it full, that once: the next opening keeps the width last dragged to.
-While the board has width to spare it gives it up to the drawer, down to a minimum, and the paper
-covers the rest of the board without moving the seats. An upright window keeps a 520 point board,
-so from 752 points wide the compact drawer docks whole and covers no seat. A window on its side is
-short and its ring needs the width, or a big game would scroll, so it keeps 760. While the paper
-covers seats, a tap on the board closes the drawer, and a plain tap on a seat also opens its menu,
-so reaching past the paper costs no extra tap. A tap that would record something, on a reminder, a
-gap or a seat during a vote, only closes the drawer: a tap meant for the paper must not change
-the game. The ring never jumps during a drag, a fully open drawer leaves some board in reach, and
-nothing dims.
+tap on one of its rows opens the drawer full, that once: the next opening keeps the width last
+dragged to. Nothing dims behind a drawer, the ring never jumps during a drag, and wider than a
+phone a fully open drawer leaves some board in reach.
+
+The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
+board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
+the compact drawer docks beside it and covers no seat. A window on its side is short, so its ring
+needs the width or a big game would scroll: it keeps 760.
+
+While the paper covers seats, a tap on the board closes the drawer. A plain tap on a seat also opens
+its menu, so reaching past the paper costs no extra tap. A tap that would record something, such as
+on a reminder, a gap or a seat during a vote, only closes the drawer: a tap meant to put the paper
+away must not change the game.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
 board itself, with no banner, so the ring does not shift.
@@ -219,7 +222,7 @@ is never seen off the board.
 
 The official player sheet is the model, kept where it works and adapted where paper and phone
 differ. Teams come in a fixed order: Townsfolk, Outsiders, Minions, Demons, then Travellers, Fabled
-and Loric. The sheet keeps the distribution table next to the characters, and the two night orders.
+and Loric. The sheet keeps the distribution table and the two night orders.
 The line explaining the asterisk is always there, as on the official sheet, since nearly every
 script has one. The Storyteller's night instructions stay off the sheet. Jinxes follow, once per
 pair, indented under the Djinn, whose rule they are, whether or not the script lists it. Homebrew
@@ -249,15 +252,20 @@ Printing uses A4, black on white with team colours on names, team words and the 
 follows the official sheet's framed table. The logo and the title head the first page, the largest
 things on it, with the script's Fabled and Loric named beside them. The second page follows the
 official one: the night orders in its outer columns behind pale gold bars, and between them the
-jinxes, the Fabled, the Loric with the Bootlegger's rules, then the Travellers under a band, so a
-handful of those never take a page of their own. The foot of every page names who owns the game and
-what the asterisk means. Ability text never shrinks below 8 pt: a long script continues onto another
-page rather than clipping. Art on the sheet is an image, never a CSS background, because browsers
-leave backgrounds off paper unless the reader turns them on.
+jinxes, the Fabled, the Loric with the Bootlegger's rules, the Travellers under a band, so a handful
+of those never take a page of their own, and the count table last. The foot of every page names who
+owns the game and what the asterisk means. Ability text never shrinks below 8 pt: a long script
+continues onto another page rather than clipping. Art on the sheet is an image, never a CSS
+background, because browsers leave backgrounds off paper unless the reader turns them on.
 
 ## The theme
 
-`theme.ts` is the one file that holds colours, type, spacing and touch sizes, each with its reason.
-Lower layers never import it. The team colours are fixed, because players know them from the
-official material: they come from the official Script Tool's stylesheet. Everything else, the felt,
-the parchment and the accent, is the design's to choose.
+`theme.ts` holds the palette, type, spacing and touch sizes, each with its reason, and a piece takes
+its colours from there. Lower layers never import it. What is drawn rather than themed keeps its
+colours beside the drawing: the board's frame, the bag, the QR code, shadows, and the printed
+sheet's inks, which include a blue and a red of their own. The page's background before the app
+loads repeats the felt.
+
+The team colours are fixed, because players know them from the official material: they come from
+the official Script Tool's stylesheet. Everything else, the felt, the parchment and the accent, is
+the design's to choose.

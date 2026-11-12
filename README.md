@@ -21,7 +21,8 @@ The Pandemonium Institute.
 - Track characters, alignment, deaths, ghost votes, reminders and notes, plus Fabled, Loric and
   the Demon's bluffs.
 - Keep the character list and both night orders next to the board.
-- Record nominations and votes, then replay any finished game.
+- Show a player an info card, their token or a written note.
+- Record nominations and votes, then replay any game.
 - Write, import, share and print your own scripts.
 
 It's available in English, French, German, Spanish (Spain and Latin America), Polish, Swedish,

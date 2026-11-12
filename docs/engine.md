@@ -8,12 +8,13 @@ explains why the Storyteller, not the app, resolves every ability.
 
 The event set is closed: one union in `events.ts`, and the reducer ends with an exhaustiveness
 check, so a new kind does not compile until it is handled. An event has an id, its position in the
-log, and an audience kept for a future shared view; the audience controls nothing today.
+log, and an audience that controls nothing ([Model](model.md#one-offline-device) says why).
 
 - Seats: `addSeat`, `removeSeat`, `moveSeat`, `renameSeat`.
 - A player's tokens: `setCharacter`, `setShown`, `setAlignment`, `kill`, `revive`, `setGhostVote`.
-- Reminders and notes: `placeToken`, `removeToken`, `setNote`.
-- Off the ring: `addLoose`, `removeLoose`, and ability annotations with `grant` and `revoke`.
+- Reminders, notes and ability annotations: `placeToken`, `removeToken`, `setNote`, `grant`,
+  `revoke`.
+- Characters off the ring: `addLoose`, `removeLoose`.
 - Phases: `phase`, `endGame`.
 - The day: `nominate`, `cancelNomination`, `vote`, `unvote`, `setVoteTotal`, `markForExecution`,
   `execute`.
@@ -23,8 +24,8 @@ log, and an audience kept for a future shared view; the audience controls nothin
 
 Each event does one thing. Changing a character keeps the seat's reminders, a death leaves ghost
 votes alone, a vote does not spend a ghost vote, and marking an execution kills nobody: each of
-those is its own edit. A vote total is a recorded number the Storyteller can correct, not a
-count, and `endGame` records the winner the Storyteller names. Some kinds have no control today;
+those is its own edit. A vote total is a recorded number, never recounted from the hands, and
+`endGame` records the winner the Storyteller names. Some kinds have no control today;
 they stay valid so saved games replay and a control can return without a format change.
 [App](app.md#the-storytellers-path) lists the edits you can make.
 
@@ -38,10 +39,9 @@ placed it, so a removal names exactly one.
 
 ## No character automation
 
-The manual reducer never branches on a character and does not check rules. It does not pick legal
-targets, calculate information, kill, pass on a role, expire reminders or declare a winner.
-Whether a player may nominate, vote, die or survive is the Storyteller's call. Adding a character
-changes data, never engine code.
+The manual reducer never branches on a character and checks no rule, so none of the automation
+[Model](model.md#the-storyteller-owns-the-game) rules out can live in it. Whether a player may
+nominate, vote, die or survive is the Storyteller's call.
 
 A few read-only helpers serve the screens: the base setup counts, the night order, what is in
 play, who is on the block, nomination thresholds and limits, and what a player is shown of their

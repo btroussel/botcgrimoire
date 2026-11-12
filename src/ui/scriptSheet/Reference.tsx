@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import type { StyleProp, ViewStyle } from 'react-native'
 import { ScrollView, Text, View } from 'react-native'
 import type { NightMarker } from '../../content'
-import { genericArt } from '../../content/generated/art'
+import { editionArt, genericArt } from '../../content/generated/art'
 import type { ArtSource } from '../Art'
 import { AbilityText } from '../AbilityText'
-import { Art } from '../Art'
+import { Art, artUri } from '../Art'
 import { CharacterIcon } from '../CharacterIcon'
 import type { Palette } from '../theme'
 import { tabular, type } from '../theme'
@@ -24,11 +25,22 @@ export const nightMarkerArt: Readonly<Record<NightMarker, number | undefined>> =
 // Art that is not a character, at its own aspect ratio: a night marker or the script's logo.
 // A plain image, because react-native-web's Image paints a CSS background and browsers leave
 // backgrounds off the printed page by default.
-export const SheetArt = ({ source, width, height }: { readonly source: ArtSource | undefined; readonly width: number; readonly height: number; }) => (
+export const SheetArt = ({ source, width, height, onError }: { readonly source: ArtSource | undefined; readonly width: number; readonly height: number; readonly onError?: () => void }) => (
   <View style={[{ width, height }]} accessible={false}>
-    {source !== undefined ? <Art source={source} /> : null}
+    {source !== undefined ? <Art source={source} {...(onError ? { onError } : {})} /> : null}
   </View>
 )
+
+// The script's logo. A custom script's own is a web address, the only art the app fetches, so it
+// may not load: no network, or a dead link. The bundled custom logo then stands in, as it does for
+// a script that names none. The address that failed is kept, not a flag, so another logo gets its
+// own try, and this sheet never asks for the failed one again.
+export const SheetLogo = ({ source }: { readonly source: ArtSource }) => {
+  const [failed, setFailed] = useState<string>()
+  const uri = artUri(source)
+  const bundled = editionArt.custom
+  return <SheetArt source={failed === uri && bundled !== undefined ? bundled : source} width={88} height={56} onError={() => setFailed(uri)} />
+}
 
 interface CountTableProps {
   readonly table: ScriptSheetCountTable
