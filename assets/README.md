@@ -4,12 +4,14 @@ Everything the app bundles, so a game never fetches, plus a few sources it's bui
 schema, upstream's English translation and the logo drawings stay out of the bundle. Upstream files
 keep their published names unless a line says otherwise.
 
-- [upstream.json](upstream.json): the commit each upstream repository is pinned at, and the game
-  translations taken. `node tools/sync-upstream.mjs` refreshes it, `--check` shows what moved.
-- [data/raw](data/raw): the official game data (`roles`, `jinxes`, `nightsheet`) from
+- [upstream.json](upstream.json): the ref and pinned commit of each upstream repository, and the
+  game translations taken. `node tools/sync-upstream.mjs` writes it
+  ([Tools](../tools/README.md) says how).
+- [data/raw](data/raw): the official game data in `release/` (`roles`, `jinxes`, `nightsheet`) from
   [botc-release](https://github.com/ThePandemoniumInstitute/botc-release) `resources/data/`, and the
-  translations from [botc-translations](https://github.com/ThePandemoniumInstitute/botc-translations)
-  `game/`. Verbatim except the character flavor text, which no screen shows and the sync leaves out.
+  translations in `translations/game/` from
+  [botc-translations](https://github.com/ThePandemoniumInstitute/botc-translations) `game/`.
+  Verbatim except the character flavor text, which no screen shows and the sync leaves out.
 - [schema](schema): the official custom-script schema, botc-release's `script-schema.json`, saved as
   `script.schema.json`.
 
@@ -49,11 +51,11 @@ away to a clock at ten to midnight. The PNGs sit in `public/icons/` because brow
 directly. The source is [les-petites-fleches.svg](art/logo/les-petites-fleches.svg), drawn with the
 bundled vellum and velvet. The favicon comes from a flat redraw with thicker hands,
 [les-petites-fleches-favicon.svg](art/logo/les-petites-fleches-favicon.svg), since the fine dial
-blurs below 48 pixels. Change both together, then run `node tools/build-icons.mjs` and
-`npm run build`.
+blurs below 48 pixels. Change both together. After a change to either, or to the burgundy velvet
+or the vellum, run `node tools/build-icons.mjs` and `npm run build`.
 
-- `icon-192.png`, `icon-512.png`: the usual PWA icons. Search results use the 192 one, since they
-  show a site icon only at a multiple of 48 pixels.
+- `icon-192.png`, `icon-512.png`: the usual PWA icons. Search results use the 192 one
+  ([App](../docs/app.md#search-and-sharing)).
 - `icon-maskable-512.png`: the book fits the central safe circle, whose radius is 40% of the width,
   and the velvet fills the square for the launcher to cut its own shape.
 - `apple-touch-icon.png`: 180px, without rounded corners baked in.
