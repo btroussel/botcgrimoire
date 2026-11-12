@@ -8,14 +8,15 @@ and [Model](model.md) explains why the log comes first.
 
 One record per game, `SavedGame` in `saved.ts`. The log is the game; the rest is what you need to
 open it again: the format version, an id, save times, the upstream commits it was played with, its
-script and its play time. The script is embedded, so the game opens on a device that never saw the
-script file, and editing the script later never changes the game. Nothing derived is saved, not
-the board, not the redo stack. New appends accept only the edits [Engine](engine.md#events) lists.
+script, its mode and its play time. The script is embedded, so the game opens on a device that
+never saw the script file, and editing the script later never changes the game. Nothing derived
+is saved, not the board, not the redo stack. New appends accept only the edits
+[Engine](engine.md#events) lists.
 
 Two optional pieces sit beside the log, because neither is a board edit. The discussion timer
 saves a deadline while it runs, so it keeps counting while the app is closed. The bag holds the
-tokens between Open grimoire and the deal; taking one appends nothing, and the deal appends its
-edits as one batch and removes the bag.
+tokens between Open grimoire and the deal; taking one appends nothing, and
+[the deal](#the-cursor) removes the bag.
 
 ## Where it lives
 
@@ -31,18 +32,20 @@ permanent, with no trash.
 History imports a game file through the same migrations and checks as a load. It keeps its id
 unless this device holds a different game under it, in which case both are kept.
 
-Windows of the app on one device share the database, so a window still holding an older copy of
-a game would put it back over newer edits at its next write, a play-time checkpoint included.
-So a window's write lands only while the stored copy is still the one its screen was built on,
-checked in the write's own transaction. When another window wrote first, that change and every
-change made after it on the same screen are dropped, since each carries values this window saw,
+Windows of the app on one device share the database, and each writes a game whole. A window
+holding an older copy would put it back over newer edits at its next write, a play-time checkpoint
+included. So a write lands only while the stored copy is still the one the window's screen was
+built on, compared inside the write's own transaction. When another window wrote first, the write
+and every later change from the same screen are dropped, since each was built on the older copy,
 and the window shows the stored copy: the Storyteller sees the other window's edits and taps
-again. Nothing already saved is lost, and nothing is merged. Every write, delete and import tells
-the other windows over a `BroadcastChannel`; a window reads the stored copy then, when it opens a
-game, and when the board comes back into view while its clock runs. A game deleted in another
-window is not written back, and one this version cannot read is left as it is: a window leaves
-the game when its write finds either, or when it reads the stored copy and the game is gone. A
-window on a build from before this rule writes as it always did.
+again. A write that fails also puts the stored copy back on screen. Nothing already saved is lost,
+and nothing is merged.
+
+Every write, delete and import is announced to the other windows over a `BroadcastChannel`. A
+window reads the stored copy when it hears of its game, when it opens a game, and when the board
+comes back into view while its clock runs. A write never lands on a game another window deleted
+or one this version cannot read; the window leaves the game instead, as it does when a read finds
+the game gone. A window on a build from before this rule writes without the check.
 
 ## Versions and migrations
 
@@ -63,9 +66,10 @@ never fixed by rewriting the log.
 ## Offline build recovery
 
 A service worker precaches the whole build, and the cache must never mix files from two builds.
-Every file is checked against the SHA-256 hash the export recorded for it; a copy from an older
-cache is reused only when its bytes match. A build that is incomplete or does not match never
-activates, and the previous one keeps running.
+Every file is checked against the SHA-256 hash `tools/build-pwa.mjs` recorded for it after the
+export; a copy from an older cache or the browser's HTTP cache is reused only when its bytes
+match. A build that is incomplete or does not match never activates, and the previous one keeps
+running.
 
 The host redirects `.html` addresses and browsers refuse a cached page with redirect history, so
 the worker strips it. Game addresses use exported route templates, since game ids exist only on
@@ -87,8 +91,8 @@ you look back, and every screen reads that one board from the React context in `
 - `undo` takes off the last batch and `redo` puts it back. Undo never removes the batch that set
   up the table, a table of one seat included. No control calls `redo`
   ([App](app.md#saved-games-and-replay) says why); the operation and its tests stay.
-- `lookAt` and `returnToPresent` move the cursor and write nothing. While you look back, nothing
-  can be appended, undone or redone.
+- `lookAt` and `returnToPresent` move the cursor and append nothing. Looking back pauses the
+  discussion timer, and while you look back nothing can be appended, undone or redone.
 
 The discussion timer is not an action. A phase change removes it, and undoing that change does
 not bring it back. [App](app.md#saved-games-and-replay) owns where the controls are.

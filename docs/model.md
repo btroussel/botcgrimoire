@@ -10,9 +10,10 @@ references, nominations and votes. The app records, the Storyteller rules, and e
 its own edit: changing a character doesn't clear its poison, reviving doesn't refresh an ability,
 and marking an execution doesn't kill anyone. One action can group edits into one undo step.
 
-The app never calculates information, applies a reaction, picks legal targets, expires a reminder or
-declares a winner. The player counts and night order are references, never limits. The setup
-shuffle is a helper before the game and never rewrites a manual choice ([App](app.md#setup)).
+The app never calculates information, applies a reaction, picks legal targets, kills a player,
+passes on a role, expires a reminder or declares a winner. The player counts and night order are
+references, never limits. The setup shuffle is a helper before the game and never rewrites a
+manual choice ([App](app.md#setup)).
 
 ## Character support
 
@@ -38,8 +39,9 @@ shown character during play. Characters can also sit outside the ring.
 
 A saved game is its script plus an event log, and a pure reducer rebuilds the board from it. Undo
 drops the last action's events and replay reduces a prefix, so there's no second board to sync. The
-log records what was done in the app, not the game at the table: a checked night step doesn't prove
-anyone woke. Old events keep their meaning, and compatibility code never runs for new edits.
+log records what was done in the app, not the game at the table: a night step checked in an older
+game doesn't prove anyone woke. Old events keep their meaning, and compatibility code never runs
+for new edits.
 
 ## One offline device
 
