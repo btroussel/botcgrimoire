@@ -30,7 +30,7 @@ free, non-commercial.
   upstream data dumps, the custom-script schema, official art and our own art. `assets/README.md`
   says where each piece comes from.
 - **`public/`** Copied to the site root as is: icons, the manifest, robots, sitemap, the sharing
-  image, and the host's rules in `_headers` and `_redirects`.
+  and search images, and the host's rules in `_headers` and `_redirects`.
 - **`src/`** The app, six folders with imports flowing downward, which lint enforces: `app/`
   routes, `features/` screens, `ui/` shared pieces, `store/` the saved game, `engine/` the manual
   reducer, `content/` the characters and text. `ui/` never imports `store/` or `engine/`, and no

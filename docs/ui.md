@@ -103,9 +103,10 @@ Loading art never delays navigation or holds a screen until its images arrive.
 ## Shared pieces
 
 Editions and custom scripts share one presentation. A shared piece gets its choices and callbacks
-from the feature: it never reads a character id, checks impairment or previews a consequence, as
-[Model](model.md) explains. A piece only one feature uses starts in that feature and moves to `ui/`
-when a second one needs it.
+from the feature: it never checks impairment, previews a consequence or reads a character id for a
+rule, as [Model](model.md) explains. The script sheet names two ids, the Djinn and the Bootlegger,
+only to put the jinxes and the homebrew rules under them. A piece only one feature uses starts in
+that feature and moves to `ui/` when a second one needs it.
 
 ## Home
 
@@ -259,7 +260,12 @@ background, because browsers leave backgrounds off paper unless the reader turns
 
 ## The theme
 
-`theme.ts` is the one file that holds colours, type, spacing and touch sizes, each with its reason.
-Lower layers never import it. The team colours are fixed, because players know them from the
-official material: they come from the official Script Tool's stylesheet. Everything else, the felt,
-the parchment and the accent, is the design's to choose.
+`theme.ts` holds the palette, type, spacing and touch sizes, each with its reason, and a piece takes
+its colours from there. Lower layers never import it. What is drawn rather than themed keeps its
+colours beside the drawing: the board's frame, the bag, the QR code, shadows, and the printed
+sheet's inks, which include a blue and a red of their own. The page's background before the app
+loads repeats the felt.
+
+The team colours are fixed, because players know them from the official material: they come from
+the official Script Tool's stylesheet. Everything else, the felt, the parchment and the accent, is
+the design's to choose.
