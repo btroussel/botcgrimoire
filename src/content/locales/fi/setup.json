@@ -33,6 +33,7 @@
   "disguiseClear": "Poista valinta",
   "disguiseTitle": "Mitä {name} näkee",
   "drawIntro": "Kierrätä laitetta pöydän ympäri istumajärjestyksessä. Jokainen tarkistaa nimensä, napauttaa yhtä kuvapuoli alaspäin olevista merkeistä nähdäkseen hahmonsa ja piilottaa sen ennen kuin antaa laitteen eteenpäin.",
+  "drawHint": "Nosta merkki napauttamalla sitä.",
   "drawTake": "Nosta piilotettu merkki {n}",
   "drawComplete": "Kaikki ovat nostaneet merkin.",
   "drawEmptied": "Kaikki merkit on nostettu.",

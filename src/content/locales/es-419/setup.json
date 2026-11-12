@@ -33,6 +33,7 @@
   "disguiseClear": "Quitar elección",
   "disguiseTitle": "Lo que ve {name}",
   "drawIntro": "Pasen el dispositivo alrededor de la mesa en orden de asientos. Cada jugador revisa su nombre, toca una de las fichas boca abajo para ver su rol y la oculta antes de pasar el dispositivo.",
+  "drawHint": "Toca una ficha para tomarla.",
   "drawTake": "Tomar la ficha boca abajo {n}",
   "drawComplete": "Todos sacaron una ficha.",
   "drawEmptied": "Ya se sacaron todas las fichas.",

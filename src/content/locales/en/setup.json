@@ -33,6 +33,7 @@
   "disguiseClear": "Clear choice",
   "disguiseTitle": "What the {name} sees",
   "drawIntro": "Pass the device around the table in seating order. Each player checks their name, taps one of the face-down tokens to see their character, then hides it before passing the device on.",
+  "drawHint": "Tap a token to take it.",
   "drawTake": "Take face-down token {n}",
   "drawComplete": "Everyone has drawn a token.",
   "drawEmptied": "Every token has been drawn.",

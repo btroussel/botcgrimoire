@@ -273,9 +273,16 @@ export const Player = ({ player, title, t, onName, onNext, onBack, bag }: {
               <Icon name="edit" size={18} color={palette.inkMuted} />
             </View>
           </View>
-          {/* Reserve the action's actual wrapped height so the token never jumps during a turn. */}
-          <div aria-hidden={!settled} inert={!settled} style={{ visibility: settled ? 'visible' : 'hidden' }}>
-            <Button label={t(player.next ? 'setup.discoveryNext' : 'setup.discoveryFinish')} variant="primary" onPress={next} disabled={!settled} />
+          {/* A player never saw the Storyteller's introduction, so the bag says how to take a token.
+              The words and the action share one cell, as tall as the taller of the two, so the
+              token never jumps during a turn. */}
+          <div style={{ display: 'grid' }}>
+            {bag ? <div aria-hidden={!choosing} style={{ gridArea: '1 / 1', alignSelf: 'center', textAlign: 'center', visibility: choosing ? 'visible' : 'hidden' }}>
+              <Text style={[type.text.body, { color: palette.text }]}>{t('setup.drawHint')}</Text>
+            </div> : null}
+            <div aria-hidden={!settled} inert={!settled} style={{ gridArea: '1 / 1', visibility: settled ? 'visible' : 'hidden' }}>
+              <Button label={t(player.next ? 'setup.discoveryNext' : 'setup.discoveryFinish')} variant="primary" onPress={next} disabled={!settled} />
+            </div>
           </div>
         </View>
       </View>

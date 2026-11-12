@@ -33,6 +33,7 @@
   "disguiseClear": "Választás törlése",
   "disguiseTitle": "Mit lát: {name}",
   "drawIntro": "Add körbe az eszközt ülésrendben. Mindenki ellenőrzi a nevét, az egyik lefordított jelölőre koppintva megnézi a karakterét, majd elrejti, mielőtt továbbadja.",
+  "drawHint": "Koppints egy jelölőre, hogy elvedd.",
   "drawTake": "{n}. lefordított jelölő elvétele",
   "drawComplete": "Mindenki húzott egy jelölőt.",
   "drawEmptied": "Minden jelölőt kihúztak.",
