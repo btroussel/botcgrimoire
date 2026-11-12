@@ -8,7 +8,7 @@ the reference for those.
 | [Model](model.md) | The big idea: a manual grimoire, what character support may include, the main boundaries | What the app represents, or whether a character needs code |
 | [Content](content.md) | Character data, scripts, translations, art and generated files | Bundled material or its format |
 | [Engine](engine.md) | The events a game is made of and how the board is rebuilt from them | An edit or how the board is computed |
-| [Store](store.md) | Saving, migrations, recovery and undo | Saved data or undo |
+| [Store](store.md) | Saving games, scripts and drafts, migrations, recovery, undo and replay | Saved data, undo or replay |
 | [App](app.md) | What the Storyteller can do, screen by screen, and offline use | A feature |
 | [UI](ui.md) | Layout, controls, focus and phones | How something looks or responds |
 | [CI](ci.md) | The checks, what they miss, and the deploy | The checks or the workflow |
