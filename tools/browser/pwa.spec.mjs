@@ -77,7 +77,7 @@ test('a new release waits while a game is on screen and installs once the Storyt
   await open(page, '/settings')
   await ready(page)
   // About names the running build, which is what a bug report needs.
-  const version = name => page.getByText(`Source code · Version ${name}`, { exact: true })
+  const version = name => page.getByText(`Version ${name}`, { exact: true })
   await expect(version('v1')).toBeVisible()
   const game = await createGame(page)
   // A reload would clear this mark.

@@ -26,20 +26,46 @@ export const thisDevice = (locale: Locale, version: string | undefined): Device 
   installed: window.matchMedia('(display-mode: standalone)').matches || (navigator as { readonly standalone?: boolean }).standalone === true,
   width: window.innerWidth,
   height: window.innerHeight,
-  browser: navigator.userAgent,
+  browser: browserName(navigator.userAgent),
 })
 
+// The person reads the details before sending, so the browser is a name, a major version and a
+// system rather than the whole user agent. First match wins: Edge and every iPhone browser also
+// claim Chrome or Safari, and Android claims Linux. An agent none of these know stays whole.
+const browsers: readonly (readonly [string, RegExp])[] = [
+  ['Edge', /Edg(?:A|iOS)?\/(\d+)/],
+  ['Samsung Internet', /SamsungBrowser\/(\d+)/],
+  ['Firefox', /(?:Firefox|FxiOS)\/(\d+)/],
+  ['Chrome', /(?:Chrome|CriOS)\/(\d+)/],
+  ['Safari', /Version\/(\d+).*Safari/],
+]
+const systems: readonly (readonly [string, RegExp])[] = [
+  ['iOS', /iPhone|iPad|iPod/],
+  ['Android', /Android/],
+  ['ChromeOS', /CrOS/],
+  ['macOS', /Mac OS X/],
+  ['Windows', /Windows/],
+  ['Linux', /Linux/],
+]
+export const browserName = (agent: string): string => {
+  const browser = browsers.map(([name, pattern]) => [name, pattern.exec(agent)?.[1]] as const).find(([, major]) => major)
+  if (!browser) return agent
+  const system = systems.find(([, pattern]) => pattern.test(agent))?.[0]
+  return [`${browser[0]} ${browser[1]}`, system].filter(Boolean).join(', ')
+}
+
 // A mailto body breaks lines with CRLF (RFC 6068). The blank lines on top are where the message
-// goes, since a mail app puts the cursor there; the details sit below a signature rule.
+// goes, since a mail app puts the cursor there; the details sit below a signature rule, on one
+// line so they read as a footnote rather than a form. Installed is said only when it is true.
 export const feedbackMail = (t: Translate, device: Device): string => {
-  const details = t('common.feedbackDetails', {
-    version: device.version ?? t('common.unknown'),
-    language: device.locale,
-    screen: `${device.width} x ${device.height}`,
-    opened: t(device.installed ? 'common.feedbackInstalled' : 'common.feedbackTab'),
-    browser: device.browser,
-  })
-  const body = ['', '', '', '-- ', ...details.split('\n')].join('\r\n')
+  const details = [
+    device.version ? t('common.version', { version: device.version }) : undefined,
+    device.locale,
+    device.browser,
+    `${device.width}×${device.height}`,
+    device.installed ? t('common.feedbackInstalled') : undefined,
+  ].filter(Boolean).join(' · ')
+  const body = ['', '', '', '-- ', details].join('\r\n')
   return `mailto:${contactAddress}?subject=${encodeURIComponent(t('common.feedbackSubject'))}&body=${encodeURIComponent(body)}`
 }
 
