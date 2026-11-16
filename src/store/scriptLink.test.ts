@@ -19,8 +19,12 @@ const official: CustomScript = {
 const brewer: Homebrew = {
   id: 'brewerx7k2', name: 'Brewer', team: 'townsfolk',
   ability: 'Each night, choose a player: you learn whether they are drunk or poisoned.',
-  reminders: ['Chosen'], firstNight: 40.5, firstNightReminder: 'The Brewer points to a player.',
+  reminders: ['Chosen'], firstNight: 40.5, firstNightAfter: 'eviltwin', firstNightReminder: 'The Brewer points to a player.',
 }
+
+// As a file writes it: counted from one, and without the step, which the schema does not know.
+const { firstNightAfter: _step, ...brewerRecord } = brewer
+const brewerFile = { ...brewerRecord, firstNight: 41.5 }
 
 const withHomebrew = (image?: Homebrew['image']): CustomScript => ({
   ...official,
@@ -47,7 +51,7 @@ describe('a script in a link', () => {
     const fragment = await scriptFragment(script)
     expect(fragment.length).toBeLessThan(1000)
     const file = await readBack(fragment)
-    expect(file.at(-1)).toEqual({ ...brewer, firstNight: 41.5 })
+    expect(file.at(-1)).toEqual(brewerFile)
     expect(parseScript(file)).toEqual(withHomebrew())
     expect(hasEmbeddedArt(withHomebrew([art, art]))).toBe(true)
   })
@@ -55,7 +59,7 @@ describe('a script in a link', () => {
   test('a web address for art is short and stays', async () => {
     const script = withHomebrew('https://example.com/brewer.png')
     expect(hasEmbeddedArt(script)).toBe(false)
-    expect((await readBack(await scriptFragment(script))).at(-1)).toEqual({ ...brewer, firstNight: 41.5, image: 'https://example.com/brewer.png' })
+    expect((await readBack(await scriptFragment(script))).at(-1)).toEqual({ ...brewerFile, image: 'https://example.com/brewer.png' })
   })
 
   test('the fragment alone, or a link inside a message, reads the same', async () => {

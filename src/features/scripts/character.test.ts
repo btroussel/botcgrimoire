@@ -1,8 +1,8 @@
 import type { Homebrew, Team } from '../../content'
-import { asCharacterId, character, homebrewArt, nightMarkers, t, teams } from '../../content'
+import { asCharacterId, character, homebrewArt, homebrewCharacter, nightMarkers, t, teams } from '../../content'
 import {
-  after, anchorOf, canAddReminder, characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, nightMoments, nightSteps,
-  shownImage, teamWords,
+  anchorOf, canAddReminder, characterOf, characterProblem, draftOfCharacter, draftWake, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, neighbours,
+  nightMoments, nightSteps, scriptSteps, shownImage, teamWords, wakeOrdinal,
 } from './character'
 import { fitWithin, hasTransparency, visibleBounds } from './image'
 
@@ -20,12 +20,24 @@ describe('the character draft', () => {
   test('saves trimmed, drops blank reminder tokens, and keeps only the instructions of nights it wakes on', () => {
     const draft = {
       ...draftOfCharacter(), name: ' Baker ', ability: ' You bake. ', team: 'outsider' as const, reminders: ['Bread', '', '  Crumbs ', ' '],
-      firstNight: 12.5, firstNightReminder: ' Wake the Baker. ', otherNight: undefined, otherNightReminder: 'Dropped.', setup: true,
+      firstNight: 'poisoner', firstNightReminder: ' Wake the Baker. ', otherNight: undefined, otherNightReminder: 'Dropped.', setup: true,
     }
+    const poisoner = character(asCharacterId('poisoner')).ordinals.first!
     expect(characterOf(draft, 'bakerab12')).toEqual({
       id: 'bakerab12', name: 'Baker', team: 'outsider', ability: 'You bake.', reminders: ['Bread', 'Crumbs'],
-      firstNight: 12.5, firstNightReminder: 'Wake the Baker.', setup: true,
+      firstNight: poisoner + 0.5, firstNightAfter: 'poisoner', firstNightReminder: 'Wake the Baker.', setup: true,
     })
+  })
+
+  test('opens on the step a record wakes after, and reads an older record or kept draft by its number', () => {
+    const poisoner = character(asCharacterId('poisoner')).ordinals.first!
+    const base: Homebrew = { id: 'lamp', name: 'Lamp', team: 'minion', ability: 'x' }
+    expect(draftOfCharacter({ ...base, firstNight: 3, firstNightAfter: 'poisoner' }).firstNight).toBe('poisoner')
+    expect(draftOfCharacter({ ...base, firstNight: poisoner + 0.5 }).firstNight).toBe('poisoner')
+    expect(draftOfCharacter({ ...base, firstNight: poisoner + 0.5, firstNightAfter: 'nobodyyet' }).firstNight).toBe('poisoner')
+    expect(draftWake('first', poisoner + 0.5)).toBe('poisoner')
+    expect(draftWake('first', 'poisoner')).toBe('poisoner')
+    expect(draftWake('first', 0)).toBeUndefined()
   })
 
   test('keeps the schema\'s lengths', () => {
@@ -97,84 +109,103 @@ describe('the character draft', () => {
 describe('where a homebrew character wakes', () => {
   const first = nightSteps('first', 'en', markers)
   const other = nightSteps('other', 'en', markers)
-  const step = (id: string) => first.find((c) => c.id === id)!
+  const step = (id: string) => first.find((c) => c.key === id)!
+  const ordinal = (night: 'first' | 'other', id: string) => character(asCharacterId(id)).ordinals[night]!
+  // The step a moment wakes after, and the one after that.
+  const around = (steps: typeof first, key: string) => {
+    const at = steps.findIndex((c) => c.key === key)
+    return [steps[at]!, steps[at + 1]] as const
+  }
 
   test('the official order runs from dusk through the dawn announcements with every waking character in it', () => {
-    expect(first[0]).toMatchObject({ ordinal: nightMarkers.first.dusk, marker: 'dusk', label: 'Dusk' })
-    expect(first.find((c) => c.marker === 'dawn')?.ordinal).toBe(nightMarkers.first.dawn)
+    expect(first[0]).toMatchObject({ key: 'dusk', ordinal: nightMarkers.first.dusk, marker: 'dusk', label: 'Dusk' })
+    expect(first.find((c) => c.marker === 'dawn')).toMatchObject({ key: 'dawn', ordinal: nightMarkers.first.dawn })
     expect(first.at(-1)?.ordinal).toBeGreaterThan(nightMarkers.first.dawn)
-    expect(step('poisoner')).toMatchObject({ ordinal: character(asCharacterId('poisoner')).ordinals.first, label: 'Poisoner', edition: 'tb' })
+    expect(step('poisoner')).toMatchObject({ ordinal: ordinal('first', 'poisoner'), label: 'Poisoner', id: 'poisoner', edition: 'tb' })
     expect(first.every((c, i) => i === 0 || first[i - 1]!.ordinal < c.ordinal)).toBe(true)
   })
 
-  test('placed after a step, it sorts between that step and the next', () => {
+  test('placed after a step, it sorts between that step and the next, as the sheets read it', () => {
     const poisoner = step('poisoner')
     const next = first[first.indexOf(poisoner) + 1]!
-    expect(poisoner.ordinal < after(poisoner) && after(poisoner) < next.ordinal).toBe(true)
-    expect(anchorOf(first, after(poisoner))).toBe(poisoner)
-    expect(anchorOf(first, poisoner.ordinal + 0.9)).toBe(poisoner)
+    const record = characterOf({ ...draftOfCharacter(), name: 'Lamp', ability: 'x', firstNight: 'poisoner' }, 'lamp')
+    const wake = homebrewCharacter(record).ordinals.first!
+    expect(wake).toBe(wakeOrdinal(first, 'poisoner'))
+    expect(poisoner.ordinal < wake && wake < next.ordinal).toBe(true)
+    expect(anchorOf(first, wake)).toBe(poisoner)
+    expect(neighbours(first, wake)).toEqual({ before: poisoner, next })
   })
 
   test('moves one step at a time, from just after dusk to the very end', () => {
-    const poisoner = step('poisoner')
-    const i = first.indexOf(poisoner)
-    expect(moveBy(first, after(poisoner), 1)).toBe(after(first[i + 1]!))
-    expect(moveBy(first, after(poisoner), -1)).toBe(after(first[i - 1]!))
-    expect(moveBy(first, after(first[0]!), -1)).toBe(after(first[0]!))
-    const last = first.at(-1)!
-    expect(moveBy(first, after(last), 1)).toBe(after(last))
+    const at = (key: string) => wakeOrdinal(first, key)
+    const i = first.indexOf(step('poisoner'))
+    expect(moveBy(first, at('poisoner'), 'poisoner', 1)).toBe(first[i + 1]!.key)
+    expect(moveBy(first, at('poisoner'), 'poisoner', -1)).toBe(first[i - 1]!.key)
+    expect(moveBy(first, at('dusk'), 'dusk', -1)).toBe('dusk')
+    const last = first.at(-1)!.key
+    expect(moveBy(first, at(last), last, 1)).toBe(last)
   })
 
-  test('moves among the steps shown when a filter hides others', () => {
+  test('moves among the steps shown when a filter hides others, and up to the shown step first', () => {
     const tb = first.filter((c) => c.marker !== undefined || c.edition === 'tb')
     const poisoner = step('poisoner')
-    const nextShown = tb[tb.indexOf(poisoner) + 1]!
-    expect(moveBy(tb, after(poisoner), 1)).toBe(after(nextShown))
+    expect(moveBy(tb, wakeOrdinal(first, 'poisoner'), 'poisoner', 1)).toBe(tb[tb.indexOf(poisoner) + 1]!.key)
+    // The Angel wakes just after dusk and is no Trouble Brewing character.
+    expect(first[1]!.key).toBe('angel')
+    expect(anchorOf(tb, wakeOrdinal(first, 'angel'))?.key).toBe('dusk')
+    expect(moveBy(tb, wakeOrdinal(first, 'angel'), 'angel', -1)).toBe('dusk')
   })
 
-  test('the first night wakes before the evil team, after it, or for information just before dawn', () => {
-    const at = (position: number) => anchorOf(first, position)
+  test('a script\'s order keeps its own characters and every marker', () => {
+    const own = scriptSteps(other, new Set(['monk', 'imp', 'empath']))
+    expect(own.map((c) => c.key)).toEqual(['dusk', 'monk', 'imp', 'empath', 'dawn'])
+    const before = nightMoments(other, 'other', 'townsfolk').find((m) => m.key === 'beforeDemon')!
+    expect(neighbours(own, wakeOrdinal(other, before.after))).toMatchObject({ before: { key: 'monk' }, next: { key: 'imp' } })
+  })
+
+  test('the first night wakes before the evil team, after it, or for information before the night is counted', () => {
     const moments = nightMoments(first, 'first', 'townsfolk')
     expect(moments.map((m) => m.key)).toEqual(['beforeEvil', 'afterEvil', 'information'])
-    const [before, afterEvil, information] = moments.map((m) => m.position)
-    expect(before!).toBeLessThan(nightMarkers.first.minionInfo)
-    expect(before!).toBeLessThan(character(asCharacterId('philosopher')).ordinals.first!)
-    expect(at(afterEvil!)?.marker).toBe('demonInfo')
-    expect(afterEvil!).toBeLessThan(character(asCharacterId('poisoner')).ordinals.first!)
-    expect(first[first.indexOf(at(information!)!) + 1]?.marker).toBe('dawn')
-    expect(information!).toBeGreaterThan(character(asCharacterId('washerwoman')).ordinals.first!)
+    const [before, afterEvil, information] = moments.map((m) => around(first, m.after))
+    expect(before![0].key).toBe('dusk')
+    expect(before![1]!.ordinal).toBeLessThanOrEqual(ordinal('first', 'philosopher'))
+    expect(afterEvil![0].marker).toBe('demonInfo')
+    expect(afterEvil![1]!.ordinal).toBeLessThan(ordinal('first', 'poisoner'))
+    expect(information![1]?.key).toBe('chambermaid')
+    expect(information![0].ordinal).toBeGreaterThan(ordinal('first', 'washerwoman'))
+    expect(information![0].ordinal).toBeLessThan(ordinal('first', 'mathematician'))
   })
 
-  test('the other nights wake around the Demons, whose run the Monk wakes before and the Assassin after', () => {
-    const at = (position: number) => anchorOf(other, position)
+  test('the other nights wake at the start, around the Demons, or for information before the night is counted', () => {
     const moments = nightMoments(other, 'other', 'townsfolk')
-    expect(moments.map((m) => m.key)).toEqual(['beforeDemon', 'afterDemon', 'information'])
-    const [before, afterDemon, information] = moments.map((m) => m.position)
-    const ordinal = (id: string) => character(asCharacterId(id)).ordinals.other!
-    expect(before!).toBeGreaterThan(ordinal('monk'))
-    expect(other[other.indexOf(at(before!)!) + 1]?.team).toBe('demon')
-    expect(at(before!)?.team).not.toBe('demon')
+    expect(moments.map((m) => m.key)).toEqual(['start', 'beforeDemon', 'afterDemon', 'information'])
+    const [start, before, afterDemon, information] = moments.map((m) => around(other, m.after))
+    expect(start![0].key).toBe('dusk')
+    expect(start![1]!.ordinal).toBeLessThan(ordinal('other', 'poisoner'))
+    expect(before![0].ordinal).toBeGreaterThan(ordinal('other', 'monk'))
+    expect(before![0].team).not.toBe('demon')
+    expect(before![1]?.team).toBe('demon')
     for (const demon of ['imp', 'nodashii', 'vigormortis']) {
-      expect(before!).toBeLessThan(ordinal(demon))
-      expect(afterDemon!).toBeGreaterThan(ordinal(demon))
+      expect(before![0].ordinal).toBeLessThan(ordinal('other', demon))
+      expect(afterDemon![0].ordinal).toBeGreaterThanOrEqual(ordinal('other', demon))
     }
-    expect(at(afterDemon!)?.team).toBe('demon')
-    expect(afterDemon!).toBeLessThan(ordinal('assassin'))
-    expect(other[other.indexOf(at(information!)!) + 1]?.marker).toBe('dawn')
-    expect(information!).toBeGreaterThan(ordinal('undertaker'))
+    expect(afterDemon![0].team).toBe('demon')
+    expect(afterDemon![1]!.ordinal).toBeLessThanOrEqual(ordinal('other', 'assassin'))
+    expect(information![1]?.key).toBe('chambermaid')
+    expect(information![0].ordinal).toBeGreaterThan(ordinal('other', 'undertaker'))
   })
 
   test('a Demon wakes as the Demon, among the others, in place of before them', () => {
     const moments = nightMoments(other, 'other', 'demon')
-    expect(moments.map((m) => m.key)).toEqual(['demon', 'afterDemon', 'information'])
-    expect(anchorOf(other, moments[0]!.position)?.id).toBe('imp')
+    expect(moments.map((m) => m.key)).toEqual(['start', 'demon', 'afterDemon', 'information'])
+    expect(moments[1]!.after).toBe('imp')
     expect(nightMoments(first, 'first', 'demon').map((m) => m.key)).toEqual(['beforeEvil', 'afterEvil', 'information'])
   })
 
-  test('a position reads as its moment only when it is exactly that moment', () => {
+  test('a wake reads as its moment only when it is after that very step', () => {
     const moments = nightMoments(first, 'first', 'townsfolk')
-    expect(momentOf(moments, moments[1]!.position)?.key).toBe('afterEvil')
-    expect(momentOf(moments, moments[1]!.position + 1)).toBeUndefined()
+    expect(momentOf(moments, 'demoninfo')?.key).toBe('afterEvil')
+    expect(momentOf(moments, 'king')).toBeUndefined()
     expect(momentOf(moments, undefined)).toBeUndefined()
   })
 })

@@ -33,7 +33,10 @@ export interface Character {
 
 // A character a custom script defines itself, in the official schema's shape so a file written
 // by another tool reads here and ours reads there. The night numbers are positions on our night
-// sheets: 23.5 wakes between the entries at 23 and 24, and 0 or none does not wake.
+// sheets: 23.5 wakes between the entries at 23 and 24, and 0 or none does not wake. A sync that
+// adds a character earlier in the night shifts every later entry, so a waking record also names
+// the step it wakes after, which wins while the sheet has it. That step is the app's own: a file
+// carries only the number.
 export interface Homebrew {
   readonly id: string
   readonly name: string
@@ -42,8 +45,10 @@ export interface Homebrew {
   readonly image?: string | readonly string[] // one icon, or the schema's set of up to three
   readonly flavor?: string
   readonly firstNight?: number
+  readonly firstNightAfter?: string // a character id, or dusk, minioninfo, demoninfo or dawn
   readonly firstNightReminder?: string
   readonly otherNight?: number
+  readonly otherNightAfter?: string
   readonly otherNightReminder?: string
   readonly reminders?: readonly string[]
   readonly remindersGlobal?: readonly string[]

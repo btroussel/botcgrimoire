@@ -215,9 +215,11 @@ its row, so a typo is fixed without leaving the script. Saving it there adds it 
 Storyteller's list under the same id. A character that came inside an imported script, or was
 deleted from the list while a script kept it, then becomes theirs to use on every script.
 
-Each night offers three moments around its fixed points, on one rule: whatever makes a player
+Each night offers a few moments around its fixed points, on one rule: whatever makes a player
 drunk or poisoned wakes before the characters it can disable, and information wakes after all of
-it. The Storyteller can also pick an exact place in the official order.
+it but before the Chambermaid and Mathematician, who count the night. Each moment names the two
+steps it falls between. The Storyteller can also pick an exact place in the official order. Opened
+from a script being composed, both read that script's own order, the one run at the table.
 
 ## Search and sharing
 

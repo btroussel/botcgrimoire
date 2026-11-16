@@ -13,7 +13,7 @@ export { contentPin } from './upstream'
 export * from './types'
 export * from './scripts'
 export type { HomebrewArt, HomebrewImage } from './homebrew'
-export { homebrewArt, homebrewCharacter, homebrewVersion, registerHomebrew, subscribeHomebrew } from './homebrew'
+export { homebrewArt, homebrewCharacter, homebrewVersion, homebrewWake, nightSheet, registerHomebrew, stepBefore, subscribeHomebrew, wakeAfter } from './homebrew'
 
 export const asCharacterId = (id: string): CharacterId => id as CharacterId
 

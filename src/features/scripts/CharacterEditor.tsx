@@ -36,6 +36,7 @@ import { ReminderTokens } from './ReminderTokens'
 export interface CharacterEditorProps {
   readonly initial?: Homebrew // editing a saved one; a new character otherwise
   readonly resume?: CharacterDraft // the kept draft to go on with, changed from initial
+  readonly script?: readonly string[] // the ids on the script it is written for, whose night order it is placed in
   readonly onBack: () => void
   readonly onSave: (character: Homebrew) => Promise<unknown>
   readonly onDelete?: () => void
@@ -43,7 +44,7 @@ export interface CharacterEditorProps {
 
 const previewSize = 148
 
-export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: CharacterEditorProps) => {
+export const CharacterEditor = ({ initial, resume, script, onBack, onSave, onDelete }: CharacterEditorProps) => {
   const store = useStore()
   const { t } = store
   const locale = store.settings.locale
@@ -61,6 +62,7 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
   const markers = useMemo(() => ({ dusk: t('scripts.dusk'), minionInfo: t('scripts.minionInfo'), demonInfo: t('scripts.demonInfo'), dawn: t('scripts.dawn') }), [t])
   const first = useMemo(() => nightSteps('first', locale, markers), [locale, markers])
   const other = useMemo(() => nightSteps('other', locale, markers), [locale, markers])
+  const onScript = useMemo(() => (script ? new Set(script) : undefined), [script])
 
   const problem = characterProblem(draft)
   const changed = JSON.stringify(draft) !== JSON.stringify(start)
@@ -174,13 +176,13 @@ export const CharacterEditor = ({ initial, resume, onBack, onSave, onDelete }: C
             </Section>
 
             <Section label={t('scripts.firstNight')}>
-              <NightPlacement label={t('scripts.firstNight')} night="first" steps={first} position={draft.firstNight}
+              <NightPlacement label={t('scripts.firstNight')} night="first" steps={first} {...(onScript ? { script: onScript } : {})} position={draft.firstNight}
                 name={draft.name} team={draft.team} token={art(32)} onPosition={(firstNight) => set({ firstNight })}>
                 {instruction(draft.firstNightReminder, (firstNightReminder) => set({ firstNightReminder }))}
               </NightPlacement>
             </Section>
             <Section label={t('scripts.otherNights')}>
-              <NightPlacement label={t('scripts.otherNights')} night="other" steps={other} position={draft.otherNight}
+              <NightPlacement label={t('scripts.otherNights')} night="other" steps={other} {...(onScript ? { script: onScript } : {})} position={draft.otherNight}
                 name={draft.name} team={draft.team} token={art(32)} onPosition={(otherNight) => set({ otherNight })}>
                 {instruction(draft.otherNightReminder, (otherNightReminder) => set({ otherNightReminder }))}
               </NightPlacement>

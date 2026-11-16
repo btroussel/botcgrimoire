@@ -3,7 +3,7 @@
 // and partial writes would be machinery for its own sake.
 import type { SavedScript, SavedScriptId } from './customScripts'
 import type { SavedCharacter } from './homebrew'
-import { scriptWithCurrentWake, withCurrentWake, withHomebrew } from './homebrew'
+import { scriptWithWakeSteps, withHomebrew, withWakeSteps } from './homebrew'
 import type { GameId, SavedGame } from './saved'
 import { deserialize, migrate, mintGameId, serialize } from './saved'
 import type { Settings } from './settings'
@@ -209,19 +209,26 @@ const updateLists = async (keys: readonly string[], change: (lists: Lists) => re
   askPersistence()
 }
 
-// Through the wake migration, so a record from an older editor opens where it wakes now. It is
-// written back with the next save.
+// Through the wake migration, so a record from an older editor names the step it wakes after.
+// Reading a list that needed it writes it back at once, while the sheet still matches the numbers.
 const scriptsNow = (raw: readonly unknown[]): readonly SavedScript[] => (raw as readonly SavedScript[]).map((s) => {
-  const script = scriptWithCurrentWake(s.script)
+  const script = scriptWithWakeSteps(s.script)
   return script === s.script ? s : { ...s, script }
 })
 
 const charactersNow = (raw: readonly unknown[]): readonly SavedCharacter[] => (raw as readonly SavedCharacter[]).map((c) => {
-  const character = withCurrentWake(c.character)
+  const character = withWakeSteps(c.character)
   return character === c.character ? c : { ...c, character }
 })
 
-export const listScripts = async (): Promise<readonly SavedScript[]> => scriptsNow(await readList<SavedScript>(SCRIPTS_KEY))
+const listNow = async <T extends { readonly updatedAt: number }>(key: string, now: (raw: readonly unknown[]) => readonly T[]): Promise<readonly T[]> => {
+  const raw = await readList<T>(key)
+  const list = now(raw)
+  if (list.some((item, i) => item !== raw[i])) await updateLists([key], ([stored = []]) => [now(stored)])
+  return list
+}
+
+export const listScripts = (): Promise<readonly SavedScript[]> => listNow(SCRIPTS_KEY, scriptsNow)
 
 // Saving under an id the list holds replaces that script; a new id joins the list.
 export const putScript = (script: SavedScript): Promise<void> =>
@@ -230,7 +237,7 @@ export const putScript = (script: SavedScript): Promise<void> =>
 export const deleteScript = (id: SavedScriptId): Promise<void> =>
   updateLists([SCRIPTS_KEY], ([scripts = []]) => [scriptsNow(scripts).filter((s) => s.id !== id)])
 
-export const listCharacters = async (): Promise<readonly SavedCharacter[]> => charactersNow(await readList<SavedCharacter>(CHARACTERS_KEY))
+export const listCharacters = (): Promise<readonly SavedCharacter[]> => listNow(CHARACTERS_KEY, charactersNow)
 
 // A saved script carries a copy of each character it uses, so saving the character replaces that
 // copy in the same write, and no script is left behind if the page closes in between.

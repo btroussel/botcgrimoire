@@ -1,5 +1,5 @@
 import { characters } from './index'
-import type { CharacterId } from './types'
+import type { CharacterId, Homebrew } from './types'
 import { impliesBootlegger, parseScript, scriptAuthor, scriptCards, scriptCharacters, scriptFile, scriptHomebrew, scriptRules } from './scripts'
 
 const meta = { id: '_meta', name: 'Test night', author: 'Us' }
@@ -46,7 +46,7 @@ describe('parseScript', () => {
       name: 'Test night',
       items: [meta, 'imp', {
         id: 'lamplighter', name: 'Lamplighter', team: 'townsfolk', ability: 'You know things.', image: 'data:image/png;base64,AA',
-        firstNight: 2, firstNightReminder: 'Show a finger.', otherNight: 0, reminders: ['Lit', 'Lit'], remindersGlobal: ['Dark'],
+        firstNight: 2, firstNightAfter: 'angel', firstNightReminder: 'Show a finger.', otherNight: 0, reminders: ['Lit', 'Lit'], remindersGlobal: ['Dark'],
         setup: true, flavor: 'Light.', jinxes: [{ id: 'imp', reason: 'x' }],
       }],
     })
@@ -181,7 +181,18 @@ describe('night positions in a file', () => {
   })
 
   test('a position at or before dusk still wakes, just after it', () => {
-    expect(after(1)).toMatchObject({ items: [meta, { firstNight: 0.5 }] })
-    expect(after(0.5)).toMatchObject({ items: [meta, { firstNight: 0.5 }] })
+    expect(after(1)).toMatchObject({ items: [meta, { firstNight: 0.5, firstNightAfter: 'dusk' }] })
+    expect(after(0.5)).toMatchObject({ items: [meta, { firstNight: 0.5, firstNightAfter: 'dusk' }] })
+  })
+
+  test('are pinned to the step they land after, which a file never carries', () => {
+    const parsed = after(washerwoman + 1.5, 0)
+    if ('errors' in parsed) throw new Error(parsed.errors.join())
+    expect(parsed.items[1]).toMatchObject({ firstNightAfter: 'washerwoman' })
+    expect(parsed.items[1]).not.toHaveProperty('otherNightAfter')
+    // A number saved before a sync moved the sheet is written from the step.
+    const stale = { ...(parsed.items[1] as Homebrew), firstNight: 2.5 }
+    const [, written] = scriptFile({ ...parsed, items: [meta, stale] })
+    expect(written).toEqual({ id: 'lamp', name: 'Lamp', team: 'townsfolk', ability: 'x', firstNight: washerwoman + 1.5, otherNight: 0 })
   })
 })

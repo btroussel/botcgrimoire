@@ -93,7 +93,7 @@ describe('a copy to edit', () => {
 })
 
 describe('homebrew characters in a draft', () => {
-  const baker: Homebrew = { id: 'bakerq1', name: 'Baker', team: 'outsider', ability: 'You bake.', reminders: ['Bread'], firstNight: 30.5 }
+  const baker: Homebrew = { id: 'bakerq1', name: 'Baker', team: 'outsider', ability: 'You bake.', reminders: ['Bread'], firstNight: 30.5, firstNightAfter: 'lleech' }
   const alchemist: Homebrew = { id: 'alchq2', name: 'Alchemist Two', team: 'townsfolk', ability: 'You brew.' }
   const draft = { name: 'Home', author: '', ids: [id('imp'), id('bakerq1'), id('chef'), id('alchq2'), id('drunk')] }
 
