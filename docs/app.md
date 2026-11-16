@@ -258,21 +258,24 @@ The Pandemonium Institute, and that Steven Medway and The Pandemonium Institute 
 characters, art and ability text.
 The search text calls it an unofficial grimoire for games at a table, never a free app, so it
 never reads as an alternative to the official one, and nothing mentions a price. About invites
-players to buy a physical Grimoire. The contact address sits in a sentence about the app, so
-nobody takes it for The Pandemonium Institute's. [UI](ui.md#settings) owns the presentation.
+players to buy a physical Grimoire. The contact address belongs to Feedback, apart from the notice
+that names The Pandemonium Institute, so nobody takes it for theirs. [UI](ui.md#settings) owns the
+presentation.
 
 ## Feedback
 
 Most Storytellers have no GitHub account, so feedback goes by email first: Send feedback opens the
-device's mail app with a subject and, below room to write, the app version, language, screen size,
-installed or tab, and browser. Copy the address serves a device with no mail app set up. A link
-opens GitHub's bug form with the same facts filled in, for those who have an account. The app sends
+device's mail app with a subject and, below room to write, one line with the app version, language,
+browser and system by name, window size, and whether it is the installed app. The person reads it
+before sending, so it stays a footnote rather than a form. Copy the address serves a device with no
+mail app set up. A link opens GitHub's bug form with the same facts filled in, for those who have an
+account, and is also where the source code shows. The app sends
 nothing itself and has no server for it: the person sees every word in their mail app or on GitHub
 before it leaves, and nothing about a game goes with it.
 
 The version is the build's own, as its service worker names it: the first seven characters of the
-precache version, which changes exactly when the bundled files do. About shows it beside Source
-code. A page no worker controls yet, the very first load, has none, and the email says so.
+precache version, which changes exactly when the bundled files do. About shows it centred at its
+foot. A page no worker controls yet, the very first load, has none, and the email leaves it out.
 
 Home offers Feedback beside the badge and About to someone who has played, and opens Settings on
 its group. Settings always has it.

@@ -33,16 +33,16 @@ test('someone who has played finds Feedback on Home, writes from Settings and re
   expect(url.searchParams.get('subject')).toBe('BotC Grimoire feedback')
   const body = url.searchParams.get('body').split('\r\n')
   expect(body.slice(0, 4)).toEqual(['', '', '', '-- '])
-  // No worker runs here, so no build names itself.
-  expect(body.slice(4, 9)).toEqual(['These details help us find the problem:', 'App version: Unknown', 'Language: en', 'Screen: 390 x 844', 'Opened in a browser tab'])
+  // No worker runs here, so no build names itself, and a tab says nothing of installation.
+  expect(body[4]).toMatch(/^en · Chrome \d+(, [\w ]+)? · 390×844$/)
 
   await page.getByRole('button', { name: 'Copy the address', exact: true }).tap()
   await expect(page.getByRole('button', { name: 'Address copied', exact: true })).toBeVisible()
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('contact@botcgrimoire.com')
 
-  const form = new URL(await page.getByRole('link', { name: 'report a bug there', exact: true }).getAttribute('href'))
+  const form = new URL(await page.getByRole('link', { name: 'Report a bug on GitHub', exact: true }).getAttribute('href'))
   expect(form.origin + form.pathname).toBe('https://github.com/btroussel/botcgrimoire/issues/new')
   expect(form.searchParams.get('template')).toBe('bug_report.yml')
-  expect(form.searchParams.get('device')).toMatch(/^Browser tab, 390 x 844, Mozilla\//)
+  expect(form.searchParams.get('device')).toMatch(/^Browser tab, 390 x 844, Chrome \d+/)
   expect(form.searchParams.get('language')).toBe('English')
 })

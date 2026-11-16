@@ -123,7 +123,9 @@ phone.
 ## Settings
 
 Group headings sit one level below the page title for screen readers, and links in About are
-underlined. [App](app.md#attribution) owns what About says.
+underlined. Feedback is one row drawn like Language's, with copying the address and the bug form as
+links under it, so it stands no taller than the groups a Storyteller comes here for.
+[App](app.md#attribution) owns what About says.
 
 ## Setup
 
