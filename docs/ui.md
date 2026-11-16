@@ -170,8 +170,16 @@ a long note never runs over a neighbour or a name. A tap opens the whole text in
 A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it
 off and a pan or a pinch that starts on it still moves the board; a mouse lifts it once it moves.
 Lifted, it rides above the finger, the seat it would land on wears the brass ring and the board
-holds still. Letting go anywhere else, a second finger or Escape puts it back. Nothing drags while
-the seats are being arranged, a panel or a vote is asking for seats, or in replay.
+holds still. Letting go anywhere else, a second finger or Escape puts it back. No reminder drags
+while the seats are being arranged, a panel or a vote is asking for seats, or in replay.
+
+While the seats are arranged, the seats drag the same way, from the disc. The others glide to make
+room as it passes, and its faded place wears the brass ring where it would land, so the ring shows
+the order it will leave before the finger lifts. A tap is the same move in two steps: the seat
+picked takes the brass ring and check, every other seat the dashed ring of a choice, and the next
+seat tapped is where it goes. The insertion markers hide while a seat is on the move, so each
+marker and each tap means one thing at a time. Reset order sits under the turning controls,
+written out below a rule, since any circling arrow would read as a third turn.
 
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show

@@ -1,31 +1,34 @@
-// Dragging a placed reminder to another seat. Touch lifts it after a long press, so a tap still
-// takes it off and a pan or a pinch that starts on it still moves the board; a mouse lifts it
-// once it has moved a few pixels. While it is lifted the board holds still and the seat under it
-// is the drop target. Letting go anywhere else, a second finger or Escape puts it back.
-// A draggable chip carries `data-chip` inside its seat's `data-seat-context-target`, so one set of
-// handlers on the ring finds what was pressed.
+// Dragging on the ring: a placed reminder to another seat, or, while the seats are arranged, a
+// seat to another place round the ring. Touch lifts after a long press, so a tap still does what
+// it did and a pan or a pinch that starts on the piece still moves the board; a mouse lifts once
+// it has moved a few pixels. While a piece is lifted the board holds still and the ring names the
+// target under it. Letting go anywhere else, a second finger or Escape puts it back.
+// The ring says what a press grabbed, so one set of handlers serves both pieces.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { HTMLAttributes } from 'react'
 
 import type { SeatId } from '../../engine'
 
+export interface Grab {
+  readonly seat: SeatId // the seat pressed, or the seat whose reminder was pressed
+  readonly chip?: string // the reminder's key; the seat itself when omitted
+}
+
 export interface DragPoint {
-  readonly x: number // where the lifted chip's centre is drawn, in the ring's band
+  readonly x: number // where the lifted piece's centre is drawn, in the ring's band
   readonly y: number
-  readonly seat?: SeatId // the seat it would land on
+  readonly target?: string // where it would land; never the place it came from
 }
 
 export interface Lifted {
-  readonly seat: SeatId // where it came from
-  readonly chip: string
-  readonly target: SeatId | undefined // another seat under it
+  readonly grab: Grab
+  readonly target: string | undefined
   readonly touch: boolean
 }
 
 interface Press {
   readonly pointer: number
-  readonly seat: SeatId
-  readonly chip: string
+  readonly grab: Grab
   readonly x: number
   readonly y: number
   readonly touch: boolean
@@ -38,36 +41,37 @@ const hold = 400 // ms, near the platforms' own long press
 const touchSlop = 10 // px a finger may wander before the press is a pan, as Pressable allows
 const mouseSlop = 5 // px, as the reference drawer
 
-export const useReminderDrag = (
+export const useRingDrag = (
   enabled: boolean,
-  locate: (clientX: number, clientY: number, touch: boolean) => DragPoint,
-  onDrop: (from: SeatId, chip: string, to: SeatId) => void,
+  grab: (pressed: Element) => Grab | undefined,
+  locate: (clientX: number, clientY: number, touch: boolean, grabbed: Grab) => DragPoint,
+  onDrop: (grabbed: Grab, target: string) => void,
 ) => {
   const [lifted, setLifted] = useState<Lifted>()
   const root = useRef<HTMLDivElement>(null)
   const ghost = useRef<HTMLDivElement>(null)
   const press = useRef<Press | undefined>(undefined)
   const point = useRef<DragPoint | undefined>(undefined)
-  // The click that follows a drag belongs to no chip, or it would take the reminder off.
+  // The click that follows a drag belongs to nothing, or it would take the reminder off or end
+  // the arrangement.
   const swallowClick = useRef(false)
-  const latest = useRef({ locate, onDrop })
-  useLayoutEffect(() => { latest.current = { locate, onDrop } })
+  const latest = useRef({ grab, locate, onDrop })
+  useLayoutEffect(() => { latest.current = { grab, locate, onDrop } })
 
   const follow = (clientX: number, clientY: number) => {
     const p = press.current
     if (!p) return
-    const at = latest.current.locate(clientX, clientY, p.touch)
+    const at = latest.current.locate(clientX, clientY, p.touch, p.grab)
     point.current = at
     if (ghost.current) ghost.current.style.transform = `translate(${at.x}px, ${at.y}px)`
-    const target = at.seat !== p.seat ? at.seat : undefined
-    setLifted(current => current && current.target !== target ? { ...current, target } : current)
+    setLifted(current => current && current.target !== at.target ? { ...current, target: at.target } : current)
   }
   const lift = (p: Press) => {
     p.lifted = true
     clearTimeout(p.timer)
     // Capture keeps a mouse drag attached once it leaves the ring.
     try { root.current?.setPointerCapture(p.pointer) } catch { /* the pointer has already gone */ }
-    setLifted({ seat: p.seat, chip: p.chip, target: undefined, touch: p.touch })
+    setLifted({ grab: p.grab, target: undefined, touch: p.touch })
     follow(p.last.x, p.last.y)
   }
   const end = (drop: boolean) => {
@@ -78,15 +82,15 @@ export const useReminderDrag = (
     if (!p.lifted) return
     swallowClick.current = true
     setLifted(undefined)
-    const to = point.current?.seat
+    const to = point.current?.target
     point.current = undefined
     if (root.current?.hasPointerCapture(p.pointer)) root.current.releasePointerCapture(p.pointer)
-    if (drop && to !== undefined && to !== p.seat) latest.current.onDrop(p.seat, p.chip, to)
+    if (drop && to !== undefined) latest.current.onDrop(p.grab, to)
   }
   const endRef = useRef(end)
   useLayoutEffect(() => { endRef.current = end })
 
-  // The lifted chip is drawn where the pointer is before its first paint.
+  // The lifted piece is drawn where the pointer is before its first paint.
   useLayoutEffect(() => {
     if (lifted && ghost.current && point.current) ghost.current.style.transform = `translate(${point.current.x}px, ${point.current.y}px)`
   }, [lifted])
@@ -101,8 +105,20 @@ export const useReminderDrag = (
     document.addEventListener('pointerdown', another, true)
     return () => document.removeEventListener('pointerdown', another, true)
   }, [])
+  // On the window, ahead of the board's own listeners on the document, so the arrangement does
+  // not read the click as a tap outside it.
+  useEffect(() => {
+    const swallow = (event: MouseEvent) => {
+      if (!swallowClick.current) return
+      swallowClick.current = false
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    window.addEventListener('click', swallow, true)
+    return () => window.removeEventListener('click', swallow, true)
+  }, [])
   // Browsers only let a page stop a scroll from a listener that is neither passive nor added
-  // mid-gesture, so this one stays on the ring and acts only while a reminder is lifted.
+  // mid-gesture, so this one stays on the ring and acts only while a piece is lifted.
   useEffect(() => {
     const node = root.current
     if (!node) return
@@ -118,7 +134,7 @@ export const useReminderDrag = (
       event.preventDefault()
       endRef.current(false)
     }
-    // Captured, so Escape puts the reminder back before it closes anything under it.
+    // Captured, so Escape puts the piece back before it closes anything under it.
     document.addEventListener('keydown', cancel, true)
     window.addEventListener('blur', cancel)
     return () => {
@@ -130,12 +146,11 @@ export const useReminderDrag = (
   const handlers: HTMLAttributes<HTMLDivElement> = {
     onPointerDown: event => {
       if (press.current || !enabled || !event.isPrimary || event.button !== 0 || !(event.target instanceof Element)) return
-      const chip = event.target.closest('[data-chip]')?.getAttribute('data-chip')
-      const seat = event.target.closest('[data-seat-context-target]')?.getAttribute('data-seat-context-target')
-      if (!chip || !seat) return
+      const grabbed = latest.current.grab(event.target)
+      if (!grabbed) return
       const x = event.clientX
       const y = event.clientY
-      const p: Press = { pointer: event.pointerId, seat: seat as SeatId, chip, x, y, touch: event.pointerType !== 'mouse', last: { x, y } }
+      const p: Press = { pointer: event.pointerId, grab: grabbed, x, y, touch: event.pointerType !== 'mouse', last: { x, y } }
       if (p.touch) p.timer = setTimeout(() => { if (press.current === p) lift(p) }, hold)
       press.current = p
     },
@@ -157,14 +172,8 @@ export const useReminderDrag = (
     },
     onPointerCancel: event => { if (event.pointerId === press.current?.pointer) end(false) },
     onLostPointerCapture: event => {
-      // A finger first captures the chip under it; that capture moving to the ring is no loss.
+      // A finger first captures the piece under it; that capture moving to the ring is no loss.
       if (event.target === event.currentTarget && event.pointerId === press.current?.pointer) end(false)
-    },
-    onClickCapture: event => {
-      if (!swallowClick.current) return
-      swallowClick.current = false
-      event.preventDefault()
-      event.stopPropagation()
     },
     // A long press on a phone would open the browser's menu, and an image would start its own drag.
     onContextMenu: event => { if (press.current?.touch) event.preventDefault() },

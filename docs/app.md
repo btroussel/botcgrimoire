@@ -103,8 +103,13 @@ open for the next one, and removing a seat asks first. No board control edits a 
 or an ability annotation: only the deal records the first, nothing records the second, and those
 already saved stay readable.
 
-Arrange the seats, in More, is where seats are added and the only way to move them. It turns the
-whole ring one place at a time, so every player keeps their neighbours.
+Arrange the seats, in More, is where seats are added and the only way to move them. The turning
+controls move the whole ring one place, so every player keeps their neighbours. A seat moved onto
+another seat's place takes it, and the seats between close up toward where it was, so neighbours
+change only on purpose and only inside this mode. Each move is one `moveSeat`, so one undo puts the
+seat back. Reset order puts back the order the ring had when the mode opened, as one action, and a
+seat added since keeps its place. The mode ends on a tap outside the seats, its controls and undo,
+or Escape; with a seat picked up, either puts the seat down first.
 
 A placed reminder or note moves to another seat by dragging it. The move is one action that takes
 it off and places it again, with no new kind of edit, so one undo puts it back where it was.

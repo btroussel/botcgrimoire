@@ -1,6 +1,6 @@
 import { game, grant, kill, setShown, token } from '../../engine/testing/board'
 import type { Event, Payload, SeatId } from '../../engine'
-import { apply, asEventId } from '../../engine'
+import { apply, asEventId, asSeatId } from '../../engine'
 import { asCharacterId, registerHomebrew, scriptHomebrew } from '../../content'
 import { deserialize, newGame, serialize } from '../../store/saved'
 import { appendAll, boardOf, openSession, redo, undo } from '../../store/session'
@@ -202,6 +202,37 @@ describe('the edits', () => {
     expect(names(edits.turnSeats(ids, 'clockwise'))).toEqual([g.seats.at(-1)!.name, ...g.seats.slice(0, -1).map((s) => s.name)])
     expect(names(edits.turnSeats(ids, 'counterclockwise'))).toEqual([...g.seats.slice(1).map((s) => s.name), g.seats[0]!.name])
     expect(edits.turnSeats(ids.slice(0, 1), 'clockwise')).toBeUndefined()
+  })
+
+  test('a moved seat takes the place it is put on, and the others close up', () => {
+    const { g } = table().build()
+    const ids = g.seats.map((s) => s.id)
+    const names = g.seats.map((s) => s.name)
+    const moved = (seat: number, to: number) => {
+      const payload = edits.moveSeat(ids, ids[seat]!, to)
+      return payload ? apply(g, manual(payload)).seats.map((s) => s.name) : undefined
+    }
+    const [a, b, c, ...rest] = names
+    expect(moved(1, 0)).toEqual([b, a, c, ...rest])
+    expect(moved(0, 2)).toEqual([b, c, a, ...rest])
+    expect(moved(1, names.length - 1)).toEqual([a, c, ...rest, b])
+    for (const to of [1, -1, names.length, 0.5]) expect(moved(1, to)).toBeUndefined()
+  })
+
+  test('resetting the order puts the earlier seats back in one action, and a seat added since keeps its place', () => {
+    const { g } = table().build()
+    const ids = g.seats.map((s) => s.id)
+    const shuffled = [ids[2]!, ids[0]!, ...ids.slice(3), ids[1]!]
+    const added = asSeatId('new')
+    const now = [...shuffled.slice(0, 2), added, ...shuffled.slice(2)]
+    const replay = (order: readonly SeatId[], payloads: readonly Payload[]) => payloads.reduce((list, p) => {
+      if (p.kind !== 'moveSeat') return list
+      const rest = list.filter((id) => id !== p.seat)
+      return rest.toSpliced(p.to, 0, p.seat)
+    }, order)
+    expect(replay(shuffled, edits.restoreOrder(shuffled, ids))).toEqual(ids)
+    expect(replay(now, edits.restoreOrder(now, ids))).toEqual([ids[0], ids[1], added, ...ids.slice(2)])
+    expect(edits.restoreOrder(ids, ids)).toEqual([])
   })
 
   test('clearing the belief leaves the seat with no shown character', () => {

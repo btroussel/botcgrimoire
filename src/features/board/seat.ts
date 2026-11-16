@@ -159,6 +159,29 @@ export const edits = {
       ? { kind: 'moveSeat', seat: seats[seats.length - 1]!, to: 0 }
       : { kind: 'moveSeat', seat: seats[0]!, to: seats.length - 1 }
   },
+  // Moving a seat to another index round the ring; its own index records nothing.
+  moveSeat: (seats: readonly SeatId[], seat: SeatId, to: number): Payload | undefined => {
+    const from = seats.indexOf(seat)
+    if (from < 0 || !Number.isInteger(to) || to < 0 || to >= seats.length || to === from) return undefined
+    return { kind: 'moveSeat', seat, to }
+  },
+  // The moves that put the seats back in an earlier order, recorded together so one undo takes them
+  // back. A seat added since keeps its place, and the earlier seats fill the others in their order.
+  restoreOrder: (seats: readonly SeatId[], earlier: readonly SeatId[]): Payload[] => {
+    const before = new Set(earlier)
+    const kept = earlier.filter(id => seats.includes(id))
+    let next = 0
+    const target = seats.map(id => before.has(id) ? kept[next++]! : id)
+    const current = [...seats]
+    const moves: Payload[] = []
+    target.forEach((id, to) => {
+      if (current[to] === id) return
+      current.splice(current.indexOf(id), 1)
+      current.splice(to, 0, id)
+      moves.push({ kind: 'moveSeat', seat: id, to })
+    })
+    return moves
+  },
   // Selection belongs to the board; showing these characters is a separate information event.
   setBluffs: (bluffs: readonly CharacterId[]): Payload => ({ kind: 'setBluffs', characters: bluffs }),
 

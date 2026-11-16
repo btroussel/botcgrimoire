@@ -133,6 +133,8 @@ export const Seat = ({
       onPointerEnter={event => { if (event.nativeEvent.pointerType === 'mouse') setPointing(true) }}
       onPointerLeave={() => setPointing(false)}>
       {pickable && !selected && !quietPick ? <AvailableRing size={size} /> : null}
+      {/* Marks the disc for the board's drag, so a press on a reminder or the plus grabs no seat. */}
+      <div data-seat-disc="" style={{ display: 'contents' }}>
       <Token
         size={size}
         printName
@@ -146,6 +148,7 @@ export const Seat = ({
         {...(onPress ? { onPress } : {})}
         accessibilityLabel={accessibilityLabel ?? name}
       />
+      </div>
       {dropTarget ? <SelectedRing size={size} /> : null}
       {onBlock ? <BlockMark size={size} /> : null}
       {dead && ghostVote ? <GhostVoteMark size={size} /> : null}

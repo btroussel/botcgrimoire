@@ -79,3 +79,72 @@ test('arranging the seats adds a seat and turns the ring in one pass, and surviv
   await expect(seats).toHaveCount(6)
   await expect.poll(names).toEqual(added)
 })
+
+test('arranging, a seat tapped and then another takes that seat\'s place, and Escape puts a picked seat down first', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openBoard(page, 6)
+  const seats = page.locator('[data-seat-context-target]')
+  const discs = seats.locator('[data-seat-disc] [role="button"]')
+  const names = () => seats.evaluateAll(all => all.map(seat => seat.querySelector('[role="button"]').getAttribute('aria-label').split(',')[0]))
+  const [a, b, c, d, ...rest] = await names()
+
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('button', { name: 'Arrange the seats', exact: true }).click()
+  await discs.nth(0).click()
+  await expect(discs.nth(0)).toHaveAttribute('aria-pressed', 'true')
+  // While a seat is picked, the insertion markers give way to the seats.
+  await expect(page.locator('[id^="seat-insertion-"]')).toHaveCount(0)
+  await page.getByRole('button', { name: new RegExp(`^${c}.*Move ${a} here$`) }).click()
+  await expect.poll(names).toEqual([b, c, a, d, ...rest])
+  await expect(page.locator('[id^="seat-insertion-"]')).not.toHaveCount(0)
+
+  // Reset order puts back the ring the mode opened with, in one undoable step, and undo keeps the
+  // mode open.
+  const reset = page.getByRole('button', { name: 'Reset order', exact: true })
+  await reset.click()
+  await expect.poll(names).toEqual([a, b, c, d, ...rest])
+  await expect(reset).toBeDisabled()
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await expect.poll(names).toEqual([b, c, a, d, ...rest])
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await expect.poll(names).toEqual([a, b, c, d, ...rest])
+  await expect(reset).toBeDisabled()
+
+  // Escape puts the picked seat down and keeps the mode; a second Escape ends it.
+  await discs.nth(1).click()
+  await page.keyboard.press('Escape')
+  await expect(discs.nth(1)).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByRole('button', { name: 'Rotate clockwise', exact: true })).toHaveCount(1)
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('button', { name: 'Rotate clockwise', exact: true })).toHaveCount(0)
+})
+
+test('arranging, a mouse drags a seat onto another place and the mode stays open', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await openBoard(page, 7)
+  const seats = page.locator('[data-seat-context-target]')
+  const discs = seats.locator('[data-seat-disc] [role="button"]')
+  const names = () => seats.evaluateAll(all => all.map(seat => seat.querySelector('[role="button"]').getAttribute('aria-label').split(',')[0]))
+  const [a, b, c, d, ...rest] = await names()
+  const centre = box => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 })
+
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('button', { name: 'Arrange the seats', exact: true }).click()
+  const from = centre(await discs.nth(0).boundingBox())
+  const to = centre(await discs.nth(3).boundingBox())
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(to.x, to.y, { steps: 12 })
+  await page.mouse.up()
+  await expect.poll(names).toEqual([b, c, d, a, ...rest])
+  await expect(page.getByRole('button', { name: 'Rotate clockwise', exact: true })).toHaveCount(1)
+
+  // Let go far from the ring, the seat goes back.
+  const back = centre(await discs.nth(3).boundingBox())
+  const ring = centre(await page.locator('#ring-turn').boundingBox())
+  await page.mouse.move(back.x, back.y)
+  await page.mouse.down()
+  await page.mouse.move(ring.x, ring.y, { steps: 12 })
+  await page.mouse.up()
+  await expect.poll(names).toEqual([b, c, d, a, ...rest])
+})

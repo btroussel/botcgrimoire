@@ -109,6 +109,14 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [reminderTarget, setReminderTarget] = useState<SeatId | undefined>(undefined)
   const [noteTarget, setNoteTarget] = useState<NoteTarget | undefined>(undefined)
   const [arranging, setArranging] = useState(false)
+  const [moving, setMoving] = useState<SeatId>() // a seat tapped while arranging, waiting for its new place
+  // The order when the arrangement began, which Reset order puts back, taken as the mode opens.
+  const [arrangedFrom, setArrangedFrom] = useState<readonly SeatId[]>([])
+  const [arrangedBefore, setArrangedBefore] = useState(false)
+  if (arranging !== arrangedBefore) {
+    setArrangedBefore(arranging)
+    if (arranging) setArrangedFrom(b.board?.seats.map(seat => seat.id) ?? [])
+  }
   const choosingSeats = !!interaction.pick || !!interaction.seatAction
   const { pick, cancelRequest } = interaction
   const hasCenterPanel = !!interaction.centerPanel
@@ -159,17 +167,20 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     document.addEventListener('keydown', keys)
     return () => document.removeEventListener('keydown', keys)
   }, [undo])
-  // Arranging the seats ends on a click anywhere but its own controls, or Escape.
+  // Arranging the seats ends on a click anywhere but its own controls, the seats and undo, so a
+  // wrong move can be taken back and tried again, or Escape. A picked seat is put down first.
   useEffect(() => {
     if (!arranging) return
-    const stop = () => setArranging(false)
+    const stop = () => moving ? setMoving(undefined) : setArranging(false)
     const cancelOutside = (event: MouseEvent) => {
       // Keep the controls mounted until their press has recorded its edit.
-      if (event.target instanceof Element && event.target.closest('[id^="seat-insertion-"], #ring-turn')) return
+      if (event.target instanceof Element
+        && event.target.closest('[id^="seat-insertion-"], #ring-turn, #board-undo, [data-seat-context-target]')) return
       stop()
     }
+    // A lifted seat takes Escape first, to go back to its place.
     const cancelOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') stop()
+      if (event.key === 'Escape' && !event.defaultPrevented) stop()
     }
     document.addEventListener('click', cancelOutside, true)
     document.addEventListener('keydown', cancelOnEscape)
@@ -177,7 +188,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
       document.removeEventListener('click', cancelOutside, true)
       document.removeEventListener('keydown', cancelOnEscape)
     }
-  }, [arranging])
+  }, [arranging, moving])
 
   const availableWidth = window.width - insets.left - insets.right
   const availableHeight = Math.max(0, window.height - insets.top - insets.bottom - (b.lookingBack ? replayBarHeight : 0))
@@ -209,6 +220,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   // or later, so the table can be laid out in one pass.
   const toggleArrange = useCallback(() => {
     setArranging(!arranging)
+    setMoving(undefined)
     if (!arranging) {
       cancelRequest()
       setPhaseOpen(false)
@@ -254,6 +266,16 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     let nextNumber = seatCount + 1
     while (board.seats.some(seat => seat.name === t('setup.defaultSeat', { n: nextNumber }))) nextNumber++
     e.append(edits.addSeat(t('setup.defaultSeat', { n: nextNumber }), at, emptySeat, 'good'))
+  }
+  const moveSeat = (seat: SeatId, to: number) => {
+    setMoving(undefined)
+    const edit = edits.moveSeat(board.seats.map(s => s.id), seat, to)
+    if (edit && live) e.append(edit)
+  }
+  const restored = arranging ? edits.restoreOrder(board.seats.map(s => s.id), arrangedFrom) : []
+  const resetOrder = () => {
+    setMoving(undefined)
+    if (live && restored.length > 0) e.appendAll(restored)
   }
   const turnSeats = (direction: 'clockwise' | 'counterclockwise') => {
     const edit = edits.turnSeats(board.seats.map(seat => seat.id), direction)
@@ -311,7 +333,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <View style={styles.ring}>
             <SeatRing seats={view.seats} band={geometry.band} geometry={geometry.ring} t={t} readOnly={b.lookingBack} panelDocked={panelDocked} deal={deal} {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
-              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats } : {}) } : {})} />
+              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats } : {}), ...(restored.length > 0 ? { onResetOrder: resetOrder } : {}) } : {})}
+              {...(arranging && live && seatCount > 2 ? { onMoveSeat: moveSeat, onPickToMove: setMoving, ...(moving ? { moving } : {}) } : {})} />
           </View>
           {winner ? <VictoryAnnouncement winner={winner} label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}
             boxes={resultBoxes} band={geometry.ring.band} left={(columnWidth - geometry.band.width) / 2}
@@ -376,7 +399,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Alone in its corner, away from Show a card and More: nothing puts an undone action
             back, so a tap aimed at another control must never land here. */}
-        {live ? <View style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
+        {live ? <View id="board-undo" style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
           <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo} />
         </View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
