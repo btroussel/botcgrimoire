@@ -104,7 +104,10 @@ or an ability annotation: only the deal records the first, nothing records the s
 already saved stay readable.
 
 Arrange the seats, in More, is where seats are added and the only way to move them. It turns the
-whole ring one place at a time, so every player keeps their neighbours.
+whole ring one place at a time, so every player keeps their neighbours, or moves one seat: onto
+another seat the two swap, and into a gap the seat takes that place while the seats between close
+up. A seat moves with its player, character, states and reminders. Both are `moveSeat` edits, a
+swap two of them recorded as one action, so one undo puts the ring back as it was.
 
 A placed reminder or note moves to another seat by dragging it. The move is one action that takes
 it off and places it again, with no new kind of edit, so one undo puts it back where it was.

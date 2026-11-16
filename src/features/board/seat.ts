@@ -5,6 +5,12 @@ import type { Event, EventId, Grimoire, Payload, SeatId } from '../../engine'
 import { inPlay, isNote, mintSeatId, noteToken } from '../../engine'
 import { unknownIds } from '../../store/scriptSheet'
 
+// Whether putting the seat at `from` into the gap before `gap` changes anyone's neighbours. The
+// gaps on either side of a seat leave the ring as it was; on a ring of two, every gap does.
+export const insertionMoves = (count: number, from: number, gap: number): boolean =>
+  Number.isInteger(gap) && gap >= 0 && gap <= count && count > 2 && gap !== from && gap !== from + 1
+  && !(from === 0 && gap === count) && !(from === count - 1 && gap === 0)
+
 // Every character the table may name: the script's bag and its Travellers (docs/app.md,
 // Board edits: characters off the script are not offered). A custom script lists its Travellers
 // among its items; an edition's are the ones upstream files under it. An id this build does not
@@ -158,6 +164,23 @@ export const edits = {
     return direction === 'clockwise'
       ? { kind: 'moveSeat', seat: seats[seats.length - 1]!, to: 0 }
       : { kind: 'moveSeat', seat: seats[0]!, to: seats.length - 1 }
+  },
+  // Two seats trade places and everyone else stays put. It is two moves recorded as one action,
+  // so one undo puts both back.
+  swapSeats: (seats: readonly SeatId[], a: SeatId, b: SeatId): readonly Payload[] => {
+    const i = seats.indexOf(a)
+    const j = seats.indexOf(b)
+    if (i < 0 || j < 0 || i === j) return []
+    const [first, second] = i < j ? [a, b] : [b, a]
+    return [{ kind: 'moveSeat', seat: first, to: Math.max(i, j) }, { kind: 'moveSeat', seat: second, to: Math.min(i, j) }]
+  },
+  // A seat lifted into the gap before `gap` (0 to the seat count, the last gap being the one
+  // between the last seat and the first). The seats between shift one place to close the hole.
+  // A gap beside the seat moves nothing, and the seat at the top stays there.
+  insertSeat: (seats: readonly SeatId[], seat: SeatId, gap: number): Payload | undefined => {
+    const i = seats.indexOf(seat)
+    if (i < 0 || !insertionMoves(seats.length, i, gap)) return undefined
+    return { kind: 'moveSeat', seat, to: i < gap ? gap - 1 : gap }
   },
   // Selection belongs to the board; showing these characters is a separate information event.
   setBluffs: (bluffs: readonly CharacterId[]): Payload => ({ kind: 'setBluffs', characters: bluffs }),

@@ -170,8 +170,20 @@ a long note never runs over a neighbour or a name. A tap opens the whole text in
 A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it
 off and a pan or a pinch that starts on it still moves the board; a mouse lifts it once it moves.
 Lifted, it rides above the finger, the seat it would land on wears the brass ring and the board
-holds still. Letting go anywhere else, a second finger or Escape puts it back. Nothing drags while
-the seats are being arranged, a panel or a vote is asking for seats, or in replay.
+holds still. Letting go anywhere else, a second finger or Escape puts it back. No reminder drags
+while the seats are being arranged, and nothing drags while a panel or a vote is asking for seats,
+or in replay.
+
+While the seats are being arranged, a seat drags the same way and its reminders and menu rest.
+Lifted, its disc rides above the finger a little smaller, so the marks of the seat under it still
+show, and its own place fades. Every other seat wears the broken brass ring, and every gap that
+would change the order shows a brass slot. The seat under it takes the solid ring and a swap
+badge; an aimed gap grows and the seats either side step apart, so the place it will take opens
+up. Let go, it glides in from where it was dropped while the others glide to their new places. A
+tap picks a seat up instead, with the same marks, so a keyboard or screen reader arranges the ring
+too: a tap on another seat swaps the two, on a slot moves it, and on itself, the velvet or Escape
+puts it down. A line under Done says how, at the capsule's width so it never reaches a name, and
+names the seat in hand.
 
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
