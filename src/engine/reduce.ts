@@ -59,7 +59,7 @@ const applyManual = (g: Grimoire, e: Event): Grimoire => {
         ...d,
         nominations: [
           ...d.nominations,
-          { opened: e.id, by: e.by, of: e.of, votes: [], weight: 0 },
+          { opened: e.id, by: e.by, of: e.of, votes: [], weight: 0, ...(e.exile ? { exile: true as const } : {}) },
         ],
       }))
     case 'vote':

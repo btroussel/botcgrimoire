@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Avbryt nomineringen: {by} → {of}",
+  "cancelExile": "Avbryt förvisningen: {of}",
   "mostVotes": "Flest röster",
   "votesLabel": {
     "one": "röst",
@@ -8,10 +9,15 @@
   "noVoters": "Inga händer noterade.",
   "voted": "Röstningen sparad",
   "nominationArrow": "{by} nominerar {of}",
+  "exileOf": "Förvisning: {of}",
   "manualNight": "Starta nästa natt",
   "manualNomination": {
     "one": "{by} → {of}: {count} röst",
     "other": "{by} → {of}: {count} röster"
+  },
+  "manualExile": {
+    "one": "Förvisning: {of}, {count} röst",
+    "other": "Förvisning: {of}, {count} röster"
   },
   "timerAdd": "Lägg till diskussionstimer",
   "timerAddThirtySeconds": "Lägg till 30 sekunder",
@@ -32,5 +38,9 @@
   "votesToTieExecute": {
     "one": "{count} röst för oavgjort, {execute} för att avrätta",
     "other": "{count} röster för oavgjort, {execute} för att avrätta"
+  },
+  "votesToExile": {
+    "one": "{count} röst för att förvisa",
+    "other": "{count} röster för att förvisa"
   }
 }

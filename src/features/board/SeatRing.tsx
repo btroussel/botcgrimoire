@@ -2,10 +2,10 @@
 // token size and positions, so rendering and overlap checks use the same geometry. A
 // tap opens the seat's nearby menu, or, while a panel has asked the ring for a seat, picks it; the
 // interaction context decides which, so the ring knows nothing about votes or what a pick is
-// for. By day, while a seat's menu is open, a tap on a seat it may still nominate under the
-// engine's once-a-day limits records that nomination. The deal is the ring's motion: a seat
-// that goes from empty to dealt leaves the centre at corner size and lands on its place, one
-// after another. A ring opened just after the deal counts every seat as empty before it, so a
+// for. By day, while a seat's menu is open, a tap on another seat records that nomination, as
+// often as the Storyteller allows it, and a Traveller's menu also calls for their exile. The deal
+// is the ring's motion: a seat that goes from empty to dealt leaves the centre at corner size and
+// lands on its place, one after another. A ring opened just after the deal counts every seat as empty before it, so a
 // new game opens with the deal. A placed reminder can be dragged to another seat; the hook beside
 // this file reads the gesture and the ring says which seat is under it. While the seats are being
 // arranged a seat moves the same way, onto another seat to swap the two or into a gap to take
@@ -16,8 +16,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 
 import type { Translate } from '../../content'
+import { asCharacterId, character } from '../../content'
 import type { EventId, SeatId } from '../../engine'
-import { canNominate, today } from '../../engine'
 import { Appear } from '../../ui/Appear'
 import { EdgeButton } from '../../ui/EdgeButton'
 import { Token } from '../../ui/Token'
@@ -200,9 +200,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const contextIndex = !pick && !action && !onGap && !onArrangeDone ? seats.findIndex(seat => seat.id === contextSeat) : -1
   const contextPlayer = seats[contextIndex]
   const contextAt = positions[contextIndex]
-  const day = e.board ? today(e.board) : undefined
   const isNominationTarget = (seatId: string) => !readOnly && !pick && !action
-    && !!interaction.nominate && !!contextPlayer && contextPlayer.id !== seatId && canNominate(day, contextPlayer.id, seatId)
+    && !!interaction.nominate && !!contextPlayer && contextPlayer.id !== seatId
   const closeContext = () => setContextSeat(undefined)
   const openSeatAction = (section: 'character' | 'remove') => {
     if (!contextPlayer) return
@@ -332,13 +331,14 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           place={(menu, room) => placeSeatMenu({ at: contextAt, size, centre, room, menu, others: positions.filter((_, i) => i !== contextIndex && i < seats.length) })}
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
           {...(onAddReminder ? { onReminder: () => { closeContext(); onAddReminder(contextPlayer.id) } } : {})}
-          nominateSelfDisabled={!canNominate(day, contextPlayer.id, contextPlayer.id)}
           onRemove={() => openSeatAction('remove')}
           onRename={name => e.append(edits.renameSeat(contextPlayer.id, name))}
           onLife={() => e.append(contextPlayer.dead ? edits.revive(contextPlayer.id) : edits.kill(contextPlayer.id))}
           onGhostVote={() => { if (contextPlayer.dead) e.append(edits.setGhostVote(contextPlayer.id, !contextPlayer.ghostVote)) }}
           onAlignment={() => e.append(edits.setAlignment(contextPlayer.id, contextPlayer.alignment === 'good' ? 'evil' : 'good'))}
-          {...(interaction.nominate ? { onNominateSelf: () => { interaction.nominate?.(contextPlayer.id, contextPlayer.id); closeContext() } } : {})} /> : null}
+          {...(interaction.nominate ? { onNominateSelf: () => { interaction.nominate?.(contextPlayer.id, contextPlayer.id); closeContext() } } : {})}
+          {...(interaction.exile && character(asCharacterId(contextPlayer.character)).team === 'traveller'
+            ? { onCallExile: () => { interaction.exile?.(contextPlayer.id); closeContext() } } : {})} /> : null}
       </View>
     {dialog && !readOnly ? <SeatActionDialog action={dialog} visible={dialogOpen} onClose={() => setDialogOpen(false)} /> : null}
     </div>

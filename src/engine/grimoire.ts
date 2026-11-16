@@ -41,6 +41,7 @@ export interface Nomination {
   readonly of: SeatId | 'storyteller' // the Storyteller with an Atheist at the table
   readonly votes: readonly SeatId[] // clockwise from the nominee, as raised
   readonly weight: number
+  readonly exile?: true // a Traveller's exile, which never touches the execution
 }
 
 export interface Day {

@@ -1,5 +1,6 @@
 {
   "cancelNomination": "Anuluj nominację: {by} → {of}",
+  "cancelExile": "Anuluj wygnanie: {of}",
   "mostVotes": "Najwięcej głosów",
   "votesLabel": {
     "one": "głos",
@@ -10,12 +11,19 @@
   "noVoters": "Brak podniesionych rąk.",
   "voted": "Głos zapisany",
   "nominationArrow": "{by} nominuje: {of}",
+  "exileOf": "Wygnanie: {of}",
   "manualNight": "Rozpocznij kolejną noc",
   "manualNomination": {
     "one": "{by} → {of}: {count} głos",
     "few": "{by} → {of}: {count} głosy",
     "many": "{by} → {of}: {count} głosów",
     "other": "{by} → {of}: {count} głosu"
+  },
+  "manualExile": {
+    "one": "Wygnanie: {of}, {count} głos",
+    "few": "Wygnanie: {of}, {count} głosy",
+    "many": "Wygnanie: {of}, {count} głosów",
+    "other": "Wygnanie: {of}, {count} głosu"
   },
   "timerAdd": "Dodaj licznik dyskusji",
   "timerAddThirtySeconds": "Dodaj 30 sekund",
@@ -40,5 +48,11 @@
     "few": "{count} głosy do remisu, {execute} do egzekucji",
     "many": "{count} głosów do remisu, {execute} do egzekucji",
     "other": "{count} głosu do remisu, {execute} do egzekucji"
+  },
+  "votesToExile": {
+    "one": "{count} głos do wygnania",
+    "few": "{count} głosy do wygnania",
+    "many": "{count} głosów do wygnania",
+    "other": "{count} głosu do wygnania"
   }
 }

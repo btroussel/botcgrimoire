@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import type { Translate } from '../../content'
 import type { EventId, Nomination } from '../../engine'
-import { asEventId, canNominate, nominationThresholds, onTheBlock, today } from '../../engine'
+import { asEventId, exileThreshold, nominationThresholds, onTheBlock, today } from '../../engine'
 import { useStore } from '../../store'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { Button, IconButton, focusStyle, isFocused } from '../../ui/Button'
@@ -13,7 +13,7 @@ import { palette, space, tabular, type } from '../../ui/theme'
 import { DayTimerControls } from './DayTimer'
 import { furthestHand, recordedVoteWeight } from './votes'
 import { NominationControls } from './NominationControls'
-import { cancelNomination, confirmNomination, nominationGhostVotes, resetNominationVotes } from './nominationEdits'
+import { cancelNomination, confirmNomination, resetNominationVotes } from './nominationEdits'
 
 // The open ballot is screen state, not an edit, so it lives in the tab: a reload, such as the
 // automatic update, reopens the controls on the same nomination instead of stranding its hands.
@@ -39,7 +39,7 @@ export const DayPanel = () => {
   const [activeId, setActiveId] = useState<EventId | undefined>(() => readOpenBallot(session?.game.id))
   const gameId = session?.game.id
   useEffect(() => { if (gameId) writeOpenBallot(gameId, activeId) }, [gameId, activeId])
-  const { cancelRequest, setSeatAction, setNominate, setCenterPanel, setVoteArc } = interaction
+  const { cancelRequest, setSeatAction, setNominate, setExile, setCenterPanel, setVoteArc } = interaction
   useEffect(() => cancelRequest, [cancelRequest])
   const nominations = useMemo(() => board ? today(board)?.nominations ?? [] : [], [board])
   // Undoing Done or Mark gives the ballot back unconfirmed, so its controls reopen on it.
@@ -53,18 +53,20 @@ export const DayPanel = () => {
   const current = nominations.find(n => n.opened === activeId)
   const replaying = session?.lookingAt !== undefined
   const name = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.name ?? t('board.storyteller'), [board, t])
+  const ballotTitle = useCallback((n: Nomination) => n.exile ? t('day.exileOf', { of: name(n.of) })
+    : t('day.nominationArrow', { by: name(n.by), of: name(n.of) }), [name, t])
   // The ring hands back its seats' ids as plain strings; each one names a seat on this board.
   const seatIn = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.id, [board])
-  // Hands are recorded as soon as a nomination is open: a tap on an eligible player toggles theirs.
+  // Hands are recorded as soon as a nomination is open: a tap on any player toggles theirs. A dead
+  // player with no ghost vote left still raises one, since an ability can let them vote again.
   useEffect(() => {
     if (!board || !current || replaying) {
       setSeatAction(undefined)
       return
     }
     const log = session?.game.log ?? []
-    const spentHere = nominationGhostVotes(log, current.opened)
     setSeatAction({
-      allowed: board.seats.filter(seat => seat.alive || seat.ghostVote || spentHere.has(seat.id) || current.votes.includes(seat.id)).map(seat => seat.id),
+      allowed: board.seats.map(seat => seat.id),
       marked: current.votes,
       markedLabel: t('day.voted'),
       onTap: id => {
@@ -87,7 +89,6 @@ export const DayPanel = () => {
   const nominate = useCallback((nominator: string, nominee: string) => {
     if (!board || !session || replaying || board.clock.phase !== 'day') return
     const day = today(board)
-    if (!canNominate(day, nominator, nominee)) return
     const by = seatIn(nominator)
     const of = seatIn(nominee)
     if (!by || !of) return
@@ -103,16 +104,29 @@ export const DayPanel = () => {
     setNominate(nominate)
     return () => setNominate(undefined)
   }, [nominate, setNominate])
+  // An exile leaves the execution's marker alone, so it opens with no marker edit.
+  const exile = useCallback((traveller: string) => {
+    if (!board || !session || replaying || board.clock.phase !== 'day') return
+    const of = seatIn(traveller)
+    if (!of) return
+    append({ kind: 'nominate', by: 'storyteller', of, exile: true })
+    setActiveId(asEventId(session.game.log.length))
+    setExpanded(undefined)
+  }, [board, session, replaying, append, seatIn])
+  useEffect(() => {
+    setExile(exile)
+    return () => setExile(undefined)
+  }, [exile, setExile])
   const controls = useMemo(() => {
     if (!board || !current || !session || replaying) return null
-    return <NominationControls by={name(current.by)} of={name(current.of)} count={current.weight}
-      thresholds={nominationThresholds(board, current.opened)} t={t}
+    return <NominationControls title={ballotTitle(current)} exile={!!current.exile} count={current.weight}
+      thresholds={current.exile ? { execute: exileThreshold(board) } : nominationThresholds(board, current.opened)} t={t}
       onDone={() => { appendAll(confirmNomination(board, session.game.log, current, { mark: false })); closeVoting() }}
       canReset={current.votes.length > 0 || current.weight !== 0}
       onReset={() => appendAll(resetNominationVotes(session.game.log, current))}
       onMark={() => { appendAll(confirmNomination(board, session.game.log, current)); closeVoting() }}
       canMark={current.of !== 'storyteller' && board.seats.some(seat => seat.id === current.of)} />
-  }, [board, current, session, replaying, name, t, closeVoting, appendAll])
+  }, [board, current, session, replaying, ballotTitle, t, closeVoting, appendAll])
   useEffect(() => {
     setCenterPanel(controls)
     return () => setCenterPanel(null)
@@ -120,27 +134,28 @@ export const DayPanel = () => {
   useEffect(() => {
     setVoteArc(board && current && controls ? { nominee: current.of,
       reached: furthestHand(board.seats.map(seat => seat.id), current.of, current.votes),
-      label: t('day.nominationArrow', { by: name(current.by), of: name(current.of) }) } : undefined)
+      label: ballotTitle(current) } : undefined)
     return () => setVoteArc(undefined)
-  }, [board, current, controls, name, t, setVoteArc])
+  }, [board, current, controls, ballotTitle, setVoteArc])
   if (activeId !== undefined && !current) closeVoting()
   if (!board) return null
   const title = t('board.day', { n: board.clock.night })
-  const highestTotal = Math.max(0, ...nominations.map(n => n.weight))
+  const highestTotal = Math.max(0, ...nominations.filter(n => !n.exile).map(n => n.weight))
   return <Panel title={title}
     footer={<Button surface="paper" variant="primary" label={t('day.manualNight')} disabled={replaying}
       onPress={() => append({ kind: 'phase', to: 'night', night: board.clock.night + 1 })} />}>
     <DayTimerControls />
-    {nominations.map((n, index) => <NominationRow key={n.opened} index={index} by={name(n.by)} of={name(n.of)} count={n.weight}
-      voters={n.votes.map(name)} leading={highestTotal > 0 && n.weight === highestTotal} expanded={expanded === n.opened} t={t}
+    {nominations.map((n, index) => <NominationRow key={n.opened} index={index} by={name(n.by)} of={name(n.of)} exile={!!n.exile} count={n.weight}
+      voters={n.votes.map(name)} leading={!n.exile && highestTotal > 0 && n.weight === highestTotal} expanded={expanded === n.opened} t={t}
       onToggle={() => setExpanded(expanded === n.opened ? undefined : n.opened)} onCancel={() => cancel(n)} />)}
   </Panel>
 }
 
-const NominationRow = ({ index, by, of, count, voters, leading, expanded, t, onToggle, onCancel }: {
+const NominationRow = ({ index, by, of, exile, count, voters, leading, expanded, t, onToggle, onCancel }: {
   readonly index: number
   readonly by: string
   readonly of: string
+  readonly exile: boolean
   readonly count: number
   readonly voters: readonly string[]
   readonly leading: boolean
@@ -153,19 +168,19 @@ const NominationRow = ({ index, by, of, count, voters, leading, expanded, t, onT
   return <View style={[styles.row, leading && styles.leading]}>
     <View style={styles.rowLine}>
       <Pressable accessibilityRole="button" aria-expanded={expanded}
-        accessibilityLabel={[t('day.manualNomination', { by, of, count }), leading ? t('day.mostVotes') : ''].filter(Boolean).join('. ')}
+        accessibilityLabel={[t(exile ? 'day.manualExile' : 'day.manualNomination', { by, of, count }), leading ? t('day.mostVotes') : ''].filter(Boolean).join('. ')}
         onPress={onToggle}
         style={state => [styles.summary, (expanded || state.pressed) && styles.summaryOpen, focusStyle(palette, focusVisible && isFocused(state), 'paper')]}>
         <Text style={[type.text.small, tabular, styles.index]}>{index + 1}.</Text>
         <View style={styles.names}>
-          <Text style={[type.text.strong, styles.ink]}>{by} → {of}</Text>
+          <Text style={[type.text.strong, styles.ink]}>{exile ? t('day.exileOf', { of }) : `${by} → ${of}`}</Text>
           <Text style={[leading ? type.text.strong : type.text.small, tabular, leading ? styles.ink : styles.muted]}>
             {count} {t('day.votesLabel', { count })}
           </Text>
         </View>
         <Icon name={expanded ? 'chevronUp' : 'chevronDown'} size={16} color={palette.inkMuted} />
       </Pressable>
-      <IconButton surface="paper" icon="close" label={t('day.cancelNomination', { by, of })} onPress={onCancel} />
+      <IconButton surface="paper" icon="close" label={t(exile ? 'day.cancelExile' : 'day.cancelNomination', { by, of })} onPress={onCancel} />
     </View>
     {expanded ? <View style={styles.voters}>
       {voters.length ? voters.map((voter, i) => <Text key={i} style={[type.text.body, styles.ink, styles.voter]}>{voter}</Text>)

@@ -1,7 +1,7 @@
 // The contract between the board and whatever renders into its panel. The board screen
 // (features/board) provides this context; the day panel (features/day) uses it to choose the
 // nominator, open the vote in the ring's centre and draw the count's route, without importing the
-// board. The card and seat-pick requests serve the board's own Show a card. It
+// board, and to open a Traveller's exile from the seat menu. The card and seat-pick requests serve the board's own Show a card. It
 // lives in ui/ because it is the one shape two features share and neither may import the other
 // (docs/app.md); ui/ knows no engine type, so a seat is a plain string id here, and a card is the
 // props the Card piece takes and nothing about the event it will append.
@@ -65,6 +65,8 @@ export interface VoteArc {
 export interface BoardInteraction {
   readonly nominate: ((by: string, of: string) => void) | undefined
   readonly setNominate: (handler: ((by: string, of: string) => void) | undefined) => void
+  readonly exile: ((of: string) => void) | undefined
+  readonly setExile: (handler: ((of: string) => void) | undefined) => void
   readonly centerPanel: ReactNode
   readonly setCenterPanel: (panel: ReactNode) => void
   readonly voteArc: VoteArc | undefined
@@ -87,6 +89,8 @@ const Context = createContext<BoardInteraction | undefined>(undefined)
 export const BoardInteractionProvider = ({ children }: { readonly children: ReactNode }) => {
   const [nominate, setNominateState] = useState<((by: string, of: string) => void)>()
   const setNominate = useCallback((handler: ((by: string, of: string) => void) | undefined) => setNominateState(() => handler), [])
+  const [exile, setExileState] = useState<((of: string) => void)>()
+  const setExile = useCallback((handler: ((of: string) => void) | undefined) => setExileState(() => handler), [])
   const [centerPanel, setCenterPanel] = useState<ReactNode>(null)
   const [voteArc, setVoteArc] = useState<VoteArc>()
   const [seatAction, setSeatAction] = useState<SeatAction>()
@@ -121,7 +125,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
 
   const value = useMemo<BoardInteraction>(
     () => ({
-      nominate, setNominate, centerPanel, setCenterPanel, voteArc, setVoteArc,
+      nominate, setNominate, exile, setExile, centerPanel, setCenterPanel, voteArc, setVoteArc,
       seatAction,
       setSeatAction,
       requestSeats,
@@ -132,7 +136,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
       card,
       closeCard,
     }),
-    [nominate, setNominate, centerPanel, voteArc, seatAction, requestSeats, cancelRequest, showCard, pick, pickSeat, card, closeCard],
+    [nominate, setNominate, exile, setExile, centerPanel, voteArc, seatAction, requestSeats, cancelRequest, showCard, pick, pickSeat, card, closeCard],
   )
 
   return <Context.Provider value={value}>{children}</Context.Provider>

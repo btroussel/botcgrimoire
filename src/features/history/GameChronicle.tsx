@@ -73,7 +73,9 @@ const lineOf = (fact: Fact, locale: Locale, t: Translate): Line => {
       const by = side(fact.by)
       const of = side(fact.of)
       const hands = fact.hands.map(({ player, ghost }) => (ghost ? t('history.voterGhost', { name: name(player) }) : name(player))).join(', ')
-      return { text: t('day.manualNomination', { by, of, count: fact.count }), names: [by, of], icon: fact.of === 'storyteller' ? 'nominate' : fact.of, ...(hands ? { hands } : {}) }
+      // An exile records no caller, so it names only the Traveller.
+      const text = fact.exile ? t('day.manualExile', { of, count: fact.count }) : t('day.manualNomination', { by, of, count: fact.count })
+      return { text, names: fact.exile ? [of] : [by, of], icon: fact.of === 'storyteller' ? 'nominate' : fact.of, ...(hands ? { hands } : {}) }
     }
   }
 }
