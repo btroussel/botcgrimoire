@@ -295,13 +295,11 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           if (mover) {
             if (!opensGap(mover.id, position)) return null
             const aimed = aimedGap?.position === position
-            return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - tokenSize.corner / 2, top: at.y - tokenSize.corner / 2 }]}>
+            // The aimed slot sits above the dragged disc, which is drawn right over it.
+            return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - tokenSize.corner / 2, top: at.y - tokenSize.corner / 2, zIndex: aimed ? 21 : 0 }]}>
               <Appear>
-                <div style={{ position: 'relative', transform: aimed && !reduced ? 'scale(1.25)' : 'none', transition: `transform ${durationFor(motion.duration.mark, reduced)}ms ${motion.css.ease}` }}>
-                  <Token size={tokenSize.corner} emptyStyle={styles.slot} selected={aimed} onPress={() => tapGap(position)}
-                    accessibilityLabel={t('board.moveSeatTo', { name: mover.name, n: (moverIndex < position ? position - 1 : position) + 1 })} />
-                  <View pointerEvents="none" style={styles.slotMark}><Icon name="insert" size={18} color={palette.accent} /></View>
-                </div>
+                <Token size={tokenSize.corner} emptyStyle={aimed ? styles.slotAimed : styles.slot} onPress={() => tapGap(position)}
+                  accessibilityLabel={t('board.moveSeatTo', { name: mover.name, n: (moverIndex < position ? position - 1 : position) + 1 })} />
               </Appear>
             </View>
           }
@@ -540,9 +538,10 @@ const styles = StyleSheet.create({
   turnPanel: { alignItems: 'center' },
   hint: { position: 'absolute', top: '100%', left: 0, right: 0, marginTop: space.sm, textAlign: 'center', color: palette.text,
     textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
-  // A gap a picked-up seat can go into: the dashed brass of a place on offer, with its arrow.
+  // A gap a picked-up seat can go into: the dashed brass of a place on offer, and nothing in it.
+  // The one a dragged seat is over fills with brass.
   slot: { borderColor: palette.accent, borderStyle: 'dashed' },
-  slotMark: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  slotAimed: { borderColor: palette.accent, borderStyle: 'dashed', backgroundColor: `${palette.accent}59` },
   // The toolbar's ink capsule, so the turning controls read as the board's own.
   turn: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
     backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },

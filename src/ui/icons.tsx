@@ -23,7 +23,6 @@ export type IconName =
   | 'turnLeft'
   | 'turnRight'
   | 'swap'
-  | 'insert'
   | 'show'
   | 'script'
   | 'order'
@@ -89,8 +88,6 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   turnRight: { d: ['M20 12a8 8 0 1 1-2.6-5.9', 'M20 3v4h-4'] },
   // Two arrows passing each other: two seats trading places.
   swap: { d: ['M4 8h14', 'M14 4l4 4-4 4', 'M20 16H6', 'M10 12l-4 4 4 4'] },
-  // Two arrows closing on a line: a seat going into the gap between two others.
-  insert: { d: ['M3 8l4 4-4 4', 'M21 8l-4 4 4 4', 'M12 5v14'] },
   // An eye: the card turned to a player.
   show: { d: ['M2.5 12c2.5-4.5 5.7-6.5 9.5-6.5s7 2 9.5 6.5c-2.5 4.5-5.7 6.5-9.5 6.5S5 16.5 2.5 12z'], circle: [12, 12, 2.75] },
   // A scroll, the printed sheet.
