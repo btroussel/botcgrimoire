@@ -159,7 +159,7 @@ const TokenFace = memo(function TokenFace({ size, id, alignment, name, named, sh
     </TokenDisc>
   ) : (
     <View style={[styles.empty, box, { borderColor: p.muted }, emptyStyle]}>
-      {add ? <Icon name="add" color={p.muted} /> : null}
+      {add ? <Icon name="add" color={p.muted} size={Math.min(24, Math.round(size * 0.6))} /> : null}
     </View>
   )
 })

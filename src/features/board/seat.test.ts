@@ -204,6 +204,43 @@ describe('the edits', () => {
     expect(edits.turnSeats(ids.slice(0, 1), 'clockwise')).toBeUndefined()
   })
 
+  test('two seats swap places, each with its character and reminders, and one undo puts both back', () => {
+    const built = table().night(1, [token('Bob', 'poisoner/Poisoned', 'Dan')]).build()
+    const before = openSession({ ...newGame('tb', 1000), log: built.log })
+    const board = boardOf(before)
+    const ids = board.seats.map((s) => s.id)
+    const names = (payloads: readonly Payload[]) => boardOf(appendAll(before, payloads, 1001)).seats.map((s) => s.name)
+    // Either order, neighbours or not, and the top seat too.
+    expect(names(edits.swapSeats(ids, built.id('Bob'), built.id('Dan')))).toEqual(['Ann', 'Dan', 'Cat', 'Bob', 'Eve'])
+    expect(names(edits.swapSeats(ids, built.id('Dan'), built.id('Bob')))).toEqual(['Ann', 'Dan', 'Cat', 'Bob', 'Eve'])
+    expect(names(edits.swapSeats(ids, built.id('Cat'), built.id('Dan')))).toEqual(['Ann', 'Bob', 'Dan', 'Cat', 'Eve'])
+    expect(names(edits.swapSeats(ids, built.id('Eve'), built.id('Ann')))).toEqual(['Eve', 'Bob', 'Cat', 'Dan', 'Ann'])
+
+    const swapped = appendAll(before, edits.swapSeats(ids, built.id('Ann'), built.id('Dan')), 1001)
+    const dan = boardOf(swapped).seats[0]!
+    expect(dan).toEqual(board.seats[3])
+    expect(boardOf(undo(swapped, 1002))).toEqual(board)
+    expect(edits.swapSeats(ids, built.id('Ann'), built.id('Ann'))).toEqual([])
+    expect(edits.swapSeats(ids, built.id('Ann'), 'nobody' as SeatId)).toEqual([])
+  })
+
+  test('a seat moved into a gap takes that place and the seats between close up behind it', () => {
+    const { g, id } = table().build()
+    const ids = g.seats.map((s) => s.id)
+    const names = (payload: Payload | undefined) => apply(g, manual(payload!)).seats.map((s) => s.name)
+    // Gap n sits before seat n, and the last one between Eve and Ann.
+    expect(names(edits.insertSeat(ids, id('Ann'), 3))).toEqual(['Bob', 'Cat', 'Ann', 'Dan', 'Eve'])
+    expect(names(edits.insertSeat(ids, id('Eve'), 1))).toEqual(['Ann', 'Eve', 'Bob', 'Cat', 'Dan'])
+    expect(names(edits.insertSeat(ids, id('Bob'), 5))).toEqual(['Ann', 'Cat', 'Dan', 'Eve', 'Bob'])
+    expect(names(edits.insertSeat(ids, id('Dan'), 2))).toEqual(['Ann', 'Bob', 'Dan', 'Cat', 'Eve'])
+    // The gaps either side of a seat leave its neighbours as they are.
+    for (const [seat, gap] of [['Cat', 2], ['Cat', 3], ['Ann', 0], ['Ann', 1], ['Ann', 5], ['Eve', 4], ['Eve', 5], ['Eve', 0]] as const) {
+      expect(edits.insertSeat(ids, id(seat), gap)).toBeUndefined()
+    }
+    expect(edits.insertSeat(ids.slice(0, 2), id('Ann'), 2)).toBeUndefined()
+    expect(edits.insertSeat(ids, id('Ann'), 6)).toBeUndefined()
+  })
+
   test('clearing the belief leaves the seat with no shown character', () => {
     const { g, id } = table().night(1, [setShown('Cat')]).build()
     expect(g.seats.find((s) => s.id === id('Cat'))?.shown).toBeUndefined()

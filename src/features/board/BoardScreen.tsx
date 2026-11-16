@@ -60,7 +60,7 @@ export interface BoardScreenProps {
   readonly timer?: ReactNode
 }
 
-// A ring holds at most twenty seats, so arranging a full one offers no insertion markers.
+// A ring holds at most twenty seats, so arranging a full one offers no add-seat markers.
 const maxSeats = 20
 // The result never runs wider than this, however much room the ring leaves.
 const resultWidth = 560
@@ -109,6 +109,9 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [reminderTarget, setReminderTarget] = useState<SeatId | undefined>(undefined)
   const [noteTarget, setNoteTarget] = useState<NoteTarget | undefined>(undefined)
   const [arranging, setArranging] = useState(false)
+  // A seat picked up by a tap while arranging, waiting for the tap that says where it goes.
+  const [chosenSeat, setChosenSeat] = useState<SeatId | undefined>(undefined)
+  if (!arranging && chosenSeat !== undefined) setChosenSeat(undefined)
   const choosingSeats = !!interaction.pick || !!interaction.seatAction
   const { pick, cancelRequest } = interaction
   const hasCenterPanel = !!interaction.centerPanel
@@ -159,17 +162,20 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     document.addEventListener('keydown', keys)
     return () => document.removeEventListener('keydown', keys)
   }, [undo])
-  // Arranging the seats ends on a click anywhere but its own controls, or Escape.
+  // Arranging the seats ends on a click anywhere but its own controls and the seats, or Escape.
+  // Either first puts down a seat that a tap picked up.
+  const picked = chosenSeat !== undefined
   useEffect(() => {
     if (!arranging) return
-    const stop = () => setArranging(false)
+    const stop = () => picked ? setChosenSeat(undefined) : setArranging(false)
     const cancelOutside = (event: MouseEvent) => {
       // Keep the controls mounted until their press has recorded its edit.
-      if (event.target instanceof Element && event.target.closest('[id^="seat-insertion-"], #ring-turn')) return
+      if (event.target instanceof Element && event.target.closest('[id^="seat-insertion-"], #ring-turn, [data-seat-context-target]')) return
       stop()
     }
+    // A dragged seat hears Escape first and goes back where it was.
     const cancelOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') stop()
+      if (event.key === 'Escape' && !event.defaultPrevented) stop()
     }
     document.addEventListener('click', cancelOutside, true)
     document.addEventListener('keydown', cancelOnEscape)
@@ -177,7 +183,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
       document.removeEventListener('click', cancelOutside, true)
       document.removeEventListener('keydown', cancelOnEscape)
     }
-  }, [arranging])
+  }, [arranging, picked])
 
   const availableWidth = window.width - insets.left - insets.right
   const availableHeight = Math.max(0, window.height - insets.top - insets.bottom - (b.lookingBack ? replayBarHeight : 0))
@@ -205,8 +211,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const over = b.board?.clock.phase === 'over' && !b.lookingBack
   const { goHome } = b
   const askHome = useCallback(() => over ? goHome() : setConfirmHome(true), [over, goHome])
-  // One mode places new seats and turns the ring to where the players sat down, after the draw
-  // or later, so the table can be laid out in one pass.
+  // One mode places new seats, turns the ring and moves single seats to where the players sat
+  // down, after the draw or later, so the table can be laid out in one pass.
   const toggleArrange = useCallback(() => {
     setArranging(!arranging)
     if (!arranging) {
@@ -258,6 +264,12 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const turnSeats = (direction: 'clockwise' | 'counterclockwise') => {
     const edit = edits.turnSeats(board.seats.map(seat => seat.id), direction)
     if (edit && live) e.append(edit)
+  }
+  // Onto another seat the two swap; into a gap the seat takes that place.
+  const moveSeat = (seat: SeatId, to: SeatId | number) => {
+    const ids = board.seats.map(s => s.id)
+    const move = typeof to === 'number' ? [edits.insertSeat(ids, seat, to)].filter(edit => edit !== undefined) : edits.swapSeats(ids, seat, to)
+    if (move.length > 0 && live) e.appendAll(move)
   }
 
   const phaseAction = live && !over
@@ -311,7 +323,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <View style={styles.ring}>
             <SeatRing seats={view.seats} band={geometry.band} geometry={geometry.ring} t={t} readOnly={b.lookingBack} panelDocked={panelDocked} deal={deal} {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
-              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats } : {}) } : {})} />
+              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats, onMoveSeat: moveSeat,
+                onChooseSeat: setChosenSeat, ...(chosenSeat !== undefined ? { chosenSeat } : {}) } : {}) } : {})} />
           </View>
           {winner ? <VictoryAnnouncement winner={winner} label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}
             boxes={resultBoxes} band={geometry.ring.band} left={(columnWidth - geometry.band.width) / 2}
