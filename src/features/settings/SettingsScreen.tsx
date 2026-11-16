@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useLocalSearchParams } from 'expo-router'
+import { useEffect, useId, useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { BoardColour, Locale, Translate } from '../../content'
@@ -13,6 +14,8 @@ import { Section } from '../../ui/Section'
 import { focusRing, motion, palette, radius, space, type } from '../../ui/theme'
 import { velvetArt } from '../../ui/Velvet'
 import { AboutSection } from './AboutSection'
+import { useBuildVersion } from './feedback'
+import { FeedbackSection } from './FeedbackSection'
 import type { SettingsView } from './useSettings'
 import { useSettings } from './useSettings'
 
@@ -20,6 +23,13 @@ export const SettingsScreen = () => {
   const s = useSettings()
   const { t } = s
   const phone = usePhone()
+  const version = useBuildVersion()
+  const languageName = s.localeOptions.find((o) => o.selected)?.name ?? ''
+  // Home's feedback link opens this screen on its group, which sits below the fold on a phone.
+  const { section } = useLocalSearchParams<{ section?: string }>()
+  useEffect(() => {
+    if (section === 'feedback') document.getElementById('settings-feedback')?.scrollIntoView({ block: 'start' })
+  }, [section])
   return (
     <Screen title={t('common.settings')} onBack={s.back} backLabel={t('common.back')}>
       <SettingsStyles />
@@ -33,8 +43,14 @@ export const SettingsScreen = () => {
           <Swatches label={t('common.grimoireStyle')} options={s.colourOptions} onChange={s.setBoardColour} />
         </Section>
 
+        <View id="settings-feedback" style={styles.feedback}>
+          <Section label={t('common.feedback')}>
+            <FeedbackSection t={t} locale={s.locale} languageName={languageName} version={version} />
+          </Section>
+        </View>
+
         <Section label={t('common.about')}>
-          <AboutSection t={t} />
+          <AboutSection t={t} version={version} />
         </Section>
       </View>
     </Screen>
@@ -152,6 +168,8 @@ const styles = StyleSheet.create({
     backgroundColor: palette.parchment,
     borderColor: palette.parchmentShade,
   },
+  // Opened from Home, the group stops a little below the top instead of under its edge.
+  feedback: { scrollMarginTop: space.lg } as object,
   // A close crop shows the weave instead of shrinking the whole board into a flat colour.
   fabric: { position: 'absolute', width: '300%', height: '300%', left: '-100%', top: '-100%' },
   languageRow: {

@@ -41,6 +41,7 @@ export const useHome = () => {
     openHistory: () => router.push('/history'),
     openScripts: () => router.push('/scripts'),
     openSettings: () => router.push('/settings'),
+    openFeedback: () => router.push('/settings?section=feedback'),
   }), [router])
   return { t, ready, artwork, current, newcomer, resume, ...navigate }
 }

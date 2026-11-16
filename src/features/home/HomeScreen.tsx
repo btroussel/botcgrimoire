@@ -99,12 +99,16 @@ export const HomeScreen = () => {
           {badge ? <View style={styles.badgeRow}>
             <Image source={communityArt['ccc-parchment']} style={styles.badge} resizeMode="contain"
               accessibilityRole="image" accessibilityLabel={t('common.unofficial')} />
-            {home.newcomer ? <AboutButton label={t('home.about')} onPress={openAbout} iconOnly={narrow} /> : null}
+            {/* The card says what the app is, to anyone. Someone who has played can also say how it
+                went, and the card keeps only its glyph so the row still fits a phone. Where the row
+                has no room at all, the feedback is still in Settings. */}
+            <BadgeButton icon="info" label={t('home.about')} onPress={openAbout} iconOnly={narrow || !home.newcomer} dialog />
+            {home.newcomer ? null : <BadgeButton icon="mail" label={t('common.feedback')} onPress={home.openFeedback} iconOnly={narrow} />}
           </View> : null}
         </div>
       </View>
       {nudging ? <Nudge label={t('home.nudge')} closeLabel={t('common.close')} onFollow={followNudge} onDismiss={dismissNudge} beside={beside} /> : null}
-      {home.newcomer ? <About t={t} dialog={about} /> : null}
+      <About t={t} dialog={about} />
     </Screen>
   )
 }
@@ -212,19 +216,21 @@ const NavItem = memo(function NavItem({ icon, title, hint, onPress, divided, com
   )
 })
 
-interface AboutButtonProps {
+interface BadgeButtonProps {
+  readonly icon: IconName
   readonly label: string
   readonly onPress: () => void
   readonly iconOnly: boolean // the narrowest phones keep the glyph, so the row still fits beside the badge
+  readonly dialog?: boolean // opens a dialog rather than another screen
 }
 
-const AboutButton = memo(function AboutButton({ label, onPress, iconOnly }: AboutButtonProps) {
+const BadgeButton = memo(function BadgeButton({ icon, label, onPress, iconOnly, dialog }: BadgeButtonProps) {
   const focusVisible = useFocusVisible()
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} aria-haspopup="dialog" onPress={onPress}
+    <Pressable accessibilityRole="button" accessibilityLabel={label} aria-haspopup={dialog ? 'dialog' : undefined} onPress={onPress}
       style={(state) => [styles.about, { backgroundColor: isHovered(state) ? hoverWash.felt : 'transparent', opacity: state.pressed ? motion.pressedOpacity : 1 },
         focusStyle(palette, isFocused(state) && focusVisible)]}>
-      <Icon name="info" color={palette.accent} size={20} />
+      <Icon name={icon} color={palette.accent} size={20} />
       {iconOnly ? null : <Text style={[type.text.small, { color: palette.text }]}>{label}</Text>}
     </Pressable>
   )
@@ -289,9 +295,13 @@ const styles = StyleSheet.create({
   navItemCompact: { minHeight: 52 },
   navItemDense: { minHeight: touch, paddingVertical: space.xxs },
   navText: { flex: 1, minWidth: 0, gap: space.xxs },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md, alignSelf: 'center' },
-  badge: { width: 120, height: 45 },
-  about: { minHeight: touch, flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, borderRadius: radius.control },
+  // As wide as the column, its contents centred, so a crowded row squeezes the badge instead of
+  // growing past the column's edges.
+  badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
+  // A long word beside it, such as Norwegian's Tilbakemelding on a 360-point phone, shrinks the
+  // badge a little rather than the buttons, which keep their touch size and whole words.
+  badge: { width: 120, height: 45, flexShrink: 1, minWidth: 96 },
+  about: { minHeight: touch, minWidth: touch, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingHorizontal: space.sm, borderRadius: radius.control },
   nudge: { flexDirection: 'row', alignItems: 'center', maxWidth: 420, borderRadius: touch / 2, borderWidth: 1, backgroundColor: '#100917f0', boxShadow: shadows.sheet },
   nudgeFollow: { flexShrink: 1, minHeight: touch, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, paddingRight: space.xs, borderRadius: touch / 2 },
   nudgeLabel: { flexShrink: 1, color: palette.text },

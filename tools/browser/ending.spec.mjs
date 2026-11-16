@@ -27,8 +27,8 @@ test('a finished game offers Replay and goes Home without asking', async ({ page
   await page.getByRole('button', { name: 'Home', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('alertdialog')).toHaveCount(0)
-  // A device that has played no longer offers what the app is.
+  // A device that has played drops the first-visit nudge and offers Feedback beside About.
   await expect(page.getByRole('button', { name: 'New game', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'About this app', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Feedback', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'New here? See what the app does', exact: true })).toHaveCount(0)
 })
