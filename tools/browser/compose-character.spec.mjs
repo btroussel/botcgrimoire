@@ -50,3 +50,42 @@ test('a homebrew character opens from the script being composed, and its new wor
   // Edited, not copied: the draft still lists it once.
   await expect(page.getByRole('button', { name: 'Edit Lamplighter', exact: true })).toHaveCount(1)
 })
+
+test('a homebrew character placed at the start of other nights stays there after a reload', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Create a character', exact: true }).first().click()
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Nightshade')
+  await page.getByRole('textbox', { name: 'Ability', exact: true }).fill('Each night*, choose a player: they are poisoned tonight.')
+  const nights = page.getByRole('radiogroup', { name: 'Other nights', exact: true })
+  await nights.getByRole('radio', { name: 'Before the Demon', exact: true }).check({ force: true })
+  await page.getByRole('button', { name: 'Choose the exact place', exact: true }).click()
+  await page.getByRole('list', { name: 'Other nights', exact: true }).getByRole('button', { name: 'Wake after Dusk', exact: true }).click()
+  await expect(nights.getByRole('radio', { name: 'At the start of the night', exact: true })).toBeChecked()
+  await page.getByRole('button', { name: 'Save character', exact: true }).click()
+  const row = page.getByRole('button', { name: 'Edit Nightshade', exact: true })
+  await expect(row).toBeVisible()
+
+  await reload(page)
+  await row.click()
+  await expect(page.getByRole('radiogroup', { name: 'Other nights', exact: true }).getByRole('radio', { name: 'At the start of the night', exact: true })).toBeChecked()
+})
+
+test('a homebrew character written for a script is placed among that script\'s steps', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Compose a script', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Script name', exact: true }).fill('Small Night')
+  await page.getByRole('button', { name: 'Add characters', exact: true }).click()
+  const search = page.getByRole('textbox', { name: 'Search characters', exact: true })
+  for (const name of ['Monk', 'Imp', 'Empath']) {
+    await search.fill(name)
+    await page.getByRole('checkbox', { name: `Add ${name}`, exact: true }).click()
+  }
+  await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+  const nights = page.getByRole('radiogroup', { name: 'Other nights', exact: true })
+  const before = nights.getByRole('radio', { name: 'Before the Demon', exact: true })
+  await expect(before).toHaveAccessibleDescription('After Monk, before Imp')
+  await before.check({ force: true })
+  await page.getByRole('button', { name: 'Choose the exact place', exact: true }).click()
+  const steps = page.getByRole('list', { name: 'Other nights', exact: true }).locator(':scope > [role="listitem"] > [role="button"]')
+  await expect(steps).toHaveText(['Dusk', 'Monk', 'Imp', 'Empath', 'Dawn'])
+})

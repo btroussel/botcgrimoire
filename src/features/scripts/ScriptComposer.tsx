@@ -193,6 +193,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
           <CharacterEditor
             {...(writing.initial ? { initial: writing.initial } : {})}
             {...(writing.resume ? { resume: writing.resume } : {})}
+            script={shown}
             onBack={closeWriter}
             onSave={keepWritten}
           />
