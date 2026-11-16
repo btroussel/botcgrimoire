@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react'
 import type { Homebrew } from '../../content'
 import { getDraft, putDraft } from '../../store'
 import type { CharacterDraft } from './character'
+import { draftWake } from './character'
 import type { Draft } from './compose'
 
 export interface KeptScript {
@@ -45,7 +46,7 @@ const isObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
 const isStrings = (value: unknown) => Array.isArray(value) && value.every((item) => typeof item === 'string')
 const isOptional = (value: unknown, check: (value: unknown) => boolean) => value === undefined || check(value)
 const isString = (value: unknown) => typeof value === 'string'
-const isNight = (value: unknown) => typeof value === 'number' && Number.isFinite(value)
+const isNight = (value: unknown) => typeof value === 'string' || (typeof value === 'number' && Number.isFinite(value))
 const isHomebrew = (value: unknown) => isObject(value) && isString(value.id) && isString(value.name) && isString(value.team)
 
 const isDraft = (value: unknown): value is Draft =>
@@ -65,7 +66,10 @@ const scriptOf = (value: unknown): KeptScript | undefined =>
 
 const characterOf = (value: unknown): KeptCharacter | undefined =>
   isObject(value) && isCharacterDraft(value.draft) && isOptional(value.initial, isHomebrew)
-    ? { draft: value.draft, ...(value.initial ? { initial: value.initial as Homebrew } : {}) }
+    ? {
+      draft: { ...value.draft, firstNight: draftWake('first', value.draft.firstNight), otherNight: draftWake('other', value.draft.otherNight) },
+      ...(value.initial ? { initial: value.initial as Homebrew } : {}),
+    }
     : undefined
 
 // Storage that cannot be read, as in some private windows, has nothing to give back.

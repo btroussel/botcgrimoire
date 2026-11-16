@@ -121,7 +121,9 @@ is the name's letters and digits plus four random ones, so it never matches an o
 unlikely to match someone else's character of the same name. Saving a character also updates its
 copy in every saved script, in the same transaction; games keep the copy they started with.
 [Content](content.md#homebrew-characters) owns how a record is read. Each list is read and
-rewritten in one transaction, so two overlapping saves both land.
+rewritten in one transaction, so two overlapping saves both land. A record saved before wakes
+named their step is given its step when the list is read, and the list is written back at once,
+before a later sync can move the numbers it was read from.
 
 ## Drafts
 

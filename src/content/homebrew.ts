@@ -7,6 +7,7 @@
 import { expandReminders } from './reminders'
 import type { Character, Homebrew } from './types'
 import { teamSide } from './types'
+import { rawNightsheet } from './upstream'
 
 let registered: ReadonlyMap<string, Homebrew> = new Map()
 let version = 0
@@ -32,16 +33,38 @@ export const subscribeHomebrew = (listener: () => void): (() => void) => {
 
 export const homebrewVersion = (): number => version
 
-// A wake position of zero or less is the schema's "does not wake".
-const ordinal = (n: number | undefined): number | undefined => (n !== undefined && n > 0 ? n : undefined)
+// The bundled sheet for a night: character ids and the dusk, minioninfo, demoninfo and dawn
+// steps, in order, each at its ordinal.
+export const nightSheet = (night: 'first' | 'other'): readonly string[] =>
+  night === 'first' ? rawNightsheet.firstNight : rawNightsheet.otherNight
+
+// The position just after a step, or nothing when this build's sheet has no such step.
+export const wakeAfter = (night: 'first' | 'other', step: string): number | undefined => {
+  const at = nightSheet(night).indexOf(step)
+  return at === -1 ? undefined : at + 0.5
+}
+
+// The step a position wakes after: the last one before it, dusk for anything earlier.
+export const stepBefore = (night: 'first' | 'other', position: number): string => {
+  const sheet = nightSheet(night)
+  return sheet[Math.min(Math.max(Math.ceil(position) - 1, 0), sheet.length - 1)]!
+}
+
+// Where a homebrew character wakes: just after its step while the sheet still has it, else at
+// its number. A wake position of zero or less is the schema's "does not wake".
+export const homebrewWake = (h: Homebrew, night: 'first' | 'other'): number | undefined => {
+  const step = night === 'first' ? h.firstNightAfter : h.otherNightAfter
+  const n = night === 'first' ? h.firstNight : h.otherNight
+  return (step !== undefined ? wakeAfter(night, step) : undefined) ?? (n !== undefined && n > 0 ? n : undefined)
+}
 
 const joined = new WeakMap<Homebrew, Character>()
 
 export const homebrewCharacter = (h: Homebrew): Character => {
   const seen = joined.get(h)
   if (seen) return seen
-  const first = ordinal(h.firstNight)
-  const other = ordinal(h.otherNight)
+  const first = homebrewWake(h, 'first')
+  const other = homebrewWake(h, 'other')
   const c: Character = {
     id: h.id as Character['id'],
     team: h.team,

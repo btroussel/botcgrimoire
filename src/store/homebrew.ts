@@ -3,7 +3,7 @@
 // stays readable by any other tool. A game embeds its script, so editing or deleting a character
 // here never changes a game already created with it.
 import type { CustomScript, Homebrew, Script } from '../content'
-import { asCharacterId, character, characters, demonNight, nightMarkers, scriptHomebrew } from '../content'
+import { asCharacterId, characters, nightMarkers, scriptHomebrew, stepBefore, wakeAfter } from '../content'
 import { randomId } from '../engine'
 import type { SavedGame } from './saved'
 import type { SavedScript } from './customScripts'
@@ -30,17 +30,26 @@ export const withHomebrew = (script: CustomScript, h: Homebrew): CustomScript =>
     ? { ...script, items: script.items.map((item) => (typeof item !== 'string' && item.id === h.id ? h : item)) }
     : script
 
-// The first editor offered the start of the night on other nights, just after dusk, for what
-// really wakes before the Demon, and nothing for a Demon's own turn. A record saved there wakes
-// in those places now; a game keeps the copy it was played with.
-export const withCurrentWake = (h: Homebrew): Homebrew => {
-  if (h.otherNight !== nightMarkers.other.dusk + 0.5) return h
-  const otherNight = h.team === 'demon' ? character(asCharacterId('imp')).ordinals.other! + 0.5 : demonNight.first - 0.5
-  return { ...h, otherNight }
+// A record saved before wakes named their step carries only its number, which this build's sheet
+// reads as an imported file's is read. Once it names its step it is left alone, so a Storyteller
+// who placed a character just after dusk keeps it there. The first editor offered other nights
+// nothing but that start of the night, so a Demon saved there wakes with the Demons, after the
+// Imp. A game keeps the copy it was played with.
+export const withWakeSteps = (h: Homebrew): Homebrew => {
+  const first = h.firstNightAfter === undefined && h.firstNight !== undefined && h.firstNight > 0 ? stepBefore('first', h.firstNight) : undefined
+  const firstDemon = h.team === 'demon' && h.otherNight === nightMarkers.other.dusk + 0.5
+  const other = h.otherNightAfter === undefined && h.otherNight !== undefined && h.otherNight > 0
+    ? (firstDemon ? 'imp' : stepBefore('other', h.otherNight)) : undefined
+  if (first === undefined && other === undefined) return h
+  return {
+    ...h,
+    ...(first !== undefined ? { firstNightAfter: first } : {}),
+    ...(other !== undefined ? { otherNight: wakeAfter('other', other) ?? h.otherNight!, otherNightAfter: other } : {}),
+  }
 }
 
-export const scriptWithCurrentWake = (script: CustomScript): CustomScript => {
-  const items = script.items.map((item) => (typeof item !== 'string' && item.id !== '_meta' && 'team' in item && item.team ? withCurrentWake(item) : item))
+export const scriptWithWakeSteps = (script: CustomScript): CustomScript => {
+  const items = script.items.map((item) => (typeof item !== 'string' && item.id !== '_meta' && 'team' in item && item.team ? withWakeSteps(item) : item))
   return items.every((item, i) => item === script.items[i]) ? script : { ...script, items }
 }
 

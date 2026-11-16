@@ -53,6 +53,10 @@ a game shows the copy it was made with. Its text is in one language.
 
 Night positions are ordinals on the bundled sheets, and zero or none means it doesn't wake. A file
 counts one higher, as the official Script Tool does, so reading takes one off and writing adds it.
+A sync that adds a character shifts every later ordinal, so a waking record also names the sheet
+step it wakes just after, and that step decides its place while the sheet has it. Reading a file
+pins each wake to the step its number lands after; writing one turns the step back into a number
+and leaves the step out, since the schema rejects fields it does not know.
 
 Only an embedded `data:image/` icon is drawn. A web address is kept but never fetched, since a game
 must not need the network or tell another server who is playing. An icon made in the app is cropped

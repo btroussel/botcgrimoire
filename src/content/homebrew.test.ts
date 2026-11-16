@@ -28,6 +28,14 @@ describe('a registered homebrew character', () => {
     })
   })
 
+  test('wakes just after its step whatever number it was saved with, and at its number once the sheet has no such step', () => {
+    const poisoner = character(asCharacterId('poisoner')).ordinals.first!
+    registerHomebrew([{ ...lamp, firstNight: 3.5, firstNightAfter: 'poisoner' }])
+    expect(character(asCharacterId('lampx1')).ordinals).toEqual({ first: poisoner + 0.5 })
+    registerHomebrew([{ ...lamp, firstNight: 3.5, firstNightAfter: 'retired' }])
+    expect(character(asCharacterId('lampx1')).ordinals).toEqual({ first: 3.5 })
+  })
+
   test('speaks its author\'s words in every locale', () => {
     registerHomebrew([lamp])
     for (const locale of ['en', 'fr'] as const) {

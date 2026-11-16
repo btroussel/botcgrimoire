@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 
 import type { CustomScript, Homebrew } from '../content'
-import { asCharacterId, character, demonNight, nightMarkers } from '../content'
+import { asCharacterId, character, nightMarkers } from '../content'
 import type { SavedScript, SavedScriptId } from './customScripts'
 import { closeDb, deleteCharacter, getSettings, listCharacters, listScripts, putCharacter, putScript, putSettings } from './db'
 import { mintCharacterId, registryOf, withHomebrew } from './homebrew'
@@ -11,6 +11,17 @@ import { newGame } from './saved'
 
 const baker: Homebrew = { id: 'bakerab12', name: 'Baker', team: 'outsider', ability: 'You bake.' }
 const script = (name: string, ...items: CustomScript['items']): CustomScript => ({ kind: 'custom', name, items: [{ id: '_meta', name }, ...items] })
+
+// A list as the database holds it, without the reading this module does.
+const stored = async (key: string): Promise<unknown> => {
+  const request = <T>(r: IDBRequest<T>) => new Promise<T>((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error) })
+  const db = await request(indexedDB.open('botcgrimoire'))
+  try {
+    return await request(db.transaction('settings').objectStore('settings').get(key))
+  } finally {
+    db.close()
+  }
+}
 
 beforeEach(async () => {
   await closeDb()
@@ -87,19 +98,24 @@ describe('characters in the database', () => {
     expect(scripts[0]!.updatedAt).toBe(4)
   })
 
-  test('a character from the first editor, at the start of other nights, wakes before the Demon now', async () => {
+  test('a record saved before wakes named their step is pinned to one once, and written back', async () => {
     const start = nightMarkers.other.dusk + 0.5
-    const monkish: Homebrew = { ...baker, firstNight: start, otherNight: start }
+    const imp = character(asCharacterId('imp')).ordinals.other!
+    const early: Homebrew = { ...baker, firstNight: 20.5, otherNight: start }
     const demon: Homebrew = { ...baker, id: 'demonab12', team: 'demon', otherNight: start }
-    const placed: Homebrew = { ...baker, id: 'placedab12', otherNight: 20.5 }
-    await putCharacter({ character: monkish, updatedAt: 3 })
+    const pinned: Homebrew = { ...baker, id: 'pinnedab12', otherNight: 3, otherNightAfter: 'dusk' }
+    await putCharacter({ character: early, updatedAt: 3 })
     await putCharacter({ character: demon, updatedAt: 2 })
-    await putCharacter({ character: placed, updatedAt: 1 })
-    await putScript({ id: 's1' as SavedScriptId, script: script('Home', 'imp', monkish), updatedAt: 1 })
-    const [moved, movedDemon, kept] = (await listCharacters()).map((c) => c.character)
-    expect(moved).toEqual({ ...monkish, otherNight: demonNight.first - 0.5 })
-    expect(movedDemon?.otherNight).toBe(character(asCharacterId('imp')).ordinals.other! + 0.5)
-    expect(kept?.otherNight).toBe(20.5)
-    expect((await listScripts())[0]!.script.items[2]).toEqual(moved)
+    await putCharacter({ character: pinned, updatedAt: 1 })
+    await putScript({ id: 's1' as SavedScriptId, script: script('Home', 'imp', early), updatedAt: 1 })
+    const [stays, movedDemon, kept] = (await listCharacters()).map((c) => c.character)
+    // Placed just after dusk, a character stays at the start of the night.
+    expect(stays).toEqual({ ...early, firstNightAfter: 'snitch', otherNightAfter: 'dusk' })
+    // The first editor gave a Demon nothing but that start, so it wakes with the Demons.
+    expect(movedDemon).toMatchObject({ otherNight: imp + 0.5, otherNightAfter: 'imp' })
+    expect(kept).toEqual(pinned)
+    expect((await listScripts())[0]!.script.items[2]).toEqual(stays)
+    // Written back on that read: what is stored already names the steps.
+    expect(await stored('characters')).toContainEqual(expect.objectContaining({ character: stays }))
   })
 })

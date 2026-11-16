@@ -9,7 +9,7 @@ import { emptyDraft } from './compose'
 import { readKept } from './drafts'
 
 const draft: Draft = { name: 'Late Night', author: 'Camille', ids: [asCharacterId('imp'), asCharacterId('chef')] }
-const character = { ...draftOfCharacter(), name: 'Baker', ability: 'You bake.', image: 'data:image/webp;base64,AAAA', firstNight: 20.5 }
+const character = { ...draftOfCharacter(), name: 'Baker', ability: 'You bake.', image: 'data:image/webp;base64,AAAA', firstNight: 'snitch' }
 
 beforeEach(async () => {
   await closeDb()
@@ -40,6 +40,11 @@ describe('kept drafts', () => {
     const initial = { id: 'bakerab12', name: 'Baker', team: 'townsfolk', ability: 'You bake.' }
     await putDraft('character', { draft: character, initial })
     expect((await readKept()).character).toEqual({ draft: character, initial })
+  })
+
+  test('a character draft kept by an older version, with a position for its wake, opens on that step', async () => {
+    await putDraft('character', { draft: { ...character, firstNight: 20.5, otherNight: 0 } })
+    expect((await readKept()).character).toEqual({ draft: { ...character, otherNight: undefined } })
   })
 
   test('a record of another shape is left out rather than opened', async () => {

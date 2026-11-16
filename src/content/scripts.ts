@@ -1,5 +1,6 @@
 // What a script is: an edition, or a custom script in upstream's schema (assets/schema). Both
 // resolve to an ordered list of character ids; the join says what each id means.
+import { homebrewWake, stepBefore } from './homebrew'
 import type { CharacterId, Edition, Homebrew, HomebrewJinx, HomebrewSpecial, Team } from './types'
 import { teams } from './types'
 import { rawRoles } from './upstream'
@@ -66,6 +67,16 @@ const isStrings = (x: unknown): x is readonly string[] => Array.isArray(x) && x.
 const fromFileNight = (n: number): number => (n > 0 ? Math.max(n - 1, 0.5) : n)
 const toFileNight = (n: number | undefined): number | undefined => (n !== undefined && n > 0 ? n + 1 : n)
 
+// A file's number read against this build's sheet, which is the nearest reading, then pinned to
+// the step it lands after so a later sync does not move it.
+const fileWake = (night: 'first' | 'other', raw: unknown): Partial<Homebrew> => {
+  if (!number(raw)) return {}
+  const n = fromFileNight(raw)
+  if (n <= 0) return night === 'first' ? { firstNight: n } : { otherNight: n }
+  const after = stepBefore(night, n)
+  return night === 'first' ? { firstNight: n, firstNightAfter: after } : { otherNight: n, otherNightAfter: after }
+}
+
 const text = (x: unknown): x is string => typeof x === 'string' && x !== ''
 const number = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
 
@@ -93,9 +104,9 @@ const homebrewExtras = (item: Record<string, unknown>): Partial<Homebrew> => {
   return {
     ...(typeof image === 'string' || (isStrings(image) && image.length > 0) ? { image: image as NonNullable<Homebrew['image']> } : {}),
     ...(text(flavor) ? { flavor } : {}),
-    ...(number(firstNight) ? { firstNight: fromFileNight(firstNight) } : {}),
+    ...fileWake('first', firstNight),
     ...(text(firstNightReminder) ? { firstNightReminder } : {}),
-    ...(number(otherNight) ? { otherNight: fromFileNight(otherNight) } : {}),
+    ...fileWake('other', otherNight),
     ...(text(otherNightReminder) ? { otherNightReminder } : {}),
     ...(isStrings(reminders) && reminders.length > 0 ? { reminders } : {}),
     ...(isStrings(remindersGlobal) && remindersGlobal.length > 0 ? { remindersGlobal } : {}),
@@ -180,13 +191,15 @@ export const parseScript = (json: unknown): CustomScript | { readonly errors: re
 }
 
 // The file a script saves and shares as: its items, with night positions counted the way a file
-// counts them, so reading the file back gives the same script.
+// counts them from where each character wakes on this build's sheet, and without the steps, which
+// the schema does not know. Reading the file back gives the same script.
 export const scriptFile = (script: CustomScript): readonly CustomScriptItem[] =>
   script.items.map((item) => {
     if (typeof item === 'string' || item.id === '_meta' || !('team' in item)) return item
-    const firstNight = toFileNight(item.firstNight)
-    const otherNight = toFileNight(item.otherNight)
-    return { ...item, ...(firstNight !== undefined ? { firstNight } : {}), ...(otherNight !== undefined ? { otherNight } : {}) }
+    const { firstNightAfter: _first, otherNightAfter: _other, ...record } = item
+    const firstNight = toFileNight(homebrewWake(item, 'first') ?? item.firstNight)
+    const otherNight = toFileNight(homebrewWake(item, 'other') ?? item.otherNight)
+    return { ...record, ...(firstNight !== undefined ? { firstNight } : {}), ...(otherNight !== undefined ? { otherNight } : {}) }
   })
 
 // The homebrew records a script carries, in its order. Older saves may hold a partial record,
