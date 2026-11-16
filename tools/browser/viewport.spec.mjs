@@ -152,7 +152,8 @@ test.describe(`${homeLocale} Home`, () => {
       for (const action of [page.getByRole('button', { name: new RegExp(`^${resume}, `) }),
         ...others.map(name => page.getByRole('button', { name, exact: true }))]) {
         await expect(action).toBeInViewport({ ratio: 1 })
-        expect((await action.boundingBox()).height).toBeGreaterThanOrEqual(44)
+        // A box placed at a fractional offset can measure 43.99998, which is still 44 on screen.
+        expect(Math.round((await action.boundingBox()).height)).toBeGreaterThanOrEqual(44)
       }
     }
   })
