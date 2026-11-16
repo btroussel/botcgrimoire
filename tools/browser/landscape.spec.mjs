@@ -35,7 +35,8 @@ test.describe(`${locale} landscape board`, () => {
       expect(box.y).toBeGreaterThanOrEqual(0)
       expect(box.x + box.width).toBeLessThanOrEqual(width + 1)
       expect(box.y + box.height).toBeLessThanOrEqual(height + 1)
-      expect(box.height).toBeGreaterThanOrEqual(44)
+      // A box placed at a fractional offset can measure 43.99998, which is still 44 on screen.
+      expect(Math.round(box.height)).toBeGreaterThanOrEqual(44)
     }
 
     for (const viewport of [{ width: 844, height: 390 }, { width: 568, height: 320 }]) {
@@ -44,7 +45,7 @@ test.describe(`${locale} landscape board`, () => {
         await expectInBounds(page.getByRole('button', { name: label, exact: true }))
       }
       for (const label of text.tabs) {
-        expect((await page.getByRole('button', { name: label, exact: true }).boundingBox()).width).toBeGreaterThanOrEqual(44)
+        expect(Math.round((await page.getByRole('button', { name: label, exact: true }).boundingBox()).width)).toBeGreaterThanOrEqual(44)
       }
       const tokens = page.locator('[data-seat-context-target]')
       for (const token of await tokens.all()) await expectInBounds(token)
