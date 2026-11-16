@@ -1,4 +1,5 @@
-import { centreBoxes, fitRing, fitRingAroundControls, nameHeightAt } from './ringLayout'
+import { seatPositions } from './ring'
+import { centreBoxes, fitRing, fitRingAroundControls, gapMarkerSize, nameHeightAt } from './ringLayout'
 
 const metrics = { maximum: 104, minimum: 44, nameOverhang: 8, nameGap: 2, nameHeight: 14, padding: 12, gap: 4 }
 
@@ -173,5 +174,36 @@ describe('the ring\'s free centre', () => {
   test('an empty ring leaves the whole band up to the widest box', () => {
     const ring = fitRing({ width: 1000, height: 650 }, 0, metrics)
     expect(centreBoxes(ring, metrics, 560)).toEqual([{ left: 220, top: 0, width: 560, height: 650 }])
+  })
+})
+
+describe('gap markers', () => {
+  // Each marker halfway between two seats, as the ring draws it: 36 points at most, 20 at least,
+  // clear of a 5 point brass ring around each token.
+  const markers = (width: number, height: number, count: number) => {
+    const geometry = fitRing({ width, height }, count, metrics)
+    const between = seatPositions(geometry.band, geometry.rx, geometry.ry, count * 2).filter((_, i) => i % 2 === 1)
+    return { geometry, between, sizes: between.map(at => gapMarkerSize(at, geometry, 36, 5, 20)) }
+  }
+
+  test('shrink to clear every token and its ring, down to a size a finger can find', () => {
+    for (const [width, height] of [[390, 640], [320, 420], [1000, 650], [768, 900]]) {
+      for (let count = 3; count <= 20; count++) {
+        const { geometry: { size, positions }, between, sizes } = markers(width!, height!, count)
+        sizes.forEach((marker, i) => {
+          expect(marker).toBeGreaterThanOrEqual(20)
+          expect(marker).toBeLessThanOrEqual(36)
+          const room = Math.min(...positions.map(seat => Math.hypot(between[i]!.x - seat.x, between[i]!.y - seat.y) - size / 2))
+          // Above the floor it clears the ring; at the floor it still never reaches the token.
+          if (marker > 20) expect(marker / 2).toBeLessThanOrEqual(room - 5)
+          expect(marker / 2).toBeLessThanOrEqual(room)
+        })
+      }
+    }
+  })
+
+  test('keep their full size between seats with room around them, and shrink on a crowded phone', () => {
+    expect(markers(1000, 650, 5).sizes.every(marker => marker === 36)).toBe(true)
+    expect(markers(390, 640, 18).sizes.every(marker => marker < 36)).toBe(true)
   })
 })

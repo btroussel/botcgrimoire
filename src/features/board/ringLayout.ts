@@ -150,3 +150,13 @@ export const centreBoxes = (geometry: Pick<RingGeometry, 'band' | 'size' | 'posi
   }
   return boxes
 }
+
+// The diameter of a gap marker halfway between two seats: its full size where that clears every
+// disc and the brass ring around it (`halo`), smaller where it would not, so a crowded ring never
+// puts a dashed circle over a token. It keeps `least` so it can still be tapped, which on the
+// most crowded phone ring only grazes a halo.
+export const gapMarkerSize = (gap: { readonly x: number; readonly y: number }, geometry: Pick<RingGeometry, 'size' | 'positions'>,
+  marker: number, halo: number, least: number) => {
+  const room = Math.min(...geometry.positions.map(seat => Math.hypot(gap.x - seat.x, gap.y - seat.y) - geometry.size / 2 - halo))
+  return Math.max(least, Math.min(marker, Math.floor(2 * room)))
+}

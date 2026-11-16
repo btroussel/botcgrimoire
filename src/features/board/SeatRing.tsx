@@ -28,13 +28,14 @@ import { ReminderChip } from '../../ui/ReminderChip'
 import { reminderSize } from '../../ui/reminderStack'
 import { Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
-import { hairline, motion, palette, radius, shadows, space, tokenSize, touch, type } from '../../ui/theme'
+import { hairline, motion, palette, radius, ring, shadows, space, tokenSize, touch, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
 import { sameSeat } from './board'
 import { centrePanelWidth } from './boardGeometry'
 import { seatPositions, stackAngle } from './ring'
+import { gapMarkerSize } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { placeSeatMenu } from './seatMenu'
@@ -80,6 +81,8 @@ const seatLiftScale = 0.9
 // one, measured against its own reach, wins, so a crowded ring still leaves room for each gap.
 const seatReach = 0.6
 const gapReach = 0.4
+// The smallest a gap marker shrinks to on a crowded ring, still a target a finger can find.
+const leastMarker = 20
 // How far the seats either side of an aimed gap step apart, in token sizes.
 const parting = 0.14
 
@@ -108,11 +111,13 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const reduced = useReducedMotion()
   const indexOf = (id: SeatId | undefined) => seats.findIndex(seat => seat.id === id)
   // Odd positions in a double-sized ring fall between the existing seats: gap n is before seat n,
-  // and the last one sits between the last seat and the first.
+  // and the last one sits between the last seat and the first. A marker stays halfway between its
+  // seats and shrinks where its full size would cover a token.
   const gapPoints = useMemo(() => !onArrangeDone ? []
-    : seats.length === 0 ? seatPositions(band, geometry.rx, geometry.ry, 1).map(at => ({ at, position: 0 }))
-      : seatPositions(band, geometry.rx, geometry.ry, seats.length * 2).flatMap((at, i) => i % 2 === 1 ? [{ at, position: (i + 1) / 2 }] : []),
-  [onArrangeDone, seats.length, band, geometry.rx, geometry.ry])
+    : (seats.length === 0 ? seatPositions(band, geometry.rx, geometry.ry, 1).map(at => ({ at, position: 0 }))
+      : seatPositions(band, geometry.rx, geometry.ry, seats.length * 2).flatMap((at, i) => i % 2 === 1 ? [{ at, position: (i + 1) / 2 }] : []))
+      .map(({ at, position }) => ({ at, position, size: gapMarkerSize(at, geometry, tokenSize.corner, ring.gap + ring.width, leastMarker) })),
+  [onArrangeDone, seats.length, band, geometry])
   const opensGap = (seat: SeatId, gap: number) => insertionMoves(seats.length, indexOf(seat), gap)
   // Where a dropped seat was let go, so it lands from there rather than from its old place.
   const landing = useRef<Landing | undefined>(undefined)
@@ -291,21 +296,21 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           </Appear>
         </div> : null}
         {/* With a seat picked up the gaps are the places it can go; otherwise, below a full ring, they add a seat. */}
-        {gapPoints.map(({ at, position }) => {
+        {gapPoints.map(({ at, position, size: marker }) => {
           if (mover) {
             if (!opensGap(mover.id, position)) return null
             const aimed = aimedGap?.position === position
-            // The aimed slot sits above the dragged disc, which is drawn right over it.
-            return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - tokenSize.corner / 2, top: at.y - tokenSize.corner / 2, zIndex: aimed ? 21 : 0 }]}>
+            // The aimed slot gives way to the dragged disc over it; the seats stepping apart mark the place.
+            return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - marker / 2, top: at.y - marker / 2, opacity: aimed ? 0 : 1 }]}>
               <Appear>
-                <Token size={tokenSize.corner} emptyStyle={aimed ? styles.slotAimed : styles.slot} onPress={() => tapGap(position)}
+                <Token size={marker} emptyStyle={styles.slot} onPress={() => tapGap(position)}
                   accessibilityLabel={t('board.moveSeatTo', { name: mover.name, n: (moverIndex < position ? position - 1 : position) + 1 })} />
               </Appear>
             </View>
           }
           if (!onGap) return null
-          return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - tokenSize.corner / 2, top: at.y - tokenSize.corner / 2 }]}>
-            <Token size={tokenSize.corner} add onPress={() => tapGap(position)} accessibilityLabel={t('board.addSeatAt', { n: position + 1 })} />
+          return <View key={`gap-${position}`} id={`seat-insertion-${position}`} style={[styles.place, { left: at.x - marker / 2, top: at.y - marker / 2 }]}>
+            <Token size={marker} add onPress={() => tapGap(position)} accessibilityLabel={t('board.addSeatAt', { n: position + 1 })} />
           </View>
         })}
         {onArrangeDone && !readOnly ? <View id="ring-turn" style={[styles.centerPanel, styles.turnPanel, { left: centre.x, top: centre.y }]}>
@@ -539,9 +544,7 @@ const styles = StyleSheet.create({
   hint: { position: 'absolute', top: '100%', left: 0, right: 0, marginTop: space.sm, textAlign: 'center', color: palette.text,
     textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   // A gap a picked-up seat can go into: the dashed brass of a place on offer, and nothing in it.
-  // The one a dragged seat is over fills with brass.
   slot: { borderColor: palette.accent, borderStyle: 'dashed' },
-  slotAimed: { borderColor: palette.accent, borderStyle: 'dashed', backgroundColor: `${palette.accent}59` },
   // The toolbar's ink capsule, so the turning controls read as the board's own.
   turn: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
     backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },
