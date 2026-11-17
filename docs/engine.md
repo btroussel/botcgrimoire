@@ -10,7 +10,8 @@ The event set is closed: one union in `events.ts`, and the reducer ends with an 
 check, so a new kind does not compile until it is handled. An event has an id, its position in the
 log, and an audience that controls nothing ([Model](model.md#one-offline-device) says why).
 
-- Seats: `addSeat`, `removeSeat`, `moveSeat`, `renameSeat`.
+- Seats: `addSeat`, `removeSeat`, `moveSeat`, `placeSeat`, `renameSeat`. `moveSeat` changes the
+  order; `placeSeat` lays a token off the circle, or back on it, and leaves the order alone.
 - A player's tokens: `setCharacter`, `setShown`, `setAlignment`, `kill`, `revive`, `setGhostVote`.
 - Reminders, notes and ability annotations: `placeToken`, `removeToken`, `setNote`, `grant`,
   `revoke`.

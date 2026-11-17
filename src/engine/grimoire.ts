@@ -23,6 +23,13 @@ export const noteToken: TokenRef = ['note', '']
 export const isNote = (def: TokenRef, note: string | undefined): boolean =>
   note !== undefined && (def[0] === 'note' || def[0] === '')
 
+// A token laid where its player sits in the room rather than on the circle: its centre as a share
+// of the board's width and height, so a layout survives a turned phone or another screen.
+export interface Place {
+  readonly x: number
+  readonly y: number
+}
+
 export interface Seat {
   readonly id: SeatId
   readonly name: string
@@ -33,6 +40,7 @@ export interface Seat {
   readonly alive: boolean
   readonly ghostVote: boolean
   readonly tokens: readonly TokenInstance[]
+  readonly place?: Place // absent on the circle
 }
 
 export interface Nomination {

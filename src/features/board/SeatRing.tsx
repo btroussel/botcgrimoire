@@ -8,18 +8,18 @@
 // lands on its place, one after another. A ring opened just after the deal counts every seat as empty before it, so a
 // new game opens with the deal. A placed reminder can be dragged to another seat; the hook beside
 // this file reads the gesture and the ring says which seat is under it. While the seats are being
-// arranged a seat moves the same way, onto another seat to swap the two or into a gap to take
-// that place, or by a tap on it and then a tap on where it goes.
+// arranged a seat moves the same way, onto another seat to swap the two, into a gap to take
+// that place or onto the velvet to stay where it was let go, so the tokens can be laid out as the
+// players sit in the room; or by a tap on it and then a tap on where it goes.
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 
 import type { Translate } from '../../content'
 import { asCharacterId, character } from '../../content'
 import type { EventId, SeatId } from '../../engine'
 import { Appear } from '../../ui/Appear'
-import { EdgeButton } from '../../ui/EdgeButton'
 import { Token } from '../../ui/Token'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { domElement } from '../../ui/focus'
@@ -28,15 +28,18 @@ import { ReminderChip } from '../../ui/ReminderChip'
 import { reminderSize } from '../../ui/reminderStack'
 import { Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
-import { hairline, motion, palette, radius, ring, shadows, space, tokenSize, touch, type } from '../../ui/theme'
+import { motion, palette, ring, seatMetrics, shadows, space, tokenSize, touch } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
 import { sameSeat } from './board'
 import { centrePanelWidth } from './boardGeometry'
-import { seatPositions, stackAngle } from './ring'
+import { ArrangeControls } from './ArrangeControls'
+import { settle, voteRoute } from './freeLayout'
+import type { Point } from './freeLayout'
+import { seatPositions, stackAngle, voteArc } from './ring'
 import { gapMarkerSize } from './ringLayout'
-import type { RingGeometry } from './ringLayout'
+import type { BoardControlBounds, RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { placeSeatMenu } from './seatMenu'
 import { SeatActionDialog } from './SeatActionDialog'
@@ -56,20 +59,29 @@ export interface SeatRingProps {
 
   readonly seats: readonly SeatView[]
   readonly band: Size // the ring's band, inside the flank insets
-  readonly geometry: RingGeometry
+  readonly geometry: RingGeometry // its positions are where the seats are drawn, laid out or on the circle
+  readonly free?: boolean // some seat is laid out off the circle
+  readonly obstacles?: readonly BoardControlBounds[] // the corner controls a laid-out seat keeps clear of
   readonly readOnly?: boolean
   readonly t: Translate
   readonly onAddReminder?: (seat: SeatId) => void
   readonly onRemoveReminder?: (placedBy: EventId) => void
   readonly onMoveReminder?: (placedBy: EventId, to: SeatId) => void
   readonly onEditNote?: (placedBy: EventId) => void
-  readonly onGap?: (at: number) => void
+  readonly onGap?: (at: number, spot: Point) => void // the gap's index, and where a seat added there would sit clear
   readonly onTurn?: (direction: 'clockwise' | 'counterclockwise') => void
   readonly onArrangeDone?: () => void // the ring's centre holds Done, between the turning controls
-  readonly onMoveSeat?: (seat: SeatId, to: SeatId | number) => void // onto another seat, or into the gap before that index
+  readonly onBackToCircle?: () => void // set while some seat is laid out off the circle
+  readonly turnAt?: Point // where the arrangement's controls sit on a laid-out board, the ring's middle otherwise
+  readonly turnDocked?: boolean // the board docks them at its foot, as a laid-out room leaves no clear middle
+  readonly onTurnSize?: (size: Size) => void
+  // Onto another seat, or into the gap before that index, with the spot clear between its new neighbours.
+  readonly onMoveSeat?: (seat: SeatId, to: SeatId | number, spot?: Point) => void
+  readonly onPlaceSeat?: (seat: SeatId, at: Point) => void // let go over the velvet, at a spot clear of the rest
   readonly chosenSeat?: SeatId // arranging: the seat a tap picked up, which the next tap moves
   readonly onChooseSeat?: (seat: SeatId | undefined) => void
   readonly panelDocked?: boolean // the board draws the centre panel at its foot instead
+  readonly panelAt?: Point // where the centre panel sits on a laid-out board, clear of every seat
   readonly deal?: boolean // the game was dealt just before the ring opened
 }
 
@@ -85,6 +97,15 @@ const gapReach = 0.4
 const leastMarker = 20
 // How far the seats either side of an aimed gap step apart, in token sizes.
 const parting = 0.14
+// A lifted seat over open velvet stays there when let go.
+const velvet = 'velvet'
+// Until the finger has come this far from the press, in token sizes, letting go puts a seat back,
+// whatever it is over: on touch the seat is drawn above the finger, so a long press let go in
+// place would otherwise move it up, and a slip of the mouse would lay the board out.
+const homeReach = 0.3
+type DropTarget = SeatId | number | typeof velvet
+
+const noObstacles: readonly BoardControlBounds[] = []
 
 interface Landing {
   readonly seat: SeatId
@@ -92,8 +113,9 @@ interface Landing {
   readonly y: number
 }
 
-export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, t, onAddReminder, onRemoveReminder, onMoveReminder, onEditNote, onGap, onTurn, onArrangeDone,
-  onMoveSeat, chosenSeat, onChooseSeat, readOnly = false, panelDocked = false, deal = false }: SeatRingProps) {
+export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, free = false, obstacles = noObstacles, t, onAddReminder, onRemoveReminder, onMoveReminder,
+  onEditNote, onGap, onTurn, onArrangeDone, onBackToCircle, turnAt, turnDocked = false, onTurnSize, onMoveSeat, onPlaceSeat, chosenSeat, onChooseSeat,
+  readOnly = false, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
   const [expandedSeat, setExpandedSeat] = useState<string | undefined>(undefined)
@@ -113,42 +135,60 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   // Odd positions in a double-sized ring fall between the existing seats: gap n is before seat n,
   // and the last one sits between the last seat and the first. A marker stays halfway between its
   // seats and shrinks where its full size would cover a token.
+  // On a laid-out board a gap sits halfway between its two seats wherever they are.
   const gapPoints = useMemo(() => !onArrangeDone ? []
     : (seats.length === 0 ? seatPositions(band, geometry.rx, geometry.ry, 1).map(at => ({ at, position: 0 }))
+      : free && seats.length > 1 ? positions.slice(0, seats.length).map((at, i) => {
+        const next = positions[(i + 1) % seats.length]!
+        return { at: { x: (at.x + next.x) / 2, y: (at.y + next.y) / 2 }, position: i + 1 }
+      })
       : seatPositions(band, geometry.rx, geometry.ry, seats.length * 2).flatMap((at, i) => i % 2 === 1 ? [{ at, position: (i + 1) / 2 }] : []))
       .map(({ at, position }) => ({ at, position, size: gapMarkerSize(at, geometry, tokenSize.corner, ring.gap + ring.width, leastMarker) })),
-  [onArrangeDone, seats.length, band, geometry])
+  [onArrangeDone, seats.length, band, geometry, free, positions])
+  // A spot for a seat near `at`, clear of every other seat and the corner controls.
+  const clearSpot = (at: Point, moving: SeatId | undefined) =>
+    settle(at, positions.filter((_, i) => seats[i] && seats[i].id !== moving), band, size, seatMetrics, obstacles)
   const opensGap = (seat: SeatId, gap: number) => insertionMoves(seats.length, indexOf(seat), gap)
+  // Where a seat moved or added into a gap would sit clear of the rest.
+  const gapSpot = (position: number, moving: SeatId | undefined) => {
+    const gap = gapPoints.find(g => g.position === position)
+    return gap ? clearSpot(gap.at, moving) : undefined
+  }
   // Where a dropped seat was let go, so it lands from there rather than from its old place.
   const landing = useRef<Landing | undefined>(undefined)
-  const { lifted, root, ghost, handlers: dragHandlers } = useBoardDrag<SeatId | number>(pressed => {
+  const { lifted, root, ghost, handlers: dragHandlers } = useBoardDrag<DropTarget>(pressed => {
     const seat = pressed.closest('[data-seat-context-target]')?.getAttribute('data-seat-context-target') as SeatId | null | undefined
     if (!seat) return undefined
     if (arranging) return { seat }
     const chip = canDrag ? pressed.closest('[data-chip]')?.getAttribute('data-chip') : undefined
     return chip ? { seat, chip } : undefined
-  }, (clientX, clientY, touch, grab) => {
+  }, (clientX, clientY, touch, grab, travel) => {
     const origin = domElement(bandView.current)?.getBoundingClientRect()
     const x = clientX - (origin?.left ?? 0)
     // On touch the piece rides above the finger, so the finger never hides it or its target.
     const y = clientY - (origin?.top ?? 0) - (touch ? grab.chip === undefined ? size * seatReach : chipSize : 0)
-    let target: SeatId | number | undefined
+    let target: DropTarget | undefined
+    if (grab.chip === undefined && travel < size * homeReach) return { x, y }
     let best = 1
-    const consider = (to: SeatId | number, at: { readonly x: number; readonly y: number } | undefined, reach: number) => {
+    const consider = (to: DropTarget, at: { readonly x: number; readonly y: number } | undefined, reach: number) => {
       const score = at ? Math.hypot(at.x - x, at.y - y) / (size * reach) : Infinity
       if (score <= best) { best = score; target = to }
     }
     seats.forEach((s, i) => { if (s.id !== grab.seat) consider(s.id, positions[i], seatReach) })
     if (grab.chip === undefined) for (const gap of gapPoints) if (opensGap(grab.seat, gap.position)) consider(gap.position, gap.at, gapReach)
+    // Anywhere else on the board a seat stays where it is let go; off the board it goes back.
+    if (target === undefined && grab.chip === undefined && onPlaceSeat && x >= 0 && y >= 0 && x <= band.width && y <= band.height) target = velvet
     return { x, y, ...(target !== undefined ? { target } : {}) }
   }, (grab, to, at) => {
     if (grab.chip === undefined) {
       landing.current = { seat: grab.seat, x: at.x, y: at.y }
-      onMoveSeat?.(grab.seat, to)
+      if (to === velvet) onPlaceSeat?.(grab.seat, clearSpot(at, grab.seat))
+      else if (typeof to === 'number') onMoveSeat?.(grab.seat, to, gapSpot(to, grab.seat))
+      else onMoveSeat?.(grab.seat, to)
       return
     }
     const placedBy = seats.find(s => s.id === grab.seat)?.chips.find(c => c.key === grab.chip)?.placedBy
-    if (placedBy !== undefined && typeof to === 'string') onMoveReminder?.(placedBy, to)
+    if (placedBy !== undefined && typeof to === 'string' && to !== velvet) onMoveReminder?.(placedBy, to)
   }, canDrag || arranging)
   const liftedSeat = lifted && lifted.grab.chip === undefined ? lifted.grab.seat : undefined
   // A seat lifted by a drag takes over from one picked up by a tap.
@@ -245,22 +285,29 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const vote = interaction.voteArc
   const nomineeAt = positionOf(vote?.nominee)
   const tapGap = (position: number) => {
-    if (!mover) { onGap?.(position); return }
-    onMoveSeat?.(mover.id, position)
+    const spot = gapSpot(position, mover?.id)
+    if (!mover) { if (spot) onGap?.(position, spot); return }
+    onMoveSeat?.(mover.id, position, spot)
     onChooseSeat?.(undefined)
   }
+  const nomineeIndex = seats.findIndex(seat => seat.id === vote?.nominee)
+  const reachedIndex = seats.findIndex(seat => seat.id === vote?.reached)
+  const route = vote && nomineeAt ? free
+    ? voteRoute(positions.slice(0, seats.length), size, nomineeIndex, reachedIndex < 0 ? undefined : reachedIndex)
+    : voteArc(band, geometry.rx, geometry.ry, size, seats.length, nomineeAt, positionOf(vote.reached)) : undefined
+  const panel = panelAt ?? centre
   const ghostSeat = Math.round(size * seatLiftScale)
 
   return (
     <div ref={root} {...dragHandlers} style={{ width: viewport.width, height: viewport.height, overflow: band.height > viewport.height || band.width > viewport.width ? 'auto' : 'visible',
       ...(lifted && !lifted.touch ? { cursor: 'grabbing' } : {}) }}>
       <View ref={bandView} style={[styles.band, { width: band.width, height: band.height }]}>
-        {vote && nomineeAt ? <VotingArc band={band} rx={geometry.rx} ry={geometry.ry} tokenSize={size} seatCount={seats.length}
-          nominee={nomineeAt} reached={positionOf(vote.reached)} label={vote.label} /> : null}
+        {vote && route ? <VotingArc band={band} route={route} label={vote.label} /> : null}
         {seats.map((seat, i) => {
           const at = positions[i]
           if (!at) return null
-          const reminderAngle = stackAngle(at, centre, geometry.rx, geometry.ry, { size, chip: chipSize })
+          // A laid-out seat's reminders face the middle of the room, which its angle points away from.
+          const reminderAngle = free ? at.angle : stackAngle(at, centre, geometry.rx, geometry.ry, { size, chip: chipSize })
           const nominationLabel = isNominationTarget(seat.id) ? t('board.nominatePlayer', { name: seat.name }) : undefined
           const inPick = pick !== undefined || action !== undefined
           const allowed = pick ? pick.allowed.includes(seat.id) : action?.allowed.includes(seat.id) ?? false
@@ -271,6 +318,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           return <RingSeat key={seat.id} seat={seat} size={size} x={at.x} y={at.y} cx={centre.x} cy={centre.y}
             angle={reminderAngle} raised={expandedSeat === seat.id} rank={tracked.ranks.get(seat.id)}
             stagger={tracked.ranks.has(seat.id) ? stagger : 0} arrived={tracked.arrived.has(seat.id)} seatCount={seats.length} index={i}
+            placed={seat.place ? `${seat.place.x},${seat.place.y}` : ''}
             selected={inPick ? chosen : arranging ? liftedSeat === undefined && mover?.id === seat.id : contextPlayer?.id === seat.id || undefined}
             pickable={inPick ? allowed : swapTarget || undefined} allowed={allowed}
             quietPick={!!vote && !pick} readOnly={readOnly} editChips={editable}
@@ -312,19 +360,12 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             <Token size={marker} add onPress={() => tapGap(position)} accessibilityLabel={t('board.addSeatAt', { n: position + 1 })} />
           </View>
         })}
-        {onArrangeDone && !readOnly ? <View id="ring-turn" style={[styles.centerPanel, styles.turnPanel, { left: centre.x, top: centre.y }]}>
-          <Appear style={styles.turn}>
-            {onTurn ? <EdgeButton icon="turnLeft" label={t('board.turnCounterclockwise')} onPress={() => onTurn('counterclockwise')} /> : null}
-            <EdgeButton icon="check" label={t('common.done')} onPress={onArrangeDone} />
-            {onTurn ? <EdgeButton icon="turnRight" label={t('board.turnClockwise')} onPress={() => onTurn('clockwise')} /> : null}
-          </Appear>
-          {/* Hung below the capsule at its width, so it never reaches the seats' names beside it. */}
-          {onMoveSeat && liftedSeat === undefined ? <Text style={[type.text.small, styles.hint]}>
-            {mover ? t('board.arrangeChosen', { name: mover.name }) : t('board.arrangeHint')}
-          </Text> : null}
-        </View> : null}
+        {onArrangeDone && !readOnly && !turnDocked ? <ArrangeControls t={t} onTurn={onTurn} onDone={onArrangeDone} onBackToCircle={onBackToCircle}
+          hint={onMoveSeat && liftedSeat === undefined ? mover ? t('board.arrangeChosen', { name: mover.name }) : t('board.arrangeHint') : undefined}
+          {...(onTurnSize ? { onSize: onTurnSize } : {})}
+          style={[styles.centerPanel, styles.turnPanel, { left: (turnAt ?? centre).x, top: (turnAt ?? centre).y }]} /> : null}
         {interaction.centerPanel && !readOnly && !panelDocked ? <View pointerEvents="box-none" style={[styles.centerPanel, {
-          left: centre.x, top: centre.y, width: centrePanelWidth(band.width, size),
+          left: panel.x, top: panel.y, width: centrePanelWidth(band.width, size),
         }]}>{interaction.centerPanel}</View> : null}
         {contextPlayer && contextAt && !readOnly ? <SeatContextMenu key={contextPlayer.id} seatId={contextPlayer.id} name={contextPlayer.name} width={contextWidth} t={t}
           alignment={contextPlayer.alignment} dead={contextPlayer.dead} ghostVote={contextPlayer.ghostVote} anchor={contextAt}
@@ -369,6 +410,7 @@ interface RingSeatProps {
   readonly arrived: boolean
   readonly seatCount: number
   readonly index: number // its place round the ring
+  readonly placed: string // where it was laid out, '' on the circle, so a new place glides
   readonly selected: boolean | undefined // a toggle only while the ring answers a pick or a vote
   readonly pickable: boolean | undefined // set while a panel asks the ring for seats
   readonly allowed: boolean
@@ -395,7 +437,7 @@ interface RingSeatProps {
 const sameRingSeat = (a: RingSeatProps, b: RingSeatProps) =>
   (Object.keys(a) as (keyof RingSeatProps)[]).every(key => key === 'seat' ? sameSeat(a.seat, b.seat) : a[key] === b[key])
 
-const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raised, rank, stagger, arrived, seatCount, index, selected, pickable, allowed,
+const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raised, rank, stagger, arrived, seatCount, index, placed, selected, pickable, allowed,
   quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, seatLifted, parted, swapping, swapLabel, canAdd, nominationLabel, markedLabel, t, handlers }: RingSeatProps) {
   const reduced = useReducedMotion()
   const empty = seat.character === ''
@@ -426,7 +468,7 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         })
   return (
     <Dealt raised={raised} size={size} x={x} y={y} cx={cx} cy={cy} {...(rank !== undefined ? { rank } : {})}
-      stagger={stagger} arrived={arrived} seatCount={seatCount} index={index} landing={() => handlers.landing(seat.id)}>
+      stagger={stagger} arrived={arrived} seatCount={seatCount} index={index} placed={placed} landing={() => handlers.landing(seat.id)}>
       <div data-seat-context-target={seat.id} title={nominationLabel} style={{ opacity: seatLifted ? motion.dimOpacity : 1, transform: parted ?? 'none',
         transition: `transform ${durationFor(motion.duration.mark, reduced)}ms ${motion.css.ease}, opacity ${durationFor(motion.duration.mark, reduced, true)}ms` }}>
       <Seat
@@ -475,18 +517,20 @@ interface DealtProps {
   readonly arrived: boolean // added to a ring already on screen
   readonly seatCount: number
   readonly index: number
+  readonly placed: string
   readonly landing: () => Landing | undefined // a dropped seat glides in from where it was let go
   readonly children: ReactNode
 }
 
 // A seat's place on the band, and its motion. Dealt, it flies from the centre at corner size to
 // its place at full size, after its rank's share of the stagger. Added, it grows in; and when a
-// seat is added, removed or the ring turns, the seats glide from where they were to their new
-// places. A resize or a measured control moves the seats at once, so only a change of seat count
-// or of a seat's place glides, and a token still in the deal has its start moved to the new centre.
+// seat is added, removed, laid out or put back on the circle, or the ring turns, the seats glide
+// from where they were to their new places. A resize or a measured control moves the seats at
+// once, so only a change of seat count, of a seat's place in the order or of where it was laid out
+// glides, and a token still in the deal has its start moved to the new centre.
 // Each run is WAAPI on the compositor, started before the first paint, and a re-render
 // mid-flight leaves it alone. Under reduced motion the token is simply there.
-const Dealt = ({ size, x, y, cx, cy, rank, stagger, arrived, seatCount, index, landing, children, raised }: DealtProps) => {
+const Dealt = ({ size, x, y, cx, cy, rank, stagger, arrived, seatCount, index, placed, landing, children, raised }: DealtProps) => {
   const reduced = useReducedMotion()
   const place = useRef<ViewInstance>(null)
   const dealing = useRef<Animation | undefined>(undefined)
@@ -507,20 +551,22 @@ const Dealt = ({ size, x, y, cx, cy, rank, stagger, arrived, seatCount, index, l
       { duration: motion.duration.mark, easing: motion.css.ease })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const last = useRef({ x, y, size, seatCount, index })
+  const last = useRef({ x, y, size, seatCount, index, placed })
   useLayoutEffect(() => {
     const before = last.current
-    last.current = { x, y, size, seatCount, index }
+    last.current = { x, y, size, seatCount, index, placed }
     const deal = dealing.current
+    // Under a point, as recording a layout's share can shift a token by a fraction of one.
+    const moved = Math.hypot(before.x - x, before.y - y) >= 1 || before.size !== size
     if (deal?.playState === 'running' && deal.effect instanceof KeyframeEffect) deal.effect.setKeyframes(fromCentre())
-    else if ((before.seatCount !== seatCount || before.index !== index) && (before.x !== x || before.y !== y || before.size !== size)) {
+    else if ((before.seatCount !== seatCount || before.index !== index || before.placed !== placed) && moved) {
       const dropped = landing()
       const from = dropped ? { x: dropped.x, y: dropped.y, scale: seatLiftScale } : { x: before.x, y: before.y, scale: before.size / size }
       element()?.animate([{ transform: `translate(${from.x - x}px, ${from.y - y}px) scale(${from.scale})` }, { transform: 'none' }],
         { duration: motion.duration.deal, easing: motion.css.ease })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [x, y, cx, cy, size, seatCount, index])
+  }, [x, y, cx, cy, size, seatCount, index, placed])
   return (
     <View ref={place} style={[styles.place, { zIndex: raised ? 2 : 0, left: x - size / 2, top: y - size / 2, width: size, height: size }]}>
       {children}
@@ -541,11 +587,6 @@ const styles = StyleSheet.create({
   place: { position: 'absolute' },
   centerPanel: { position: 'absolute', zIndex: 15, transform: [{ translateX: '-50%' }, { translateY: '-50%' }] },
   turnPanel: { alignItems: 'center' },
-  hint: { position: 'absolute', top: '100%', left: 0, right: 0, marginTop: space.sm, textAlign: 'center', color: palette.text,
-    textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   // A gap a picked-up seat can go into: the dashed brass of a place on offer, and nothing in it.
   slot: { borderColor: palette.accent, borderStyle: 'dashed' },
-  // The toolbar's ink capsule, so the turning controls read as the board's own.
-  turn: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
-    backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },
 })

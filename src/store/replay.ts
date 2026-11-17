@@ -22,7 +22,7 @@ export const phaseMarks = (log: readonly Event[]): readonly PhaseMark[] => {
 
 // Keep the initial deal visible, before preparation reminders, information and bluffs.
 export const setupStart = (log: readonly Event[]): number => {
-  const initial = new Set(['addSeat', 'setCharacter', 'setAlignment', 'setShown', 'renameSeat', 'moveSeat'])
+  const initial = new Set(['addSeat', 'setCharacter', 'setAlignment', 'setShown', 'renameSeat', 'moveSeat', 'placeSeat'])
   const firstChoice = log.findIndex(event => !initial.has(event.kind))
   if (firstChoice < 0) return log.length
   const batch = log[firstChoice - 1]?.batch

@@ -47,6 +47,18 @@ test('reordering retains identity and result is recorded only by an explicit end
   expect(moved.result).toBeUndefined()
 })
 
+test('a placed seat keeps its place through a move and returns to the circle without one', () => {
+  const b = game().seat('Ann', 'chef').seat('Bob', 'imp').seat('Cat', 'monk').build()
+  let g = apply(b.g, manual({ kind: 'placeSeat', seat: b.id('Ann'), at: { x: 0.2, y: 0.8 } }))
+  expect(g.seats[0]!.place).toEqual({ x: 0.2, y: 0.8 })
+  expect(g.seats[1]!.place).toBeUndefined()
+  g = apply(g, manual({ kind: 'moveSeat', seat: b.id('Ann'), to: 2 }))
+  expect(g.seats[2]!.place).toEqual({ x: 0.2, y: 0.8 })
+  g = apply(g, manual({ kind: 'placeSeat', seat: b.id('Ann') }))
+  expect(g.seats[2]).not.toHaveProperty('place')
+  expect(g.seats[2]!.tokens).toBe(b.g.seats[0]!.tokens)
+})
+
 test('night checklist notes do not mutate the board', () => {
   const b = game().seat('Ann', 'chef').build()
   expect(apply(b.g, manual({ kind: 'nightChecklist', entry: 'custom:1', status: 'done', label: 'Remember note' }))).toBe(b.g)

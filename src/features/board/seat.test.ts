@@ -224,6 +224,30 @@ describe('the edits', () => {
     expect(edits.swapSeats(ids, built.id('Ann'), 'nobody' as SeatId)).toEqual([])
   })
 
+  test('on a board laid out as the room, a swap or a turn moves players between its spots', () => {
+    const built = table().build()
+    const start = openSession({ ...newGame('tb', 1000), log: built.log })
+    const ids = boardOf(start).seats.map((s) => s.id)
+    const spot = (i: number) => ({ x: i / 10, y: 0.5 })
+    // On the circle a move is only a move.
+    const swap = edits.swapSeats(ids, built.id('Ann'), built.id('Dan'))
+    expect(edits.keepSpots(boardOf(start), swap)).toBe(swap)
+
+    const laid = appendAll(start, ids.slice(0, 4).map((id, i) => edits.placeSeat(id, spot(i))), 1001)
+    const places = (s: typeof laid) => boardOf(s).seats.map((seat) => [seat.name, seat.place?.x])
+    const swapped = appendAll(laid, edits.keepSpots(boardOf(laid), swap), 1002)
+    expect(places(swapped)).toEqual([['Dan', 0], ['Bob', 0.1], ['Cat', 0.2], ['Ann', 0.3], ['Eve', undefined]])
+    // Eve sat on the circle, so whoever takes her place in the order does too.
+    const turned = appendAll(laid, edits.keepSpots(boardOf(laid), [edits.turnSeats(ids, 'clockwise')!]), 1002)
+    expect(places(turned)).toEqual([['Eve', 0], ['Ann', 0.1], ['Bob', 0.2], ['Cat', 0.3], ['Dan', undefined]])
+    expect(boardOf(undo(turned, 1003))).toEqual(boardOf(laid))
+
+    const circle = appendAll(laid, edits.backToCircle(boardOf(laid)), 1002)
+    expect(boardOf(circle).seats.every((seat) => seat.place === undefined)).toBe(true)
+    expect(boardOf(undo(circle, 1003))).toEqual(boardOf(laid))
+    expect(edits.backToCircle(boardOf(start))).toEqual([])
+  })
+
   test('a seat moved into a gap takes that place and the seats between close up behind it', () => {
     const { g, id } = table().build()
     const ids = g.seats.map((s) => s.id)

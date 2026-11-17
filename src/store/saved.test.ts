@@ -178,6 +178,16 @@ describe('migrate', () => {
     expect(() => migrate(progress({ marker: 'step', step: 'twelve' }))).toThrow(InvalidSavedGame)
   })
 
+  test('a seat place is a share of the board, or absent to go back to the circle', () => {
+    const game = newGame('tb', 1)
+    const placed = (extra: object) => ({ ...game, log: [{ id: 0, audience: 'storyteller', kind: 'placeSeat', seat: 'sa1', ...extra }] })
+    expect(migrate(placed({ at: { x: 0, y: 1 } })).log).toHaveLength(1)
+    expect(migrate(placed({})).log).toHaveLength(1)
+    expect(() => migrate(placed({ at: { x: 1.2, y: 0.5 } }))).toThrow(InvalidSavedGame)
+    expect(() => migrate(placed({ at: { x: '0.5', y: 0.5 } }))).toThrow(InvalidSavedGame)
+    expect(() => migrate(placed({ at: { x: 0.5 } }))).toThrow(InvalidSavedGame)
+  })
+
   test('a script is an edition id or a whole custom script', () => {
     const game = newGame('tb', 1)
     expect(() => migrate({ ...game, script: { kind: 'custom', items: [] } })).toThrow(InvalidSavedGame)

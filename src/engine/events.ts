@@ -1,6 +1,7 @@
 // The closed event set (docs/engine.md). The log is the saved state and every event is
 // self-contained: an `info` carries what was told rather than pointing at a board field.
 import type { Alignment, CharacterId, TokenRef } from '../content'
+import type { Place } from './grimoire'
 import type { EventId, SeatId } from './ids'
 
 export type Phase = 'setup' | 'night' | 'day' | 'over'
@@ -113,6 +114,8 @@ export type Payload =
       readonly alignment: Alignment
     }
   | { readonly kind: 'removeSeat'; readonly seat: SeatId }
+  // Where the token lies on the board, off the circle; without `at` it goes back to the circle.
+  | { readonly kind: 'placeSeat'; readonly seat: SeatId; readonly at?: Place }
   | { readonly kind: 'renameSeat'; readonly seat: SeatId; readonly name: string }
   | { readonly kind: 'setCharacter'; readonly seat: SeatId; readonly to: CharacterId; readonly alignment?: Alignment }
   | { readonly kind: 'setShown'; readonly seat: SeatId; readonly to?: CharacterId }
@@ -129,7 +132,7 @@ export type Event = Envelope & Payload
 
 // These explicit edits may be appended to any game, including older saved games.
 export const isBoardEdit = (payload: { readonly kind: string }): boolean =>
-  ['addSeat', 'removeSeat', 'renameSeat', 'setCharacter', 'setAlignment', 'kill', 'revive', 'placeToken', 'removeToken', 'setNote', 'setBluffs', 'setGhostVote', 'moveSeat', 'endGame', 'nightChecklist', 'phase', 'nightProgress', 'wake', 'nominate', 'cancelNomination', 'vote', 'unvote', 'setVoteTotal', 'markForExecution', 'execute', 'exile', 'setShown', 'addLoose', 'removeLoose', 'grant', 'revoke', 'override', 'info'].includes(payload.kind)
+  ['addSeat', 'removeSeat', 'renameSeat', 'placeSeat', 'setCharacter', 'setAlignment', 'kill', 'revive', 'placeToken', 'removeToken', 'setNote', 'setBluffs', 'setGhostVote', 'moveSeat', 'endGame', 'nightChecklist', 'phase', 'nightProgress', 'wake', 'nominate', 'cancelNomination', 'vote', 'unvote', 'setVoteTotal', 'markForExecution', 'execute', 'exile', 'setShown', 'addLoose', 'removeLoose', 'grant', 'revoke', 'override', 'info'].includes(payload.kind)
 
 // The exhaustiveness check every fold over a closed set ends with.
 export const unreachable = (x: never): never => {

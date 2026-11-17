@@ -1,7 +1,7 @@
 // Manual board edits and localized picker rows.
 import type { Alignment, CharacterId, Locale, Script, Team } from '../../content'
 import { character, characters, gameText, isCustom, scriptCharacters, teams } from '../../content'
-import type { Event, EventId, Grimoire, Payload, SeatId } from '../../engine'
+import type { Event, EventId, Grimoire, Payload, Place, SeatId } from '../../engine'
 import { inPlay, isNote, mintSeatId, noteToken } from '../../engine'
 import { unknownIds } from '../../store/scriptSheet'
 
@@ -184,5 +184,30 @@ export const edits = {
   },
   // Selection belongs to the board; showing these characters is a separate information event.
   setBluffs: (bluffs: readonly CharacterId[]): Payload => ({ kind: 'setBluffs', characters: bluffs }),
+  // A token laid where its player sits, or back on the circle without a place.
+  placeSeat: (seat: SeatId, at?: Place): Payload => ({ kind: 'placeSeat', seat, ...(at ? { at } : {}) }),
+  // Once tokens are laid out as the room, swapping or turning the seats moves players between
+  // its spots, as it moves them between places on the circle: each spot stays where it is and
+  // takes the seat that now holds its place in the order. A board on the circle needs nothing.
+  keepSpots: (g: Grimoire, moves: readonly Payload[]): readonly Payload[] => {
+    if (!g.seats.some(seat => seat.place)) return moves
+    const ids = g.seats.map(seat => seat.id)
+    for (const move of moves) {
+      if (move.kind !== 'moveSeat') continue
+      const from = ids.indexOf(move.seat)
+      if (from < 0) continue
+      ids.splice(from, 1)
+      ids.splice(Math.max(0, Math.min(move.to, ids.length)), 0, move.seat)
+    }
+    const spots = ids.flatMap((id, i) => {
+      const spot = g.seats[i]!.place
+      const held = g.seats.find(seat => seat.id === id)?.place
+      return spot === held ? [] : [{ kind: 'placeSeat', seat: id, ...(spot ? { at: spot } : {}) } as Payload]
+    })
+    return [...moves, ...spots]
+  },
+  // Every laid-out token back on the circle, as one action.
+  backToCircle: (g: Grimoire): readonly Payload[] =>
+    g.seats.flatMap(seat => seat.place ? [{ kind: 'placeSeat', seat: seat.id } as Payload] : []),
 
 }

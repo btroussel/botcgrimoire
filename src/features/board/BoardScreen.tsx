@@ -41,7 +41,10 @@ import { ReplayBar, replayBarHeight } from './ReplayBar'
 import { ReferenceRail } from './ReferenceRail'
 import type { ReferenceTab } from './ReferenceRail'
 import { useReferenceDrawer } from './useReferenceDrawer'
-import { boardGeometry, tokenStripHeight, toolbarHeight } from './boardGeometry'
+import { boardGeometry, centrePanelWidth, tokenStripHeight, toolbarHeight } from './boardGeometry'
+import { ArrangeControls, hintRoom } from './ArrangeControls'
+import { centreSpot, isFree, layoutPositions, toPlace } from './freeLayout'
+import type { Point } from './freeLayout'
 import { centreBoxes } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
@@ -64,6 +67,9 @@ export interface BoardScreenProps {
 const maxSeats = 20
 // The result never runs wider than this, however much room the ring leaves.
 const resultWidth = 560
+// The vote controls' height with a two-line title, which a laid-out room must leave clear at its
+// middle before they go there rather than dock at the foot.
+const votePanelHeight = 200
 // Undo, the toolbar, the plaque and the bluffs hold the four corners of a live board. Replay has
 // no undo, so its corner keeps the ornament.
 const replayOrnaments = ['topLeft'] as const
@@ -194,7 +200,26 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const geometry = useMemo(() => boardGeometry({ width: availableWidth, height: availableHeight, landscape, live,
     reserved: reservedWidth, toolbar: toolbarSize, bluffs: bluffsSize, clockHeight, seats: seatCount, strip: stripCount }),
   [availableWidth, availableHeight, landscape, live, reservedWidth, toolbarSize, bluffsSize, clockHeight, seatCount, stripCount])
-  const resultBoxes = useMemo(() => centreBoxes(geometry.ring, seatMetrics, resultWidth), [geometry.ring])
+  // Where the seats are drawn: laid out as the room, or on the circle.
+  const places = useMemo(() => b.view?.seats.map(seat => seat.place) ?? [], [b.view])
+  const free = isFree(places)
+  const ring = useMemo(() => free ? { ...geometry.ring, positions: layoutPositions(geometry.ring, places, seatMetrics) } : geometry.ring,
+    [free, geometry.ring, places])
+  const resultBoxes = useMemo(() => centreBoxes(ring, seatMetrics, resultWidth), [ring])
+  // A laid-out room may have a seat in its middle, so the vote goes where none is, or to the foot.
+  const panelAt = useMemo(() => {
+    if (!free) return undefined
+    const width = centrePanelWidth(ring.band.width, ring.size)
+    return centreSpot(centreBoxes(ring, seatMetrics, width), width, votePanelHeight)
+  }, [free, ring])
+  // The arrangement's controls make way for a laid-out room: in its middle where that is clear,
+  // else docked at the foot over the bluffs and the plaque, which arranging does not need.
+  const [turnSize, setTurnSize] = useState<Size>()
+  const turnAt = useMemo(() => free && turnSize
+    ? centreSpot(centreBoxes(ring, seatMetrics, ring.band.width), turnSize.width, turnSize.height + 2 * hintRoom) : undefined,
+  [free, turnSize, ring])
+  const turnDocked = free && turnSize !== undefined && turnAt === undefined
+  const seatsRight = free ? Math.max(-Infinity, ...ring.positions.map(at => at.x + ring.size / 2)) : geometry.seatsRight
   const { append, appendAll, board: edited } = e
   const addReminder = useCallback((seat: SeatId) => setReminderTarget(seat), [])
   const removeReminder = useCallback((placedBy: EventId) => append(edits.removeToken(placedBy)), [append])
@@ -221,6 +246,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     }
   }, [arranging, cancelRequest])
   const stopArranging = useCallback(() => setArranging(false), [])
+  const updateTurnSize = useCallback((size: Size) =>
+    setTurnSize(previous => previous && previous.width === size.width && previous.height === size.height ? previous : size), [])
 
   // A locked phone mid-night is worse than a bright one. On the web the lock is refused while the
   // tab is hidden, and releasing a lock that never took would otherwise throw on unmount.
@@ -246,7 +273,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const winner = board.clock.phase === 'over' ? board.result?.winner : undefined
   const { columnWidth, statusHeight, utilitiesHeight, utilitiesWidth, clockWidth, topBandHeight } = geometry
   const hasUtilities = stripCount > 0
-  const panelDocked = !!interaction.centerPanel && geometry.panelDocks
+  const panelDocked = !!interaction.centerPanel && (free ? panelAt === undefined : geometry.panelDocks)
   const dockWidth = Math.min(440, availableWidth - 2 * space.sm)
 
   const grantLabel = (from: string | undefined) => from ?? t('board.storyteller')
@@ -255,21 +282,39 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
       ? t('board.grantOwn', { character: e.name(characterId) })
       : t('board.grantFrom', { character: e.name(characterId), name: from })
 
-  const addSeat = (at: number) => {
+  // In a laid-out room a seat added or moved into a gap sits between its new neighbours, unless
+  // both are on the circle, where it takes its place on the circle too.
+  const betweenPlaced = (gap: number) => [board.seats[gap - 1], board.seats[gap % seatCount]].some(seat => seat?.place)
+  const addSeat = (at: number, spot: Point) => {
     if (seatCount >= maxSeats) return
     let nextNumber = seatCount + 1
     while (board.seats.some(seat => seat.name === t('setup.defaultSeat', { n: nextNumber }))) nextNumber++
-    e.append(edits.addSeat(t('setup.defaultSeat', { n: nextNumber }), at, emptySeat, 'good'))
+    const add = edits.addSeat(t('setup.defaultSeat', { n: nextNumber }), at, emptySeat, 'good')
+    e.appendAll(add.kind === 'addSeat' && betweenPlaced(at) ? [add, edits.placeSeat(add.seat, toPlace(spot, ring.band))] : [add])
   }
   const turnSeats = (direction: 'clockwise' | 'counterclockwise') => {
     const edit = edits.turnSeats(board.seats.map(seat => seat.id), direction)
-    if (edit && live) e.append(edit)
+    if (edit && live) e.appendAll(edits.keepSpots(board, [edit]))
   }
   // Onto another seat the two swap; into a gap the seat takes that place.
-  const moveSeat = (seat: SeatId, to: SeatId | number) => {
+  const moveSeat = (seat: SeatId, to: SeatId | number, spot?: Point) => {
     const ids = board.seats.map(s => s.id)
-    const move = typeof to === 'number' ? [edits.insertSeat(ids, seat, to)].filter(edit => edit !== undefined) : edits.swapSeats(ids, seat, to)
-    if (move.length > 0 && live) e.appendAll(move)
+    if (!live) return
+    if (typeof to !== 'number') {
+      const swap = edits.swapSeats(ids, seat, to)
+      if (swap.length > 0) e.appendAll(edits.keepSpots(board, swap))
+      return
+    }
+    const insert = edits.insertSeat(ids, seat, to)
+    if (!insert) return
+    const placed = betweenPlaced(to) && spot ? [edits.placeSeat(seat, toPlace(spot, ring.band))]
+      : board.seats.find(s => s.id === seat)?.place ? [edits.placeSeat(seat)] : []
+    e.appendAll([insert, ...placed])
+  }
+  const placeSeat = (seat: SeatId, at: Point) => { if (live) e.append(edits.placeSeat(seat, toPlace(at, ring.band))) }
+  const backToCircle = () => {
+    const back = edits.backToCircle(board)
+    if (back.length > 0 && live) e.appendAll(back)
   }
 
   const phaseAction = live && !over
@@ -321,13 +366,17 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
 
         <View style={{ paddingTop: geometry.fitted ? 0 : utilitiesHeight }}>
           <View style={styles.ring}>
-            <SeatRing seats={view.seats} band={geometry.band} geometry={geometry.ring} t={t} readOnly={b.lookingBack} panelDocked={panelDocked} deal={deal} {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
+            <SeatRing seats={view.seats} band={geometry.band} geometry={ring} free={free} obstacles={geometry.obstacles} t={t} readOnly={b.lookingBack}
+              {...(turnAt ? { turnAt } : {})} turnDocked={turnDocked} onTurnSize={updateTurnSize}
+              panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal}
+              {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
-              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(seatCount > 1 ? { onTurn: turnSeats, onMoveSeat: moveSeat,
+              {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(free ? { onBackToCircle: backToCircle } : {}),
+                ...(seatCount > 1 ? { onTurn: turnSeats, onMoveSeat: moveSeat, onPlaceSeat: placeSeat,
                 onChooseSeat: setChosenSeat, ...(chosenSeat !== undefined ? { chosenSeat } : {}) } : {}) } : {})} />
           </View>
           {winner ? <VictoryAnnouncement winner={winner} label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}
-            boxes={resultBoxes} band={geometry.ring.band} left={(columnWidth - geometry.band.width) / 2}
+            boxes={resultBoxes} band={ring.band} left={(columnWidth - geometry.band.width) / 2}
             top={geometry.fitted ? 0 : utilitiesHeight} /> : null}
         </View>
 
@@ -382,6 +431,11 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           left: insets.left + (availableWidth - dockWidth) / 2, width: dockWidth, bottom: insets.bottom + space.xs }]}>
           {interaction.centerPanel}
         </View> : null}
+        {arranging && live && !hasCenterPanel && turnDocked ? <ArrangeControls t={t} docked={{ height: statusHeight - space.xs }}
+          onTurn={seatCount > 1 ? turnSeats : undefined} onDone={stopArranging} onBackToCircle={backToCircle}
+          hint={seatCount > 1 ? chosenSeat !== undefined ? t('board.arrangeChosen', { name: board.seats.find(seat => seat.id === chosenSeat)?.name ?? '' })
+            : t('board.arrangeHint') : undefined}
+          style={[styles.dockedPanel, { left: insets.left + (availableWidth - dockWidth) / 2, width: dockWidth, bottom: insets.bottom + space.xs }]} /> : null}
         {live ? <View onLayout={event => {
           const { width, height } = event.nativeEvent.layout
           setToolbarSize(sameSize({ width, height }))
@@ -393,7 +447,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo} />
         </View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
-        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={geometry.seatsRight} board={tableView}
+        <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={seatsRight} board={tableView}
           seatTapsAct={!choosingSeats && !arranging}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
