@@ -1,5 +1,7 @@
 {
   "instructionminioninfo": "Herätä kaikki kätyrit: Näytä *TÄMÄ ON DEMONI* -merkki. Osoita demonia. Näytä *NÄMÄ OVAT KÄTYRISI* -merkki. Osoita muita kätyreitä.",
   "instructiondemoninfo": "Herätä demoni: Näytä *NÄMÄ OVAT KÄTYRISI* -merkki. Osoita kaikkia kätyreitä. Näytä *NÄMÄ HAHMOT EIVÄT OLE PELISSÄ* -merkki. Näytä 3 hyvää hahmoa, jotka eivät ole pelissä.",
-  "startDay": "Aloita päivä"
+  "startDay": "Aloita päivä",
+  "diedTonight": "Kuolleet tänä yönä",
+  "nobodyDied": "Kukaan ei kuollut tänä yönä"
 }

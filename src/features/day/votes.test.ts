@@ -1,7 +1,7 @@
 import { asCharacterId } from '../../content'
 import { asEventId, asSeatId, reduce } from '../../engine'
 import type { Payload } from '../../engine'
-import { furthestHand, recordedVoteWeight } from './votes'
+import { recordedVoteWeight, votingOrder } from './votes'
 
 const seat = asSeatId('player')
 const nomination = asEventId(2)
@@ -38,13 +38,11 @@ test('another nomination and another player do not replace the selected recorded
   ], nomination, seat)).toBe(3)
 })
 
-test('the count reaches the recorded hand furthest clockwise from the nominee', () => {
+test('hands are numbered clockwise from the seat after the nominee, the nominee last', () => {
   const seats = ['a', 'b', 'c', 'd', 'e']
-  expect(furthestHand(seats, 'c', [])).toBeUndefined()
-  expect(furthestHand(seats, 'c', ['d'])).toBe('d')
+  expect(votingOrder(seats, 'c', [])).toEqual([])
   // Round past the top: after the nominee come d, e, a, b, and the nominee last.
-  expect(furthestHand(seats, 'c', ['d', 'a', 'e'])).toBe('a')
-  expect(furthestHand(seats, 'c', ['b', 'c'])).toBe('c')
-  expect(furthestHand(seats, 'storyteller', ['a'])).toBeUndefined()
-  expect(furthestHand(seats, 'c', ['gone'])).toBeUndefined()
+  expect(votingOrder(seats, 'c', ['c', 'a', 'd', 'e'])).toEqual(['d', 'e', 'a', 'c'])
+  expect(votingOrder(seats, 'storyteller', ['e', 'a'])).toEqual(['a', 'e'])
+  expect(votingOrder(seats, 'c', ['gone', 'b'])).toEqual(['b'])
 })

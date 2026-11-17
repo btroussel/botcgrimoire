@@ -88,45 +88,15 @@ export const seatPositions = (band: Size, rx: number, ry: number, seatCount: num
   })
 }
 
-// The share of the seats' radii the vote arc runs on: inside the tokens and their reminders,
-// outside the centred vote controls. On a narrow board it keeps at least three quarters of a
-// token clear of the seat centres instead, so it never runs along a token's inner edge.
-export const voteArcScale = 0.6
-const voteArcClearance = 0.75
-
-// The route of a count on an inner ellipse: it leaves the nominee, runs clockwise past every
-// other seat and ends in an arrowhead back at the nominee, where the count closes. `reached` is
-// the furthest seat with a recorded hand; `lit` is the share of the route up to it, by length,
-// because on a tall oval the angle does not advance evenly with distance.
-export const voteArc = (band: Size, rx: number, ry: number, tokenSize: number, seatCount: number, nominee: SeatPosition, reached?: SeatPosition) => {
-  if (rx <= 0 || ry <= 0 || seatCount <= 0) return undefined
-  const cx = band.width / 2
-  const cy = band.height / 2
-  const angle = (p: SeatPosition) => Math.atan2((p.y - cy) / ry, (p.x - cx) / rx)
-  // A third of a seat's spacing on each side of the nominee, so the first voter is always past the start.
-  const gap = (2 * Math.PI / Math.max(seatCount, 3)) / 3
-  const from = angle(nominee) + gap
-  const sweep = 2 * Math.PI - 2 * gap
-  const inset = (r: number) => Math.max(r * 0.2, Math.min(r * voteArcScale, r - tokenSize * voteArcClearance))
-  const xRadius = inset(rx)
-  const yRadius = inset(ry)
-  const point = (t: number) => ({ x: cx + xRadius * Math.cos(t), y: cy + yRadius * Math.sin(t) })
-  const length = (to: number) => {
-    let total = 0
-    let prev = point(from)
-    for (let i = 1; i <= 96; i++) {
-      const next = point(from + (to - from) * i / 96)
-      total += Math.hypot(next.x - prev.x, next.y - prev.y)
-      prev = next
-    }
-    return total
-  }
-  const start = point(from)
-  const end = point(from + sweep)
-  const arrow = { ...end, angle: Math.atan2(yRadius * Math.cos(from + sweep), -xRadius * Math.sin(from + sweep)) * 180 / Math.PI }
-  const path = `M ${start.x} ${start.y} A ${xRadius} ${yRadius} 0 1 1 ${end.x} ${end.y}`
-  if (!reached) return { path, start, end, arrow, lit: 0 }
-  // The nominee closes the count, so their own hand lights the whole route.
-  const upTo = Math.min(sweep, ((angle(reached) - from) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI))
-  return { path, start, end, arrow, lit: length(from + upTo) / length(from + sweep) }
+// Where a count starts: on the line through the seats' centres, in the gap between the nominee
+// and the next seat round, pointing the way the count goes. On the circle that is the ring's own
+// halfway point, where arranging draws its gap marker; the tangent there runs clockwise.
+export const countStartOnRing = (band: Size, rx: number, ry: number, seatCount: number, nominee: number) => {
+  if (seatCount < 2 || nominee < 0 || nominee >= seatCount) return undefined
+  const at = seatPositions(band, rx, ry, seatCount * 2)[nominee * 2 + 1]
+  return at && { x: at.x, y: at.y, angle: (at.angle + 90) % 360 }
 }
+
+// A laid-out room has no ring, so the count starts halfway along the straight line between the two seats.
+export const countStartBetween = (from: { readonly x: number; readonly y: number }, to: { readonly x: number; readonly y: number }) =>
+  ({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2, angle: Math.atan2(to.y - from.y, to.x - from.x) * 180 / Math.PI })

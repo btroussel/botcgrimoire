@@ -7,10 +7,12 @@
     "other": "stemmer"
   },
   "noVoters": "Ingen hender registrert.",
-  "voted": "Stemmen er registrert",
+  "voteNumber": "Stemme {n}",
   "nominationArrow": "{by} nominerer {of}",
   "exileOf": "Forvisning: {of}",
   "manualNight": "Start neste natt",
+  "executeNight": "Henrett {name}, start natt {n}",
+  "noExecutionNight": "Ingen henrettelse, start natt {n}",
   "manualNomination": {
     "one": "{by} → {of}: {count} stemme",
     "other": "{by} → {of}: {count} stemmer"
@@ -42,5 +44,7 @@
   "votesToExile": {
     "one": "{count} stemme for å forvise",
     "other": "{count} stemmer for å forvise"
-  }
+  },
+  "outOf": "av {count}",
+  "tieAt": "{count} gir uavgjort"
 }

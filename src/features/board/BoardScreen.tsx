@@ -420,6 +420,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
               setPhaseOpen(!phaseOpen)
               setReferenceTab(null)
             } : undefined}
+            diedTonight={b.view?.diedTonight.flatMap(id => b.view?.seats.filter(seat => seat.id === id)
+              .map(seat => ({ name: seat.name, character: seat.characterName })) ?? [])}
             onStartDay={phaseAction && board.clock.phase === 'night' ? () => {
               cancelRequest()
               e.append({ kind: 'phase', to: 'day' })

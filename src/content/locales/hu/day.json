@@ -7,10 +7,12 @@
     "other": "szavazat"
   },
   "noVoters": "Nincs rögzített szavazat.",
-  "voted": "Szavazat rögzítve",
+  "voteNumber": "{n}. szavazat",
   "nominationArrow": "{by} gyanúsít: {of}",
   "exileOf": "Száműzés: {of}",
   "manualNight": "Következő éjszaka",
+  "executeNight": "Kivégzés: {name}, {n}. éjszaka",
+  "noExecutionNight": "Nincs kivégzés, {n}. éjszaka",
   "manualNomination": {
     "one": "{by} → {of}: {count} szavazat",
     "other": "{by} → {of}: {count} szavazat"
@@ -42,5 +44,7 @@
   "votesToExile": {
     "one": "Száműzéshez {count} szavazat kell",
     "other": "Száműzéshez {count} szavazat kell"
-  }
+  },
+  "outOf": "/ {count}",
+  "tieAt": "{count} döntetlen"
 }

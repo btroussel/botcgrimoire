@@ -7,10 +7,12 @@
     "other": "votes"
   },
   "noVoters": "Aucune main notée.",
-  "voted": "Vote enregistré",
+  "voteNumber": "Vote {n}",
   "nominationArrow": "{by} nomme {of}",
   "exileOf": "Exil : {of}",
   "manualNight": "Commencer la nuit suivante",
+  "executeNight": "Exécuter {name}, commencer la nuit {n}",
+  "noExecutionNight": "Pas d’exécution, commencer la nuit {n}",
   "manualNomination": {
     "one": "{by} → {of} : {count} vote",
     "other": "{by} → {of} : {count} votes"
@@ -42,5 +44,7 @@
   "votesToExile": {
     "one": "{count} vote pour exiler",
     "other": "{count} votes pour exiler"
-  }
+  },
+  "outOf": "sur {count}",
+  "tieAt": "{count} égalise"
 }

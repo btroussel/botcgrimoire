@@ -11,9 +11,9 @@ import { Icon } from '../../ui/icons'
 import { useFocusVisible } from '../../ui/focus'
 import { palette, space, tabular, type } from '../../ui/theme'
 import { DayTimerControls } from './DayTimer'
-import { furthestHand, recordedVoteWeight } from './votes'
+import { recordedVoteWeight, votingOrder } from './votes'
 import { NominationControls } from './NominationControls'
-import { cancelNomination, confirmNomination, resetNominationVotes } from './nominationEdits'
+import { cancelNomination, confirmNomination, endDay, resetNominationVotes } from './nominationEdits'
 
 // The open ballot is screen state, not an edit, so it lives in the tab: a reload, such as the
 // automatic update, reopens the controls on the same nomination instead of stranding its hands.
@@ -39,7 +39,7 @@ export const DayPanel = () => {
   const [activeId, setActiveId] = useState<EventId | undefined>(() => readOpenBallot(session?.game.id))
   const gameId = session?.game.id
   useEffect(() => { if (gameId) writeOpenBallot(gameId, activeId) }, [gameId, activeId])
-  const { cancelRequest, setSeatAction, setNominate, setExile, setCenterPanel, setVoteArc } = interaction
+  const { cancelRequest, setSeatAction, setNominate, setExile, setCenterPanel, setCountStart } = interaction
   useEffect(() => cancelRequest, [cancelRequest])
   const nominations = useMemo(() => board ? today(board)?.nominations ?? [] : [], [board])
   // Undoing Done or Mark gives the ballot back unconfirmed, so its controls reopen on it.
@@ -59,6 +59,7 @@ export const DayPanel = () => {
   const seatIn = useCallback((id: string) => board?.seats.find(seat => seat.id === id)?.id, [board])
   // Hands are recorded as soon as a nomination is open: a tap on any player toggles theirs. A dead
   // player with no ghost vote left still raises one, since an ability can let them vote again.
+  // Each hand shows its place in the count, the number the Storyteller says out loud.
   useEffect(() => {
     if (!board || !current || replaying) {
       setSeatAction(undefined)
@@ -67,8 +68,8 @@ export const DayPanel = () => {
     const log = session?.game.log ?? []
     setSeatAction({
       allowed: board.seats.map(seat => seat.id),
-      marked: current.votes,
-      markedLabel: t('day.voted'),
+      marked: votingOrder(board.seats.map(seat => seat.id), current.of, current.votes),
+      markedLabel: place => t('day.voteNumber', { n: place }),
       onTap: id => {
         const seat = seatIn(id)
         if (!seat) return
@@ -119,31 +120,36 @@ export const DayPanel = () => {
   }, [exile, setExile])
   const controls = useMemo(() => {
     if (!board || !current || !session || replaying) return null
-    return <NominationControls title={ballotTitle(current)} exile={!!current.exile} count={current.weight}
+    return <NominationControls title={ballotTitle(current)} by={name(current.by)} of={name(current.of)} exile={!!current.exile} count={current.weight}
       thresholds={current.exile ? { execute: exileThreshold(board) } : nominationThresholds(board, current.opened)} t={t}
       onDone={() => { appendAll(confirmNomination(board, session.game.log, current, { mark: false })); closeVoting() }}
       canReset={current.votes.length > 0 || current.weight !== 0}
       onReset={() => appendAll(resetNominationVotes(session.game.log, current))}
       onMark={() => { appendAll(confirmNomination(board, session.game.log, current)); closeVoting() }}
       canMark={current.of !== 'storyteller' && board.seats.some(seat => seat.id === current.of)} />
-  }, [board, current, session, replaying, ballotTitle, t, closeVoting, appendAll])
+  }, [board, current, session, replaying, ballotTitle, name, t, closeVoting, appendAll])
   useEffect(() => {
     setCenterPanel(controls)
     return () => setCenterPanel(null)
   }, [controls, setCenterPanel])
   useEffect(() => {
-    setVoteArc(board && current && controls ? { nominee: current.of,
-      reached: furthestHand(board.seats.map(seat => seat.id), current.of, current.votes),
-      label: ballotTitle(current) } : undefined)
-    return () => setVoteArc(undefined)
-  }, [board, current, controls, ballotTitle, setVoteArc])
+    setCountStart(current && controls ? { nominee: current.of, label: ballotTitle(current) } : undefined)
+    return () => setCountStart(undefined)
+  }, [current, controls, ballotTitle, setCountStart])
   if (activeId !== undefined && !current) closeVoting()
   if (!board) return null
   const title = t('board.day', { n: board.clock.night })
   const highestTotal = Math.max(0, ...nominations.filter(n => !n.exile).map(n => n.weight))
-  return <Panel title={title}
-    footer={<Button surface="paper" variant="primary" label={t('day.manualNight')} disabled={replaying}
-      onPress={() => append({ kind: 'phase', to: 'night', night: board.clock.night + 1 })} />}>
+  const blocked = onTheBlock(board)
+  const next = board.clock.night + 1
+  const startNight = (execute: boolean) => appendAll(endDay(board, { execute }))
+  // With the skull on a player, the day ends in one of two ways and the panel names both.
+  const footer = blocked ? <View style={styles.endDay}>
+    <Button surface="paper" variant="primary" label={t('day.executeNight', { name: name(blocked), n: next })} disabled={replaying}
+      onPress={() => startNight(true)} />
+    <Button surface="paper" label={t('day.noExecutionNight', { n: next })} disabled={replaying} onPress={() => startNight(false)} />
+  </View> : <Button surface="paper" variant="primary" label={t('day.manualNight')} disabled={replaying} onPress={() => startNight(false)} />
+  return <Panel title={title} footer={footer}>
     <DayTimerControls />
     {nominations.map((n, index) => <NominationRow key={n.opened} index={index} by={name(n.by)} of={name(n.of)} exile={!!n.exile} count={n.weight}
       voters={n.votes.map(name)} leading={!n.exile && highestTotal > 0 && n.weight === highestTotal} expanded={expanded === n.opened} t={t}
@@ -201,4 +207,5 @@ const styles = StyleSheet.create({
   muted: { color: palette.inkMuted },
   voters: { paddingHorizontal: space.md, paddingBottom: space.md, flexDirection: 'row', flexWrap: 'wrap', rowGap: space.xs },
   voter: { width: '50%', minWidth: 0, paddingRight: space.sm },
+  endDay: { gap: space.sm },
 })

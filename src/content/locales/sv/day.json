@@ -7,10 +7,12 @@
     "other": "röster"
   },
   "noVoters": "Inga händer noterade.",
-  "voted": "Röstningen sparad",
+  "voteNumber": "Röst {n}",
   "nominationArrow": "{by} nominerar {of}",
   "exileOf": "Förvisning: {of}",
   "manualNight": "Starta nästa natt",
+  "executeNight": "Avrätta {name}, starta natt {n}",
+  "noExecutionNight": "Ingen avrättning, starta natt {n}",
   "manualNomination": {
     "one": "{by} → {of}: {count} röst",
     "other": "{by} → {of}: {count} röster"
@@ -42,5 +44,7 @@
   "votesToExile": {
     "one": "{count} röst för att förvisa",
     "other": "{count} röster för att förvisa"
-  }
+  },
+  "outOf": "av {count}",
+  "tieAt": "{count} oavgjort"
 }

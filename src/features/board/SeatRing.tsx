@@ -13,7 +13,7 @@
 // players sit in the room; or by a tap on it and then a tap on where it goes.
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 
 import type { Translate } from '../../content'
@@ -28,23 +28,23 @@ import { ReminderChip } from '../../ui/ReminderChip'
 import { reminderSize } from '../../ui/reminderStack'
 import { Seat } from '../../ui/Seat'
 import type { SeatChip } from '../../ui/Seat'
-import { motion, palette, ring, seatMetrics, shadows, space, tokenSize, touch } from '../../ui/theme'
+import { motion, palette, ring, seatMetrics, shadows, space, tabular, tokenSize, touch, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Icon } from '../../ui/icons'
 import type { SeatView } from './board'
 import { sameSeat } from './board'
 import { centrePanelWidth } from './boardGeometry'
 import { ArrangeControls } from './ArrangeControls'
-import { settle, voteRoute } from './freeLayout'
+import { settle } from './freeLayout'
 import type { Point } from './freeLayout'
-import { seatPositions, stackAngle, voteArc } from './ring'
+import { countStartBetween, countStartOnRing, seatPositions, stackAngle } from './ring'
 import { gapMarkerSize } from './ringLayout'
 import type { BoardControlBounds, RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { placeSeatMenu } from './seatMenu'
 import { SeatActionDialog } from './SeatActionDialog'
 import type { SeatDialogAction } from './SeatActionDialog'
-import { VotingArc } from './VotingArc'
+import { CountStart } from './CountStart'
 import { edits, insertionMoves } from './seat'
 import { useEdits } from './useEdits'
 import { useBoardDrag } from './useBoardDrag'
@@ -281,20 +281,18 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
     },
   }), [])
   const contextWidth = Math.min(168, band.width - 16)
-  const positionOf = (id: string | undefined) => positions[seats.findIndex(seat => seat.id === id)]
-  const vote = interaction.voteArc
-  const nomineeAt = positionOf(vote?.nominee)
+  const vote = interaction.countStart
   const tapGap = (position: number) => {
     const spot = gapSpot(position, mover?.id)
     if (!mover) { if (spot) onGap?.(position, spot); return }
     onMoveSeat?.(mover.id, position, spot)
     onChooseSeat?.(undefined)
   }
-  const nomineeIndex = seats.findIndex(seat => seat.id === vote?.nominee)
-  const reachedIndex = seats.findIndex(seat => seat.id === vote?.reached)
-  const route = vote && nomineeAt ? free
-    ? voteRoute(positions.slice(0, seats.length), size, nomineeIndex, reachedIndex < 0 ? undefined : reachedIndex)
-    : voteArc(band, geometry.rx, geometry.ry, size, seats.length, nomineeAt, positionOf(vote.reached)) : undefined
+  const nomineeIndex = vote ? seats.findIndex(seat => seat.id === vote.nominee) : -1
+  const nextSeat = positions[(nomineeIndex + 1) % seats.length]
+  const countStart = nomineeIndex < 0 ? undefined : free
+    ? seats.length > 1 && positions[nomineeIndex] && nextSeat ? countStartBetween(positions[nomineeIndex], nextSeat) : undefined
+    : countStartOnRing(band, geometry.rx, geometry.ry, seats.length, nomineeIndex)
   const panel = panelAt ?? centre
   const ghostSeat = Math.round(size * seatLiftScale)
 
@@ -302,7 +300,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
     <div ref={root} {...dragHandlers} style={{ width: viewport.width, height: viewport.height, overflow: band.height > viewport.height || band.width > viewport.width ? 'auto' : 'visible',
       ...(lifted && !lifted.touch ? { cursor: 'grabbing' } : {}) }}>
       <View ref={bandView} style={[styles.band, { width: band.width, height: band.height }]}>
-        {vote && route ? <VotingArc band={band} route={route} label={vote.label} /> : null}
+        {vote && countStart ? <CountStart band={band} at={countStart} size={size} label={vote.label} /> : null}
         {seats.map((seat, i) => {
           const at = positions[i]
           if (!at) return null
@@ -311,7 +309,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           const nominationLabel = isNominationTarget(seat.id) ? t('board.nominatePlayer', { name: seat.name }) : undefined
           const inPick = pick !== undefined || action !== undefined
           const allowed = pick ? pick.allowed.includes(seat.id) : action?.allowed.includes(seat.id) ?? false
-          const chosen = action?.marked.includes(seat.id) ?? false
+          const place = (action?.marked.indexOf(seat.id) ?? -1) + 1
+          const chosen = place > 0
           // While a seat is picked up every other seat is a place it can go.
           const swapTarget = !!mover && mover.id !== seat.id
           const editable = !readOnly && !inPick && !arranging
@@ -327,7 +326,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             seatLifted={liftedSeat === seat.id} parted={partingOf(i)}
             dropTarget={lifted?.target === seat.id} swapping={liftedSeat !== undefined && lifted?.target === seat.id}
             swapLabel={swapTarget ? t('board.swapWith', { name: mover.name }) : undefined}
-            nominationLabel={nominationLabel} markedLabel={chosen ? action?.markedLabel : undefined} t={t} handlers={handlers} />
+            nominationLabel={nominationLabel} marked={chosen ? place : undefined} markedLabel={chosen ? action?.markedLabel(place) : undefined}
+            t={t} handlers={handlers} />
         })}
         {liftedChip ? <div ref={ghost} aria-hidden style={{ position: 'absolute', left: 0, top: 0, zIndex: 20, pointerEvents: 'none' }}>
           <Appear from={1 / liftScale} style={{ position: 'absolute', left: -ghostSlot.width / 2, top: -ghostSlot.height / 2, filter: `drop-shadow(${shadows.lifted})` }}>
@@ -427,7 +427,8 @@ interface RingSeatProps {
   readonly swapLabel: string | undefined // set while a picked-up seat could swap with this one
   readonly canAdd: boolean
   readonly nominationLabel: string | undefined // set while this seat can be nominated from the open menu
-  readonly markedLabel: string | undefined // the recorded-hand badge
+  readonly marked: number | undefined // a recorded hand's place in the count, shown on its badge
+  readonly markedLabel: string | undefined // and read with the seat's own name
   readonly t: Translate
   readonly handlers: SeatHandlers
 }
@@ -438,7 +439,7 @@ const sameRingSeat = (a: RingSeatProps, b: RingSeatProps) =>
   (Object.keys(a) as (keyof RingSeatProps)[]).every(key => key === 'seat' ? sameSeat(a.seat, b.seat) : a[key] === b[key])
 
 const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raised, rank, stagger, arrived, seatCount, index, placed, selected, pickable, allowed,
-  quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, seatLifted, parted, swapping, swapLabel, canAdd, nominationLabel, markedLabel, t, handlers }: RingSeatProps) {
+  quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, seatLifted, parted, swapping, swapLabel, canAdd, nominationLabel, marked, markedLabel, t, handlers }: RingSeatProps) {
   const reduced = useReducedMotion()
   const empty = seat.character === ''
   const chips: readonly SeatChip[] = seat.chips.map((c) => ({
@@ -489,7 +490,7 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         {...(canAdd ? { onAddReminder: () => handlers.addReminder(seat.id), addReminderLabel: t('board.addSeatReminder', { name: seat.name }) } : {})}
         angle={angle}
         {...(!readOnly ? { onPress: () => handlers.tap(seat.id, allowed) } : {})}
-        accessibilityLabel={[label, seat.onBlock ? t('board.onBlock') : undefined, nominationLabel, swapLabel].filter(Boolean).join('. ')}
+        accessibilityLabel={[label, seat.onBlock ? t('board.onBlock') : undefined, nominationLabel, swapLabel, markedLabel].filter(Boolean).join('. ')}
       />
       </div>
       {nominationLabel ? <Appear pointerEvents="none" style={styles.nominationBadge}>
@@ -498,8 +499,8 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
       {swapping ? <Appear pointerEvents="none" style={styles.nominationBadge}>
         <View aria-hidden style={styles.nominationDisc}><Icon name="swap" size={18} color={palette.onAccent} /></View>
       </Appear> : null}
-      {markedLabel ? <Appear pointerEvents="none" style={styles.votedBadge}>
-        <View accessibilityLabel={markedLabel} style={styles.votedDisc}><Icon name="check" size={16} color={palette.onAccent} /></View>
+      {marked !== undefined ? <Appear pointerEvents="none" style={styles.votedBadge}>
+        <View aria-hidden style={styles.votedDisc}><Text style={[type.text.strong, tabular, styles.votedNumber]}>{marked}</Text></View>
       </Appear> : null}
     </Dealt>
   )
@@ -579,9 +580,10 @@ const styles = StyleSheet.create({
   nominationDisc: { width: 28, height: 28, borderRadius: 14,
     backgroundColor: palette.accent, borderWidth: 2, borderColor: palette.ink, alignItems: 'center', justifyContent: 'center' },
   votedBadge: { position: 'absolute', top: 0, right: 0 },
-  // An ink edge like the nomination badge, so the check reads against parchment art and the brass ring.
-  votedDisc: { width: 26, height: 26, borderRadius: 13, backgroundColor: palette.accent, borderWidth: 2, borderColor: palette.ink,
+  // An ink edge like the nomination badge, so the number reads against parchment art and the brass ring.
+  votedDisc: { minWidth: 26, height: 26, borderRadius: 13, paddingHorizontal: 3, backgroundColor: palette.accent, borderWidth: 2, borderColor: palette.ink,
     alignItems: 'center', justifyContent: 'center' },
+  votedNumber: { fontSize: 14, lineHeight: 18, color: palette.onAccent, textAlign: 'center' },
   // Chips and names hang outside every seat's box, so nothing here clips.
   band: { overflow: 'visible' },
   place: { position: 'absolute' },

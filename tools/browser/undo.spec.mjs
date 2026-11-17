@@ -50,11 +50,11 @@ test('undoing Mark reopens the vote, and undoing the ending resumes the game', a
   expect(await onTheBlock(page)).toEqual([3])
 
   await button(page, 'Undo').tap()
-  await expect(vote).toContainText('4 votes')
+  await expect(vote.locator('[aria-live]')).toHaveText(/^4\s*of \d+$/)
   expect(await onTheBlock(page)).toEqual([])
   // One more takes back the last hand, as it would have before Mark.
   await button(page, 'Undo').tap()
-  await expect(vote).toContainText('3 votes')
+  await expect(vote.locator('[aria-live]')).toHaveText(/^3\s*of \d+$/)
   await button(page, 'Done').tap()
 
   await button(page, 'More').tap()

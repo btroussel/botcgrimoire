@@ -7,10 +7,12 @@
     "other": "ääntä"
   },
   "noVoters": "Ei kirjattuja käsiä.",
-  "voted": "Ääni kirjattu",
+  "voteNumber": "Ääni {n}",
   "nominationArrow": "{by} nimittää pelaajan {of}",
   "exileOf": "Karkotus: {of}",
   "manualNight": "Aloita seuraava yö",
+  "executeNight": "Teloita {name}, aloita yö {n}",
+  "noExecutionNight": "Ei teloitusta, aloita yö {n}",
   "manualNomination": {
     "one": "{by} → {of}: {count} ääni",
     "other": "{by} → {of}: {count} ääntä"
@@ -42,5 +44,7 @@
   "votesToExile": {
     "one": "{count} ääni karkotukseen",
     "other": "{count} ääntä karkotukseen"
-  }
+  },
+  "outOf": "/ {count}",
+  "tieAt": "{count} tasapeli"
 }

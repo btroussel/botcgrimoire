@@ -9,10 +9,12 @@
     "other": "głosu"
   },
   "noVoters": "Brak podniesionych rąk.",
-  "voted": "Głos zapisany",
+  "voteNumber": "Głos {n}",
   "nominationArrow": "{by} nominuje: {of}",
   "exileOf": "Wygnanie: {of}",
   "manualNight": "Rozpocznij kolejną noc",
+  "executeNight": "Egzekucja: {name}, rozpocznij noc {n}",
+  "noExecutionNight": "Bez egzekucji, rozpocznij noc {n}",
   "manualNomination": {
     "one": "{by} → {of}: {count} głos",
     "few": "{by} → {of}: {count} głosy",
@@ -54,5 +56,7 @@
     "few": "{count} głosy do wygnania",
     "many": "{count} głosów do wygnania",
     "other": "{count} głosu do wygnania"
-  }
+  },
+  "outOf": "z {count}",
+  "tieAt": "{count} remisuje"
 }

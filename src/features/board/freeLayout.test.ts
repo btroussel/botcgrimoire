@@ -1,4 +1,4 @@
-import { centreSpot, keepInside, layoutCentre, layoutPositions, settle, toPlace, voteRoute } from './freeLayout'
+import { centreSpot, keepInside, layoutCentre, layoutPositions, settle, toPlace } from './freeLayout'
 import { fitRing, seatsClear } from './ringLayout'
 
 const metrics = { maximum: 104, minimum: 44, nameOverhang: 8, nameGap: 2, nameHeight: 14, padding: 12, gap: 4 }
@@ -71,23 +71,6 @@ describe('settling a dropped seat', () => {
 })
 
 describe('the room around the vote and the result', () => {
-  test('the count runs from the nominee through every seat in order and back', () => {
-    const square = [{ x: 200, y: 100 }, { x: 350, y: 300 }, { x: 200, y: 500 }, { x: 50, y: 300 }]
-    const route = voteRoute(square, 64, 1)!
-    expect(route.path.match(/Q/g)).toHaveLength(3)
-    // It starts and ends halfway to the nominee's neighbours, inside the seats.
-    expect(route.start.x).toBeGreaterThan(200)
-    expect(route.start.y).toBeGreaterThan(300)
-    expect(route.end.y).toBeLessThan(300)
-    expect(route.lit).toBe(0)
-    const half = voteRoute(square, 64, 1, 3)!.lit
-    expect(half).toBeGreaterThan(0.4)
-    expect(half).toBeLessThan(0.6)
-    expect(voteRoute(square, 64, 1, 2)!.lit).toBeLessThan(half)
-    expect(voteRoute(square, 64, 1, 1)!.lit).toBe(1)
-    expect(voteRoute(square.slice(0, 1), 64, 0)).toBeUndefined()
-  })
-
   test('a panel goes in the tallest clear box wide enough, or nowhere', () => {
     const boxes = [{ left: 0, top: 0, width: 400, height: 60 }, { left: 100, top: 100, width: 200, height: 300 }]
     expect(centreSpot(boxes, 180, 120)).toEqual({ x: 200, y: 250 })

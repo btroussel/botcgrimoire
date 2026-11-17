@@ -82,6 +82,52 @@ test('Done records a failed vote, leaves the leader on the block, and History te
   await expect(day).toContainText('Seat 2 → Seat 6: 1 vote')
 })
 
+test('hands are numbered in counting order, Execute ends the day, and dawn lists the night\'s deaths', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  // Hands tapped out of order still number from the seat after the nominee round to them.
+  const controls = await nominate(page, 0, 2, [6, 3, 2, 4])
+  await expect(controls.locator('[aria-live]')).toHaveText(/^4\s*of 4$/)
+  const place = index => seat(page, index).getAttribute('aria-label').then(label => label.match(/Vote (\d+)$/)?.[1])
+  expect(await Promise.all([3, 4, 6, 2, 5].map(place))).toEqual(['1', '2', '3', '4', undefined])
+  await seat(page, 4).tap()
+  await expect.poll(() => place(6)).toBe('2')
+  await seat(page, 4).tap()
+  await page.getByRole('button', { name: 'Mark', exact: true }).tap()
+  await expect.poll(() => place(3)).toBeUndefined()
+
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await page.getByRole('button', { name: 'Execute Seat 3, start night 2', exact: true }).tap()
+  await expect(page.getByRole('button', { name: 'Night 2', exact: true })).toBeVisible()
+  await expect(page.getByText('6 / 7 alive')).toBeVisible()
+
+  // The plaque's menu is where the Storyteller reads out the night's deaths before starting the day.
+  const dawn = page.locator('[popover]:popover-open')
+  await page.getByRole('button', { name: 'Night 2', exact: true }).tap()
+  await expect(dawn).toContainText('Nobody died tonight')
+  await page.keyboard.press('Escape')
+  await seat(page, 5).tap()
+  await page.getByRole('group', { name: 'Seat 6', exact: true }).getByRole('button', { name: 'Mark dead', exact: true }).tap()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Night 2', exact: true }).tap()
+  await expect(dawn).toContainText('Died tonight')
+  await expect(dawn).toContainText('Seat 6')
+  await expect(dawn).not.toContainText('Seat 3')
+  await page.getByRole('button', { name: 'Start the day', exact: true }).tap()
+  await page.getByRole('button', { name: 'Day 2', exact: true }).tap()
+  await expect(page.getByRole('button', { name: 'Start the next night', exact: true })).toBeVisible()
+})
+
+test('No execution starts the night with the player on the block alive', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  await nominate(page, 0, 2, [3, 4, 5, 6])
+  await page.getByRole('button', { name: 'Mark', exact: true }).tap()
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await page.getByRole('button', { name: 'No execution, start night 2', exact: true }).tap()
+  await expect(page.getByText('7 / 7 alive')).toBeVisible()
+})
+
 test('a seat nominates again and a dead player with no ghost vote still raises a hand', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openDay(page, 7)
@@ -119,7 +165,8 @@ test('a Traveller\'s exile counts the dead hand, keeps its ghost vote and leaves
   await seat(page, traveller).tap()
   await page.getByRole('group', { name: `Seat ${traveller + 1}`, exact: true }).getByRole('button', { name: 'Call for exile', exact: true }).tap()
   const controls = page.getByRole('region', { name: `Exile: Seat ${traveller + 1}`, exact: true })
-  await expect(controls).toContainText('8 votes to exile')
+  await expect(controls.getByRole('img', { name: '8 votes to exile', exact: true })).toBeVisible()
+  await expect(controls.locator('[aria-live]')).toHaveText(/^0\s*of 8$/)
   await expect(controls.getByRole('button', { name: 'Mark', exact: true })).toHaveCount(0)
   for (const hand of [ghost, traveller]) await seat(page, hand).tap()
   await controls.getByRole('button', { name: 'Done', exact: true }).tap()

@@ -1,4 +1,4 @@
-import { addLoose, game, grant, info, kill, token } from '../../engine/testing/board'
+import { addLoose, game, grant, info, kill, revive, token } from '../../engine/testing/board'
 import { asEventId, isNote } from '../../engine'
 import { boardView, looseChoices, sameSeat } from './board'
 
@@ -20,6 +20,11 @@ describe('the board view', () => {
     expect(view.seats.filter(seat => seat.onBlock).map(seat => seat.id)).toEqual([id('Bob')])
     expect(view.seats.find(seat => seat.id === id('Bob'))?.dead).toBe(false)
     expect(boardView({ ...g, clock: { ...g.clock, phase: 'night' } }, log, 'en').seats.some(seat => seat.onBlock)).toBe(false)
+  })
+  test('dawn lists who died tonight, not the day\'s execution or a death taken back', () => {
+    const { g, log, id } = table().night(1, [kill('Eve')]).day([kill('Dan')]).night(2, [kill('Ann'), kill('Cat'), revive('Cat')]).build()
+    expect(boardView(g, log, 'en').diedTonight).toEqual([id('Ann')])
+    expect(boardView({ ...g, clock: { ...g.clock, phase: 'day' } }, log, 'en').diedTonight).toEqual([])
   })
   test('the view keeps notes and reminders without touching the saved board', () => {
     const { g, log, id } = table().night(1, [

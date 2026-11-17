@@ -5,7 +5,7 @@
 import type { Alignment, CharacterId, Locale, Script } from '../../content'
 import { gameText, isEmptySeat, isLoose, scriptCharacters, characters } from '../../content'
 import type { Event, EventId, Grant, Grimoire, Place, Seat, SeatId, TokenInstance } from '../../engine'
-import { isNote, onTheBlock } from '../../engine'
+import { isNote, onTheBlock, reduce } from '../../engine'
 import { bluffsOf } from '../../store/bluffs'
 
 export interface ChipView {
@@ -40,6 +40,7 @@ export interface BoardView {
   readonly bluffs: readonly CharacterId[]
   readonly loose: readonly CharacterId[]
   readonly grants: readonly GrantView[]
+  readonly diedTonight: readonly SeatId[] // by night, the players alive at dusk and dead now
 }
 
 const chipOf = (token: TokenInstance, g: Grimoire, text: ReturnType<typeof gameText>): ChipView => {
@@ -85,6 +86,16 @@ const grantView = (grant: Grant, g: Grimoire): GrantView => ({
   ...(grant.source === 'storyteller' || grant.source === 'self' ? {} : { from: g.seats.find((s) => s.id === grant.source)?.name ?? grant.source }),
 })
 
+// What the Storyteller announces at dawn: whoever was alive when the night began and is dead now,
+// so a death taken back during the night is not announced and the day's execution never is.
+const diedTonight = (g: Grimoire, log: readonly Event[]): readonly SeatId[] => {
+  if (g.clock.phase !== 'night') return []
+  const dusk = log.findLastIndex(e => e.kind === 'phase' && e.to === 'night')
+  if (dusk < 0) return []
+  const before = reduce(g.script, log.slice(0, dusk + 1))
+  return g.seats.filter(s => !s.alive && before.seats.some(b => b.id === s.id && b.alive)).map(s => s.id)
+}
+
 // The bluffs come from the log unless the caller has followed them already.
 export const boardView = (g: Grimoire, log: readonly Event[], locale: Locale, bluffs = bluffsOf(g, log)): BoardView => {
   const text = gameText(locale)
@@ -94,6 +105,7 @@ export const boardView = (g: Grimoire, log: readonly Event[], locale: Locale, bl
     bluffs,
     loose: g.loose,
     grants: g.storyteller.abilities.map((a) => grantView(a, g)),
+    diedTonight: diedTonight(g, log),
   }
 }
 

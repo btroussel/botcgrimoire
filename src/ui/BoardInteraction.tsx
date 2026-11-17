@@ -1,6 +1,6 @@
 // The contract between the board and whatever renders into its panel. The board screen
 // (features/board) provides this context; the day panel (features/day) uses it to choose the
-// nominator, open the vote in the ring's centre and draw the count's route, without importing the
+// nominator, open the vote in the ring's centre and mark where the count starts, without importing the
 // board, and to open a Traveller's exile from the seat menu. The card and seat-pick requests serve the board's own Show a card. It
 // lives in ui/ because it is the one shape two features share and neither may import the other
 // (docs/app.md); ui/ knows no engine type, so a seat is a plain string id here, and a card is the
@@ -50,15 +50,14 @@ export interface SeatRequest {
 export interface SeatAction {
   // The phase's default seat tap, overridden temporarily by an explicit pick request.
   readonly allowed: readonly string[]
-  readonly marked: readonly string[]
-  readonly markedLabel?: string
+  readonly marked: readonly string[] // in order: each marked seat's badge shows its place, from 1
+  readonly markedLabel: (place: number) => string
   readonly onTap: (seat: string) => void
 }
 
-// The count on the ring: the route from the nominee round to them again, lit up to the last hand.
-export interface VoteArc {
+// Where a count starts: the gap after the nominee, which the count leaves clockwise.
+export interface CountStart {
   readonly nominee: string
-  readonly reached: string | undefined // the furthest seat round from the nominee with a recorded hand
   readonly label: string
 }
 
@@ -69,8 +68,8 @@ export interface BoardInteraction {
   readonly setExile: (handler: ((of: string) => void) | undefined) => void
   readonly centerPanel: ReactNode
   readonly setCenterPanel: (panel: ReactNode) => void
-  readonly voteArc: VoteArc | undefined
-  readonly setVoteArc: (arc: VoteArc | undefined) => void
+  readonly countStart: CountStart | undefined
+  readonly setCountStart: (start: CountStart | undefined) => void
   readonly seatAction: SeatAction | undefined
   readonly setSeatAction: (action: SeatAction | undefined) => void
   // The panel side.
@@ -92,7 +91,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
   const [exile, setExileState] = useState<((of: string) => void)>()
   const setExile = useCallback((handler: ((of: string) => void) | undefined) => setExileState(() => handler), [])
   const [centerPanel, setCenterPanel] = useState<ReactNode>(null)
-  const [voteArc, setVoteArc] = useState<VoteArc>()
+  const [countStart, setCountStart] = useState<CountStart>()
   const [seatAction, setSeatAction] = useState<SeatAction>()
   // The pick is mirrored in a ref so `onDone` runs once, outside a state updater, which React
   // may call twice in development.
@@ -125,7 +124,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
 
   const value = useMemo<BoardInteraction>(
     () => ({
-      nominate, setNominate, exile, setExile, centerPanel, setCenterPanel, voteArc, setVoteArc,
+      nominate, setNominate, exile, setExile, centerPanel, setCenterPanel, countStart, setCountStart,
       seatAction,
       setSeatAction,
       requestSeats,
@@ -136,7 +135,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
       card,
       closeCard,
     }),
-    [nominate, setNominate, exile, setExile, centerPanel, voteArc, seatAction, requestSeats, cancelRequest, showCard, pick, pickSeat, card, closeCard],
+    [nominate, setNominate, exile, setExile, centerPanel, countStart, seatAction, requestSeats, cancelRequest, showCard, pick, pickSeat, card, closeCard],
   )
 
   return <Context.Provider value={value}>{children}</Context.Provider>

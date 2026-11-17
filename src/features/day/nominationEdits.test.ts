@@ -3,7 +3,8 @@ import { onTheBlock, today } from '../../engine'
 import { game, kill } from '../../engine/testing/board'
 import { append, appendAll, boardOf, openSession, redo, undo } from '../../store/session'
 import { deserialize, mintGameId, SAVED_VERSION, serialize } from '../../store/saved'
-import { cancelNomination, confirmNomination, resetNominationVotes } from './nominationEdits'
+import { chronicleOf } from '../../store/chronicle'
+import { cancelNomination, confirmNomination, endDay, resetNominationVotes } from './nominationEdits'
 
 const prepare = () => {
   const fixture = game().seat('Alice', 'chef').seat('Bob', 'imp').seat('Ghost', 'monk')
@@ -119,4 +120,30 @@ test('an exile counts the dead hand without spending its ghost vote and marks no
   const voted = append(called, { kind: 'vote', nomination: exile.opened, seat: id('Ghost'), weight: 1, free: true }, 5)
   const ballot = today(boardOf(voted))!.nominations[1]!
   expect(confirmNomination(boardOf(voted), voted.game.log, ballot)).toEqual([{ kind: 'setVoteTotal', nomination: exile.opened, total: 1 }])
+})
+
+test('Execute kills the player on the block and starts the night as one undo step', () => {
+  const { session, id } = prepare()
+  const board = boardOf(session)
+  const marked = appendAll(session, confirmNomination(board, session.game.log, today(board)!.nominations[0]!), 4)
+  const night = appendAll(marked, endDay(boardOf(marked), { execute: true }), 5)
+  const after = boardOf(openSession(deserialize(serialize(night.game))))
+  expect(after.clock).toEqual({ phase: 'night', night: 2 })
+  expect(after.seats.find(s => s.id === id('Bob'))!.alive).toBe(false)
+  const day = chronicleOf(night.game.log, after.script).chapters.find(c => c.phase === 'day')!
+  expect(day.facts.filter(f => f.kind !== 'nomination').map(f => f.kind)).toEqual(['executed', 'dies'])
+  const undone = boardOf(undo(night, 6))
+  expect(undone.clock.phase).toBe('day')
+  expect(undone.seats.find(s => s.id === id('Bob'))!.alive).toBe(true)
+  expect(onTheBlock(undone)).toBe(id('Bob'))
+})
+
+test('No execution starts the night and kills nobody, and an execution of a dead player kills nobody twice', () => {
+  const { session, id } = prepare()
+  const marked = appendAll(session, [{ kind: 'markForExecution', seat: id('Ghost') }], 4)
+  expect(endDay(boardOf(marked), { execute: false })).toEqual([{ kind: 'phase', to: 'night', night: 2 }])
+  expect(endDay(boardOf(marked), { execute: true })).toEqual([
+    { kind: 'execute', seat: id('Ghost'), cause: 'vote' },
+    { kind: 'phase', to: 'night', night: 2 },
+  ])
 })
