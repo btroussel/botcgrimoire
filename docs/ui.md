@@ -192,8 +192,10 @@ too: a tap on another seat swaps the two, on a slot moves it, and on itself, the
 puts it down. A line under Done says how, at the capsule's width so it never reaches a name, and
 names the seat in hand.
 
-Let go over the velvet, a seat stays there. It keeps the circle's token size, so laying one out
-never shrinks the rest. Dropped over another token or name, or under a corner control, it moves to
+Let go over the velvet, a seat stays there. Until the finger has come a third of a token from
+where it pressed, letting go puts the seat back whatever it is over, since on touch it rides above
+the finger and a long press let go in place would otherwise move it. It keeps the circle's token
+size, so laying one out never shrinks the rest. Dropped over another token or name, or under a corner control, it moves to
 the nearest clear spot; with none within a token and a half it may cover a token, since a long jump
 would surprise more, but never a control. On a laid-out board each seat's reminders stack toward
 the middle of the room, a gap marker sits halfway between its two seats wherever they are, and the

@@ -45,7 +45,9 @@ const mouseSlop = 5 // px, as the reference drawer
 
 export const useBoardDrag = <T extends string | number>(
   grab: (pressed: Element) => Grab | undefined, // undefined: nothing here lifts, or dragging is off
-  locate: (clientX: number, clientY: number, touch: boolean, grab: Grab) => DragPoint<T>,
+  // `travel` is how far the pointer has come since the press, so a piece let go about where it was
+  // lifted can go back however far above the finger it is drawn.
+  locate: (clientX: number, clientY: number, touch: boolean, grab: Grab, travel: number) => DragPoint<T>,
   onDrop: (grab: Grab, to: T, at: { readonly x: number; readonly y: number }) => void,
   enabled: boolean,
 ) => {
@@ -63,7 +65,7 @@ export const useBoardDrag = <T extends string | number>(
   const follow = (clientX: number, clientY: number) => {
     const p = press.current
     if (!p) return
-    const at = latest.current.locate(clientX, clientY, p.touch, p.grab)
+    const at = latest.current.locate(clientX, clientY, p.touch, p.grab, Math.hypot(clientX - p.x, clientY - p.y))
     point.current = at
     if (ghost.current) ghost.current.style.transform = `translate(${at.x}px, ${at.y}px)`
     setLifted(current => current && current.target !== at.target ? { ...current, target: at.target } : current)

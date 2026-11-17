@@ -99,6 +99,10 @@ const leastMarker = 20
 const parting = 0.14
 // A lifted seat over open velvet stays there when let go.
 const velvet = 'velvet'
+// Until the finger has come this far from the press, in token sizes, letting go puts a seat back,
+// whatever it is over: on touch the seat is drawn above the finger, so a long press let go in
+// place would otherwise move it up, and a slip of the mouse would lay the board out.
+const homeReach = 0.3
 type DropTarget = SeatId | number | typeof velvet
 
 const noObstacles: readonly BoardControlBounds[] = []
@@ -158,12 +162,13 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
     if (arranging) return { seat }
     const chip = canDrag ? pressed.closest('[data-chip]')?.getAttribute('data-chip') : undefined
     return chip ? { seat, chip } : undefined
-  }, (clientX, clientY, touch, grab) => {
+  }, (clientX, clientY, touch, grab, travel) => {
     const origin = domElement(bandView.current)?.getBoundingClientRect()
     const x = clientX - (origin?.left ?? 0)
     // On touch the piece rides above the finger, so the finger never hides it or its target.
     const y = clientY - (origin?.top ?? 0) - (touch ? grab.chip === undefined ? size * seatReach : chipSize : 0)
     let target: DropTarget | undefined
+    if (grab.chip === undefined && travel < size * homeReach) return { x, y }
     let best = 1
     const consider = (to: DropTarget, at: { readonly x: number; readonly y: number } | undefined, reach: number) => {
       const score = at ? Math.hypot(at.x - x, at.y - y) / (size * reach) : Infinity
