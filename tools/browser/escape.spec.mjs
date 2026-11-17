@@ -59,5 +59,5 @@ test('Escape closes the reference and a menu before it ends a vote, and keeps it
   await page.keyboard.press('Escape')
   await expect(controls).toHaveCount(0)
   await page.getByRole('button', { name: 'Day 1', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 2 votes. Most votes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 2 votes', exact: true })).toBeVisible()
 })

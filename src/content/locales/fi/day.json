@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Peru nimitys: {by} → {of}",
   "cancelExile": "Peru karkotus: {of}",
-  "mostVotes": "Eniten ääniä",
   "votesLabel": {
     "one": "ääni",
     "other": "ääntä"

@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Anuluj nominację: {by} → {of}",
   "cancelExile": "Anuluj wygnanie: {of}",
-  "mostVotes": "Najwięcej głosów",
   "votesLabel": {
     "one": "głos",
     "few": "głosy",

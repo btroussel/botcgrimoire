@@ -9,7 +9,7 @@ import { Button, IconButton, focusStyle, isFocused } from '../../ui/Button'
 import { Panel } from '../../ui/Panel'
 import { Icon } from '../../ui/icons'
 import { useFocusVisible } from '../../ui/focus'
-import { palette, space, tabular, type } from '../../ui/theme'
+import { palette, radius, space, type } from '../../ui/theme'
 import { DayTimerControls } from './DayTimer'
 import { recordedVoteWeight, votingOrder } from './votes'
 import { NominationControls } from './NominationControls'
@@ -139,8 +139,9 @@ export const DayPanel = () => {
   if (activeId !== undefined && !current) closeVoting()
   if (!board) return null
   const title = t('board.day', { n: board.clock.night })
-  const highestTotal = Math.max(0, ...nominations.filter(n => !n.exile).map(n => n.weight))
   const blocked = onTheBlock(board)
+  // The skull sits on a seat, so its chip goes on that player's latest nomination.
+  const blockRow = nominations.findLast(n => !n.exile && n.of === blocked)?.opened
   const next = board.clock.night + 1
   const startNight = (execute: boolean) => appendAll(endDay(board, { execute }))
   // With the skull on a player, the day ends in one of two ways and the panel names both.
@@ -151,40 +152,48 @@ export const DayPanel = () => {
   </View> : <Button surface="paper" variant="primary" label={t('day.manualNight')} disabled={replaying} onPress={() => startNight(false)} />
   return <Panel title={title} footer={footer}>
     <DayTimerControls />
-    {nominations.map((n, index) => <NominationRow key={n.opened} index={index} by={name(n.by)} of={name(n.of)} exile={!!n.exile} count={n.weight}
-      voters={n.votes.map(name)} leading={!n.exile && highestTotal > 0 && n.weight === highestTotal} expanded={expanded === n.opened} t={t}
+    {nominations.map(n => <NominationRow key={n.opened} by={name(n.by)} of={name(n.of)} exile={!!n.exile} count={n.weight}
+      voters={n.votes.map(name)} onBlock={n.opened === blockRow} expanded={expanded === n.opened} t={t}
       onToggle={() => setExpanded(expanded === n.opened ? undefined : n.opened)} onCancel={() => cancel(n)} />)}
   </Panel>
 }
 
-const NominationRow = ({ index, by, of, exile, count, voters, leading, expanded, t, onToggle, onCancel }: {
-  readonly index: number
+// A ledger line: the names, the count in a column on the right where the eye compares the day's
+// votes, and the skull's own chip on the row that put a player on the block, so the list says
+// what the board says. A tap on the row lists the hands.
+const NominationRow = ({ by, of, exile, count, voters, onBlock, expanded, t, onToggle, onCancel }: {
   readonly by: string
   readonly of: string
   readonly exile: boolean
   readonly count: number
   readonly voters: readonly string[]
-  readonly leading: boolean
+  readonly onBlock: boolean
   readonly expanded: boolean
   readonly t: Translate
   readonly onToggle: () => void
   readonly onCancel: () => void
 }) => {
   const focusVisible = useFocusVisible()
-  return <View style={[styles.row, leading && styles.leading]}>
+  return <View style={styles.row}>
     <View style={styles.rowLine}>
       <Pressable accessibilityRole="button" aria-expanded={expanded}
-        accessibilityLabel={[t(exile ? 'day.manualExile' : 'day.manualNomination', { by, of, count }), leading ? t('day.mostVotes') : ''].filter(Boolean).join('. ')}
+        accessibilityLabel={[t(exile ? 'day.manualExile' : 'day.manualNomination', { by, of, count }), onBlock ? t('board.onBlock') : ''].filter(Boolean).join('. ')}
         onPress={onToggle}
         style={state => [styles.summary, (expanded || state.pressed) && styles.summaryOpen, focusStyle(palette, focusVisible && isFocused(state), 'paper')]}>
-        <Text style={[type.text.small, tabular, styles.index]}>{index + 1}.</Text>
         <View style={styles.names}>
-          <Text style={[type.text.strong, styles.ink]}>{exile ? t('day.exileOf', { of }) : `${by} → ${of}`}</Text>
-          <Text style={[leading ? type.text.strong : type.text.small, tabular, leading ? styles.ink : styles.muted]}>
-            {count} {t('day.votesLabel', { count })}
+          <Text style={[type.text.strong, styles.ink]}>
+            {exile ? t('day.exileOf', { of }) : <>{by}<Text style={styles.arrow}>{' → '}</Text>{of}</>}
           </Text>
+          {onBlock ? <View style={styles.block}>
+            <Icon name="skull" size={13} color={palette.parchment} />
+            <Text style={[type.text.small, styles.blockLabel]}>{t('board.onBlock')}</Text>
+          </View> : null}
         </View>
-        <Icon name={expanded ? 'chevronUp' : 'chevronDown'} size={16} color={palette.inkMuted} />
+        <Text style={styles.tally}>
+          <Text style={styles.count}>{count}</Text>
+          {'\n'}
+          <Text style={[type.text.small, styles.muted]}>{t('day.votesLabel', { count })}</Text>
+        </Text>
       </Pressable>
       <IconButton surface="paper" icon="close" label={t(exile ? 'day.cancelExile' : 'day.cancelNomination', { by, of })} onPress={onCancel} />
     </View>
@@ -196,13 +205,18 @@ const NominationRow = ({ index, by, of, exile, count, voters, leading, expanded,
 }
 
 const styles = StyleSheet.create({
-  row: { borderBottomWidth: 1, borderColor: palette.parchmentShade, borderLeftWidth: 3, borderLeftColor: 'transparent', paddingLeft: space.xs },
-  leading: { borderLeftColor: palette.accent, backgroundColor: palette.paperPressed },
+  row: { borderBottomWidth: 1, borderColor: palette.parchmentShade },
   rowLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
-  summary: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.md },
+  summary: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm, paddingHorizontal: space.xs,
+    borderRadius: radius.control },
   summaryOpen: { backgroundColor: palette.paperInset },
-  index: { color: palette.inkMuted },
-  names: { flex: 1, minWidth: 0 },
+  names: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: space.xxs },
+  arrow: { color: palette.inkMuted },
+  block: { flexDirection: 'row', alignItems: 'center', gap: space.xxs, backgroundColor: palette.ink, borderRadius: 999,
+    paddingLeft: space.xxs + 1, paddingRight: space.sm, paddingVertical: 1 },
+  blockLabel: { color: palette.parchment, fontSize: 12, lineHeight: 16 },
+  tally: { textAlign: 'right', fontSize: 12, lineHeight: 14 },
+  count: { ...type.text.tally, fontSize: 24, lineHeight: 26, color: palette.ink },
   ink: { color: palette.ink },
   muted: { color: palette.inkMuted },
   voters: { paddingHorizontal: space.md, paddingBottom: space.md, flexDirection: 'row', flexWrap: 'wrap', rowGap: space.xs },

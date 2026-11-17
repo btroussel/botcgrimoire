@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Avbryt nomineringen: {by} → {of}",
   "cancelExile": "Avbryt förvisningen: {of}",
-  "mostVotes": "Flest röster",
   "votesLabel": {
     "one": "röst",
     "other": "röster"

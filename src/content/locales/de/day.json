@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Nominierung aufheben: {by} → {of}",
   "cancelExile": "Verbannung aufheben: {of}",
-  "mostVotes": "Meiste Stimmen",
   "votesLabel": {
     "one": "Stimme",
     "other": "Stimmen"

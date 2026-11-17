@@ -69,7 +69,7 @@ test('Done records a failed vote, leaves the leader on the block, and History te
   expect(await onTheBlock(page)).toEqual([3])
 
   await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
-  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 5 votes. Most votes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 5 votes. On the block', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Seat 2 → Seat 6: 1 vote', exact: true })).toBeVisible()
 
   // History reads the day back from the edits the taps above saved.
@@ -144,8 +144,8 @@ test('a seat nominates again and a dead player with no ghost vote still raises a
     await expect(controls).toHaveCount(0)
   }
   await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
-  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 1 vote. Most votes', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 4: 1 vote. Most votes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 1 vote', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 4: 1 vote', exact: true })).toBeVisible()
 })
 
 test('a Traveller\'s exile counts the dead hand, keeps its ghost vote and leaves the block alone', async ({ page }) => {

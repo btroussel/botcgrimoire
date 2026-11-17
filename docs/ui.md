@@ -236,8 +236,12 @@ pip for each hand the threshold needs, and the tally reads "3 of 5". It turns br
 reach the count that executes. No line is drawn round the ring: each recorded hand's badge shows its
 place in the count, from the seat after the nominee round to the nominee, the number the
 Storyteller says out loud, and a brass chevron in the gap after the nominee shows where the count
-starts and which way it goes. The colour, the pips, the numbers and the most-votes highlight are
-references only: they never advance, count or decide anything.
+starts and which way it goes. The colour, the pips and the numbers are references only: they never
+advance, count or decide anything.
+
+The day's list is a ledger: one line of names per nomination and its count in a column on the
+right, where the eye compares the day's votes. The row that put a player on the block carries the
+skull's chip, so the list and the board say the same thing; no other row is singled out.
 
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only.

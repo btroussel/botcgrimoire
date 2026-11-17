@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Gyanúsítás törlése: {by} → {of}",
   "cancelExile": "Száműzés törlése: {of}",
-  "mostVotes": "Legtöbb szavazat",
   "votesLabel": {
     "one": "szavazat",
     "other": "szavazat"

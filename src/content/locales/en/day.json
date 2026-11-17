@@ -1,7 +1,6 @@
 {
   "cancelNomination": "Cancel nomination: {by} → {of}",
   "cancelExile": "Cancel exile: {of}",
-  "mostVotes": "Most votes",
   "votesLabel": {
     "one": "vote",
     "other": "votes"
