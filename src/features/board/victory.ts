@@ -34,3 +34,9 @@ export const twoLineWidth = (words: readonly string[], measure: (text: string) =
   }
   return narrowest
 }
+
+// Whether some box holds actions of this size under the words at their smallest size.
+export const fitsUnder = (boxes: readonly CentreBox[], room: { readonly width: number; readonly height: number }): boolean => {
+  const { padX, padY, line, rules, smallest } = resultFrame
+  return boxes.some(box => box.width >= room.width + 2 * padX && box.height - room.height >= smallest * (line + rules) + 2 * padY)
+}

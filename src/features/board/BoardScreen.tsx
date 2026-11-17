@@ -22,6 +22,7 @@ import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
 import { PaperTexture } from '../../ui/PaperTexture'
 import { PageEnter, Screen } from '../../ui/Screen'
+import { usePhone } from '../../ui/breakpoint'
 import { usePresence } from '../../ui/motion'
 import { hairline, layout, palette, radius, scrim, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
@@ -46,6 +47,7 @@ import { ArrangeControls, hintRoom } from './ArrangeControls'
 import { centreSpot, isFree, layoutPositions, toPlace } from './freeLayout'
 import type { Point } from './freeLayout'
 import { centreBoxes } from './ringLayout'
+import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
 import { ShowSheet } from './ShowSheet'
@@ -53,6 +55,8 @@ import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
 import { useEdits } from './useEdits'
 import { VictoryAnnouncement } from './VictoryAnnouncement'
+import { GameOverActions, actionsRoom } from './GameOverActions'
+import { fitsUnder } from './victory'
 
 export interface BoardScreenProps {
   readonly id: string // the game id the route was given
@@ -76,6 +80,9 @@ const replayOrnaments = ['topLeft'] as const
 const noOrnaments = [] as const
 // A landscape board this tall has room for the bluff tray's title; a phone on its side does not.
 const tallBoard = 600
+// Docked actions take the foot from the bluffs and the plaque, which stay measured where they
+// were, so the ring does not move as the game ends.
+const aside = { 'aria-hidden': true, pointerEvents: 'none' } as const
 // A control measured again at the same size keeps the board's layout as it was.
 const sameSize = (next: Size) => (previous: Size) => previous.width === next.width && previous.height === next.height ? previous : next
 
@@ -91,6 +98,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const interaction = useBoardInteraction()
   const insets = useSafeAreaInsets()
   const window = useLayoutViewport()
+  const phone = usePhone()
   const p = palette
   const t = b.t
   const [showOpen, setShowOpen] = useState(false)
@@ -197,14 +205,25 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const live = !b.lookingBack
   const seatCount = b.view?.seats.length ?? 0
   const stripCount = b.view ? b.view.loose.length + b.view.grants.length : 0
-  const geometry = useMemo(() => boardGeometry({ width: availableWidth, height: availableHeight, landscape, live,
+  const measures = useMemo(() => ({ width: availableWidth, height: availableHeight, landscape, live,
     reserved: reservedWidth, toolbar: toolbarSize, bluffs: bluffsSize, clockHeight, seats: seatCount, strip: stripCount }),
   [availableWidth, availableHeight, landscape, live, reservedWidth, toolbarSize, bluffsSize, clockHeight, seatCount, stripCount])
+  const opened = useMemo(() => boardGeometry(measures), [measures])
   // Where the seats are drawn: laid out as the room, or on the circle.
   const places = useMemo(() => b.view?.seats.map(seat => seat.place) ?? [], [b.view])
   const free = isFree(places)
-  const ring = useMemo(() => free ? { ...geometry.ring, positions: layoutPositions(geometry.ring, places, seatMetrics) } : geometry.ring,
-    [free, geometry.ring, places])
+  const placed = useCallback((at: RingGeometry) => free ? { ...at, positions: layoutPositions(at, places, seatMetrics) } : at, [free, places])
+  // A finished game's actions go under the result where the middle holds them both. On a phone,
+  // in thumb reach, or where the middle is too small, they dock at the foot, and a board on its
+  // side then gives its foot up to them as a portrait one always does.
+  const over = b.board?.clock.phase === 'over' && !b.lookingBack
+  const winner = b.board?.clock.phase === 'over' ? b.board.result?.winner : undefined
+  const actionsCentred = useMemo(() => over && !!winner && !phone
+    && fitsUnder(centreBoxes(placed(opened.ring), seatMetrics, resultWidth), actionsRoom), [over, winner, phone, placed, opened])
+  const actionsDocked = over && !actionsCentred
+  const footDocked = actionsDocked && landscape
+  const geometry = useMemo(() => footDocked ? boardGeometry({ ...measures, foot: true }) : opened, [footDocked, measures, opened])
+  const ring = useMemo(() => placed(geometry.ring), [placed, geometry.ring])
   const resultBoxes = useMemo(() => centreBoxes(ring, seatMetrics, resultWidth), [ring])
   // A laid-out room may have a seat in its middle, so the vote goes where none is, or to the foot.
   const panelAt = useMemo(() => {
@@ -232,10 +251,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const openShow = useCallback(() => setShowOpen(true), [])
   const openLoose = useCallback(() => setLooseOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
-  // A finished game has nothing left to resume, so Home leaves without asking.
-  const over = b.board?.clock.phase === 'over' && !b.lookingBack
-  const { goHome } = b
-  const askHome = useCallback(() => over ? goHome() : setConfirmHome(true), [over, goHome])
+  const askHome = useCallback(() => setConfirmHome(true), [])
   // One mode places new seats, turns the ring and moves single seats to where the players sat
   // down, after the draw or later, so the table can be laid out in one pass.
   const toggleArrange = useCallback(() => {
@@ -270,7 +286,6 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     )
   }
 
-  const winner = board.clock.phase === 'over' ? board.result?.winner : undefined
   const { columnWidth, statusHeight, utilitiesHeight, utilitiesWidth, clockWidth, topBandHeight } = geometry
   const hasUtilities = stripCount > 0
   const panelDocked = !!interaction.centerPanel && (free ? panelAt === undefined : geometry.panelDocks)
@@ -323,9 +338,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     arrangeDisabled={seatCount >= maxSeats && (seatCount < 2 || hasCenterPanel)}
     onShow={openShow}
     onLoose={openLoose} looseDisabled={looseChoices(board.script).length === 0}
-    onEnd={openEnd} endDisabled={over}
-    onReplay={over ? b.enterReplay : undefined} onHome={askHome}
+    onEnd={openEnd} onHome={askHome}
     />
+  // A finished game leaves nothing to resume, so its Home leaves without asking.
+  const actions = <GameOverActions t={t} onPlayAgain={b.playAgain} onReplay={b.enterReplay} onHome={b.goHome} />
 
   const table = (
     <View
@@ -377,6 +393,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           </View>
           {winner ? <VictoryAnnouncement winner={winner} label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}
             boxes={resultBoxes} band={ring.band} left={(columnWidth - geometry.band.width) / 2}
+            {...(actionsCentred ? { actions: { node: actions, room: actionsRoom } } : {})}
             top={geometry.fitted ? 0 : utilitiesHeight} /> : null}
         </View>
 
@@ -384,7 +401,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <View onLayout={event => {
             const { width, height } = event.nativeEvent.layout
             setBluffsSize(sameSize({ width, height }))
-          }}>
+          }} {...(actionsDocked ? aside : {})} style={actionsDocked ? styles.aside : null}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
               ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} />
@@ -404,8 +421,9 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <View ref={tableView} style={[styles.root, styles.row]}>
           {table}
         </View>
-        <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)}
-          style={[styles.clockCorner, { right: insets.right + space.md, bottom: insets.bottom + space.md + (b.lookingBack ? replayBarHeight : 0) }]}>
+        <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)} {...(actionsDocked ? aside : {})}
+          style={[styles.clockCorner, { right: insets.right + space.md, bottom: insets.bottom + space.md + (b.lookingBack ? replayBarHeight : 0) },
+            actionsDocked ? styles.aside : null]}>
           <PhasePlaque t={t} windowOpen={phaseAction && (phaseOpen || choosingSeats)}
             clock={{ width: clockWidth,
               // A result on the velvet says the game is over; an older ending without one needs saying here.
@@ -438,7 +456,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           hint={seatCount > 1 ? chosenSeat !== undefined ? t('board.arrangeChosen', { name: board.seats.find(seat => seat.id === chosenSeat)?.name ?? '' })
             : t('board.arrangeHint') : undefined}
           style={[styles.dockedPanel, { left: insets.left + (availableWidth - dockWidth) / 2, width: dockWidth, bottom: insets.bottom + space.xs }]} /> : null}
-        {live ? <View onLayout={event => {
+        {actionsDocked ? <GameOverActions t={t} docked onPlayAgain={b.playAgain} onReplay={b.enterReplay} onHome={b.goHome}
+          style={[styles.dockedPanel, styles.dockedActions, { left: insets.left, right: insets.right, bottom: insets.bottom + space.md }]} /> : null}
+        {/* A finished game needs neither Show a card nor More: what it offers is under the result. */}
+        {live && !over ? <View onLayout={event => {
           const { width, height } = event.nativeEvent.layout
           setToolbarSize(sameSize({ width, height }))
         }}
@@ -627,6 +648,8 @@ const styles = StyleSheet.create({
   clockCorner: { position: 'absolute', zIndex: 6 },
   // Over the bluffs and clock while a vote runs; neither is needed until it ends.
   dockedPanel: { position: 'absolute', zIndex: 7 },
+  dockedActions: { alignItems: 'center' },
+  aside: { opacity: 0 },
   grant: { alignItems: 'center', width: tokenSize.corner + space.xl },
   grantName: { textAlign: 'center', width: tokenSize.corner + space.xl },
 })

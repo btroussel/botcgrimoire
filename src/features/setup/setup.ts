@@ -1,4 +1,4 @@
-import { character, emptySeat, isLoose, teamSide } from '../../content'
+import { character, emptySeat, isDefaultSeat, isLoose, teamSide } from '../../content'
 import type { Alignment, CharacterId, Team } from '../../content'
 import { baseCounts, mintSeatId } from '../../engine'
 import type { Payload, SeatId } from '../../engine'
@@ -35,6 +35,14 @@ export const trimBag = (bag: readonly CharacterId[], count: number): readonly Ch
 export const openingEvents = (names: readonly string[]): readonly Payload[] => names.map((name, at) => ({
   kind: 'addSeat', seat: mintSeatId(), name, at, character: emptySeat, alignment: 'good',
 }))
+
+// Play again seats the players of the game it came from, in their order, the extra seats of a
+// bigger table numbered. A default name is a place, not a player, so it takes its new number.
+export const tableNames = (players: readonly string[], count: number, numbered: (n: number) => string): readonly string[] =>
+  Array.from({ length: count }, (_, i) => {
+    const name = players[i]
+    return name !== undefined && !isDefaultSeat(name) ? name : numbered(i + 1)
+  })
 
 // A loose character is never dealt to a seat, so it goes straight to the board, once.
 export const looseEvents = (bag: readonly CharacterId[]): readonly Payload[] =>

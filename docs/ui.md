@@ -207,7 +207,8 @@ behind a rule, since it moves every laid-out token at once, and the tokens glide
 
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
-a card then More, keep that order in every phase and width, and their first tap always acts.
+a card then More, keep that order in every phase and width until the game ends, when the result's
+own actions replace them, and their first tap always acts.
 Undo is a small arrow alone in the top left corner, the one corner with no other control, so a
 tap aimed at Show a card or More never lands on it. The ring keeps clear of it as it does of the
 toolbar.
@@ -244,7 +245,12 @@ right, where the eye compares the day's votes. The row that put a player on the 
 skull's chip, so the list and the board say the same thing; no other row is singled out.
 
 The result of End game shows at the ring's centre without covering any token or name, and never
-blocks or dims the board. In replay the seats are read only.
+blocks or dims the board. In replay the seats are read only. Play again, Replay and Home sit
+under the result where the middle holds them as well. On a phone they always dock at the foot in
+a compact row, Play again first, so they are in the same place every game whatever the table's
+size, and the bluffs and the plaque step aside for them. On a wider screen they dock there only
+when the middle is too small, and a board on its side then gives its foot up to them, as a
+portrait one always keeps it.
 
 ## History
 

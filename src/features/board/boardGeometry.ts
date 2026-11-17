@@ -33,9 +33,11 @@ export interface BoardMeasures {
   readonly clockHeight: number
   readonly seats: number
   readonly strip: number // loose characters and Storyteller grants
+  readonly foot?: boolean // a board on its side keeps its status band whole, for actions docked over it
 }
 
-export const boardGeometry = ({ width, height, landscape, live, reserved, toolbar, bluffs, clockHeight, seats, strip }: BoardMeasures) => {
+export const boardGeometry = ({ width, height, landscape, live, reserved, toolbar, bluffs, clockHeight, seats, strip, foot = false }: BoardMeasures) => {
+  const sideways = landscape && !foot
   const columnWidth = Math.max(0, width - (live ? reserved : 0))
   const statusHeight = Math.max(layout.statusBand, space.md + Math.max(clockHeight, bluffs.height))
   const utilitiesHeight = columnWidth < 500 && strip > 0 ? tokenStripHeight + space.md : 0
@@ -45,7 +47,8 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
   // The narrow width still holds "20 / 20 en vie" and its chevron on one line.
   const clockWidth = width < 380 ? 132 : 148
   // The ring rises beside the toolbar and loose tokens wherever no seat reaches them. Portrait
-  // keeps its status band whole, since voting controls dock over it there.
+  // keeps its status band whole, since voting controls dock over it there, and so does a board on
+  // its side whose finished game docks its actions.
   const controls = {
     top: [
       { left: space.md, top: space.md, width: undoSize, height: undoSize },
@@ -53,14 +56,14 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
       ...(strip > 0 ? [{ left: columnWidth - space.md - utilitiesWidth, top: toolbarHeight,
         width: utilitiesWidth, height: tokenStripHeight }] : []),
     ],
-    bottom: landscape ? [
+    bottom: sideways ? [
       { left: space.md, top: height - space.md - bluffs.height, ...bluffs },
       { left: width - space.md - clockWidth, top: height - space.md - clockHeight,
         width: clockWidth, height: clockHeight },
     ] : [],
   }
   const aroundControls = live
-    ? fitRingAroundControls({ width: columnWidth, height: height - (landscape ? 0 : statusHeight) }, seats, seatMetrics, controls)
+    ? fitRingAroundControls({ width: columnWidth, height: height - (sideways ? 0 : statusHeight) }, seats, seatMetrics, controls)
     : undefined
   const band = aroundControls?.band ?? { width: columnWidth,
     height: Math.max(0, height - toolbarHeight - statusHeight - utilitiesHeight) }
@@ -76,7 +79,7 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
     band,
     ring,
     // Portrait boards reserve the status band, so a docked panel there covers no seat.
-    panelDocks: !(landscape && aroundControls) && !centrePanelFits(band.width, ring.size),
+    panelDocks: !(sideways && aroundControls) && !centrePanelFits(band.width, ring.size),
     // The drawer can extend into unused board space without covering a token on the circle.
     seatsRight: Math.max(-Infinity, ...ring.positions.map(at => at.x + ring.size / 2)),
     // The corner controls that reach into the ring's band, in its coordinates, which a seat laid

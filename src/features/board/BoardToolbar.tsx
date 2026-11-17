@@ -8,7 +8,7 @@ import { hairline, palette, radius, shadows, space } from '../../ui/theme'
 import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from '../../ui/popover'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
-  onLoose, looseDisabled, onEnd, endDisabled, onReplay, onHome }: {
+  onLoose, looseDisabled, onEnd, onHome }: {
   readonly t: Translate
   readonly arranging: boolean
   readonly arrangeDisabled: boolean
@@ -17,8 +17,6 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   readonly onLoose: () => void
   readonly looseDisabled: boolean
   readonly onEnd: () => void
-  readonly endDisabled: boolean
-  readonly onReplay?: (() => void) | undefined // once the game has ended
   readonly onHome: () => void
 }) {
   const trigger = useRef<HTMLDivElement>(null)
@@ -46,8 +44,7 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
       {item({ icon: 'add', label: t('board.looseTitle'), action: onLoose, disabled: looseDisabled })}
       {/* Leaving the game sits apart from the tools for the board. */}
       <View style={menuStyles.rule} />
-      {item({ icon: 'check', label: t('board.endGame'), action: onEnd, disabled: endDisabled })}
-      {onReplay ? item({ icon: 'history', label: t('history.replay'), action: onReplay }) : null}
+      {item({ icon: 'check', label: t('board.endGame'), action: onEnd })}
       {item({ icon: 'home', label: t('common.home'), action: onHome })}
     </div>
   </>

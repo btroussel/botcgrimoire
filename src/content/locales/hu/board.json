@@ -99,6 +99,7 @@
   "addSeatReminder": "Emlékeztető hozzáadása: {name}",
   "aliveCount": "{alive} / {total} él",
   "endGame": "Játék befejezése",
+  "playAgain": "Még egy játék",
   "onBlock": "Kivégzésre vár",
   "referenceCharacters": "Karakterek",
   "referenceResize": "Referenciapanel átméretezése"
