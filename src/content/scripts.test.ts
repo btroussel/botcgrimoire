@@ -1,5 +1,7 @@
 import { characters } from './index'
-import type { CharacterId, Homebrew } from './types'
+import type { CharacterId, Homebrew, Team } from './types'
+import { homebrewWake } from './homebrew'
+import type { CustomScript } from './scripts'
 import { impliesBootlegger, parseScript, scriptAuthor, scriptCards, scriptCharacters, scriptFile, scriptHomebrew, scriptRules } from './scripts'
 
 const meta = { id: '_meta', name: 'Test night', author: 'Us' }
@@ -194,5 +196,18 @@ describe('night positions in a file', () => {
     const stale = { ...(parsed.items[1] as Homebrew), firstNight: 2.5 }
     const [, written] = scriptFile({ ...parsed, items: [meta, stale] })
     expect(written).toEqual({ id: 'lamp', name: 'Lamp', team: 'townsfolk', ability: 'x', firstNight: washerwoman + 1.5, otherNight: 0 })
+  })
+
+  test('keep the order of homebrew characters after the same step, there and back', () => {
+    // An Outsider placed after two Minions, all after dusk, and listed before them.
+    const record = (id: string, team: Team, firstNight: number): Homebrew => ({ id, name: id, team, ability: 'x', firstNight, firstNightAfter: 'dusk' })
+    const script = { kind: 'custom' as const, name: 'Home', items: [meta, record('owl', 'outsider', 0.875), record('hex', 'minion', 0.5), record('jinn', 'minion', 0.75)] }
+    const file = scriptFile(script)
+    expect(file.slice(1).map((item) => (item as Homebrew).firstNight)).toEqual([1.875, 1.5, 1.75])
+    const read = parseScript(file)
+    if ('errors' in read) throw new Error(read.errors.join())
+    const order = (s: CustomScript) => [...scriptHomebrew(s)].sort((a, b) => homebrewWake(a, 'first')! - homebrewWake(b, 'first')!).map((h) => h.id)
+    expect(order(read)).toEqual(['hex', 'jinn', 'owl'])
+    expect(read.items).toEqual(script.items)
   })
 })
