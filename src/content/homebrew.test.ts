@@ -1,5 +1,5 @@
 import type { Homebrew } from './index'
-import { asCharacterId, character, gameText, homebrewArt, homebrewVersion, registerHomebrew, subscribeHomebrew } from './index'
+import { asCharacterId, character, gameText, homebrewArt, homebrewVersion, homebrewWake, registerHomebrew, subscribeHomebrew, wakeJustAfter } from './index'
 
 const lamp: Homebrew = {
   id: 'lampx1',
@@ -28,12 +28,33 @@ describe('a registered homebrew character', () => {
     })
   })
 
-  test('wakes just after its step whatever number it was saved with, and at its number once the sheet has no such step', () => {
+  test('wakes after its step wherever the sheet has moved it, and at its number once the sheet has no such step', () => {
     const poisoner = character(asCharacterId('poisoner')).ordinals.first!
     registerHomebrew([{ ...lamp, firstNight: 3.5, firstNightAfter: 'poisoner' }])
     expect(character(asCharacterId('lampx1')).ordinals).toEqual({ first: poisoner + 0.5 })
     registerHomebrew([{ ...lamp, firstNight: 3.5, firstNightAfter: 'retired' }])
     expect(character(asCharacterId('lampx1')).ordinals).toEqual({ first: 3.5 })
+  })
+
+  test('keeps its place among the homebrew characters after the same step, read from the fraction a sync leaves alone', () => {
+    const poisoner = character(asCharacterId('poisoner')).ordinals.first!
+    // Saved when the Poisoner was the third step, read on a sheet where it is later.
+    expect(homebrewWake({ ...lamp, firstNight: 3.25, firstNightAfter: 'poisoner' }, 'first')).toBe(poisoner + 0.25)
+    expect(homebrewWake({ ...lamp, firstNight: 3.75, firstNightAfter: 'poisoner' }, 'first')).toBe(poisoner + 0.75)
+    // Another tool's whole number names a step's own slot, and sits mid-gap as before.
+    expect(homebrewWake({ ...lamp, firstNight: 3, firstNightAfter: 'poisoner' }, 'first')).toBe(poisoner + 0.5)
+  })
+
+  test('placed just after a step or another homebrew character, it wakes halfway to whatever wakes next', () => {
+    const poisoner = character(asCharacterId('poisoner')).ordinals.first!
+    const at = (firstNight: number, id = 'x'): Homebrew => ({ ...lamp, id, firstNight, firstNightAfter: 'poisoner' })
+    expect(wakeJustAfter('first', 'poisoner', [])).toBe(poisoner + 0.5)
+    expect(wakeJustAfter('first', 'poisoner', [at(poisoner + 0.5)])).toBe(poisoner + 0.25)
+    expect(wakeJustAfter('first', 'x', [at(poisoner + 0.5)])).toBe(poisoner + 0.75)
+    expect(wakeJustAfter('first', 'x', [at(poisoner + 0.5), at(poisoner + 0.75, 'y')])).toBe(poisoner + 0.625)
+    // One after another step is not in the way, and an id nobody has places nothing.
+    expect(wakeJustAfter('first', 'poisoner', [{ ...lamp, firstNight: 0.5, firstNightAfter: 'dusk' }])).toBe(poisoner + 0.5)
+    expect(wakeJustAfter('first', 'gone', [at(poisoner + 0.5)])).toBeUndefined()
   })
 
   test('speaks its author\'s words in every locale', () => {

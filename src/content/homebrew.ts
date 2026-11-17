@@ -50,12 +50,36 @@ export const stepBefore = (night: 'first' | 'other', position: number): string =
   return sheet[Math.min(Math.max(Math.ceil(position) - 1, 0), sheet.length - 1)]!
 }
 
-// Where a homebrew character wakes: just after its step while the sheet still has it, else at
-// its number. A wake position of zero or less is the schema's "does not wake".
+// Where a homebrew character wakes. The step it names fixes the gap it wakes in while the sheet
+// has it, and its number fixes its place in that gap: a record is saved as the step's ordinal plus
+// a fraction, and the fraction is what a sync leaves alone. Placing a character just after another
+// homebrew character takes the place between that one and whatever wakes next rather than naming
+// it, so moving or deleting the other never moves this one, there is no chain or loop to follow,
+// and the file's own numbers carry the order. A whole number, from another tool's file, names a
+// step's own slot and sits mid-gap as it always has. A wake position of zero or less is the
+// schema's "does not wake".
 export const homebrewWake = (h: Homebrew, night: 'first' | 'other'): number | undefined => {
   const step = night === 'first' ? h.firstNightAfter : h.otherNightAfter
   const n = night === 'first' ? h.firstNight : h.otherNight
-  return (step !== undefined ? wakeAfter(night, step) : undefined) ?? (n !== undefined && n > 0 ? n : undefined)
+  const at = step !== undefined ? nightSheet(night).indexOf(step) : -1
+  if (at !== -1) return at + (n !== undefined && n > 0 && !Number.isInteger(n) ? n - Math.floor(n) : 0.5)
+  return n !== undefined && n > 0 ? n : undefined
+}
+
+// The position just after a step or one of `others`, halfway to whatever wakes next among them or
+// the next step, so the character sits directly under the row it was placed after. Nothing when
+// neither has that id. `others` leaves out the character being placed.
+export const wakeJustAfter = (night: 'first' | 'other', key: string, others: readonly Homebrew[]): number | undefined => {
+  const step = nightSheet(night).indexOf(key)
+  const other = step === -1 ? others.find((h) => h.id === key) : undefined
+  const from = step !== -1 ? step : other ? homebrewWake(other, night) : undefined
+  if (from === undefined) return undefined
+  let to = Math.floor(from) + 1
+  for (const h of others) {
+    const at = homebrewWake(h, night)
+    if (at !== undefined && at > from && at < to) to = at
+  }
+  return (from + to) / 2
 }
 
 const joined = new WeakMap<Homebrew, Character>()

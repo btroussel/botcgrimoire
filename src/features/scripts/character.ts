@@ -1,7 +1,7 @@
 // A homebrew character being written (docs/app.md, Scripts): the form's draft, the record it
 // saves as, and where on each night sheet it wakes. Pure, no React; the editor draws it.
 import type { CharacterId, Homebrew, Locale, NightMarker, Team, Translate } from '../../content'
-import { characters, demonNight, gameText, homebrewWake, nightSheet, stepBefore, wakeAfter } from '../../content'
+import { characters, demonNight, gameText, homebrewWake, nightSheet, stepBefore, wakeJustAfter } from '../../content'
 
 // A team in the singular, as the editor's tiles and the list of characters name it.
 export const teamWords = (t: Translate): Readonly<Record<Team, string>> => ({
@@ -22,28 +22,44 @@ export interface CharacterDraft {
   readonly ability: string
   readonly image: Homebrew['image'] // undefined for the team icon
   readonly reminders: readonly string[] // one per token, as typed; blank ones are dropped on save
-  readonly firstNight: string | undefined // the step it wakes after, undefined when it does not wake
+  readonly firstNight: string | undefined // the step or homebrew character it wakes just after, undefined when it does not wake
   readonly firstNightReminder: string
   readonly otherNight: string | undefined
   readonly otherNightReminder: string
   readonly setup: boolean
 }
 
-// The step a record wakes after, read the way the night sheets place it.
-const wakeStep = (h: Homebrew | undefined, night: 'first' | 'other'): string | undefined => {
+// The row a record wakes just after, read the way the night sheets place it: the last of the
+// script's other homebrew characters between its step and it, else that step. Two saved at the
+// same place read in the script's order, as the sheets sort them. `homebrew` is the script's
+// homebrew in its order, this record included or not.
+const wakeStep = (h: Homebrew | undefined, night: 'first' | 'other', homebrew: readonly Homebrew[]): string | undefined => {
   const at = h ? homebrewWake(h, night) : undefined
-  return at === undefined ? undefined : stepBefore(night, at)
+  if (h === undefined || at === undefined) return undefined
+  const step = stepBefore(night, at)
+  const self = homebrew.findIndex((o) => o.id === h.id)
+  let found = step
+  let best = -Infinity
+  homebrew.forEach((o, i) => {
+    const w = o.id === h.id ? undefined : homebrewWake(o, night)
+    if (w === undefined || w < best || stepBefore(night, w) !== step) return
+    if (w < at || (w === at && (self === -1 || i < self))) {
+      best = w
+      found = o.id
+    }
+  })
+  return found
 }
 
-export const draftOfCharacter = (h?: Homebrew): CharacterDraft => ({
+export const draftOfCharacter = (h?: Homebrew, homebrew: readonly Homebrew[] = []): CharacterDraft => ({
   name: h?.name ?? '',
   team: h?.team ?? 'townsfolk',
   ability: h?.ability ?? '',
   image: h?.image,
   reminders: h?.reminders ?? [],
-  firstNight: wakeStep(h, 'first'),
+  firstNight: wakeStep(h, 'first', homebrew),
   firstNightReminder: h?.firstNightReminder ?? '',
-  otherNight: wakeStep(h, 'other'),
+  otherNight: wakeStep(h, 'other', homebrew),
   otherNightReminder: h?.otherNightReminder ?? '',
   setup: h?.setup === true,
 })
@@ -60,21 +76,32 @@ export const characterProblem = (draft: CharacterDraft): CharacterProblem | unde
 // The record a draft saves as. Fields the form does not edit, such as flavor text, global
 // reminders or jinxes from an imported file, survive from the record it started from. An
 // instruction for a night the character does not wake on is dropped with the position.
-export const characterOf = (draft: CharacterDraft, id: string, base?: Homebrew): Homebrew => {
+// `homebrew` is the script it is written for, whose other homebrew characters it can wake after.
+export const characterOf = (draft: CharacterDraft, id: string, base?: Homebrew, homebrew: readonly Homebrew[] = []): Homebrew => {
   const reminders = draft.reminders.map((r) => r.trim().slice(0, limits.reminder)).filter((r) => r !== '')
   const firstNightReminder = draft.firstNightReminder.trim()
   const otherNightReminder = draft.otherNightReminder.trim()
-  const first = draft.firstNight !== undefined ? wakeAfter('first', draft.firstNight) : undefined
-  const other = draft.otherNight !== undefined ? wakeAfter('other', draft.otherNight) : undefined
+  const others = homebrew.filter((h) => h.id !== id)
+  // A wake left on the row it opened on keeps its place, so saving from the list, where the
+  // script's other characters are not shown, never moves it among them. So does one placed after
+  // a character the script no longer has.
+  const wake = (night: 'first' | 'other', key: string | undefined): number | undefined => {
+    if (key === undefined) return undefined
+    const kept = base ? homebrewWake(base, night) : undefined
+    if (kept !== undefined && key === wakeStep(base, night, homebrew)) return kept
+    return wakeJustAfter(night, key, others) ?? kept
+  }
+  const first = wake('first', draft.firstNight)
+  const other = wake('other', draft.otherNight)
   return {
     id,
     name: draft.name.trim().slice(0, limits.name),
     team: draft.team,
     ability: draft.ability.trim().slice(0, limits.ability),
     ...(draft.image !== undefined ? { image: draft.image } : {}),
-    ...(first !== undefined ? { firstNight: first, firstNightAfter: draft.firstNight! } : {}),
+    ...(first !== undefined ? { firstNight: first, firstNightAfter: stepBefore('first', first) } : {}),
     ...(first !== undefined && firstNightReminder !== '' ? { firstNightReminder } : {}),
-    ...(other !== undefined ? { otherNight: other, otherNightAfter: draft.otherNight! } : {}),
+    ...(other !== undefined ? { otherNight: other, otherNightAfter: stepBefore('other', other) } : {}),
     ...(other !== undefined && otherNightReminder !== '' ? { otherNightReminder } : {}),
     ...(reminders.length > 0 ? { reminders } : {}),
     ...(base?.remindersGlobal ? { remindersGlobal: base.remindersGlobal } : {}),
@@ -120,13 +147,14 @@ export const imageForTeam = (image: Homebrew['image'], from: Team, to: Team): Ho
 // dusk, information and dawn markers, in order. A character wakes just after a step, so the
 // sheets sort it between that step and the next.
 export interface NightStep {
-  readonly key: string // the step's id on the bundled sheet, which a character wakes after
+  readonly key: string // the step's id on the bundled sheet, or a homebrew character's, which a character wakes after
   readonly ordinal: number
   readonly label: string
   readonly id?: CharacterId // a character step
   readonly team?: Team
   readonly marker?: NightMarker
   readonly edition?: string // a character step's, for the edition filter
+  readonly homebrew?: boolean // another homebrew character on the script, at its own place
 }
 
 const markerOf: Readonly<Record<string, NightMarker>> = { dusk: 'dusk', minioninfo: 'minionInfo', demoninfo: 'demonInfo', dawn: 'dawn' }
@@ -145,9 +173,29 @@ export const nightSteps = (night: 'first' | 'other', locale: Locale, markers: Re
 export const scriptSteps = (steps: readonly NightStep[], ids: ReadonlySet<string>): readonly NightStep[] =>
   steps.filter((step) => step.marker !== undefined || (step.id !== undefined && ids.has(step.id)))
 
-// Where a character waking after `key` sorts among `steps`.
-export const wakeOrdinal = (steps: readonly NightStep[], key: string): number =>
-  (steps.find((step) => step.key === key)?.ordinal ?? 0) + 0.5
+// The night order with the script's other homebrew characters at their own places, so a
+// character can wake just after one of them as after any step. Two at the same place keep the
+// script's order, as the sheets sort them. `self` is the character being placed.
+export const withHomebrew = (steps: readonly NightStep[], night: 'first' | 'other', homebrew: readonly Homebrew[], self?: string): readonly NightStep[] => {
+  const rows = homebrew.flatMap((h): NightStep[] => {
+    const ordinal = h.id === self ? undefined : homebrewWake(h, night)
+    return ordinal === undefined ? [] : [{ key: h.id, ordinal, label: h.name, id: h.id as CharacterId, team: h.team, homebrew: true }]
+  })
+  return rows.length === 0 ? steps : [...steps, ...rows].sort((a, b) => a.ordinal - b.ordinal)
+}
+
+// Where a character waking just after `key` sorts among `steps`: halfway to the next row, and
+// never past the next step on the sheet, as a saved record is placed (wakeJustAfter).
+export const wakeOrdinal = (steps: readonly NightStep[], key: string): number => {
+  const from = steps.find((step) => step.key === key)?.ordinal ?? 0
+  const next = steps.find((step) => step.ordinal > from)?.ordinal ?? Infinity
+  return (from + Math.min(Math.floor(from) + 1, next)) / 2
+}
+
+// The row a character waking after `key` shows under: that row, or when a filter hides it, the
+// last shown before the wake.
+export const placeOf = (shown: readonly NightStep[], wake: number, key: string): NightStep | undefined =>
+  shown.find((step) => step.key === key) ?? anchorOf(shown, wake)
 
 // The step shown just before a wake: the one it wakes after, or when a filter hides that, the
 // last shown before it.
@@ -168,7 +216,7 @@ export const neighbours = (shown: readonly NightStep[], wake: number): { readonl
 // the official order keeps the announcements made at dawn. A wake after a hidden step moves up
 // to the shown step before it first.
 export const moveBy = (shown: readonly NightStep[], wake: number, key: string, delta: -1 | 1): string => {
-  const anchor = anchorOf(shown, wake)
+  const anchor = placeOf(shown, wake, key)
   if (!anchor) return key
   if (delta === -1 && anchor.key !== key) return anchor.key
   const at = shown.indexOf(anchor)
@@ -208,6 +256,21 @@ export const nightMoments = (steps: readonly NightStep[], night: 'first' | 'othe
   ]
 }
 
-// The moment a wake is, or nothing when it was placed elsewhere.
-export const momentOf = (moments: readonly NightMoment[], key: string | undefined): NightMoment | undefined =>
-  key === undefined ? undefined : moments.find((m) => m.after === key)
+// The moment a wake is, or nothing when it was placed elsewhere. Waking after a homebrew character
+// that is at a moment is being at that moment too.
+export const momentOf = (moments: readonly NightMoment[], key: string | undefined, order: readonly NightStep[] = []): NightMoment | undefined => {
+  if (key === undefined) return undefined
+  let at = order.findIndex((step) => step.key === key)
+  while (at > 0 && order[at]!.homebrew) at--
+  const step = at === -1 ? key : order[at]!.key
+  return moments.find((m) => m.after === step)
+}
+
+// Where choosing a moment places a character: after its step and after the homebrew characters
+// already there, so characters given the same moment wake in the order they were given it.
+export const momentPlace = (order: readonly NightStep[], step: string): string => {
+  let at = order.findIndex((s) => s.key === step)
+  if (at === -1) return step
+  while (order[at + 1]?.homebrew) at++
+  return order[at]!.key
+}

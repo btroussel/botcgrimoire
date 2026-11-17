@@ -1,4 +1,5 @@
-import { gameText } from '../../content'
+import type { CustomScript, Homebrew, Team } from '../../content'
+import { gameText, registerHomebrew, scriptHomebrew } from '../../content'
 import { markedCharacters } from '../../engine'
 import { addLoose, game, grant, kill, token } from '../../engine/testing/board'
 import { listed, nightOrders } from '../../store/scriptSheet'
@@ -85,5 +86,20 @@ describe('the night reference', () => {
     expect(markers(six().build().g)).toEqual([])
     expect(markers(six().seat('Gil', 'thief').build().g)).toEqual([])
     expect(markers(six().seat('Gus', 'ravenkeeper').build().g)).toEqual(['minionInfo', 'demonInfo'])
+  })
+
+  test('homebrew characters after the same step wake in the order they were placed in, as on the script sheet', () => {
+    // An Outsider placed after the Minions, all of them after dusk, on a script listing it first.
+    const record = (id: string, team: Team, firstNight: number): Homebrew => ({ id, name: id, team, ability: 'x', firstNight, firstNightAfter: 'dusk' })
+    const script: CustomScript = {
+      kind: 'custom', name: 'Home', items: [{ id: '_meta', name: 'Home' }, record('owl', 'outsider', 0.875), record('hex', 'minion', 0.5), record('jinn', 'minion', 0.75)],
+    }
+    registerHomebrew(scriptHomebrew(script))
+    try {
+      const { g } = game(script).seat('Ann', 'owl').seat('Bob', 'hex').seat('Cat', 'jinn').build()
+      expect(ids(rows(g, 'first')).slice(0, 4)).toEqual(['dusk', 'hex', 'jinn', 'owl'])
+    } finally {
+      registerHomebrew([])
+    }
   })
 })

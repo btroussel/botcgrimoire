@@ -3,14 +3,15 @@
 // it falls between. Any other place is chosen on the night itself: the night order as a column of
 // tokens with the character's own token standing in its place, where tapping a step wakes it just
 // after that step and the arrows move it one step at a time. Opened from a script, both read the
-// script's own order, the one the Storyteller will run. A character placed elsewhere opens on
-// that column.
+// script's own order, the one the Storyteller will run, and the column also holds the script's
+// other homebrew characters at their places, so one can wake just after another. A character
+// placed elsewhere opens on that column.
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 
-import type { Team } from '../../content'
+import type { Homebrew, Team } from '../../content'
 import { editions, gameText } from '../../content'
 import { useStore } from '../../store'
 import { Button, focusStyle, IconButton, isFocused, isHovered } from '../../ui/Button'
@@ -20,7 +21,7 @@ import { useReducedMotion } from '../../ui/motion'
 import { nightMarkerArt } from '../../ui/scriptSheet/Reference'
 import { border, focusRing, hoverWash, motion, palette, radius, space, touch, type } from '../../ui/theme'
 import type { NightStep } from './character'
-import { anchorOf, momentOf, moveBy, neighbours, nightMoments, scriptSteps, wakeOrdinal } from './character'
+import { momentOf, momentPlace, moveBy, neighbours, nightMoments, placeOf, scriptSteps, wakeOrdinal, withHomebrew } from './character'
 
 const icon = 32
 
@@ -29,7 +30,9 @@ export interface NightPlacementProps {
   readonly night: 'first' | 'other'
   readonly steps: readonly NightStep[] // the whole night order
   readonly script?: ReadonlySet<string> // the ids on the script the character is written for
-  readonly position: string | undefined // the step it wakes after, undefined when it does not wake
+  readonly homebrew?: readonly Homebrew[] // that script's homebrew characters, in its order
+  readonly self?: string // the character's id, once it has one
+  readonly position: string | undefined // the step or homebrew character it wakes after, undefined when it does not wake
   readonly name: string
   readonly team: Team
   readonly token: ReactNode // the character's own art at `icon` size
@@ -37,11 +40,13 @@ export interface NightPlacementProps {
   readonly children?: ReactNode // the instruction field, shown while it wakes
 }
 
-export const NightPlacement = ({ label, night, steps, script, position, name, team, token, onPosition, children }: NightPlacementProps) => {
+export const NightPlacement = ({ label, night, steps, script, homebrew, self, position, name, team, token, onPosition, children }: NightPlacementProps) => {
   const { t } = useStore()
   const moments = useMemo(() => nightMoments(steps, night, team), [steps, night, team])
   const own = useMemo(() => (script ? scriptSteps(steps, script) : undefined), [steps, script])
-  const moment = momentOf(moments, position)
+  const order = useMemo(() => withHomebrew(steps, night, homebrew ?? [], self), [steps, night, homebrew, self])
+  const ownOrder = useMemo(() => (script ? scriptSteps(order, script) : undefined), [order, script])
+  const moment = momentOf(moments, position, order)
   const [exact, setExact] = useState(false)
   const elsewhere = position !== undefined && moment === undefined
   const group = useId()
@@ -58,11 +63,11 @@ export const NightPlacement = ({ label, night, steps, script, position, name, te
       <div role="radiogroup" aria-label={label} className="night-moments">
         <Moment group={group} checked={position === undefined} title={t('scripts.doesNotWake')} onPick={() => pick(undefined)} />
         {moments.map((m) => (
-          <Moment key={m.key} group={group} checked={m === moment} title={t(`scripts.moment_${m.key}`)} detail={between(m.after)} onPick={() => pick(m.after)} />
+          <Moment key={m.key} group={group} checked={m === moment} title={t(`scripts.moment_${m.key}`)} detail={between(m.after)} onPick={() => pick(momentPlace(order, m.after))} />
         ))}
       </div>
       {position !== undefined && (exact || elsewhere) ? (
-        <NightOrder label={label} steps={steps} own={own} position={position} name={name} team={team} token={token}
+        <NightOrder label={label} steps={order} own={ownOrder} position={position} name={name} team={team} token={token}
           reveal={exact} onPosition={onPosition} />
       ) : position !== undefined ? (
         <Button label={t('scripts.exactPlace')} icon="order" onPress={() => setExact(true)} variant="text" surface="paper" style={styles.start} />
@@ -95,7 +100,8 @@ const Moment = ({ group, checked, title, detail, onPick }: {
 }
 
 // The night order with the character standing in it. A filter shortens the column to the script,
-// or to the characters of one edition the Storyteller knows best, without changing the order.
+// or to the characters of one edition the Storyteller knows best, without changing the order. The
+// script's homebrew characters stay under every filter, since the character is placed among them.
 const NightOrder = ({ label, steps, own, position, name, team, token, reveal, onPosition }: {
   readonly label: string
   readonly steps: readonly NightStep[]
@@ -111,9 +117,9 @@ const NightOrder = ({ label, steps, own, position, name, team, token, reveal, on
   const reduced = useReducedMotion()
   const [edition, setEdition] = useState(own ? 'script' : 'all')
   const shown = useMemo(() => (edition === 'script' && own ? own
-    : steps.filter((step) => step.marker !== undefined || edition === 'all' || step.edition === edition)), [steps, own, edition])
+    : steps.filter((step) => step.marker !== undefined || step.homebrew || edition === 'all' || step.edition === edition)), [steps, own, edition])
   const wake = wakeOrdinal(steps, position)
-  const anchor = anchorOf(shown, wake)
+  const anchor = placeOf(shown, wake, position)
   const frame = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLDivElement>(null)
   const here = useRef<ViewInstance>(null)
@@ -191,7 +197,7 @@ const StepRow = ({ step, label, tabbable, onPress }: {
 }) => {
   const focusVisible = useFocusVisible()
   const art = step.marker ? <Image source={nightMarkerArt[step.marker]} style={styles.markerArt} resizeMode="contain" accessible={false} />
-    : step.id ? <CharacterIcon id={step.id} size={icon} lazy /> : null
+    : step.id ? <CharacterIcon id={step.id} {...(step.team ? { team: step.team } : {})} size={icon} lazy /> : null
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} tabIndex={tabbable ? 0 : -1}
       style={(state) => [styles.step, focusStyle(palette, isFocused(state) && focusVisible, 'paper'), isHovered(state) ? { backgroundColor: hoverWash.paper } : null,
