@@ -99,6 +99,7 @@
   "addSeatReminder": "Agregar un recordatorio para {name}",
   "aliveCount": "{alive} / {total} vivos",
   "endGame": "Terminar partida",
+  "playAgain": "Volver a jugar",
   "onBlock": "En el patíbulo",
   "referenceCharacters": "Roles",
   "referenceResize": "Cambiar el tamaño del panel de referencia"

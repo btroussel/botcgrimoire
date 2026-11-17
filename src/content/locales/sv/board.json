@@ -99,6 +99,7 @@
   "addSeatReminder": "Lägg till en påminnelse för {name}",
   "aliveCount": "{alive} / {total} lever",
   "endGame": "Avsluta spelet",
+  "playAgain": "Spela igen",
   "onBlock": "Dömd",
   "referenceCharacters": "Roller",
   "referenceResize": "Ändra storlek på referenspanelen"

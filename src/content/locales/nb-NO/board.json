@@ -99,6 +99,7 @@
   "addSeatReminder": "Legg til en påminnelse for {name}",
   "aliveCount": "{alive} / {total} i live",
   "endGame": "Avslutt spillet",
+  "playAgain": "Spill igjen",
   "onBlock": "På skafottet",
   "referenceCharacters": "Roller",
   "referenceResize": "Endre størrelse på rolleoversikten"

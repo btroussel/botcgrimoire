@@ -99,6 +99,7 @@
   "addSeatReminder": "Erinnerung für {name} hinzufügen",
   "aliveCount": "{alive} / {total} lebendig",
   "endGame": "Spiel beenden",
+  "playAgain": "Noch einmal spielen",
   "onBlock": "Auf dem Richtblock",
   "referenceCharacters": "Charaktere",
   "referenceResize": "Größe der Referenzleiste ändern"

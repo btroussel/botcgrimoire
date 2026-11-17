@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 
 import { durationFor, useReducedMotion } from '../../ui/motion'
@@ -11,23 +12,29 @@ const widthAtOnePoint = (text: string) => widthIn(text, font.display.bold)
 // The saved result stays on the velvet for as long as the board is finished, in the largest
 // box across the ring's centre that leaves every token and name clear. A dark glow opens first
 // and the words rise into it once the End game dialog has gone; the result is already recorded,
-// so nothing waits on the show.
-export const VictoryAnnouncement = ({ winner, label, boxes, left, top, band }: {
+// so nothing waits on the show. Actions under the words keep their room out of the fit, and rise
+// with the words.
+export const VictoryAnnouncement = ({ winner, label, boxes, left, top, band, actions }: {
   readonly winner: 'good' | 'evil'
   readonly label: string
   readonly boxes: readonly CentreBox[] // from centreBoxes, in band coordinates
   readonly left: number // the band's place in the parent
   readonly top: number
   readonly band: { readonly width: number; readonly height: number } // the fallback when no box is clear
+  readonly actions?: { readonly node: ReactNode; readonly room: { readonly width: number; readonly height: number } }
 }) => {
   const glow = useRef<HTMLDivElement>(null)
   const words = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion()
+  const room = actions?.room
   const fit = useMemo(() => {
     const text = label.toLocaleUpperCase()
-    return fitResult(boxes.length > 0 ? boxes : [{ left: 0, top: 0, ...band }],
-      widthAtOnePoint(text) * slack, twoLineWidth(text.split(/\s+/), widthAtOnePoint) * slack)
-  }, [label, boxes, band])
+    const below = room ? room.height : 0
+    const fitted = fitResult((boxes.length > 0 ? boxes : [{ left: 0, top: 0, ...band }])
+      .filter(box => !room || box.width >= room.width + 2 * resultFrame.padX).map(box => ({ ...box, height: box.height - below })),
+    widthAtOnePoint(text) * slack, twoLineWidth(text.split(/\s+/), widthAtOnePoint) * slack)
+    return fitted && { ...fitted, box: { ...fitted.box, height: fitted.box.height + below } }
+  }, [label, boxes, band, room])
   useLayoutEffect(() => {
     const shown = { opacity: 1, transform: 'none' }
     const glowRun = glow.current?.animate?.(reduced ? [{ opacity: 0 }, shown] : [{ opacity: 0, transform: 'scale(0.6)' }, shown],
@@ -52,6 +59,7 @@ export const VictoryAnnouncement = ({ winner, label, boxes, left, top, band }: {
         <div style={{ fontFamily: font.display.bold, lineHeight: resultFrame.line, textTransform: 'uppercase',
           color: colour, textShadow: `0 2px 8px #000, 0 0 28px ${colour}88` }}>{label}</div>
         <div aria-hidden style={{ ...rule, margin: `${resultFrame.rules / 2}em auto 0` }} />
+        {actions ? <div style={{ display: 'flex', justifyContent: 'center', pointerEvents: 'auto' }}>{actions.node}</div> : null}
       </div>
     </div>
   </div>

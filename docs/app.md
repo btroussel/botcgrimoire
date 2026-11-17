@@ -30,7 +30,7 @@ the setup and day windows and the day timer, so the board never imports those fe
 | Route | Feature | What it is |
 | --- | --- | --- |
 | `/`, `/[lang]` | `home` | Resume or start a game, scripts, history, settings; `/fr` and the like for search |
-| `/new` | `setup` | Script, seat count and optional bag; `?script=` opens on that script's bag |
+| `/new` | `setup` | Script, seat count and optional bag; `?script=` opens on that script's bag, `?from=` seats a finished game's players |
 | `/game/[id]` | `board`, `setup`, `day` | The board; `?draw=` and `?discovery=` hold a player's turn, `?replay=1` the replay, where the older `/game/[id]/history` address redirects |
 | `/history`, `/history/[id]` | `history` | Saved games, optionally one opened |
 | `/scripts` | `scripts` | Read, compose, import, share and print scripts; homebrew characters; `?import=1` opens the import window, a `#script=` link opens its script |
@@ -180,6 +180,17 @@ block. It ends with Done alone: the Storyteller records the death.
 ### Ending
 
 End game asks who won, good or evil. The app never detects a win.
+
+A finished game offers three things and nothing else: Play again, Replay and Home. Show a card
+and More go, since nothing is left to show or arrange, and Undo stays, the way back from a wrong
+winner. Home leaves without asking, as there is nothing to resume.
+
+Play again is how a group plays its next game without typing its names again. It opens New game
+on the script list with the finished game's players in the seats, in the order they sat and as
+many seats as they took, so the Storyteller picks a script and goes on as usual. A default name
+is a place rather than a player, so it takes the number of its new seat, and a bigger table
+numbers its extra seats. Nothing carries over from a game the Storyteller did not ask to repeat:
+New game alone still starts every seat at its number.
 
 ## Saved games and replay
 

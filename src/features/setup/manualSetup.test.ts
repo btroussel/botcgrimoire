@@ -4,7 +4,7 @@ import type { Payload } from '../../engine'
 import { listed } from '../../store/scriptSheet'
 import { dealDraw, fillBag } from './draw'
 import { randomBag, shuffled } from './randomBag'
-import { dealTarget, looseEvents, openingEvents, scriptLoose, seatedCharacters, showsCopies, trimBag } from './setup'
+import { dealTarget, looseEvents, openingEvents, scriptLoose, seatedCharacters, showsCopies, tableNames, trimBag } from './setup'
 
 const ids = ['drunk', 'marionette', 'imp'].map(asCharacterId)
 const reduced = (payloads: readonly Payload[]) => reduce('tb', payloads.map((event, i) => ({ ...event, id: asEventId(i), audience: 'storyteller' as const, manual: true })))
@@ -25,6 +25,14 @@ test('one or twenty players can open empty, without any preparation or role vali
     expect(board.seats.every(s => s.character === '_empty')).toBe(true)
     expect(fillBag([])).toBeUndefined()
   }
+})
+
+test('play again keeps the players in order and numbers the default seats by their new place', () => {
+  const numbered = (n: number) => `Seat ${n}`
+  const players = ['Ana', 'Place 7', 'Ben', 'Seat 1']
+  expect(tableNames(players, 4, numbered)).toEqual(['Ana', 'Seat 2', 'Ben', 'Seat 4'])
+  expect(tableNames(players, 2, numbered)).toEqual(['Ana', 'Seat 2'])
+  expect(tableNames(players, 6, numbered)).toEqual(['Ana', 'Seat 2', 'Ben', 'Seat 4', 'Seat 5', 'Seat 6'])
 })
 
 test('random selection follows ordinary team counts when no setup modifiers are on the script', () => {

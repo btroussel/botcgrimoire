@@ -99,6 +99,7 @@
   "addSeatReminder": "Add a reminder for {name}",
   "aliveCount": "{alive} / {total} alive",
   "endGame": "End game",
+  "playAgain": "Play again",
   "onBlock": "On the block",
   "referenceCharacters": "Characters",
   "referenceResize": "Resize reference drawer"

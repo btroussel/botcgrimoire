@@ -101,6 +101,7 @@
   "addSeatReminder": "Dodaj przypominajkę dla: {name}",
   "aliveCount": "Żywi: {alive} / {total}",
   "endGame": "Zakończ grę",
+  "playAgain": "Zagraj ponownie",
   "onBlock": "Na szafocie",
   "referenceCharacters": "Postacie",
   "referenceResize": "Zmień rozmiar panelu postaci"
