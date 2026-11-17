@@ -54,9 +54,16 @@ a game shows the copy it was made with. Its text is in one language.
 Night positions are ordinals on the bundled sheets, and zero or none means it doesn't wake. A file
 counts one higher, as the official Script Tool does, so reading takes one off and writing adds it.
 A sync that adds a character shifts every later ordinal, so a waking record also names the sheet
-step it wakes just after, and that step decides its place while the sheet has it. Reading a file
-pins each wake to the step its number lands after; writing one turns the step back into a number
-and leaves the step out, since the schema rejects fields it does not know.
+step it wakes just after, and that step decides its gap while the sheet has it. The fraction of
+its number decides its place in the gap, among the homebrew characters after the same step, since
+a sync leaves it alone. A whole number from another tool sits mid-gap. Two records at one place
+wake in the script's order. Reading a file pins each wake to the step its number lands after;
+writing one turns the step back into a number with the same fraction and leaves the step out,
+since the schema rejects fields it does not know.
+
+Waking just after another homebrew character takes the place halfway between it and whatever wakes
+next, rather than naming it. Moving or deleting that character never moves this one, there is no
+chain or loop to resolve, and a file's numbers carry the order to other tools.
 
 Only an embedded `data:image/` icon is drawn. A web address is kept but never fetched, since a game
 must not need the network or tell another server who is playing. An icon made in the app is cropped

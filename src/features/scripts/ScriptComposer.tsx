@@ -24,7 +24,7 @@ import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import { ScriptCharacterPicker } from './ScriptCharacterPicker'
 import type { Draft } from './compose'
-import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, recordsOf, toggleId } from './compose'
+import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, orderIds, recordsOf, toggleId } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepScript, useKept } from './drafts'
 import { useSheetWords } from './useScripts'
@@ -79,6 +79,9 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   // Homebrew characters or rules bring the Bootlegger, which stays while they do.
   const shown = useMemo(() => draftIds(draft, records), [draft, records])
   const bootlegged = draftNeedsBootlegger(draft, records)
+  // The script's homebrew characters in the order its file lists them, which a character written
+  // here can wake after.
+  const onSheet = useMemo(() => orderIds(shown, records).flatMap((id) => records.get(id) ?? []), [shown, records])
   const chosen = useMemo(() => roster.filter((c) => shown.includes(c.id)), [roster, shown])
   const counts = useMemo(() => teamCounts(chosen), [chosen])
   const target = composeTarget(counts)
@@ -194,6 +197,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
             {...(writing.initial ? { initial: writing.initial } : {})}
             {...(writing.resume ? { resume: writing.resume } : {})}
             script={shown}
+            homebrew={onSheet}
             onBack={closeWriter}
             onSave={keepWritten}
           />

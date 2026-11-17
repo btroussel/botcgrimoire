@@ -37,6 +37,7 @@ export interface CharacterEditorProps {
   readonly initial?: Homebrew // editing a saved one; a new character otherwise
   readonly resume?: CharacterDraft // the kept draft to go on with, changed from initial
   readonly script?: readonly string[] // the ids on the script it is written for, whose night order it is placed in
+  readonly homebrew?: readonly Homebrew[] // that script's homebrew characters, in its order, which it can wake after
   readonly onBack: () => void
   readonly onSave: (character: Homebrew) => Promise<unknown>
   readonly onDelete?: () => void
@@ -44,12 +45,12 @@ export interface CharacterEditorProps {
 
 const previewSize = 148
 
-export const CharacterEditor = ({ initial, resume, script, onBack, onSave, onDelete }: CharacterEditorProps) => {
+export const CharacterEditor = ({ initial, resume, script, homebrew, onBack, onSave, onDelete }: CharacterEditorProps) => {
   const store = useStore()
   const { t } = store
   const locale = store.settings.locale
   const pad = usePhone() ? space.lg : space.xl
-  const start = useMemo(() => draftOfCharacter(initial), [initial])
+  const start = useMemo(() => draftOfCharacter(initial, homebrew), [initial, homebrew])
   const [draft, setDraft] = useState<CharacterDraft>(resume ?? start)
   const [leaving, setLeaving] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -63,6 +64,7 @@ export const CharacterEditor = ({ initial, resume, script, onBack, onSave, onDel
   const first = useMemo(() => nightSteps('first', locale, markers), [locale, markers])
   const other = useMemo(() => nightSteps('other', locale, markers), [locale, markers])
   const onScript = useMemo(() => (script ? new Set(script) : undefined), [script])
+  const placing = { ...(onScript ? { script: onScript } : {}), ...(homebrew ? { homebrew } : {}), ...(initial ? { self: initial.id } : {}) }
 
   const problem = characterProblem(draft)
   const changed = JSON.stringify(draft) !== JSON.stringify(start)
@@ -74,7 +76,7 @@ export const CharacterEditor = ({ initial, resume, script, onBack, onSave, onDel
     const taken = new Set(store.characters.map((c) => c.character.id))
     setSaving(true)
     setSaveFailed(false)
-    onSave(characterOf(draft, initial?.id ?? mintCharacterId(draft.name, (id) => taken.has(id)), initial)).then(() => keepCharacter(undefined), () => {
+    onSave(characterOf(draft, initial?.id ?? mintCharacterId(draft.name, (id) => taken.has(id)), initial, homebrew)).then(() => keepCharacter(undefined), () => {
       setSaving(false)
       setSaveFailed(true)
     })
@@ -176,13 +178,13 @@ export const CharacterEditor = ({ initial, resume, script, onBack, onSave, onDel
             </Section>
 
             <Section label={t('scripts.firstNight')}>
-              <NightPlacement label={t('scripts.firstNight')} night="first" steps={first} {...(onScript ? { script: onScript } : {})} position={draft.firstNight}
+              <NightPlacement label={t('scripts.firstNight')} night="first" steps={first} {...placing} position={draft.firstNight}
                 name={draft.name} team={draft.team} token={art(32)} onPosition={(firstNight) => set({ firstNight })}>
                 {instruction(draft.firstNightReminder, (firstNightReminder) => set({ firstNightReminder }))}
               </NightPlacement>
             </Section>
             <Section label={t('scripts.otherNights')}>
-              <NightPlacement label={t('scripts.otherNights')} night="other" steps={other} {...(onScript ? { script: onScript } : {})} position={draft.otherNight}
+              <NightPlacement label={t('scripts.otherNights')} night="other" steps={other} {...placing} position={draft.otherNight}
                 name={draft.name} team={draft.team} token={art(32)} onPosition={(otherNight) => set({ otherNight })}>
                 {instruction(draft.otherNightReminder, (otherNightReminder) => set({ otherNightReminder }))}
               </NightPlacement>

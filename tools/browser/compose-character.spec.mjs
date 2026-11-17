@@ -89,3 +89,37 @@ test('a homebrew character written for a script is placed among that script\'s s
   const steps = page.getByRole('list', { name: 'Other nights', exact: true }).locator(':scope > [role="listitem"] > [role="button"]')
   await expect(steps).toHaveText(['Dusk', 'Monk', 'Imp', 'Empath', 'Dawn'])
 })
+
+test('on a script of homebrew alone, an Outsider placed after a Minion wakes after it', async ({ page }) => {
+  const create = async (name, team, wakes = true) => {
+    await page.getByRole('button', { name: 'Add characters', exact: true }).click()
+    await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name)
+    await page.getByRole('textbox', { name: 'Ability', exact: true }).fill('You start knowing something.')
+    await page.getByRole('radio', { name: team, exact: true }).check({ force: true })
+    if (wakes) await page.getByRole('radiogroup', { name: 'First night', exact: true }).getByRole('radio', { name: 'Before the evil team', exact: true }).check({ force: true })
+    await page.getByRole('button', { name: 'Save character', exact: true }).click()
+    await page.getByRole('button', { name: 'Done', exact: true }).click()
+  }
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Compose a script', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Script name', exact: true }).fill('Evil First')
+  await create('Owl', 'Outsider')
+  await create('Hex', 'Minion')
+  // A script needs five characters; these never wake.
+  for (const name of ['Baker', 'Cooper', 'Draper']) await create(name, 'Townsfolk', false)
+
+  await page.getByRole('button', { name: 'Edit Owl', exact: true }).click()
+  await page.getByRole('button', { name: 'Choose the exact place', exact: true }).click()
+  const column = page.getByRole('list', { name: 'First night', exact: true })
+  await expect(column.locator(':scope > [role="listitem"] > [role="button"]')).toHaveText(['Dusk', 'Hex', 'Minion info', 'Demon info', 'Dawn'])
+  await column.getByRole('button', { name: 'Wake after Hex', exact: true }).click()
+  await expect(page.getByRole('radiogroup', { name: 'First night', exact: true }).getByRole('radio', { name: 'Before the evil team', exact: true })).toBeChecked()
+  await page.getByRole('button', { name: 'Save character', exact: true }).click()
+
+  await page.getByRole('button', { name: 'Save script', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Evil First', exact: true })).toBeVisible()
+  const firstNight = await page.locator('#script-sheet-nights').innerText()
+  expect(firstNight.indexOf('Hex')).toBeGreaterThan(-1)
+  expect(firstNight.indexOf('Hex')).toBeLessThan(firstNight.indexOf('Owl'))
+})

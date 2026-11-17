@@ -1,8 +1,8 @@
 import type { Homebrew, Team } from '../../content'
-import { asCharacterId, character, homebrewArt, homebrewCharacter, nightMarkers, t, teams } from '../../content'
+import { asCharacterId, character, homebrewArt, homebrewCharacter, homebrewWake, nightMarkers, t, teams, wakeJustAfter } from '../../content'
 import {
-  anchorOf, canAddReminder, characterOf, characterProblem, draftOfCharacter, draftWake, imageForTeam, imageOf, imagesOf, limits, momentOf, moveBy, neighbours,
-  nightMoments, nightSteps, scriptSteps, shownImage, teamWords, wakeOrdinal,
+  anchorOf, canAddReminder, characterOf, characterProblem, draftOfCharacter, draftWake, imageForTeam, imageOf, imagesOf, limits, momentOf, momentPlace, moveBy,
+  neighbours, nightMoments, nightSteps, placeOf, scriptSteps, shownImage, teamWords, wakeOrdinal, withHomebrew,
 } from './character'
 import { fitWithin, hasTransparency, visibleBounds } from './image'
 
@@ -207,6 +207,83 @@ describe('where a homebrew character wakes', () => {
     expect(momentOf(moments, 'demoninfo')?.key).toBe('afterEvil')
     expect(momentOf(moments, 'king')).toBeUndefined()
     expect(momentOf(moments, undefined)).toBeUndefined()
+  })
+})
+
+describe('a homebrew character placed after another on its script', () => {
+  const first = nightSteps('first', 'en', markers)
+  const record = (id: string, team: Team, firstNight: number): Homebrew =>
+    ({ id, name: id, team, ability: 'x', firstNight, firstNightAfter: 'dusk' })
+  // A script of nothing but homebrew, as the composer lists it: the Outsider before the Minions.
+  // The Outsider and the first Minion were given the moment before the evil team at the same
+  // place, so they tie and the Outsider wakes first; the second Minion was placed after the first.
+  const owl = record('owl', 'outsider', 0.5)
+  const hex = record('hex', 'minion', 0.5)
+  const jinn = record('jinn', 'minion', 0.75)
+  const script = [owl, hex, jinn]
+  const ids = new Set(script.map((h) => h.id))
+  const wake = (h: Homebrew) => homebrewWake(h, 'first')!
+  const poisoner = first.find((c) => c.key === 'poisoner')!.ordinal
+
+  test('the column holds the script\'s other homebrew characters at their places, but not the one being placed', () => {
+    const order = withHomebrew(first, 'first', script, 'owl')
+    expect(scriptSteps(order, ids).map((step) => step.key)).toEqual(['dusk', 'hex', 'jinn', 'minioninfo', 'demoninfo', 'dawn'])
+    expect(order.find((step) => step.key === 'hex')).toMatchObject({ label: 'hex', id: 'hex', team: 'minion', homebrew: true, ordinal: 0.5 })
+    expect(withHomebrew(first, 'first', [])).toBe(first)
+  })
+
+  test('an Outsider tapped onto a Minion wakes just after it, before whatever came next', () => {
+    const afterJinn = characterOf({ ...draftOfCharacter(owl, script), firstNight: 'jinn' }, 'owl', owl, script)
+    expect(afterJinn).toMatchObject({ firstNight: 0.875, firstNightAfter: 'dusk' })
+    const afterHex = characterOf({ ...draftOfCharacter(owl, script), firstNight: 'hex' }, 'owl', owl, script)
+    expect(wake(hex) < wake(afterHex) && wake(afterHex) < wake(jinn)).toBe(true)
+    // Tapping a step puts it directly under the step, ahead of the homebrew characters there.
+    const afterDusk = characterOf({ ...draftOfCharacter(owl, script), firstNight: 'dusk' }, 'owl', owl, [hex, jinn])
+    expect(wake(afterDusk)).toBe(0.25)
+    // The column and the saved record agree on the place.
+    const order = withHomebrew(first, 'first', script, 'owl')
+    expect(wakeOrdinal(order, 'hex')).toBe(wake(afterHex))
+    expect(wakeJustAfter('first', 'hex', [hex, jinn])).toBe(wake(afterHex))
+  })
+
+  test('opens on the row it wakes under, and two saved at one place read in the script\'s order', () => {
+    const between = { ...owl, firstNight: 0.625 }
+    expect(draftOfCharacter(between, [between, hex, jinn]).firstNight).toBe('hex')
+    expect(draftOfCharacter(owl, script).firstNight).toBe('dusk')
+    const tied = { ...jinn, firstNight: 0.5 }
+    expect(draftOfCharacter(tied, [owl, hex, tied]).firstNight).toBe('hex')
+    expect(draftOfCharacter(hex, [owl, hex, tied]).firstNight).toBe('owl')
+    // Without the script, only the sheet's steps are rows.
+    expect(draftOfCharacter(between).firstNight).toBe('dusk')
+  })
+
+  test('keeps its place when saved without moving, even from the list where the others are not shown', () => {
+    const between = { ...owl, firstNight: 0.625 }
+    expect(characterOf(draftOfCharacter(between), 'owl', between).firstNight).toBe(0.625)
+    expect(characterOf(draftOfCharacter(between, script), 'owl', between, script).firstNight).toBe(0.625)
+    // An anchor the script no longer has leaves it where it was.
+    expect(characterOf({ ...draftOfCharacter(between), firstNight: 'gone' }, 'owl', between).firstNight).toBe(0.625)
+    // Moved from the list, it wakes after the step as it always has.
+    expect(characterOf({ ...draftOfCharacter(between), firstNight: 'poisoner' }, 'owl', between))
+      .toMatchObject({ firstNight: poisoner + 0.5, firstNightAfter: 'poisoner' })
+  })
+
+  test('the arrows walk through the homebrew rows like any step', () => {
+    const order = scriptSteps(withHomebrew(first, 'first', script, 'owl'), ids)
+    const at = wakeOrdinal(order, 'hex')
+    expect(placeOf(order, at, 'hex')?.key).toBe('hex')
+    expect(moveBy(order, at, 'hex', 1)).toBe('jinn')
+    expect(moveBy(order, at, 'hex', -1)).toBe('dusk')
+    expect(moveBy(order, wakeOrdinal(order, 'dusk'), 'dusk', 1)).toBe('hex')
+  })
+
+  test('waking after a homebrew character at a moment is that moment, and choosing a moment joins the others there last', () => {
+    const order = withHomebrew(first, 'first', script, 'owl')
+    const moments = nightMoments(first, 'first', 'outsider')
+    expect(momentOf(moments, 'jinn', order)?.key).toBe('beforeEvil')
+    expect(momentOf(moments, 'dusk', order)?.key).toBe('beforeEvil')
+    expect(momentPlace(order, 'dusk')).toBe('jinn')
+    expect(momentPlace(order, 'demoninfo')).toBe('demoninfo')
   })
 })
 
