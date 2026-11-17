@@ -46,7 +46,7 @@ export const Confirm = ({ visible, title, message, confirmLabel, cancelLabel, on
           <Text style={[type.text.body, { color: p.ink }]}>{message}</Text>
           <View style={styles.actions}>
             <Button label={cancelLabel} onPress={onCancel} variant="text" surface="paper" />
-            <Button label={confirmLabel} onPress={onConfirm} variant={danger ? 'danger' : 'primary'} surface="paper" />
+            <Button label={confirmLabel} onPress={onConfirm} variant={danger ? 'danger' : 'primary'} surface="paper" style={styles.confirm} />
           </View>
         </Animated.View>
       </View>
@@ -61,5 +61,8 @@ const styles = StyleSheet.create({
   inert: { pointerEvents: 'none' },
   centre: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.lg },
   card: { borderRadius: radius.dialog, padding: space.xl, gap: space.md, borderWidth: hairline, borderColor: palette.accent, boxShadow: shadows.sheet },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: space.sm, marginTop: space.sm, flexWrap: 'wrap' },
+  // The confirm takes the width the cancel leaves. Labels too long for one row, which some
+  // languages have, put the confirm full width on top and the cancel centred under it.
+  actions: { flexDirection: 'row', flexWrap: 'wrap-reverse', justifyContent: 'center', alignItems: 'center', gap: space.sm, marginTop: space.sm },
+  confirm: { flexGrow: 1 },
 })
