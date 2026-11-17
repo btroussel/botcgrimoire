@@ -20,6 +20,7 @@ export type IconName =
   | 'history'
   | 'undo'
   | 'addSeat'
+  | 'circle'
   | 'turnLeft'
   | 'turnRight'
   | 'swap'
@@ -84,6 +85,8 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   undo: { d: ['M9 14 4 9l5-5', 'M4 9h10a6 6 0 0 1 0 12h-3'] },
   // A seat ring with a plus for the gap.
   addSeat: { d: ['M12 15v6', 'M9 18h6', 'M5.5 15a7.5 7.5 0 1 1 13 0'] },
+  // Seats round a circle, for putting laid-out tokens back on it.
+  circle: { d: ['M11 4a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M16.66 6.34a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M19 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M16.66 17.66a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M11 20a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M5.34 17.66a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M3 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M5.34 6.34a1 1 0 1 0 2 0a1 1 0 1 0-2 0'] },
   // Most of a circle with its arrowhead: the ring turning one place either way.
   turnLeft: { d: ['M4 12a8 8 0 1 0 2.6-5.9', 'M4 3v4h4'] },
   turnRight: { d: ['M20 12a8 8 0 1 1-2.6-5.9', 'M20 3v4h-4'] },

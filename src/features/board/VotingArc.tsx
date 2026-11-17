@@ -1,24 +1,21 @@
 import { useReducedMotion } from '../../ui/motion'
 import { motion, palette } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
-import type { SeatPosition } from './ring'
-import { voteArc } from './ring'
 
-// The count's route around the ring. It lights up to the furthest hand recorded and never advances
-// or casts a vote on its own; the checks on the tokens say who voted.
-export const VotingArc = ({ band, rx, ry, tokenSize, seatCount, nominee, reached, label }: {
+export interface VoteRoute {
+  readonly path: string
+  readonly arrow: { readonly x: number; readonly y: number; readonly angle: number }
+  readonly lit: number // the share of the route up to the furthest hand
+}
+
+// The count's route around the ring, or through a laid-out room. It lights up to the furthest
+// hand recorded and never advances or casts a vote on its own; the checks on the tokens say who voted.
+export const VotingArc = ({ band, route: arc, label }: {
   readonly band: Size
-  readonly rx: number
-  readonly ry: number
-  readonly tokenSize: number
-  readonly seatCount: number
-  readonly nominee: SeatPosition
-  readonly reached: SeatPosition | undefined
+  readonly route: VoteRoute
   readonly label: string
 }) => {
   const reduced = useReducedMotion()
-  const arc = voteArc(band, rx, ry, tokenSize, seatCount, nominee, reached)
-  if (!arc) return null
   const transition = reduced ? 'none' : `stroke-dashoffset ${motion.duration.mark}ms ${motion.css.ease}`
   return <svg width={band.width} height={band.height} role="img" aria-label={label}
     style={{ position: 'absolute', pointerEvents: 'none', overflow: 'visible' }}>

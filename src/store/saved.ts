@@ -13,7 +13,7 @@ export type GameId = string & { readonly __brand: 'GameId' }
 
 // Increments whenever the shape of SavedGame or of any event changes in a way an older app
 // would misread. Each step from n to n+1 is one function in `migrations`.
-export const SAVED_VERSION = 16
+export const SAVED_VERSION = 17
 
 export type GameMode = 'storyteller' | 'free'
 
@@ -137,11 +137,15 @@ const migrate14to15: Migration = (raw) => ({ ...raw, version: 15 })
 // Older logs need no changes; version 16 adds exile ballots, which an older app would count as
 // nominations toward the execution.
 const migrate15to16: Migration = (raw) => ({ ...raw, version: 16 })
-const migrations: Readonly<Record<number, Migration>> = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10, 10: migrate10to11, 11: migrate11to12, 12: migrate12to13, 13: migrate13to14, 14: migrate14to15, 15: migrate15to16 }
+// Older logs need no changes; version 17 adds placeSeat, a token laid off the circle.
+const migrate16to17: Migration = (raw) => ({ ...raw, version: 17 })
+const migrations: Readonly<Record<number, Migration>> = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10, 10: migrate10to11, 11: migrate11to12, 12: migrate12to13, 13: migrate13to14, 14: migrate14to15, 15: migrate15to16, 16: migrate16to17 }
 
 export class InvalidSavedGame extends Error {}
 
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null
+// A share of the board, so never outside it.
+const isPlace = (x: unknown): boolean => isRecord(x) && [x.x, x.y].every(n => typeof n === 'number' && n >= 0 && n <= 1)
 
 // The structural check after migration: the shape the current app writes, and every event an
 // object with a kind and its index as id. What each event means is the engine's business.
@@ -169,6 +173,7 @@ const validate = (raw: Record<string, unknown>): SavedGame => {
     if (e.kind === 'cancelNomination' && (!Number.isInteger(e.nomination) || Number(e.nomination) < 0 || Number(e.nomination) >= i || !isRecord(log[Number(e.nomination)]) || log[Number(e.nomination)].kind !== 'nominate')) fail(`event ${i} nomination cancellation`)
     if (e.kind === 'setVoteTotal' && (!Number.isInteger(e.nomination) || Number(e.nomination) < 0 || Number(e.nomination) >= i || !Number.isInteger(e.total) || Number(e.total) < 0)) fail(`event ${i} vote total`)
     if (e.kind === 'moveSeat' && (typeof e.seat !== 'string' || !e.seat || !Number.isInteger(e.to) || Number(e.to) < 0)) fail(`event ${i} seat position`)
+    if (e.kind === 'placeSeat' && (typeof e.seat !== 'string' || !e.seat || (e.at !== undefined && !isPlace(e.at)))) fail(`event ${i} seat place`)
     if (e.kind === 'endGame' && ((e.winner !== undefined && e.winner !== 'good' && e.winner !== 'evil') || (e.note !== undefined && typeof e.note !== 'string'))) fail(`event ${i} result`)
     if (e.kind === 'nightChecklist' && (typeof e.entry !== 'string' || !e.entry || !['done', 'skipped', 'pending'].includes(String(e.status)) || (e.label !== undefined && typeof e.label !== 'string'))) fail(`event ${i} night checklist`)
     if (e.kind === 'unvote' &&

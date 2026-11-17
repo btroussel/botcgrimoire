@@ -105,9 +105,20 @@ already saved stay readable.
 
 Arrange the seats, in More, is where seats are added and the only way to move them. It turns the
 whole ring one place at a time, so every player keeps their neighbours, or moves one seat: onto
-another seat the two swap, and into a gap the seat takes that place while the seats between close
-up. A seat moves with its player, character, states and reminders. Both are `moveSeat` edits, a
-swap two of them recorded as one action, so one undo puts the ring back as it was.
+another seat the two swap, into a gap the seat takes that place while the seats between close
+up, and anywhere else on the board the token stays where it was let go. A seat moves with its
+player, character, states and reminders. The order changes by `moveSeat` edits, a swap two of them
+recorded as one action, so one undo puts the ring back as it was. Outside the arrangement nothing
+moves a seat, so a layout cannot shift during play.
+
+Letting a token go on the board lays the board out like the room, sofas and armchairs included: a
+`placeSeat` edit records where it lies, as a share of the board, so the layout survives a turned
+phone or another screen. Placing a seat never changes the order. Who sits next to whom, and so who
+votes after whom, changes only by a swap or a gap, since a token dropped across a half-arranged
+room would otherwise take its neighbours from wherever the others happen to be. Once the board is
+laid out, a swap or a turn moves players between its spots, as on the circle, and a seat moved or
+added into a gap sits between its new neighbours. Back to the circle, beside Done, puts every
+token back on the circle as one action.
 
 A placed reminder or note moves to another seat by dragging it. The move is one action that takes
 it off and places it again, with no new kind of edit, so one undo puts it back where it was.

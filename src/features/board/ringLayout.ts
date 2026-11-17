@@ -16,8 +16,25 @@ export interface SeatMetrics {
 export const nameHeightAt = (metrics: Pick<SeatMetrics, 'nameHeight' | 'largeName'>, size: number) =>
   metrics.largeName && size >= metrics.largeName.from ? metrics.largeName.height : metrics.nameHeight
 
-// Check circular tokens and rectangular labels separately so diagonal neighbours can
-// use the space beside a disc without covering its name.
+// Whether two tokens of this size and their names leave each other clear. Circular tokens and
+// rectangular labels are checked separately so diagonal neighbours can use the space beside a
+// disc without covering its name.
+export const seatsClear = (metrics: SeatMetrics, size: number) => {
+  const { nameOverhang, nameGap, gap } = metrics
+  const nameHeight = nameHeightAt(metrics, size)
+  const halfWidth = size / 2 + nameOverhang
+  const discClearsName = (p: { x: number; y: number }, q: { x: number; y: number }) => {
+    const top = q.y + size / 2 + nameGap
+    const dx = Math.max(0, Math.abs(p.x - q.x) - halfWidth)
+    const dy = Math.max(top - p.y, 0, p.y - top - nameHeight)
+    return Math.hypot(dx, dy) >= size / 2 + gap
+  }
+  return (p: { x: number; y: number }, q: { x: number; y: number }) =>
+    Math.hypot(p.x - q.x, p.y - q.y) >= size + gap &&
+    (Math.abs(p.x - q.x) >= size + 2 * nameOverhang + gap || Math.abs(p.y - q.y) >= nameHeight + gap) &&
+    discClearsName(p, q) && discClearsName(q, p)
+}
+
 export const fitRing = (viewport: Size, count: number, metrics: SeatMetrics) => {
   const { maximum, minimum, nameOverhang, nameGap, padding, gap } = metrics
   const candidate = (band: Size, size: number) => {
@@ -27,20 +44,11 @@ export const fitRing = (viewport: Size, count: number, metrics: SeatMetrics) => 
     const ry = Math.max(0, band.height / 2 - below - padding)
     const rx = Math.max(0, band.width / 2 - halfWidth - padding)
     const positions = seatPositions(band, rx, ry, count)
-    const discClearsName = (p: { x: number; y: number }, q: { x: number; y: number }) => {
-      const top = q.y + size / 2 + nameGap
-      const dx = Math.max(0, Math.abs(p.x - q.x) - halfWidth)
-      const dy = Math.max(top - p.y, 0, p.y - top - nameHeight)
-      return Math.hypot(dx, dy) >= size / 2 + gap
-    }
     // Large discs can fit a shallow oval by alternating between its two sides. Leave
     // a touch target between the upper names and lower discs before accepting that size.
     const openCentre = count < 3 || band.width <= band.height ||
       2 * ry - size - nameGap - nameHeight >= minimum
-    const clear = (p: { x: number; y: number }, q: { x: number; y: number }) =>
-      Math.hypot(p.x - q.x, p.y - q.y) >= size + gap &&
-      (Math.abs(p.x - q.x) >= size + 2 * nameOverhang + gap || Math.abs(p.y - q.y) >= nameHeight + gap) &&
-      discClearsName(p, q) && discClearsName(q, p)
+    const clear = seatsClear(metrics, size)
     // Every pair once, by index: this runs for each size and margin step the board tries.
     const fits = openCentre && positions.every((p, i) => {
       if (!(p.x - halfWidth >= padding - 0.01 && p.x + halfWidth <= band.width - padding + 0.01 &&

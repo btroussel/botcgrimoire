@@ -192,6 +192,17 @@ too: a tap on another seat swaps the two, on a slot moves it, and on itself, the
 puts it down. A line under Done says how, at the capsule's width so it never reaches a name, and
 names the seat in hand.
 
+Let go over the velvet, a seat stays there. It keeps the circle's token size, so laying one out
+never shrinks the rest. Dropped over another token or name, or under a corner control, it moves to
+the nearest clear spot; with none within a token and a half it may cover a token, since a long jump
+would surprise more, but never a control. On a laid-out board each seat's reminders stack toward
+the middle of the room, a gap marker sits halfway between its two seats wherever they are, and the
+count's route runs through the seats in voting order. The capsule, the vote controls and the result
+make way for the seats rather than the seats for them: each goes to clear velvet across the room's
+middle, and the capsule and the vote dock at the foot when there is none, over the bluffs and the
+plaque, which neither needs. Back to the circle sits in the capsule apart from Done and the turns,
+behind a rule, since it moves every laid-out token at once, and the tokens glide home.
+
 The status plaque is also the phase control, in thumb reach at the lower right. A phone has no
 hover to show it is a button, so a brass border and a chevron mark it. The floating controls, Show
 a card then More, keep that order in every phase and width, and their first tap always acts.

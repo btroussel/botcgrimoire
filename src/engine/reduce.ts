@@ -111,6 +111,11 @@ const applyManual = (g: Grimoire, e: Event): Grimoire => {
     case 'removeSeat':
       // Tokens the seat placed on others stay; its own leave with it.
       return { ...g, seats: g.seats.filter((s) => s.id !== e.seat) }
+    case 'placeSeat':
+      return patchSeat(g, e.seat, (s) => {
+        const { place: _place, ...rest } = s
+        return e.at === undefined ? rest : { ...rest, place: { x: e.at.x, y: e.at.y } }
+      })
     case 'renameSeat':
       return e.name.trim() ? patchSeat(g, e.seat, (s) => ({ ...s, name: e.name.trim() })) : g
     case 'setCharacter':

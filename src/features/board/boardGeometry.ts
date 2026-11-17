@@ -46,20 +46,22 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
   const clockWidth = width < 380 ? 132 : 148
   // The ring rises beside the toolbar and loose tokens wherever no seat reaches them. Portrait
   // keeps its status band whole, since voting controls dock over it there.
+  const controls = {
+    top: [
+      { left: space.md, top: space.md, width: undoSize, height: undoSize },
+      { left: width - space.md - toolbar.width, top: space.md, ...toolbar },
+      ...(strip > 0 ? [{ left: columnWidth - space.md - utilitiesWidth, top: toolbarHeight,
+        width: utilitiesWidth, height: tokenStripHeight }] : []),
+    ],
+    bottom: landscape ? [
+      { left: space.md, top: height - space.md - bluffs.height, ...bluffs },
+      { left: width - space.md - clockWidth, top: height - space.md - clockHeight,
+        width: clockWidth, height: clockHeight },
+    ] : [],
+  }
   const aroundControls = live
-    ? fitRingAroundControls({ width: columnWidth, height: height - (landscape ? 0 : statusHeight) }, seats, seatMetrics, {
-      top: [
-        { left: space.md, top: space.md, width: undoSize, height: undoSize },
-        { left: width - space.md - toolbar.width, top: space.md, ...toolbar },
-        ...(strip > 0 ? [{ left: columnWidth - space.md - utilitiesWidth, top: toolbarHeight,
-          width: utilitiesWidth, height: tokenStripHeight }] : []),
-      ],
-      bottom: landscape ? [
-        { left: space.md, top: height - space.md - bluffs.height, ...bluffs },
-        { left: width - space.md - clockWidth, top: height - space.md - clockHeight,
-          width: clockWidth, height: clockHeight },
-      ] : [],
-    }) : undefined
+    ? fitRingAroundControls({ width: columnWidth, height: height - (landscape ? 0 : statusHeight) }, seats, seatMetrics, controls)
+    : undefined
   const band = aroundControls?.band ?? { width: columnWidth,
     height: Math.max(0, height - toolbarHeight - statusHeight - utilitiesHeight) }
   const ring = aroundControls?.geometry ?? fitRing(band, seats, seatMetrics)
@@ -75,7 +77,10 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
     ring,
     // Portrait boards reserve the status band, so a docked panel there covers no seat.
     panelDocks: !(landscape && aroundControls) && !centrePanelFits(band.width, ring.size),
-    // The drawer can extend into unused board space without covering a token.
+    // The drawer can extend into unused board space without covering a token on the circle.
     seatsRight: Math.max(-Infinity, ...ring.positions.map(at => at.x + ring.size / 2)),
+    // The corner controls that reach into the ring's band, in its coordinates, which a seat laid
+    // off the circle keeps clear of. A band below the toolbar and above the status band has none.
+    obstacles: aroundControls ? [...controls.top, ...controls.bottom].map(control => ({ ...control, top: control.top - aroundControls.top })) : [],
   }
 }

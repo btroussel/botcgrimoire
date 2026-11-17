@@ -4,7 +4,7 @@
 // in the chosen language; every judgement stays in the engine.
 import type { Alignment, CharacterId, Locale, Script } from '../../content'
 import { gameText, isEmptySeat, isLoose, scriptCharacters, characters } from '../../content'
-import type { Event, EventId, Grant, Grimoire, Seat, SeatId, TokenInstance } from '../../engine'
+import type { Event, EventId, Grant, Grimoire, Place, Seat, SeatId, TokenInstance } from '../../engine'
 import { isNote, onTheBlock } from '../../engine'
 import { bluffsOf } from '../../store/bluffs'
 
@@ -26,6 +26,7 @@ export interface SeatView {
   readonly onBlock?: boolean
   readonly ghostVote: boolean
   readonly chips: readonly ChipView[]
+  readonly place?: Place // laid out off the circle
 }
 
 export interface GrantView {
@@ -73,6 +74,7 @@ const seatView = (seat: Seat, g: Grimoire, text: ReturnType<typeof gameText>): S
     dead: !seat.alive,
     ghostVote: seat.ghostVote,
     chips: chipsOf(seat, g, text),
+    ...(seat.place ? { place: seat.place } : {}),
   }
 }
 
@@ -103,7 +105,7 @@ const sameChip = (a: ChipView, b: ChipView): boolean =>
 export const sameSeat = (a: SeatView, b: SeatView): boolean =>
   a === b || (a.id === b.id && a.name === b.name && a.character === b.character && a.characterName === b.characterName &&
     a.alignment === b.alignment && a.dead === b.dead && a.onBlock === b.onBlock &&
-    a.ghostVote === b.ghostVote && a.chips.length === b.chips.length && a.chips.every((chip, i) => sameChip(chip, b.chips[i]!)))
+    a.ghostVote === b.ghostVote && a.place?.x === b.place?.x && a.place?.y === b.place?.y && a.chips.length === b.chips.length && a.chips.every((chip, i) => sameChip(chip, b.chips[i]!)))
 
 // The characters that hold no seat: the script's Fabled, Loric and Lil' Monsta, then every other
 // bundled Fabled and Loric. The bag never deals them, so the board is where the Storyteller puts
