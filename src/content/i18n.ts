@@ -49,6 +49,8 @@ const defaultSeats = [...locales.map((l) => bundles[l].setup?.defaultSeat), ...r
   return [new RegExp(`^${before}(\\d+)${after}$`)]
 })
 
+export const isDefaultSeat = (name: string): boolean => defaultSeats.some((pattern) => pattern.test(name))
+
 export const seatName = (locale: Locale, name: string): string => {
   for (const pattern of defaultSeats) {
     const n = pattern.exec(name)?.[1]

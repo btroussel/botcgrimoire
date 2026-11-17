@@ -99,6 +99,7 @@
   "addSeatReminder": "Lisää muistutus pelaajalle {name}",
   "aliveCount": "{alive} / {total} elossa",
   "endGame": "Lopeta peli",
+  "playAgain": "Pelaa uudelleen",
   "onBlock": "Pölkyllä",
   "referenceCharacters": "Hahmot",
   "referenceResize": "Muuta hahmolistan kokoa"

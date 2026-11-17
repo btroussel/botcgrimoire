@@ -99,6 +99,7 @@
   "addSeatReminder": "Ajouter un rappel pour {name}",
   "aliveCount": "{alive} / {total} en vie",
   "endGame": "Terminer la partie",
+  "playAgain": "Rejouer",
   "onBlock": "Sur le billot",
   "referenceCharacters": "Rôles",
   "referenceResize": "Redimensionner le tiroir de référence"

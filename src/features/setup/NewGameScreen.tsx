@@ -16,21 +16,24 @@ import { ScriptListRow, scriptDetails } from '../../ui/ScriptListRow'
 import { palette, space, type } from '../../ui/theme'
 import { SetupScriptSheet } from './SetupScriptSheet'
 import { chosenTokens, fillBag } from './draw'
-import { looseEvents, openingEvents, scriptLoose, trimBag } from './setup'
+import { looseEvents, openingEvents, scriptLoose, tableNames, trimBag } from './setup'
 
 // The script sheet's New game names its script in the address, an edition by its id and a saved
 // script by its own, and this page then opens on that script's bag. It waits for the store: a
 // saved script is only there once the store has loaded, and the first render has to match the
-// exported page, which is the list.
+// exported page, which is the list. Play again names the finished game, whose players then
+// take the new seats in the order they sat.
 export const NewGameScreen = () => {
-  const { ready, scripts } = useStore()
-  const { script: named } = useLocalSearchParams<{ script?: string }>()
+  const { ready, scripts, games } = useStore()
+  const { script: named, from } = useLocalSearchParams<{ script?: string; from?: string }>()
   const preset: Script | undefined = !ready || !named ? undefined
     : editions.some(e => e.id === named) ? named as ScriptId : scripts.find(saved => saved.id === named)?.script
-  return <NewGame key={preset ? named : ''} {...(preset ? { preset } : {})} />
+  const source = ready && from ? games.find(game => game.id === from) : undefined
+  const players = useMemo(() => source ? boardOf({ game: source, redo: [] }).seats.map(seat => seat.name) : undefined, [source])
+  return <NewGame key={preset ? named : ''} {...(preset ? { preset } : {})} {...(players && players.length <= 20 ? { players } : {})} />
 }
 
-const NewGame = ({ preset }: { readonly preset?: Script }) => {
+const NewGame = ({ preset, players }: { readonly preset?: Script; readonly players?: readonly string[] }) => {
   const store = useStore()
   const { t } = store
   const router = useRouter()
@@ -49,7 +52,7 @@ const NewGame = ({ preset }: { readonly preset?: Script }) => {
     return seats >= 1 && seats <= 20 ? seats : 7
   }, [games])
   const [chosenCount, setCount] = useState<number>()
-  const count = chosenCount ?? lastTable
+  const count = chosenCount ?? (players?.length || lastTable)
   // A script's Fabled and Loric are its rules, so they start selected for the board.
   const [bag, setBag] = useState<readonly CharacterId[]>(() => preset ? scriptLoose(listed(preset, locale)) : [])
   const [shows, setShows] = useState<ReadonlyMap<CharacterId, CharacterId>>(new Map())
@@ -71,7 +74,7 @@ const NewGame = ({ preset }: { readonly preset?: Script }) => {
     opening.current = true
     setBusy(true); setError(false)
     try {
-      const seats = openingEvents(Array.from({ length: count }, (_, i) => t('setup.defaultSeat', { n: i + 1 })))
+      const seats = openingEvents(tableNames(players ?? [], count, n => t('setup.defaultSeat', { n })))
       const id = await store.create(script)
       store.appendAll([...seats, ...looseEvents(bag)])
       // The tokens wait in the bag, so the board opens empty on the setup window that deals them.

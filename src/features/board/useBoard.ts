@@ -30,6 +30,7 @@ export interface BoardBinding {
   readonly returnToPresent: () => void
   readonly enterReplay: () => void
   readonly goHome: () => void
+  readonly playAgain: () => void // a new game for the same players, from the script list
 }
 
 export const useBoard = (raw: string, replay = false): BoardBinding => {
@@ -88,6 +89,10 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
     store.returnToPresent()
   }, [router, store, replay])
   const enterReplay = useCallback(() => router.setParams({ replay: '1' }), [router])
+  const playAgain = useCallback(() => {
+    store.close()
+    router.replace({ pathname: '/new', params: { from: id } })
+  }, [store, router, id])
 
   const visibleLog = open && session ? session.game.log.slice(0, session.lookingAt) : []
   const lastPhase = visibleLog.findLast(event => event.kind === 'phase' && event.to !== 'over')
@@ -116,5 +121,6 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
     returnToPresent,
     enterReplay,
     goHome,
+    playAgain,
   }
 }

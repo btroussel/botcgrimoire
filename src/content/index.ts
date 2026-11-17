@@ -5,7 +5,7 @@ import type { Character, CharacterId, Jinx } from './types'
 import { rawJinxes, rawNightsheet, rawRoles } from './upstream'
 
 export type { Locale, Translate, Values } from './i18n'
-export { locales, seatName, t } from './i18n'
+export { isDefaultSeat, locales, seatName, t } from './i18n'
 export { gameText } from './gameText'
 export { boardColours } from './appearance'
 export type { BoardColour } from './appearance'
