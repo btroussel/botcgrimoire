@@ -157,6 +157,10 @@ seats, loose characters and recorded characters off the script included, or the 
 Below seven players, Travellers not counted, the Minion and Demon info rows drop out; an empty
 seat counts as a player. There is no checklist: reading a row records nothing.
 
+Start the day is the second tap on the plaque, under the night's deaths: every player alive when
+the night began and dead now, so the Storyteller reads them out before confirming. It reads the
+recorded edits only, so a death taken back during the night is not listed and nothing is inferred.
+
 ### Day
 
 Tap the nominator, then the nominee; a player nominates themselves from their seat menu. Nothing
@@ -168,9 +172,15 @@ the day's best tally, with a tie once that tally reaches the minimum. It counts 
 and adjusts for no character.
 
 Mark and Done end the vote and spend the ghost vote of each dead voter who held one. Mark puts a
-skull on the nominee, never an execution: the Storyteller records deaths. Cancelling a nomination
-gives back the ghost votes it spent. The browser tab remembers an open nomination, so a reload
-reopens it. Undoing Done or Mark reopens the vote on its nomination.
+skull on the nominee, never an execution. Cancelling a nomination gives back the ghost votes it
+spent. The browser tab remembers an open nomination, so a reload reopens it. Undoing Done or Mark
+reopens the vote on its nomination.
+
+With the skull on a player, the day ends with Execute or No execution. Execute records the
+execution and that player's death and starts the night, one undo step; No execution only starts the
+night. The app draws no line between an execution and a death: a player an execution spares, as a
+Zombuul or Tea Lady can, is revived like any other correction. With nobody on the block the day
+ends with Start the next night.
 
 A Traveller's seat menu calls for their exile, which anyone may do, so it names no caller. The
 exile opens the same vote, where every hand counts and none spends a ghost vote. Its threshold is

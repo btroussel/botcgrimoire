@@ -12,12 +12,11 @@ export const recordedVoteWeight = (log: readonly Payload[], nomination: EventId,
   return undefined
 }
 
-// How far round the count has come: the recorded hand furthest clockwise from the nominee, whose
-// own hand closes the round. Taking back a hand to fix a mistake leaves the others where they are.
-export const furthestHand = (seats: readonly string[], nominee: string, votes: readonly string[]): string | undefined => {
+// The recorded hands in the order the count reaches them: clockwise from the seat after the
+// nominee, whose own hand closes the round. The Storyteller, who sits at no seat when an Atheist
+// is nominated, starts the count at the first seat. A hand taken back drops out and the rest close up.
+export const votingOrder = (seats: readonly string[], nominee: string, votes: readonly string[]): readonly string[] => {
   const start = seats.indexOf(nominee)
-  if (start < 0) return undefined
   const along = (seat: string) => (seats.indexOf(seat) - start + seats.length - 1) % seats.length
-  return votes.filter(seat => seats.includes(seat)).reduce<string | undefined>(
-    (best, seat) => best === undefined || along(seat) > along(best) ? seat : best, undefined)
+  return votes.filter(seat => seats.includes(seat)).sort((a, b) => along(a) - along(b))
 }

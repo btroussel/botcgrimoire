@@ -199,7 +199,7 @@ size, so laying one out never shrinks the rest. Dropped over another token or na
 the nearest clear spot; with none within a token and a half it may cover a token, since a long jump
 would surprise more, but never a control. On a laid-out board each seat's reminders stack toward
 the middle of the room, a gap marker sits halfway between its two seats wherever they are, and the
-count's route runs through the seats in voting order. The capsule, the vote controls and the result
+count starts in the gap after the nominee as on the circle. The capsule, the vote controls and the result
 make way for the seats rather than the seats for them: each goes to clear velvet across the room's
 middle, and the capsule and the vote dock at the foot when there is none, over the bluffs and the
 plaque, which neither needs. Back to the circle sits in the capsule apart from Done and the turns,
@@ -232,9 +232,17 @@ A card fills the screen and hides the grimoire. A card that needs a player lets 
 board itself, with no banner, so the ring does not shift.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
-voter is covered. The tally turns brass once the hands reach the count that executes. That colour,
-the count's route and the most-votes highlight are references only: they never advance, count or
-decide anything.
+voter is covered. They name the nomination as the day's list does, nominator then nominee, with a
+pip for each hand the threshold needs, and the tally reads "3 of 5". It turns brass once the hands
+reach the count that executes. No line is drawn round the ring: each recorded hand's badge shows its
+place in the count, from the seat after the nominee round to the nominee, the number the
+Storyteller says out loud, and a brass chevron in the gap after the nominee shows where the count
+starts and which way it goes. The colour, the pips and the numbers are references only: they never
+advance, count or decide anything.
+
+The day's list is a ledger: one line of names per nomination and its count in a column on the
+right, where the eye compares the day's votes. The row that put a player on the block carries the
+skull's chip, so the list and the board say the same thing; no other row is singled out.
 
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only. Play again, Replay and Home sit

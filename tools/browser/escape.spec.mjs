@@ -40,24 +40,24 @@ test('Escape closes the reference and a menu before it ends a vote, and keeps it
   const controls = page.getByRole('region', { name: 'Seat 1 nominates Seat 3' })
   await seat(page, 3).click()
   await seat(page, 4).click()
-  await expect(controls).toContainText('2 votes')
+  await expect(controls.locator('[aria-live]')).toHaveText(/^2\s*of \d+$/)
 
   await characters.click()
   await expect(characters).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('Escape')
   await expect(characters).toHaveAttribute('aria-expanded', 'false')
-  await expect(controls).toContainText('2 votes')
+  await expect(controls.locator('[aria-live]')).toHaveText(/^2\s*of \d+$/)
 
   const more = page.getByRole('button', { name: 'More', exact: true })
   await more.click()
   await expect(more).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('Escape')
   await expect(more).toHaveAttribute('aria-expanded', 'false')
-  await expect(controls).toContainText('2 votes')
+  await expect(controls.locator('[aria-live]')).toHaveText(/^2\s*of \d+$/)
 
   // The last Escape ends the vote as Done does: recorded, with nobody on the block.
   await page.keyboard.press('Escape')
   await expect(controls).toHaveCount(0)
   await page.getByRole('button', { name: 'Day 1', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 2 votes. Most votes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 2 votes', exact: true })).toBeVisible()
 })

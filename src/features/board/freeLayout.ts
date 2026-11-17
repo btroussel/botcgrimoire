@@ -7,7 +7,6 @@
 import type { Place } from '../../engine'
 import type { Size } from '../../ui/theme'
 import type { SeatPosition } from './ring'
-import { voteArcScale } from './ring'
 import { nameHeightAt, seatsClear } from './ringLayout'
 import type { BoardControlBounds, CentreBox, RingGeometry, SeatMetrics } from './ringLayout'
 
@@ -113,51 +112,3 @@ export const centreSpot = (boxes: readonly CentreBox[], width: number, height: n
   return { x: best.left + best.width / 2, y: best.top + best.height / 2 }
 }
 
-// The count's route on a placed board: from the nominee through every seat in the order a vote
-// runs, back to the nominee, drawn inside the seats toward the middle of the room as the circle's
-// arc is. A quadratic curve per seat, bent toward that seat and joining its neighbours halfway,
-// so the route turns smoothly whatever shape the room is. `lit` is the share of its length up to
-// the reached seat, the nominee's own hand lighting it all.
-export const voteRoute = (points: readonly Point[], tokenSize: number, nominee: number, reached?: number) => {
-  const n = points.length
-  if (n < 2 || nominee < 0 || nominee >= n) return undefined
-  const centre = layoutCentre(points)
-  const inset = (p: Point) => {
-    const d = Math.hypot(p.x - centre.x, p.y - centre.y)
-    if (d === 0) return p
-    const k = Math.max(d * 0.2, Math.min(d * voteArcScale, d - tokenSize * 0.75)) / d
-    return { x: centre.x + (p.x - centre.x) * k, y: centre.y + (p.y - centre.y) * k }
-  }
-  const q = (i: number) => inset(points[(nominee + i) % n]!)
-  const mid = (a: Point, b: Point) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
-  const start = mid(q(0), q(1))
-  const curves = Array.from({ length: n - 1 }, (_, k) => {
-    const i = k + 1
-    return { from: i === 1 ? start : mid(q(i - 1), q(i)), control: q(i), to: mid(q(i), q(i + 1)) }
-  })
-  const at = (c: (typeof curves)[number], t: number) => ({
-    x: (1 - t) ** 2 * c.from.x + 2 * (1 - t) * t * c.control.x + t ** 2 * c.to.x,
-    y: (1 - t) ** 2 * c.from.y + 2 * (1 - t) * t * c.control.y + t ** 2 * c.to.y,
-  })
-  const length = (c: (typeof curves)[number], upTo = 1) => {
-    let total = 0
-    let previous = c.from
-    for (let s = 1; s <= 16; s++) {
-      const next = at(c, upTo * s / 16)
-      total += Math.hypot(next.x - previous.x, next.y - previous.y)
-      previous = next
-    }
-    return total
-  }
-  const last = curves.at(-1)!
-  const path = `M ${start.x} ${start.y} ` + curves.map(c => `Q ${c.control.x} ${c.control.y} ${c.to.x} ${c.to.y}`).join(' ')
-  const end = last.to
-  const arrow = { ...end, angle: Math.atan2(end.y - last.control.y, end.x - last.control.x) * 180 / Math.PI }
-  if (reached === undefined || reached < 0 || reached >= n) return { path, start, end, arrow, lit: 0 }
-  const steps = (reached - nominee + n) % n
-  if (steps === 0) return { path, start, end, arrow, lit: 1 }
-  const total = curves.reduce((sum, c) => sum + length(c), 0)
-  // The route passes a seat halfway along its curve.
-  const upTo = curves.slice(0, steps - 1).reduce((sum, c) => sum + length(c), 0) + length(curves[steps - 1]!, 0.5)
-  return { path, start, end, arrow, lit: total > 0 ? upTo / total : 0 }
-}

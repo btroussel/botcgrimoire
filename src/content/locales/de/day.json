@@ -1,16 +1,17 @@
 {
   "cancelNomination": "Nominierung aufheben: {by} → {of}",
   "cancelExile": "Verbannung aufheben: {of}",
-  "mostVotes": "Meiste Stimmen",
   "votesLabel": {
     "one": "Stimme",
     "other": "Stimmen"
   },
   "noVoters": "Keine Hände notiert.",
-  "voted": "Stimme notiert",
+  "voteNumber": "Stimme {n}",
   "nominationArrow": "{by} nominiert {of}",
   "exileOf": "Verbannung: {of}",
   "manualNight": "Nächste Nacht beginnen",
+  "executeNight": "{name} hinrichten, Nacht {n} beginnen",
+  "noExecutionNight": "Keine Hinrichtung, Nacht {n} beginnen",
   "manualNomination": {
     "one": "{by} → {of}: {count} Stimme",
     "other": "{by} → {of}: {count} Stimmen"
@@ -42,5 +43,7 @@
   "votesToExile": {
     "one": "{count} Stimme zur Verbannung",
     "other": "{count} Stimmen zur Verbannung"
-  }
+  },
+  "outOf": "von {count}",
+  "tieAt": "{count} Gleichstand"
 }

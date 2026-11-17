@@ -1,16 +1,17 @@
 {
   "cancelNomination": "Cancel nomination: {by} → {of}",
   "cancelExile": "Cancel exile: {of}",
-  "mostVotes": "Most votes",
   "votesLabel": {
     "one": "vote",
     "other": "votes"
   },
   "noVoters": "No recorded hands.",
-  "voted": "Vote recorded",
+  "voteNumber": "Vote {n}",
   "nominationArrow": "{by} nominates {of}",
   "exileOf": "Exile: {of}",
   "manualNight": "Start the next night",
+  "executeNight": "Execute {name}, start night {n}",
+  "noExecutionNight": "No execution, start night {n}",
   "manualNomination": {
     "one": "{by} → {of}: {count} vote",
     "other": "{by} → {of}: {count} votes"
@@ -42,5 +43,7 @@
   "votesToExile": {
     "one": "{count} vote to exile",
     "other": "{count} votes to exile"
-  }
+  },
+  "outOf": "of {count}",
+  "tieAt": "{count} ties"
 }

@@ -1,4 +1,5 @@
 import type { Event, EventId, Grimoire, Nomination, Payload, SeatId } from '../../engine'
+import { onTheBlock } from '../../engine'
 import { recordedVoteWeight } from './votes'
 
 // Restart an unconfirmed ballot without cancelling its nomination or spending ghost votes.
@@ -46,5 +47,18 @@ export const cancelNomination = (log: readonly Event[], nomination: Nomination):
     ...[...spent].map(seat => ({ kind: 'setGhostVote' as const, seat, available: true })),
     ...(ownsMarker ? [{ kind: 'markForExecution' as const, seat: null }] : []),
     { kind: 'cancelNomination', nomination: nomination.opened },
+  ]
+}
+
+// Ending the day with the player on the block executed records the execution, their death and
+// the night as one undo step. An execution that spares someone, as a Zombuul or Tea Lady can, is
+// undone with Revive like any other correction, so every ordinary day costs one tap.
+export const endDay = (board: Grimoire, { execute }: { readonly execute: boolean }): readonly Payload[] => {
+  const blocked = onTheBlock(board)
+  const seat = execute ? board.seats.find(s => s.id === blocked) : undefined
+  return [
+    ...(seat ? [{ kind: 'execute' as const, seat: seat.id, cause: 'vote' as const }] : []),
+    ...(seat?.alive ? [{ kind: 'kill' as const, seat: seat.id, cause: 'execution' as const }] : []),
+    { kind: 'phase', to: 'night', night: board.clock.night + 1 },
   ]
 }

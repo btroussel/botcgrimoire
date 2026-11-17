@@ -1,4 +1,4 @@
-import { lean, seatPositions, voteArc, voteArcScale } from './ring'
+import { countStartBetween, countStartOnRing, lean, seatPositions } from './ring'
 
 // A worked example: a 390 x 527 middle band on a 390 x 844 phone, and a margin of 90, gives
 // radii of 105 and 173.5.
@@ -16,35 +16,26 @@ describe('seat positions on the ring', () => {
     expect(lean(10, 80, 1)).toBeCloseTo(80)
   })
 
-  test('the vote arc runs clockwise from the nominee round to an arrowhead back at them', () => {
-    const inner = (p: { x: number; y: number }) => ({ x: band.width / 2 + (p.x - band.width / 2) * voteArcScale, y: band.height / 2 + (p.y - band.height / 2) * voteArcScale })
+  test('a count starts on the ring halfway to the next seat, pointing round to it', () => {
+    const centre = { x: band.width / 2, y: band.height / 2 }
     for (const count of [5, 7, 20]) {
       const seats = seatPositions(band, rx, ry, count)
       for (let nominee = 0; nominee < count; nominee++) {
-        const at = seats[nominee]!
-        const arc = voteArc(band, rx, ry, 0, count, at)!
-        expect(arc.lit).toBe(0)
-        // Both ends sit near the nominee, either side of them, clear of each other.
-        const home = inner(at)
-        expect(Math.hypot(arc.start.x - home.x, arc.start.y - home.y)).toBeGreaterThan(1)
-        expect(Math.hypot(arc.end.x - home.x, arc.end.y - home.y)).toBeGreaterThan(1)
-        const tangentX = -rx * (at.y - band.height / 2) / ry
-        const tangentY = ry * (at.x - band.width / 2) / rx
-        const a = arc.arrow.angle * Math.PI / 180
-        expect(Math.cos(a) * tangentX + Math.sin(a) * tangentY).toBeGreaterThan(0)
+        const from = seats[nominee]!
+        const to = seats[(nominee + 1) % count]!
+        const mark = countStartOnRing(band, rx, ry, count, nominee)!
+        // On the ellipse through the seats' centres, nearer each of the two seats than any other.
+        expect(((mark.x - centre.x) / rx) ** 2 + ((mark.y - centre.y) / ry) ** 2).toBeCloseTo(1)
+        const distance = (p: { x: number; y: number }) => Math.hypot(mark.x - p.x, mark.y - p.y)
+        const nearest = seats.map(distance).sort((a, b) => a - b)
+        expect(nearest.slice(0, 2)).toEqual(expect.arrayContaining([distance(from), distance(to)]))
+        const a = mark.angle * Math.PI / 180
+        expect(Math.cos(a) * (to.x - from.x) + Math.sin(a) * (to.y - from.y)).toBeGreaterThan(0)
       }
     }
-  })
-
-  test('the arc lights up clockwise to the furthest hand, and fully at the nominee', () => {
-    const count = 8
-    const seats = seatPositions(band, rx, ry, count)
-    const nominee = 6
-    const lit = [1, 2, 3, 4, 5, 6, 7].map(step => voteArc(band, rx, ry, 0, count, seats[nominee]!, seats[(nominee + step) % count])!.lit)
-    for (let i = 1; i < lit.length; i++) expect(lit[i]!).toBeGreaterThan(lit[i - 1]!)
-    expect(lit[0]!).toBeGreaterThan(0)
-    expect(voteArc(band, rx, ry, 0, count, seats[nominee]!, seats[nominee])!.lit).toBeCloseTo(1)
-    expect(voteArc(band, 0, ry, 0, count, seats[0]!)).toBeUndefined()
+    expect(countStartOnRing(band, rx, ry, 1, 0)).toBeUndefined()
+    expect(countStartOnRing(band, rx, ry, 5, -1)).toBeUndefined()
+    expect(countStartBetween({ x: 0, y: 0 }, { x: 0, y: 10 })).toEqual({ x: 0, y: 5, angle: 90 })
   })
 
   test('one position per seat, the first at the top and the rest clockwise', () => {
