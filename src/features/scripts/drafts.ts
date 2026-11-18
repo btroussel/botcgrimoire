@@ -60,6 +60,7 @@ const isCharacterDraft = (value: unknown): value is CharacterDraft =>
   && isOptional(value.image, (image) => isString(image) || isStrings(image)) && isStrings(value.reminders)
   && isOptional(value.firstNight, isNight) && isString(value.firstNightReminder)
   && isOptional(value.otherNight, isNight) && isString(value.otherNightReminder) && typeof value.setup === 'boolean'
+  && isOptional(value.jinxWith, isString) && isOptional(value.jinxReason, isString)
 
 const scriptOf = (value: unknown): KeptScript | undefined =>
   isObject(value) && isDraft(value.draft) && isDraft(value.initial) ? { draft: value.draft, initial: value.initial } : undefined
@@ -67,7 +68,11 @@ const scriptOf = (value: unknown): KeptScript | undefined =>
 const characterOf = (value: unknown): KeptCharacter | undefined =>
   isObject(value) && isCharacterDraft(value.draft) && isOptional(value.initial, isHomebrew)
     ? {
-      draft: { ...value.draft, firstNight: draftWake('first', value.draft.firstNight), otherNight: draftWake('other', value.draft.otherNight) },
+      // An older version kept no jinx.
+      draft: {
+        ...value.draft, firstNight: draftWake('first', value.draft.firstNight), otherNight: draftWake('other', value.draft.otherNight),
+        jinxWith: value.draft.jinxWith, jinxReason: value.draft.jinxReason ?? '',
+      },
       ...(value.initial ? { initial: value.initial as Homebrew } : {}),
     }
     : undefined
