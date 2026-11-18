@@ -6,7 +6,7 @@
     },
     "custom": {
       "description": "Pour jouer avec un script custom, vous devez d’abord sélectionner les rôles que vous souhaitez utiliser dans l’Outil de Script officiel, puis importer le fichier \"custom-list.json\" généré, soit directement ici, soit en fournissant l’URL d’un fichier JSON hébergé. Vous pouvez également charger ce fichier en le faisant glisser-déposer sur cet écran ou en collant le contenu JSON depuis votre presse-papiers.",
-      "name": "Scripts custom"
+      "name": "Scripts personnalisé"
     },
     "homebrew": {
       "name": "Règles maison"
@@ -322,7 +322,7 @@
     },
     "bigwig": {
       "ability": "Chaque joueur nommé choisit un joueur : jusqu’au vote, seul ce joueur peut parler et il est « fou » que le joueur nommé est bon. Sinon, il pourrait mourir.",
-      "name": "Big Wig"
+      "name": "Gros bonnet"
     },
     "bishop": {
       "ability": "Seul le Conteur peut nommer des joueurs. Au moins 1 joueur d'alignement opposé doit être nommé chaque jour.",
@@ -557,7 +557,7 @@
       "name": "Gangster"
     },
     "gardener": {
-      "ability": "Le Conteur attribue leur rôle à tous les joueurs.",
+      "ability": "Le Conteur assigne les rôles de tous les joueurs.",
       "name": "Jardinier"
     },
     "general": {
@@ -581,7 +581,8 @@
       "other": "Si un Marginal est mort dans la journée, le Parrain choisit un joueur. :reminder:"
     },
     "godofug": {
-      "ability": "Un chapeau Ug. Quand porter chapeau Ug, parler un son à la fois mais voter deux fois. Si échouer, passer chapeau Ug."
+      "ability": "Un chapeau Ug. Quand porter chapeau Ug, on doit parler un son à la fois mais voter deux fois. Si échec, passe chapeau Ug.",
+      "name": "Dieu Ug"
     },
     "golem": {
       "ability": "Vous pouvez faire une seule nomination dans la partie. Quand vous le faites, si le nommé n’est pas le Démon, il meurt.",
@@ -691,7 +692,8 @@
       "name": "Maladroit"
     },
     "knaves": {
-      "ability": "Il y a 2 Conteurs : l’un ment et l’autre dit la vérité. Une fois par partie, au crépuscule, ils peuvent échanger."
+      "ability": "Il y a 2 Conteurs : l’un ment et l’autre dit la vérité. Une fois par partie, au crépuscule, ils peuvent échanger.",
+      "name": "Valets"
     },
     "knight": {
       "ability": "Lors de votre première nuit, vous apprenez 2 joueurs qui ne sont pas le Démon.",
