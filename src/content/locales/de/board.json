@@ -101,6 +101,8 @@
   "endGame": "Spiel beenden",
   "playAgain": "Noch einmal spielen",
   "onBlock": "Auf dem Richtblock",
+  "nominatorToday": "Hat heute nominiert",
+  "nomineeToday": "Wurde heute nominiert",
   "referenceCharacters": "Charaktere",
   "referenceResize": "Größe der Referenzleiste ändern"
 }

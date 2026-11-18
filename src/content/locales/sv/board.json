@@ -101,6 +101,8 @@
   "endGame": "Avsluta spelet",
   "playAgain": "Spela igen",
   "onBlock": "Dömd",
+  "nominatorToday": "Har nominerat i dag",
+  "nomineeToday": "Har nominerats i dag",
   "referenceCharacters": "Roller",
   "referenceResize": "Ändra storlek på referenspanelen"
 }

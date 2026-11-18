@@ -101,6 +101,8 @@
   "endGame": "End game",
   "playAgain": "Play again",
   "onBlock": "On the block",
+  "nominatorToday": "Has nominated today",
+  "nomineeToday": "Has been nominated today",
   "referenceCharacters": "Characters",
   "referenceResize": "Resize reference drawer"
 }

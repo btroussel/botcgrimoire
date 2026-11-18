@@ -103,6 +103,8 @@
   "endGame": "Zakończ grę",
   "playAgain": "Zagraj ponownie",
   "onBlock": "Na szafocie",
+  "nominatorToday": "Dziś już nominował(a)",
+  "nomineeToday": "Dziś już nominowany(a)",
   "referenceCharacters": "Postacie",
   "referenceResize": "Zmień rozmiar panelu postaci"
 }

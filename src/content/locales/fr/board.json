@@ -101,6 +101,8 @@
   "endGame": "Terminer la partie",
   "playAgain": "Rejouer",
   "onBlock": "Sur le billot",
+  "nominatorToday": "A nommé aujourd’hui",
+  "nomineeToday": "A été nommé aujourd’hui",
   "referenceCharacters": "Rôles",
   "referenceResize": "Redimensionner le tiroir de référence"
 }

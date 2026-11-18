@@ -101,6 +101,8 @@
   "endGame": "Játék befejezése",
   "playAgain": "Még egy játék",
   "onBlock": "Kivégzésre vár",
+  "nominatorToday": "Ma már gyanúsított",
+  "nomineeToday": "Ma már gyanúsították",
   "referenceCharacters": "Karakterek",
   "referenceResize": "Referenciapanel átméretezése"
 }

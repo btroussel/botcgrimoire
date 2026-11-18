@@ -480,6 +480,8 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         dead={seat.dead}
         onBlock={seat.onBlock === true}
         ghostVote={seat.ghostVote}
+        nominator={seat.nominator === true}
+        nominee={seat.nominee === true}
         selected={selected}
         dropTarget={dropTarget}
         {...(pickable !== undefined ? { pickable } : {})}
@@ -490,7 +492,8 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         {...(canAdd ? { onAddReminder: () => handlers.addReminder(seat.id), addReminderLabel: t('board.addSeatReminder', { name: seat.name }) } : {})}
         angle={angle}
         {...(!readOnly ? { onPress: () => handlers.tap(seat.id, allowed) } : {})}
-        accessibilityLabel={[label, seat.onBlock ? t('board.onBlock') : undefined, nominationLabel, swapLabel, markedLabel].filter(Boolean).join('. ')}
+        accessibilityLabel={[label, seat.onBlock ? t('board.onBlock') : undefined, seat.nominator ? t('board.nominatorToday') : undefined,
+          seat.nominee ? t('board.nomineeToday') : undefined, nominationLabel, swapLabel, markedLabel].filter(Boolean).join('. ')}
       />
       </div>
       {nominationLabel ? <Appear pointerEvents="none" style={styles.nominationBadge}>

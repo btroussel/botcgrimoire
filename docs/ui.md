@@ -244,6 +244,12 @@ The day's list is a ledger: one line of names per nomination and its count in a 
 right, where the eye compares the day's votes. The row that put a player on the block carries the
 skull's chip, so the list and the board say the same thing; no other row is singled out.
 
+By day each seat also says whether it has nominated or been nominated today, so the Storyteller
+sees it without opening the list: a brass mark low on the left of the rim for the nominator, a
+cream one low on the right for the nominee, the same figure with its arrow leaving or arriving.
+They come from the day's recorded nominations, exiles aside, and go at nightfall. Like the
+threshold pips they are references only: a second nomination records as the first did.
+
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only. Play again, Replay and Home sit
 under the result where the middle holds them as well. On a phone they always dock at the foot in
