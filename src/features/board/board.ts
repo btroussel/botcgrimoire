@@ -5,7 +5,7 @@
 import type { Alignment, CharacterId, Locale, Script } from '../../content'
 import { gameText, isEmptySeat, isLoose, scriptCharacters, characters } from '../../content'
 import type { Event, EventId, Grant, Grimoire, Place, Seat, SeatId, TokenInstance } from '../../engine'
-import { isNote, onTheBlock, reduce } from '../../engine'
+import { isNote, onTheBlock, reduce, today } from '../../engine'
 import { bluffsOf } from '../../store/bluffs'
 
 export interface ChipView {
@@ -24,6 +24,8 @@ export interface SeatView {
   readonly alignment: Alignment
   readonly dead: boolean
   readonly onBlock?: boolean
+  readonly nominator?: boolean // has nominated today
+  readonly nominee?: boolean // has been nominated today
   readonly ghostVote: boolean
   readonly chips: readonly ChipView[]
   readonly place?: Place // laid out off the circle
@@ -100,8 +102,14 @@ const diedTonight = (g: Grimoire, log: readonly Event[]): readonly SeatId[] => {
 export const boardView = (g: Grimoire, log: readonly Event[], locale: Locale, bluffs = bluffsOf(g, log)): BoardView => {
   const text = gameText(locale)
   const blocked = onTheBlock(g)
+  // Who has nominated and who has been nominated today, read from the day's ledger as a
+  // reference: a second nomination still records. An exile is no nomination, and the
+  // Storyteller holds no seat to mark.
+  const day = g.clock.phase === 'day' ? today(g) : undefined
+  const nominations = day && !day.closed ? day.nominations.filter(n => !n.exile) : []
   return {
-    seats: g.seats.map((s) => ({ ...seatView(s, g, text), onBlock: s.id === blocked })),
+    seats: g.seats.map((s) => ({ ...seatView(s, g, text), onBlock: s.id === blocked,
+      nominator: nominations.some(n => n.by === s.id), nominee: nominations.some(n => n.of === s.id) })),
     bluffs,
     loose: g.loose,
     grants: g.storyteller.abilities.map((a) => grantView(a, g)),
@@ -116,7 +124,7 @@ const sameChip = (a: ChipView, b: ChipView): boolean =>
 // compares by value to leave the seats an edit did not touch alone.
 export const sameSeat = (a: SeatView, b: SeatView): boolean =>
   a === b || (a.id === b.id && a.name === b.name && a.character === b.character && a.characterName === b.characterName &&
-    a.alignment === b.alignment && a.dead === b.dead && a.onBlock === b.onBlock &&
+    a.alignment === b.alignment && a.dead === b.dead && a.onBlock === b.onBlock && a.nominator === b.nominator && a.nominee === b.nominee &&
     a.ghostVote === b.ghostVote && a.place?.x === b.place?.x && a.place?.y === b.place?.y && a.chips.length === b.chips.length && a.chips.every((chip, i) => sameChip(chip, b.chips[i]!)))
 
 // The characters that hold no seat: the script's Fabled, Loric and Lil' Monsta, then every other

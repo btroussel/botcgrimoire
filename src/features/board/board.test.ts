@@ -1,4 +1,4 @@
-import { addLoose, game, grant, info, kill, revive, token } from '../../engine/testing/board'
+import { addLoose, exile, game, grant, info, kill, nominate, nominateStoryteller, revive, token } from '../../engine/testing/board'
 import { asEventId, isNote } from '../../engine'
 import { boardView, looseChoices, sameSeat } from './board'
 
@@ -20,6 +20,14 @@ describe('the board view', () => {
     expect(view.seats.filter(seat => seat.onBlock).map(seat => seat.id)).toEqual([id('Bob')])
     expect(view.seats.find(seat => seat.id === id('Bob'))?.dead).toBe(false)
     expect(boardView({ ...g, clock: { ...g.clock, phase: 'night' } }, log, 'en').seats.some(seat => seat.onBlock)).toBe(false)
+  })
+  test('today\'s nominations mark who nominated and who was nominated, until night', () => {
+    const { g, log } = table().night(1).day([nominate('Ann', 'Bob'), nominate('Ann', 'Cat'), nominateStoryteller('Dan'), exile('Eve')]).build()
+    const marks = (view: ReturnType<typeof boardView>) => Object.fromEntries(view.seats.map(seat => [seat.name, [seat.nominator, seat.nominee]]))
+    expect(marks(boardView(g, log, 'en'))).toEqual({
+      Ann: [true, false], Bob: [false, true], Cat: [false, true], Dan: [true, false], Eve: [false, false],
+    })
+    expect(boardView({ ...g, clock: { ...g.clock, phase: 'night' } }, log, 'en').seats.some(seat => seat.nominator || seat.nominee)).toBe(false)
   })
   test('dawn lists who died tonight, not the day\'s execution or a death taken back', () => {
     const { g, log, id } = table().night(1, [kill('Eve')]).day([kill('Dan')]).night(2, [kill('Ann'), kill('Cat'), revive('Cat')]).build()
@@ -121,7 +129,7 @@ describe('comparing seat views', () => {
     expect(sameSeat(seat, again)).toBe(true)
     const chip = seat.chips[1]!
     for (const changed of [
-      { ...seat, name: 'Cathy' }, { ...seat, dead: true }, { ...seat, ghostVote: !seat.ghostVote }, { ...seat, onBlock: true },
+      { ...seat, name: 'Cathy' }, { ...seat, dead: true }, { ...seat, ghostVote: !seat.ghostVote }, { ...seat, onBlock: true }, { ...seat, nominator: true }, { ...seat, nominee: true },
       { ...seat, alignment: 'evil' as const }, { ...seat, chips: seat.chips.slice(0, 1) },
       { ...seat, chips: [seat.chips[0]!, { ...chip, label: 'Drunk' }] },
       { ...seat, chips: [seat.chips[0]!, { ...chip, placedBy: asEventId(99) }] },

@@ -1,5 +1,5 @@
 // One seat as the board draws it: the token, greyed once dead, the name under it, the ghost vote
-// skull while a dead seat holds it, a reminder stack pointing toward the centre, and the plus on
+// skull while a dead seat holds it, the day's nomination marks, a reminder stack pointing toward the centre, and the plus on
 // the token's rim.
 // One rule: the piece is anchored on the token. Its box is the token's (size x size) and
 // everything else hangs off it in absolute positions, so the board places a seat by its token's
@@ -10,7 +10,7 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import type { Alignment } from '../content'
 import { AddBadge, ReminderChip } from './ReminderChip'
-import { AvailableRing, BlockMark, GhostVoteMark, SelectedRing } from './SeatMarks'
+import { AvailableRing, BlockMark, GhostVoteMark, NominationMark, SelectedRing } from './SeatMarks'
 import { Token } from './Token'
 import { reminderStack } from './reminderStack'
 import { motion, palette, seatMetrics, seatNameStyle, space, touch } from './theme'
@@ -35,6 +35,8 @@ export interface SeatProps {
   readonly dead?: boolean
   readonly onBlock?: boolean
   readonly ghostVote?: boolean // a dead seat shows its skull while it holds the vote
+  readonly nominator?: boolean // has nominated today
+  readonly nominee?: boolean // has been nominated today
   readonly selected?: boolean | undefined // the brass ring: a hand recorded, a seat picked
   readonly dropTarget?: boolean // the brass ring alone: a dragged reminder would land here
   readonly pickable?: boolean // unavailable seats fade; earlier selections stay marked and readable
@@ -64,6 +66,8 @@ export const Seat = ({
   dead,
   onBlock,
   ghostVote,
+  nominator,
+  nominee,
   selected,
   dropTarget = false,
   pickable,
@@ -149,6 +153,8 @@ export const Seat = ({
       {dropTarget ? <SelectedRing size={size} /> : null}
       {onBlock ? <BlockMark size={size} /> : null}
       {dead && ghostVote ? <GhostVoteMark size={size} /> : null}
+      {nominator ? <NominationMark size={size} role="nominator" /> : null}
+      {nominee ? <NominationMark size={size} role="nominee" /> : null}
       <Text
         // react-native-web caps a Text at its parent's width, and the parent here is the token's box.
         // A diagonal stack's first disc reaches the end of a long name, so the name is drawn above

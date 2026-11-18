@@ -101,6 +101,8 @@
   "endGame": "Terminar partida",
   "playAgain": "Volver a jugar",
   "onBlock": "En el patíbulo",
+  "nominatorToday": "Ya nominó hoy",
+  "nomineeToday": "Ya fue nominado hoy",
   "referenceCharacters": "Personajes",
   "referenceResize": "Cambiar el tamaño del panel de referencia"
 }
