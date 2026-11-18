@@ -10,7 +10,7 @@ export const teamWords = (t: Translate): Readonly<Record<Team, string>> => ({
 })
 
 // The schema's limits, so a saved file stays valid for every other tool. `reminders` counts tokens.
-export const limits = { name: 30, ability: 250, reminder: 30, instruction: 500, reminders: 20 } as const
+export const limits = { name: 30, ability: 250, reminder: 30, instruction: 500, reminders: 20, jinx: 500 } as const
 
 // The editor offers another reminder token only below the schema's count. A record that already
 // carries more keeps them all: only adding stops.
@@ -27,6 +27,8 @@ export interface CharacterDraft {
   readonly otherNight: string | undefined
   readonly otherNightReminder: string
   readonly setup: boolean
+  readonly jinxWith: string | undefined // the one character the form jinxes it with, undefined for none
+  readonly jinxReason: string
 }
 
 // The row a record wakes just after, read the way the night sheets place it: the last of the
@@ -62,19 +64,35 @@ export const draftOfCharacter = (h?: Homebrew, homebrew: readonly Homebrew[] = [
   otherNight: wakeStep(h, 'other', homebrew),
   otherNightReminder: h?.otherNightReminder ?? '',
   setup: h?.setup === true,
+  jinxWith: h?.jinxes?.[0]?.id,
+  jinxReason: h?.jinxes?.[0]?.reason ?? '',
 })
 
 // A draft kept by an older version holds a position rather than a step.
 export const draftWake = (night: 'first' | 'other', kept: unknown): string | undefined =>
   typeof kept === 'string' ? kept : typeof kept === 'number' && kept > 0 ? stepBefore(night, kept) : undefined
 
-export type CharacterProblem = 'characterNameNeeded' | 'abilityNeeded'
+export type CharacterProblem = 'characterNameNeeded' | 'abilityNeeded' | 'jinxReasonNeeded'
 
+// A jinx with no reason would say nothing on the sheet, and import drops one, so saving waits for it.
 export const characterProblem = (draft: CharacterDraft): CharacterProblem | undefined =>
-  draft.name.trim() === '' ? 'characterNameNeeded' : draft.ability.trim() === '' ? 'abilityNeeded' : undefined
+  draft.name.trim() === '' ? 'characterNameNeeded'
+    : draft.ability.trim() === '' ? 'abilityNeeded'
+      : draft.jinxWith !== undefined && draft.jinxReason.trim() === '' ? 'jinxReasonNeeded'
+        : undefined
 
-// The record a draft saves as. Fields the form does not edit, such as flavor text, global
-// reminders or jinxes from an imported file, survive from the record it started from. An
+// The form edits one jinx, the record's first. Any others an imported file carried stay after it,
+// less one with the character the form now names, so a pair is never written twice.
+const jinxesOf = (draft: CharacterDraft, base?: Homebrew): Homebrew['jinxes'] => {
+  const reason = draft.jinxReason.trim().slice(0, limits.jinx)
+  const own = draft.jinxWith !== undefined && reason !== '' ? [{ id: draft.jinxWith, reason }] : []
+  const rest = (base?.jinxes ?? []).slice(1).filter((j) => j.id !== draft.jinxWith)
+  const all = [...own, ...rest]
+  return all.length > 0 ? all : undefined
+}
+
+// The record a draft saves as. Fields the form does not edit, such as flavor text or global
+// reminders from an imported file, survive from the record it started from. An
 // instruction for a night the character does not wake on is dropped with the position.
 // `homebrew` is the script it is written for, whose other homebrew characters it can wake after.
 export const characterOf = (draft: CharacterDraft, id: string, base?: Homebrew, homebrew: readonly Homebrew[] = []): Homebrew => {
@@ -93,6 +111,7 @@ export const characterOf = (draft: CharacterDraft, id: string, base?: Homebrew, 
   }
   const first = wake('first', draft.firstNight)
   const other = wake('other', draft.otherNight)
+  const jinxes = jinxesOf(draft, base)
   return {
     id,
     name: draft.name.trim().slice(0, limits.name),
@@ -107,7 +126,7 @@ export const characterOf = (draft: CharacterDraft, id: string, base?: Homebrew, 
     ...(base?.remindersGlobal ? { remindersGlobal: base.remindersGlobal } : {}),
     ...(base?.flavor ? { flavor: base.flavor } : {}),
     ...(draft.setup ? { setup: true } : {}),
-    ...(base?.jinxes ? { jinxes: base.jinxes } : {}),
+    ...(jinxes ? { jinxes } : {}),
     ...(base?.special ? { special: base.special } : {}),
     ...(base?.edition ? { edition: base.edition } : {}),
   }

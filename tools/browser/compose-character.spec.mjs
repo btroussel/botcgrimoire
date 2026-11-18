@@ -123,3 +123,31 @@ test('on a script of homebrew alone, an Outsider placed after a Minion wakes aft
   expect(firstNight.indexOf('Hex')).toBeGreaterThan(-1)
   expect(firstNight.indexOf('Hex')).toBeLessThan(firstNight.indexOf('Owl'))
 })
+
+test('a homebrew character jinxed with a character on its script shows the jinx on the sheet', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Compose a script', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Script name', exact: true }).fill('Lit Rooms')
+  await page.getByRole('button', { name: 'Add characters', exact: true }).click()
+  const search = page.getByRole('textbox', { name: 'Search characters', exact: true })
+  await search.fill('Spy')
+  await page.getByRole('checkbox', { name: 'Add Spy', exact: true }).click()
+  await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Lamplighter')
+  await page.getByRole('textbox', { name: 'Ability', exact: true }).fill('Each night, learn which player is lit.')
+
+  // Only the script's characters are offered, and the jinx waits for its reason.
+  const jinx = page.getByRole('combobox', { name: 'Jinxed with', exact: true })
+  await expect(jinx.getByRole('option')).toHaveText(['No jinx', 'Spy'])
+  await jinx.selectOption('spy')
+  const save = page.getByRole('button', { name: 'Save character', exact: true })
+  await save.click()
+  await expect(page.getByText('Write what the jinx changes', { exact: true })).toBeVisible()
+  await page.getByRole('textbox', { name: 'What the jinx changes', exact: true }).fill('The Spy sees which player is lit.')
+  await save.click()
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+
+  await expect(page.getByText('The Spy sees which player is lit.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Edit Lamplighter', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Jinxed with', exact: true })).toHaveValue('spy')
+})

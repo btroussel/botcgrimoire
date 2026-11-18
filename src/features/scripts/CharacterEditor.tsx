@@ -1,8 +1,8 @@
 // Writing a homebrew character (docs/app.md, Scripts): its token as it will look on the board,
-// which is also where its images are chosen, the schema's fields, its reminder tokens and when it
-// wakes. A changed draft is kept on the device until it is saved or discarded, and leaving it in
-// the app asks first. Saving hands the record back; the screen that opened the editor decides
-// where it goes.
+// which is also where its images are chosen, the schema's fields, its reminder tokens, when it
+// wakes and its one jinx. A changed draft is kept on the device until it is saved or discarded,
+// and leaving it in the app asks first. Saving hands the record back; the screen that opened the
+// editor decides where it goes.
 import { useId, useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -12,7 +12,8 @@ import { teamSide } from '../../content'
 import { tokenArt } from '../../content/generated/art'
 import { mintCharacterId, useStore } from '../../store'
 import { pickFile } from '../../store/browser'
-import { sheetTeams } from '../../store/scriptSheet'
+import type { Listed } from '../../store/scriptSheet'
+import { sheetTeams, teamLabels } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
 import { Button, focusStyle, isFocused } from '../../ui/Button'
 import { CharacterIcon } from '../../ui/CharacterIcon'
@@ -28,6 +29,7 @@ import { TokenDisc } from '../../ui/TokenDisc'
 import { border, focusRing, hoverWash, motion, palette, radius, space, touch, type } from '../../ui/theme'
 import type { CharacterDraft } from './character'
 import { characterOf, characterProblem, draftOfCharacter, imageForTeam, imageOf, imagesOf, limits, nightSteps, shownImage, teamWords } from './character'
+import { composeRoster, recordsOf } from './compose'
 import { keepCharacter, useKept } from './drafts'
 import { iconFromFile } from './image'
 import { NightPlacement } from './NightPlacement'
@@ -65,6 +67,13 @@ export const CharacterEditor = ({ initial, resume, script, homebrew, onBack, onS
   const other = useMemo(() => nightSteps('other', locale, markers), [locale, markers])
   const onScript = useMemo(() => (script ? new Set(script) : undefined), [script])
   const placing = { ...(onScript ? { script: onScript } : {}), ...(homebrew ? { homebrew } : {}), ...(initial ? { self: initial.id } : {}) }
+  // Opened from a script, it jinxes with a character on that script, since the jinx shows only
+  // when both are; from the list, with any character the app knows.
+  const records = useMemo(() => recordsOf(homebrew, store.characters.map((c) => c.character)), [homebrew, store.characters])
+  const jinxable = useMemo(
+    () => composeRoster(locale, records).filter((c) => c.id !== initial?.id && (onScript === undefined || onScript.has(c.id))),
+    [locale, records, initial, onScript],
+  )
 
   const problem = characterProblem(draft)
   const changed = JSON.stringify(draft) !== JSON.stringify(start)
@@ -189,6 +198,13 @@ export const CharacterEditor = ({ initial, resume, script, homebrew, onBack, onS
                 {instruction(draft.otherNightReminder, (otherNightReminder) => set({ otherNightReminder }))}
               </NightPlacement>
             </Section>
+            <Section label={t('scripts.characterJinx')}>
+              <JinxChoice label={t('scripts.jinxWith')} none={t('scripts.noJinx')} hint={t('scripts.jinxHint')} teams={teamLabels(t)}
+                value={draft.jinxWith} choices={jinxable} onChange={(jinxWith) => set({ jinxWith })} />
+              {draft.jinxWith !== undefined
+                ? <Field label={t('scripts.jinxReason')} value={draft.jinxReason} maxLength={limits.jinx} multiline lines={2} onChange={(jinxReason) => set({ jinxReason })} />
+                : null}
+            </Section>
             {onDelete ? <Button label={t('scripts.deleteCharacterConfirm')} icon="trash" onPress={onDelete} variant="dangerText" surface="paper" style={styles.delete} /> : null}
           </div>
         </div>
@@ -299,6 +315,42 @@ const SideChoice = ({ label, sides, value, words, art, onChange }: {
 
 const sideIcon = 24
 
+// The character it is jinxed with, by team as the sheet lists them, beside that character's icon.
+// A native select, which a phone opens as its own long-list picker. An id from an imported file
+// that the app does not know stays offered under its id, so opening the form never drops it.
+const JinxChoice = ({ label, none, hint, teams, value, choices, onChange }: {
+  readonly label: string
+  readonly none: string
+  readonly hint: string
+  readonly teams: Readonly<Record<Team, string>>
+  readonly value: string | undefined
+  readonly choices: readonly Listed[]
+  readonly onChange: (id: string | undefined) => void
+}) => {
+  const chosen = choices.find((c) => c.id === value)
+  const groups = sheetTeams.map((team) => ({ team, rows: choices.filter((c) => c.team === team) })).filter((g) => g.rows.length > 0)
+  return (
+    <View style={styles.jinx}>
+      <Text style={[type.text.small, { color: palette.inkMuted }]}>{label}</Text>
+      <View style={styles.jinxRow}>
+        {value !== undefined ? <CharacterIcon id={value} size={jinxIcon} {...(chosen ? { team: chosen.team } : {})} /> : null}
+        <select className="editor-select" aria-label={label} value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)} style={selectStyle}>
+          <option value="">{none}</option>
+          {value !== undefined && chosen === undefined ? <option value={value}>{value}</option> : null}
+          {groups.map((g) => (
+            <optgroup key={g.team} label={teams[g.team]}>
+              {g.rows.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </optgroup>
+          ))}
+        </select>
+      </View>
+      <Text style={[type.text.small, { color: palette.inkMuted }]}>{hint}</Text>
+    </View>
+  )
+}
+
+const jinxIcon = 32
+
 // Once the panel is 600 points wide the token stands beside the name and ability, about their
 // height, and the teams run four over three; a narrower one centres the token above everything. A
 // container query decides before paint, by the panel's width rather than the window's. Every
@@ -350,6 +402,7 @@ const EditorStyles = () => <style href="grimoire-character-editor" precedence="d
   }
   .editor-switch:checked { background-color: ${palette.ink}; border-color: ${palette.ink}; }
   .editor-switch:checked::before { transform: translateX(18px); background-color: ${palette.parchment}; }
+  .editor-select:focus-visible { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; }
   .editor-switch:focus-visible { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; }
   /* After the narrow rules, which it overrides. */
   @container character-editor (min-width: 600px) {
@@ -367,6 +420,12 @@ const fillImage: CSSProperties = { display: 'block', width: '100%', height: '100
 // A DOM span reads a bare line height as a multiple of the font size, so the measure gets its unit.
 const toggleLabel: CSSProperties = {
   flex: 1, minWidth: 0, fontFamily: type.text.body.fontFamily, fontSize: type.text.body.fontSize, lineHeight: `${type.text.body.lineHeight}px`, color: palette.ink,
+}
+
+const selectStyle: CSSProperties = {
+  position: 'relative', flex: 1, minWidth: 0, minHeight: touch, padding: `0 ${space.md}px`, cursor: 'pointer',
+  borderRadius: radius.control, border: `1px solid ${palette.parchmentShade}`, backgroundColor: palette.paperInset, color: palette.ink,
+  fontFamily: type.text.body.fontFamily, fontSize: type.text.body.fontSize,
 }
 
 const styles = StyleSheet.create({
@@ -388,4 +447,6 @@ const styles = StyleSheet.create({
   barPaper: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', borderBottomLeftRadius: radius.tile, borderBottomRightRadius: radius.tile },
   failed: { width: '100%', textAlign: 'right' },
   delete: { alignSelf: 'flex-start' },
+  jinx: { gap: space.xs },
+  jinxRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 })

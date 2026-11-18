@@ -254,6 +254,12 @@ its row, so a typo is fixed without leaving the script. Saving it there adds it 
 Storyteller's list under the same id. A character that came inside an imported script, or was
 deleted from the list while a script kept it, then becomes theirs to use on every script.
 
+A homebrew character can be jinxed with one other character, with a reason the Storyteller
+writes. Opened from a script, the form offers that script's characters, since a jinx shows only
+when both are on it; from the list, every character the app knows. The jinx shows wherever the
+script's jinxes do, and an official jinx for the same pair is shown instead. A file can carry more
+than one: the form edits the first and keeps the others.
+
 Each night offers a few moments around its fixed points, on one rule: whatever makes a player
 drunk or poisoned wakes before the characters it can disable, and information wakes after all of
 it but before the Chambermaid and Mathematician, who count the night. Each moment names the two
