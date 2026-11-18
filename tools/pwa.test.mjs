@@ -134,7 +134,7 @@ test('exported HTML exposes every language\'s Home to search and excludes workin
     })
   }
   // Every Home lists the same alternates, one per Home plus the root as the default, and each
-  // code is a language with an optional country, as search engines take them.
+  // code is a language with an optional script and country, as search engines take them.
   const alternates = homes.get(`${site}/`).alternates
   assert.equal(homes.size, languages.length)
   assert.deepEqual(alternates.filter(a => !a.startsWith('x-default ')).map(a => a.split(' ')[1]).sort(), [...homes.keys()].sort())
@@ -152,7 +152,7 @@ test('exported HTML exposes every language\'s Home to search and excludes workin
   // fetch the search thumbnail.
   assert.match(script, /"url":"\/share\.jpg"/)
   assert.doesNotMatch(script, /"url":"\/search\.jpg"/)
-  for (const a of alternates) assert.match(a.split(' ')[0], /^([a-z]{2}(-[A-Z]{2})?|x-default)$/)
+  for (const a of alternates) assert.match(a.split(' ')[0], /^([a-z]{2}(-[A-Z][a-z]{3})?(-[A-Z]{2})?|x-default)$/)
   assert.equal(homes.get(`${site}/`).lang, 'en')
   assert.equal(homes.get(`${site}/fr`).lang, 'fr')
   const robots = await readFile(new URL('robots.txt', root), 'utf8')
