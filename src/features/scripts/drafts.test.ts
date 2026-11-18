@@ -47,6 +47,14 @@ describe('kept drafts', () => {
     expect((await readKept()).character).toEqual({ draft: { ...character, otherNight: undefined } })
   })
 
+  test('a character draft kept before jinxes could be written opens with none', async () => {
+    const { jinxWith: _with, jinxReason: _reason, ...older } = character
+    await putDraft('character', { draft: older })
+    expect((await readKept()).character).toEqual({ draft: { ...character, jinxReason: '' } })
+    await putDraft('character', { draft: { ...character, jinxWith: 'spy', jinxReason: 'Seen.' } })
+    expect((await readKept()).character?.draft).toMatchObject({ jinxWith: 'spy', jinxReason: 'Seen.' })
+  })
+
   test('a record of another shape is left out rather than opened', async () => {
     await putDraft('script', { draft: { name: 'No ids', author: '' }, initial: emptyDraft })
     expect(await readKept()).toEqual({})
