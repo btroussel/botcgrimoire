@@ -1,0 +1,7 @@
+{
+  "instructionminioninfo": "Desperta tots els sequaços: Mostra’ls la targeta <b>AQUEST ÉS EL DIMONI</b>. Assenya-la el dimoni. Mostra’ls la targeta <b>AQUESTS SÓN ELS TEUS SEQUAÇOS</b>. Assenya-la els altres sequaços.",
+  "instructiondemoninfo": "Desperta el dimoni: Mostra-li la targeta *AQUESTS SÓN ELS TEUS SEQUAÇOS*. Assenya-la tots els sequaços. Mostra-li la targeta *AQUESTS PERSONATGES NO SÓN A LA PARTIDA*. Mostra-li tres fitxes de personatge que no siguin a la partida.",
+  "startDay": "Comença el dia",
+  "diedTonight": "Morts d’aquesta nit",
+  "nobodyDied": "Aquesta nit no ha mort ningú"
+}

@@ -1,0 +1,61 @@
+{
+  "cancelNomination": "Отменить номинацию: {by} → {of}",
+  "cancelExile": "Отменить изгнание: {of}",
+  "votesLabel": {
+    "one": "голос",
+    "few": "голоса",
+    "many": "голосов",
+    "other": "голоса"
+  },
+  "noVoters": "Поднятых рук не отмечено.",
+  "voteNumber": "Голос {n}",
+  "nominationArrow": "{by} номинирует игрока {of}",
+  "exileOf": "Изгнание: {of}",
+  "manualNight": "Начать следующую ночь",
+  "executeNight": "Казнить игрока {name}, начать ночь {n}",
+  "noExecutionNight": "Без казни, начать ночь {n}",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} голос",
+    "few": "{by} → {of}: {count} голоса",
+    "many": "{by} → {of}: {count} голосов",
+    "other": "{by} → {of}: {count} голоса"
+  },
+  "manualExile": {
+    "one": "Изгнание: {of}, {count} голос",
+    "few": "Изгнание: {of}, {count} голоса",
+    "many": "Изгнание: {of}, {count} голосов",
+    "other": "Изгнание: {of}, {count} голоса"
+  },
+  "timerAdd": "Добавить таймер обсуждения",
+  "timerAddThirtySeconds": "Добавить 30 секунд",
+  "timerFinished": "Время вышло",
+  "timerPause": "Пауза",
+  "timerRemove": "Убрать таймер",
+  "timerReset": "Сбросить",
+  "timerResume": "Возобновить",
+  "timerStart": "Начать",
+  "timerSubtractThirtySeconds": "Убавить 30 секунд",
+  "timerSummary": "Обсуждение: {time}",
+  "voteReset": "Сбросить",
+  "mark": "Отметить",
+  "votesToExecute": {
+    "one": "{count} голос, чтобы казнить",
+    "few": "{count} голоса, чтобы казнить",
+    "many": "{count} голосов, чтобы казнить",
+    "other": "{count} голоса, чтобы казнить"
+  },
+  "votesToTieExecute": {
+    "one": "{count} голос, чтобы сравнять, {execute}, чтобы казнить",
+    "few": "{count} голоса, чтобы сравнять, {execute}, чтобы казнить",
+    "many": "{count} голосов, чтобы сравнять, {execute}, чтобы казнить",
+    "other": "{count} голоса, чтобы сравнять, {execute}, чтобы казнить"
+  },
+  "votesToExile": {
+    "one": "{count} голос, чтобы изгнать",
+    "few": "{count} голоса, чтобы изгнать",
+    "many": "{count} голосов, чтобы изгнать",
+    "other": "{count} голоса, чтобы изгнать"
+  },
+  "outOf": "из {count}",
+  "tieAt": "ничья при {count}"
+}

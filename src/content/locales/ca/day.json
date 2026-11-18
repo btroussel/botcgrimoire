@@ -1,0 +1,49 @@
+{
+  "cancelNomination": "Cancel·la la nominació: {by} → {of}",
+  "cancelExile": "Cancel·la l’exili: {of}",
+  "votesLabel": {
+    "one": "vot",
+    "other": "vots"
+  },
+  "noVoters": "No s’ha anotat cap mà.",
+  "voteNumber": "Vot {n}",
+  "nominationArrow": "{by} nomina {of}",
+  "exileOf": "Exili: {of}",
+  "manualNight": "Comença la nit següent",
+  "executeNight": "Executa {name} i comença la nit {n}",
+  "noExecutionNight": "Sense execució, comença la nit {n}",
+  "manualNomination": {
+    "one": "{by} → {of}: {count} vot",
+    "other": "{by} → {of}: {count} vots"
+  },
+  "manualExile": {
+    "one": "Exili: {of}, {count} vot",
+    "other": "Exili: {of}, {count} vots"
+  },
+  "timerAdd": "Afegeix un temporitzador de debat",
+  "timerAddThirtySeconds": "Afegeix 30 segons",
+  "timerFinished": "S’ha acabat el temps",
+  "timerPause": "Posa en pausa",
+  "timerRemove": "Elimina el temporitzador",
+  "timerReset": "Restableix",
+  "timerResume": "Reprèn",
+  "timerStart": "Inicia",
+  "timerSubtractThirtySeconds": "Treu 30 segons",
+  "timerSummary": "Debat: {time}",
+  "voteReset": "Restableix",
+  "mark": "Marca",
+  "votesToExecute": {
+    "one": "{count} vot per a executar",
+    "other": "{count} vots per a executar"
+  },
+  "votesToTieExecute": {
+    "one": "{count} vot per a empatar, {execute} per a executar",
+    "other": "{count} vots per a empatar, {execute} per a executar"
+  },
+  "votesToExile": {
+    "one": "{count} vot per a exiliar",
+    "other": "{count} vots per a exiliar"
+  },
+  "outOf": "de {count}",
+  "tieAt": "Empat a {count}"
+}

@@ -85,8 +85,10 @@ itself, so a gap stays visible. Tests check key parity, plural forms and punctua
 
 To add a language: add its folder, add its tag to `locales` in `assets/upstream.json` with `_` for
 `-`, run the sync and `npm run content`, and add its Home page to `public/sitemap.xml`. A tag like
-`es-419` also needs an entry in `searchLanguages` in `src/features/shell/homePages.ts`. The sync
-takes the latest upstream commits, so review its whole diff ([CI](ci.md)).
+`es-419` also needs an entry in `searchLanguages` in `src/features/shell/homePages.ts`; a script tag
+like `zh-Hans` does not. The sync takes the latest upstream commits, so review its whole diff
+([CI](ci.md)). Upstream's `app/` folder holds the official app's own text in each language: our
+strings are not its strings, but it gives the terms a new language should use.
 
 Character names, abilities, reminders and jinx reasons come from upstream's translations. The one
 piece of game text a locale writes itself is the Minion and Demon info instruction in `night.json`:

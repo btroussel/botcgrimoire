@@ -33,13 +33,14 @@ describe('settings at startup', () => {
     vi.stubGlobal('navigator', { language: 'fr-CA' })
     expect(withDefaults(undefined)).toEqual({ locale: 'fr', boardColour: 'burgundy' })
     expect(withDefaults({})).toEqual({ locale: 'fr', boardColour: 'burgundy' })
-    vi.stubGlobal('navigator', { language: 'ja-JP' })
+    vi.stubGlobal('navigator', { language: 'it-IT' })
     expect(withDefaults(undefined).locale).toBe('en')
   })
 
   it.each([
     ['de-AT', 'de'], ['es-ES', 'es'], ['es', 'es'], ['es-MX', 'es-419'], ['es-419', 'es-419'], ['pl-PL', 'pl'],
     ['sv-FI', 'sv'], ['fi', 'fi'], ['hu-HU', 'hu'], ['nb-NO', 'nb-NO'], ['no', 'nb-NO'], ['nn-NO', 'nb-NO'], ['EN-gb', 'en'],
+    ['ca-ES', 'ca'], ['ja-JP', 'ja'], ['ko-KR', 'ko'], ['ru-RU', 'ru'], ['th-TH', 'th'], ['zh-CN', 'zh-Hans'], ['zh-Hans-SG', 'zh-Hans'],
   ])('reads the browser language %s as %s', (language, locale) => {
     vi.stubGlobal('navigator', { language })
     expect(withDefaults(undefined).locale).toBe(locale)
