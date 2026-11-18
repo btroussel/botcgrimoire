@@ -1,10 +1,10 @@
 // The states a seat wears on the board, each a small piece laid over a token: the skull of a
-// ghost vote a dead seat still holds, the translucent skull of a nominee marked for execution and
-// the brass ring around a chosen disc. Death itself is the greyed token (Token's `dead`), not a
+// ghost vote a dead seat still holds, the translucent skull of a nominee marked for execution, the
+// day's nomination marks and the brass ring around a chosen disc. Death itself is the greyed token (Token's `dead`), not a
 // piece. Each mark arrives with the mark motion so it is seen to happen. One rule: every piece
 // here is positioned against the token's box (size x size at the origin) and touches nothing else.
 import { StyleSheet, View } from 'react-native'
-import Svg, { Ellipse, Path } from 'react-native-svg'
+import Svg, { Circle, Ellipse, Path } from 'react-native-svg'
 
 import { Appear } from './Appear'
 import { motion, palette, ring, shadows } from './theme'
@@ -51,6 +51,34 @@ export const GhostVoteMark = ({ size }: MarkProps) => {
   )
 }
 
+// The day's nominations, low on the rim either side of the printed name, where no other piece
+// goes: brass on the left for a seat that has nominated, cream on the right for one nominated.
+// Both draw the same figure with its arrow leaving or arriving, so they part by shape as well as
+// colour on a greyed token. The stroke is heavier than an icon's, to read at arm's length.
+export const NominationMark = ({ size, role }: MarkProps & { readonly role: 'nominator' | 'nominee' }) => {
+  const p = palette
+  const diameter = Math.round(Math.max(18, size * 0.28))
+  const edge = diameter < 24 ? 1.5 : 2
+  const glyph = Math.round(diameter * 0.66)
+  const ink = role === 'nominator' ? p.onAccent : p.ink
+  // The centre sits just outside the rim, 25 degrees below the horizontal: a long character name
+  // runs nearly that far round, and the night leaves sit at three and nine o'clock.
+  const r = size / 2
+  const angle = 25 * Math.PI / 180
+  const x = r + (role === 'nominator' ? -1 : 1) * 1.1 * r * Math.cos(angle)
+  const y = r + 1.1 * r * Math.sin(angle)
+  return (
+    <Appear pointerEvents="none" style={[styles.mark, { left: x - diameter / 2, top: y - diameter / 2, width: diameter, height: diameter,
+      borderRadius: diameter / 2, borderWidth: edge, backgroundColor: role === 'nominator' ? p.accent : p.text, filter: `drop-shadow(${shadows.lifted})` }]}>
+      <Svg width={glyph} height={glyph} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <Path d={`M3 21v-3a6 6 0 0 1 12 0v3M16 7h6${role === 'nominator' ? 'M19 4l3 3-3 3' : 'M19 4l-3 3 3 3'}`}
+          stroke={ink} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+        <Circle cx={9} cy={7} r={3} stroke={ink} strokeWidth={2.6} />
+      </Svg>
+    </Appear>
+  )
+}
+
 // The brass ring outside a disc: a selected token, a hand recorded during the count.
 export const SelectedRing = ({ size }: MarkProps) => {
   const p = palette
@@ -75,6 +103,7 @@ export const AvailableRing = ({ size }: MarkProps) => {
 
 const styles = StyleSheet.create({
   ghost: { position: 'absolute' },
+  mark: { position: 'absolute', alignItems: 'center', justifyContent: 'center', borderColor: palette.ink },
   ring: { position: 'absolute' },
   ringLine: { borderWidth: ring.width },
 })

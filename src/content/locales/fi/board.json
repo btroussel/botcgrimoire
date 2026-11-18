@@ -101,6 +101,8 @@
   "endGame": "Lopeta peli",
   "playAgain": "Pelaa uudelleen",
   "onBlock": "Pölkyllä",
+  "nominatorToday": "Nimitti tänään",
+  "nomineeToday": "Nimitetty tänään",
   "referenceCharacters": "Hahmot",
   "referenceResize": "Muuta hahmolistan kokoa"
 }

@@ -65,6 +65,28 @@ describe('the character draft', () => {
     expect(characterOf({ ...draft, image: undefined }, 'lamp', base).image).toBeUndefined()
   })
 
+  test('jinxes with one character, and waits for the reason before saving', () => {
+    const draft = { ...draftOfCharacter(), name: 'Lamp', ability: 'x' }
+    expect(draft).toMatchObject({ jinxWith: undefined, jinxReason: '' })
+    expect(characterOf(draft, 'lamp').jinxes).toBeUndefined()
+    const jinxed = { ...draft, jinxWith: 'spy', jinxReason: ' The Spy sees the lamp. ' }
+    expect(characterProblem({ ...jinxed, jinxReason: ' ' })).toBe('jinxReasonNeeded')
+    expect(characterProblem(jinxed)).toBeUndefined()
+    expect(characterOf(jinxed, 'lamp').jinxes).toEqual([{ id: 'spy', reason: 'The Spy sees the lamp.' }])
+    expect(characterOf({ ...jinxed, jinxReason: 'r'.repeat(600) }, 'lamp').jinxes?.[0]?.reason).toHaveLength(limits.jinx)
+    // A reason typed and then left with no character says nothing.
+    expect(characterOf({ ...jinxed, jinxWith: undefined }, 'lamp').jinxes).toBeUndefined()
+  })
+
+  test('edits the first jinx of an imported record and keeps the others behind it', () => {
+    const base: Homebrew = { id: 'lamp', name: 'Lamp', team: 'minion', ability: 'x', jinxes: [{ id: 'spy', reason: 'a' }, { id: 'imp', reason: 'b' }] }
+    const draft = draftOfCharacter(base)
+    expect(draft).toMatchObject({ jinxWith: 'spy', jinxReason: 'a' })
+    expect(characterOf({ ...draft, jinxWith: 'baron' }, 'lamp', base).jinxes).toEqual([{ id: 'baron', reason: 'a' }, { id: 'imp', reason: 'b' }])
+    expect(characterOf({ ...draft, jinxWith: 'imp', jinxReason: 'c' }, 'lamp', base).jinxes).toEqual([{ id: 'imp', reason: 'c' }])
+    expect(characterOf({ ...draft, jinxWith: undefined }, 'lamp', base).jinxes).toEqual([{ id: 'imp', reason: 'b' }])
+  })
+
   test('shows only an embedded image', () => {
     expect(shownImage('data:image/png;base64,AA')).toBe('data:image/png;base64,AA')
     expect(shownImage(['data:image/png;base64,BB', 'x'])).toBe('data:image/png;base64,BB')

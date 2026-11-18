@@ -67,6 +67,11 @@ test('Done records a failed vote, leaves the leader on the block, and History te
   await page.getByRole('button', { name: 'Done', exact: true }).tap()
   await expect(failed).toHaveCount(0)
   expect(await onTheBlock(page)).toEqual([3])
+  // Each seat says whether it nominated or was nominated today, without the list open.
+  const seatLabel = index => page.locator('[data-seat-context-target]').nth(index).locator('[aria-label]').first().getAttribute('aria-label')
+  expect(await seatLabel(1)).toContain('Has nominated today')
+  expect(await seatLabel(5)).toContain('Has been nominated today')
+  expect(await seatLabel(3)).not.toContain('nominated today')
 
   await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
   await expect(page.getByRole('button', { name: 'Seat 1 → Seat 3: 5 votes. On the block', exact: true })).toBeVisible()
