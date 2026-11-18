@@ -47,9 +47,16 @@ const artShare = 0.66
 // The printed name's baseline sits inside the rim's ornament and over the art's foot, and the
 // arc stops this far below the horizontal on each side so the name stays on the lower rim.
 const arc = { radius: 0.4, endDegrees: 22 } as const
-// Grenze's average uppercase advance in ems: enough to tell when a long name will not fit the
-// arc and must print smaller.
-const glyphAdvance = 0.62
+// Average uppercase advances in ems: enough to tell when a long name will not fit the arc and
+// must print smaller. Grenze, which is narrow, draws only Latin. Other scripts come from the
+// device's fonts: Han, kana and Hangul a full em wide, anything else, like Cyrillic or Thai, as
+// wide as a common serif's bold capitals. A combining mark, like Thai's vowels above and below a
+// letter, takes no room of its own.
+const glyphAdvance = { grenze: 0.62, wide: 1, fallback: 0.8 } as const
+const wideGlyph = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\u3000-\u30ff\uff01-\uff60]/u
+const grenzeGlyph = /[\p{Script=Latin}\p{Script=Common}]/u
+const advance = (glyph: string): number => /\p{M}/u.test(glyph) ? 0
+  : wideGlyph.test(glyph) ? glyphAdvance.wide : grenzeGlyph.test(glyph) ? glyphAdvance.grenze : glyphAdvance.fallback
 // A disc is a physical piece: pressed, it gives under the finger rather than fading.
 const pressedScale = 0.96
 
@@ -181,11 +188,12 @@ export const PrintedName = memo(function PrintedName({ name, size, color, outlin
   const d = `M ${x0} ${y} A ${r} ${r} 0 0 0 ${x1} ${y}`
 
   const text = name.toUpperCase()
-  const glyphs = Array.from(text).length
+  const advances = Array.from(text, advance)
+  const glyphs = advances.filter(Boolean).length
   const baseSize = fontSize ?? printed.fontSize ?? 0
   const baseSpacing = printed.letterSpacing ?? 0
   const capacity = r * (Math.PI - 2 * a)
-  const estimate = glyphs * baseSize * glyphAdvance + Math.max(0, glyphs - 1) * baseSpacing
+  const estimate = advances.reduce((sum, ems) => sum + ems, 0) * baseSize + Math.max(0, glyphs - 1) * baseSpacing
   const fit = estimate > capacity ? capacity / estimate : 1
 
   return (
