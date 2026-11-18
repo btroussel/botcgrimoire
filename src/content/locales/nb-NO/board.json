@@ -80,7 +80,7 @@
   "cardTokenOnly": "Bare brikken",
   "cardSelectedYou": "Denne rollen valgte deg",
   "cardThisIsTheDemon": "Dette er Demonen",
-  "cardTheseAreYourMinions": "Dette er dine Minioner",
+  "cardTheseAreYourMinions": "Dette er dine Undersåtter",
   "showAboutWhichCharacter": "Hvilken rolle",
   "showBluffs": "Hvilke roller er ikke i spill",
   "showCharactersCount": {
@@ -91,7 +91,7 @@
   "sheetOtherNights": "Andre netter",
   "markerDusk": "Skumring",
   "markerDawn": "Daggry",
-  "markerMinionInfo": "Minioner",
+  "markerMinionInfo": "Undersåtter",
   "markerDemonInfo": "Demon",
   "changeCharacter": "Bytt rolle",
   "renamePlayer": "Gi spilleren nytt navn",

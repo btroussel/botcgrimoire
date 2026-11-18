@@ -216,6 +216,8 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   return <View style={styles.root}>
     <div ref={tabElements} {...dragHandlers} style={{ display: 'flex', touchAction: 'none', userSelect: 'none', cursor: dragging ? 'grabbing' : 'ew-resize' }}>
     <View style={[styles.tabs, compactTabs ? styles.compactTabs : { paddingBottom: bottomClearance }]}>
+      {/* A tab's label reads bottom to top. Vertical text keeps Han, kana and Hangul upright, so
+          every script is laid on its side, as Latin letters already are. */}
       {(Object.keys(tabKeys) as ReferenceTab[]).map(value => <Pressable key={value}
         nativeID={`${tabId}-${value}`}
         hitSlop={{ left: 2, right: 2 }}
@@ -229,7 +231,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
           <Icon name={value === 'characters' ? 'script' : 'order'} size={22} color={tab === value ? palette.parchment : palette.text} />
           {value !== 'characters' ? <span style={{ position: 'absolute', right: 0, bottom: 0, fontFamily: font.body.bold,
             fontSize: 11, lineHeight: '12px', color: tab === value ? palette.parchment : palette.text }}>{value === 'first' ? '1' : '2+'}</span> : null}
-        </span> : <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13,
+        </span> : <span style={{ writingMode: 'vertical-rl', textOrientation: 'sideways', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13,
           letterSpacing: 1, textTransform: 'uppercase', color: tab === value ? palette.parchment : palette.text }}>
           {t(tabKeys[value])}
         </span>}

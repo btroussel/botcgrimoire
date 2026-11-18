@@ -1,0 +1,43 @@
+{
+  "cancelNomination": "ยกเลิกการเสนอชื่อ: {by} → {of}",
+  "cancelExile": "ยกเลิกการขับไล่: {of}",
+  "votesLabel": {
+    "other": "โหวต"
+  },
+  "noVoters": "ไม่มีการบันทึกการยกมือ",
+  "voteNumber": "โหวตที่ {n}",
+  "nominationArrow": "{by} เสนอชื่อ {of}",
+  "exileOf": "ขับไล่: {of}",
+  "manualNight": "เริ่มคืนถัดไป",
+  "executeNight": "ประหารชีวิต {name} แล้วเริ่มคืนที่ {n}",
+  "noExecutionNight": "ไม่มีการประหารชีวิต เริ่มคืนที่ {n}",
+  "manualNomination": {
+    "other": "{by} → {of}: {count} โหวต"
+  },
+  "manualExile": {
+    "other": "ขับไล่: {of} ได้ {count} โหวต"
+  },
+  "timerAdd": "เพิ่มตัวจับเวลาการพูดคุย",
+  "timerAddThirtySeconds": "เพิ่ม 30 วินาที",
+  "timerFinished": "หมดเวลา",
+  "timerPause": "หยุด",
+  "timerRemove": "นำตัวจับเวลาออก",
+  "timerReset": "รีเซต",
+  "timerResume": "ไปต่อ",
+  "timerStart": "เริ่มต้น",
+  "timerSubtractThirtySeconds": "ลด 30 วินาที",
+  "timerSummary": "พูดคุย: {time}",
+  "voteReset": "รีเซต",
+  "mark": "ทำเครื่องหมาย",
+  "votesToExecute": {
+    "other": "{count} โหวต เพื่อประหารชีวิต"
+  },
+  "votesToTieExecute": {
+    "other": "{count} โหวต เพื่อเสมอ {execute} โหวต เพื่อประหารชีวิต"
+  },
+  "votesToExile": {
+    "other": "{count} โหวต เพื่อขับไล่"
+  },
+  "outOf": "จาก {count}",
+  "tieAt": "เสมอที่ {count}"
+}

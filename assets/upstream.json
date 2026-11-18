@@ -3,7 +3,7 @@
     "repo": "ThePandemoniumInstitute/botc-release",
     "ref": "main",
     "revision": "f10cd02e3401af227ce406287eaae7bb99a06a42",
-    "fetchedAt": "2026-10-20T08:30:38.761Z"
+    "fetchedAt": "2026-11-18T17:06:49.090Z"
   },
   "botc-translations": {
     "repo": "ThePandemoniumInstitute/botc-translations",
@@ -18,9 +18,15 @@
       "hu",
       "nb_NO",
       "pl",
-      "sv"
+      "sv",
+      "ca",
+      "ja",
+      "ko",
+      "ru",
+      "th",
+      "zh_Hans"
     ],
-    "revision": "77163a62e8c514f47e747c18bcc6cc2478bb194e",
-    "fetchedAt": "2026-10-20T08:30:38.761Z"
+    "revision": "3ebe94d34b25e88330286a3577ae07a685e506cc",
+    "fetchedAt": "2026-11-18T17:06:49.090Z"
   }
 }

@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://botcgrimoire.com/</loc></url>
+  <url><loc>https://botcgrimoire.com/ca</loc></url>
   <url><loc>https://botcgrimoire.com/de</loc></url>
   <url><loc>https://botcgrimoire.com/es</loc></url>
   <url><loc>https://botcgrimoire.com/es-419</loc></url>
   <url><loc>https://botcgrimoire.com/fi</loc></url>
   <url><loc>https://botcgrimoire.com/fr</loc></url>
   <url><loc>https://botcgrimoire.com/hu</loc></url>
+  <url><loc>https://botcgrimoire.com/ja</loc></url>
+  <url><loc>https://botcgrimoire.com/ko</loc></url>
   <url><loc>https://botcgrimoire.com/nb-no</loc></url>
   <url><loc>https://botcgrimoire.com/pl</loc></url>
+  <url><loc>https://botcgrimoire.com/ru</loc></url>
   <url><loc>https://botcgrimoire.com/sv</loc></url>
+  <url><loc>https://botcgrimoire.com/th</loc></url>
+  <url><loc>https://botcgrimoire.com/zh-hans</loc></url>
 </urlset>

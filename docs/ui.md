@@ -31,6 +31,11 @@ bones that reads as the game's world. Atkinson Hyperlegible for everything you r
 for low vision, and a Storyteller reading ability text in a dim room is that case. Counts, tallies
 and clocks use its tabular figures.
 
+Both faces cover Latin script only. Cyrillic, Chinese, Japanese, Korean and Thai text falls back to
+the device's own fonts, which every phone and computer reading those languages has: bundling faces
+for them would add megabytes to the offline download. The name printed on a token's arc counts a
+Han, kana or Hangul character a full em wide and a combining mark as nothing, so it still fits.
+
 Wherever an ability shows, its setup change in square brackets, like the Baron's `[+2 Outsiders]`,
 is bold with its brackets, as the official Script Tool prints it, so the Storyteller sees what to
 change before play. Nothing else in an ability is bold, and the bold is only how it looks: no rule

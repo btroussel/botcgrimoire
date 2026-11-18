@@ -1,0 +1,43 @@
+{
+  "cancelNomination": "取消提名：{by} → {of}",
+  "cancelExile": "取消流放：{of}",
+  "votesLabel": {
+    "other": "票"
+  },
+  "noVoters": "没有记录举手。",
+  "voteNumber": "第 {n} 票",
+  "nominationArrow": "{by} 提名 {of}",
+  "exileOf": "流放：{of}",
+  "manualNight": "开始下一个夜晚",
+  "executeNight": "处决 {name}，开始第 {n} 夜",
+  "noExecutionNight": "不处决，开始第 {n} 夜",
+  "manualNomination": {
+    "other": "{by} → {of}：{count} 票"
+  },
+  "manualExile": {
+    "other": "流放：{of}，{count} 票"
+  },
+  "timerAdd": "添加讨论计时器",
+  "timerAddThirtySeconds": "增加 30 秒",
+  "timerFinished": "时间到",
+  "timerPause": "暂停",
+  "timerRemove": "移除计时器",
+  "timerReset": "重置",
+  "timerResume": "继续",
+  "timerStart": "开始",
+  "timerSubtractThirtySeconds": "减少 30 秒",
+  "timerSummary": "讨论：{time}",
+  "voteReset": "重置",
+  "mark": "标记",
+  "votesToExecute": {
+    "other": "{count} 票即可处决"
+  },
+  "votesToTieExecute": {
+    "other": "{count} 票打平，{execute} 票即可处决"
+  },
+  "votesToExile": {
+    "other": "{count} 票即可流放"
+  },
+  "outOf": "/ {count}",
+  "tieAt": "{count} 票打平"
+}

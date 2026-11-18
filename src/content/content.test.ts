@@ -5,8 +5,12 @@ import { rawRoles, rawJinxes, rawTranslations, type RawTranslation } from './ups
 
 // Spacing and case aside, a localized information step keeps the upstream text after its opening
 // clause. Only that clause loses the player count, which Swedish puts at its end, not its start.
-const plain = (text: string) => text.replace(/\s+/g, ' ').trim().toLowerCase()
-const afterOpening = (text: string) => plain(text).replace(/^[^.:]*[.:] /, '')
+// Chinese and Japanese end the clause with a full-width colon or full stop, and Thai, which has
+// no sentence punctuation, keeps upstream's text after it word for word.
+const plain = (text: string) => text.replace(/\s+/g, '').toLowerCase()
+const afterOpening = (text: string) => plain(text).replace(/^[^.:。：]*[.:。：]/, '')
+const keepsUpstream = (instruction: string, original: string) =>
+  afterOpening(instruction) === afterOpening(original) || plain(original).endsWith(plain(instruction))
 
 test.each(locales)('%s night markers retain upstream instructions without the information steps’ player-count lead-in', locale => {
   const source = locale === 'en' ? (enJson as RawTranslation) : rawTranslations[locale]
@@ -17,7 +21,7 @@ test.each(locales)('%s night markers retain upstream instructions without the in
       expect(instruction).not.toBe('')
       const original = source?.roles[key]?.[phase] ?? (enJson as RawTranslation).roles[key]?.[phase] ?? ''
       if (phase === 'first' && (key === 'minioninfo' || key === 'demoninfo')) {
-        expect(afterOpening(instruction), `${locale} ${key}`).toBe(afterOpening(original))
+        expect(keepsUpstream(instruction, original), `${locale} ${key}: ${instruction}`).toBe(true)
         expect(plain(instruction).length).toBeLessThan(plain(original).length)
       } else expect(instruction).toBe(original)
     }

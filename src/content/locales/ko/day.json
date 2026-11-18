@@ -1,0 +1,43 @@
+{
+  "cancelNomination": "지목 취소: {by} → {of}",
+  "cancelExile": "추방 취소: {of}",
+  "votesLabel": {
+    "other": "표수"
+  },
+  "noVoters": "손을 든 사람이 기록되지 않았습니다.",
+  "voteNumber": "{n}번째 투표",
+  "nominationArrow": "지목: {by} → {of}",
+  "exileOf": "추방: {of}",
+  "manualNight": "다음 밤 시작",
+  "executeNight": "{name} 처형, {n}번째 밤 시작",
+  "noExecutionNight": "처형 없음, {n}번째 밤 시작",
+  "manualNomination": {
+    "other": "{by} → {of}: {count}표"
+  },
+  "manualExile": {
+    "other": "추방: {of}, {count}표"
+  },
+  "timerAdd": "토론 타이머 추가",
+  "timerAddThirtySeconds": "30초 추가",
+  "timerFinished": "시간 종료",
+  "timerPause": "일시정지",
+  "timerRemove": "타이머 제거",
+  "timerReset": "초기화",
+  "timerResume": "재개",
+  "timerStart": "시작",
+  "timerSubtractThirtySeconds": "30초 빼기",
+  "timerSummary": "토론: {time}",
+  "voteReset": "초기화",
+  "mark": "처형 예정",
+  "votesToExecute": {
+    "other": "처형에는 {count}표가 필요합니다"
+  },
+  "votesToTieExecute": {
+    "other": "동표는 {count}표이며, 처형에는 {execute}표가 필요합니다"
+  },
+  "votesToExile": {
+    "other": "추방에는 {count}표가 필요합니다"
+  },
+  "outOf": "{count}표 중",
+  "tieAt": "{count}표면 동표"
+}
