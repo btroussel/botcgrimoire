@@ -100,6 +100,8 @@
   "endGame": "จบเกม",
   "playAgain": "เล่นอีกครั้ง",
   "onBlock": "บนแท่นประหาร",
+  "nominatorToday": "เสนอชื่อแล้ววันนี้",
+  "nomineeToday": "ถูกเสนอชื่อแล้ววันนี้",
   "referenceCharacters": "ตัวละคร",
   "referenceResize": "ปรับขนาดแถบอ้างอิง"
 }

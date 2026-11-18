@@ -100,6 +100,8 @@
   "endGame": "게임 끝내기",
   "playAgain": "다시 하기",
   "onBlock": "처형 대상",
+  "nominatorToday": "오늘 지목함",
+  "nomineeToday": "오늘 지목됨",
   "referenceCharacters": "캐릭터",
   "referenceResize": "참조표 크기 조절"
 }

@@ -103,6 +103,8 @@
   "endGame": "Завершить игру",
   "playAgain": "Сыграть ещё раз",
   "onBlock": "На плахе",
+  "nominatorToday": "Сегодня уже номинировал",
+  "nomineeToday": "Сегодня уже был номинирован",
   "referenceCharacters": "Роли",
   "referenceResize": "Изменить размер панели ролей"
 }

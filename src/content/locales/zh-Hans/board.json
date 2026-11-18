@@ -100,6 +100,8 @@
   "endGame": "结束游戏",
   "playAgain": "再来一局",
   "onBlock": "待处决",
+  "nominatorToday": "今天已提名",
+  "nomineeToday": "今天已被提名",
   "referenceCharacters": "角色",
   "referenceResize": "调整参考面板大小"
 }

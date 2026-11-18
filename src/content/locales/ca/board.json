@@ -101,6 +101,8 @@
   "endGame": "Acaba la partida",
   "playAgain": "Torna a jugar",
   "onBlock": "Al patíbul",
+  "nominatorToday": "Ha nominat avui",
+  "nomineeToday": "Ha rebut una nominació avui",
   "referenceCharacters": "Personatges",
   "referenceResize": "Canvia la mida del panell de referència"
 }
