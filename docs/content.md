@@ -48,8 +48,10 @@ app reads is a `signal` named `card`, the official app's custom Storyteller card
 one more card to show, since showing words runs nothing.
 
 Lookups fall back to a registry of homebrew records, so a homebrew character shows wherever a
-bundled one does. A bundled id always wins, and the open game's script fills the registry last, so
-a game shows the copy it was made with. Its text is in one language.
+bundled one does. A bundled id always wins. The script being read fills the registry after what the
+device holds, so a sheet shows the copy it carries, an imported file's art before it is saved
+included. The open game's script fills it last, so a game shows the copy it was made with. Its text
+is in one language.
 
 Night positions are ordinals on the bundled sheets, and zero or none means it doesn't wake. A file
 counts one higher, as the official Script Tool does, so reading takes one off and writing adds it.

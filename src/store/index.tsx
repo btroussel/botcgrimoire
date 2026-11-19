@@ -40,6 +40,7 @@ export interface Store {
   readonly characters: readonly SavedCharacter[] // the Storyteller's own homebrew, newest edit first
   readonly saveCharacter: (character: Homebrew) => Promise<void> // also updates the saved scripts carrying it
   readonly removeCharacter: (id: string) => Promise<void>
+  readonly showScript: (script: Script | undefined) => void // the script on screen, whose homebrew art draws even before it is saved
   readonly settings: Settings
   readonly setSettings: (patch: Partial<Settings>) => void
   readonly session?: Session
@@ -86,10 +87,16 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
   // Registering happens beside each state change, never during a render, so a screen reads the
   // records its new state needs and the art pieces subscribed to the registry hear of it.
   const held = useRef<{ games: readonly SavedGame[]; scripts: readonly SavedScript[]; characters: readonly SavedCharacter[] }>({ games: [], scripts: [], characters: [] })
+  const reading = useRef<Script | undefined>(undefined)
   const register = useCallback(() => {
     const { games, scripts, characters } = held.current
-    registerHomebrew(registryOf(games, scripts, characters, live.current?.game.script))
+    registerHomebrew(registryOf(games, scripts, characters, live.current?.game.script, reading.current))
   }, [])
+  const showScript = useCallback((script: Script | undefined) => {
+    if (reading.current === script) return
+    reading.current = script
+    register()
+  }, [register])
   const replace = useCallback((next: Session | undefined) => {
     const script = live.current?.game.script
     live.current = next
@@ -427,6 +434,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       characters,
       saveCharacter,
       removeCharacter,
+      showScript,
       settings,
       setSettings,
       ...(session ? { session } : {}),
@@ -459,6 +467,7 @@ export const StoreProvider = ({ children, page }: { readonly children: ReactNode
       characters,
       saveCharacter,
       removeCharacter,
+      showScript,
       settings,
       setSettings,
       session,

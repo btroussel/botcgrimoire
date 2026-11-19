@@ -66,10 +66,17 @@ const reopened = async (): Promise<Open> => {
 export const ScriptsScreen = () => {
   const router = useRouter()
   const scripts = useScripts()
-  const { ready } = useStore()
+  const { ready, showScript } = useStore()
   const { t } = scripts
   const p = palette
   const [open, setOpen] = useState<Open>({ kind: 'list' })
+  // The script on screen lends the registry its own homebrew records, so a file's art shows before
+  // it is saved. They go in before the state that shows them, so no icon opens on its team's art.
+  const view = (next: Open) => {
+    showScript(next.kind === 'read' || next.kind === 'received' ? next.script : undefined)
+    setOpen(next)
+  }
+  useEffect(() => () => showScript(undefined), [showScript])
   const { editions, custom, locale } = scripts
   const art = useMemo(() => (open.kind === 'read' || open.kind === 'received' ? [open.script] : open.kind === 'list' ? [
     ...editions.map(e => e.id), ...custom.map(c => c.saved.script),
@@ -90,7 +97,7 @@ export const ScriptsScreen = () => {
 
   const back = () => backOrHome(router, locale)
   // Any move off the list drops an old import error, so returning never shows a stale one.
-  const show = (next: Open) => { setImportErrors([]); setKeepFailed(false); setOpen(next) }
+  const show = (next: Open) => { setImportErrors([]); setKeepFailed(false); view(next) }
   const list = () => show({ kind: 'list' })
   const readSaved = (saved: SavedScript) => show({ kind: 'read', script: saved.script, saved })
   const edit = (saved: SavedScript, fromReader = false) =>
@@ -127,12 +134,12 @@ export const ScriptsScreen = () => {
         if (!live) return
         if ('errors' in read) {
           forgetLink()
-          setOpen({ kind: 'list' })
+          view({ kind: 'list' })
           setImportErrors(read.errors)
         } else {
           setImportErrors([])
           setKeepFailed(false)
-          setOpen({ kind: 'received', script: read.script })
+          view({ kind: 'received', script: read.script })
         }
       })
       return true

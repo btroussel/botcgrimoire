@@ -63,6 +63,16 @@ describe('registryOf', () => {
     expect(list.map((h) => h.ability)).toEqual(['Played.', 'Scripted.', 'Own.'])
     expect(registryOf([game], [saved], [{ character: own, updatedAt: 1 }], game.script).at(-1)).toBe(played)
   })
+
+  test('puts the script being read after the Storyteller\'s own and before the open game', () => {
+    const played = { ...baker, ability: 'Played.' }
+    const own = { ...baker, ability: 'Own.' }
+    const drawn = { ...baker, ability: 'Drawn.', image: 'data:image/png;base64,AAAA' }
+    const game: SavedGame = newGame(script('Game', played), 1)
+    const file = script('File', drawn)
+    expect(registryOf([], [], [{ character: own, updatedAt: 1 }], undefined, file).at(-1)).toBe(drawn)
+    expect(registryOf([], [], [{ character: own, updatedAt: 1 }], game.script, file).at(-1)).toBe(played)
+  })
 })
 
 describe('characters in the database', () => {
