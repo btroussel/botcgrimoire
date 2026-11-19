@@ -51,6 +51,41 @@ test('a file imported twice is kept once', async ({ browser, baseURL }) => {
   }
 })
 
+test('a file shows its own art before it is saved, even over a copy saved from a link', async ({ browser, baseURL }) => {
+  const icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=='
+  const items = script('Drawn Script').map((item) => (typeof item === 'object' && item.id === 'brewerx7k2' ? { ...item, image: icon } : item))
+  const brewer = (page) => page.locator('#script-sheet-row-brewerx7k2 img').first()
+  const sender = await device(browser, baseURL, ['clipboard-read', 'clipboard-write'])
+  const receiver = await device(browser, baseURL)
+  try {
+    await open(sender.page, '/scripts')
+    await importAndSave(sender.page, items)
+    await sender.page.getByRole('button', { name: 'Share', exact: true }).click()
+    await sender.page.getByRole('button', { name: 'Copy the link', exact: true }).click()
+    await expect(sender.page.getByRole('button', { name: 'Link copied', exact: true })).toBeVisible()
+    const link = await sender.page.evaluate(() => navigator.clipboard.readText())
+
+    // The link leaves the art out, so the copy saved from it draws the team's icon.
+    const { page } = receiver
+    await open(page, link)
+    await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+    await expect(brewer(page)).not.toHaveAttribute('src', icon)
+    await page.getByRole('button', { name: 'Back', exact: true }).first().click()
+
+    // The file read on top of it draws the art it carries, before and after it is saved.
+    await importFile(page, items)
+    await expect(page.getByRole('button', { name: 'Save to your scripts', exact: true })).toBeVisible()
+    await expect(brewer(page)).toHaveAttribute('src', icon)
+    await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+    await expect(brewer(page)).toHaveAttribute('src', icon)
+  } finally {
+    await sender.context.close()
+    await receiver.context.close()
+  }
+})
+
 test('a copied link opens the script on another device, which saves it once', async ({ browser, baseURL }) => {
   const sender = await device(browser, baseURL, ['clipboard-read', 'clipboard-write'])
   const receiver = await device(browser, baseURL)

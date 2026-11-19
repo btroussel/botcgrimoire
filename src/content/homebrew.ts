@@ -2,8 +2,9 @@
 // The bundled lookups (`character`, `gameText().role`, a character's art) fall back to this
 // registry, so a seat, a sheet row or a picker shows a homebrew token with its name, team, art
 // and night positions without every call site finding the script it came from. The store fills
-// it from what the device holds, the open game's script last so its copy wins. It is an external
-// store for React: a piece that draws art subscribes, since the same id can change its image.
+// it from what the device holds, then the script being read, then the open game's script, so the
+// copy on screen wins. It is an external store for React: a piece that draws art subscribes,
+// since the same id can change its image.
 import { expandReminders } from './reminders'
 import type { Character, Homebrew } from './types'
 import { teamSide } from './types'

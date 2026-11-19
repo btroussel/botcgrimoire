@@ -54,15 +54,19 @@ export const scriptWithWakeSteps = (script: CustomScript): CustomScript => {
 }
 
 // Every homebrew record the device holds, the one to show last: old games, then saved scripts,
-// then the Storyteller's own list, then the open game, whose copy is the one it was played with.
+// then the Storyteller's own list, then the script being read, so a sheet shows the copy it
+// carries, even an imported file's before it is saved, then the open game, whose copy is the one
+// it was played with.
 export const registryOf = (
   games: readonly SavedGame[],
   scripts: readonly SavedScript[],
   own: readonly SavedCharacter[],
   open?: Script,
+  read?: Script,
 ): readonly Homebrew[] => [
   ...[...games].reverse().flatMap((g) => scriptHomebrew(g.script)),
   ...[...scripts].reverse().flatMap((s) => scriptHomebrew(s.script)),
   ...own.map((c) => c.character),
+  ...(read ? scriptHomebrew(read) : []),
   ...(open ? scriptHomebrew(open) : []),
 ]
