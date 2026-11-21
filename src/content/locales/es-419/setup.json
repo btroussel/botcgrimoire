@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Este escenario no puede llenar estos asientos con una preparación válida. Tu selección no cambió. Escoge los roles a mano o cambia el número de jugadores.",
   "prepareDrunk": "Quien saque esta ficha verá un Ciudadano que no está en la bolsa. El Grimorio mostrará después ese Ciudadano con el recordatorio del Borracho.",
   "prepareLunatic": "Quien saque esta ficha verá el Demonio de la bolsa.",
-  "prepareMarionette": "Quien saque esta ficha verá un Ciudadano que no está en la bolsa y lo recibirá como jugador bueno. Después, la Marioneta espera junto al tablero: pon su recordatorio en un vecino bueno del Demonio y haz malvado a ese jugador. Con un Invocador o un Monstruito, resuelve primero el conjuro.",
+  "prepareMarionette": "Un Ciudadano extra ocupa su lugar. Después del reparto, pon su recordatorio en un vecino bueno del Demonio.",
   "prepareBountyHunter": "Escoge un Ciudadano que empiece malvado y anota su alineamiento.",
   "prepareAbilities": "Escoge la habilidad otorgada y aplica los cambios de preparación que pida.",
   "prepareHermit": "Revisa las habilidades de los Extranjeros del escenario y sus conjuros para este jugador.",

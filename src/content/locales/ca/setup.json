@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Aquest guió no pot omplir aquests seients amb una preparació vàlida. La selecció no canvia. Trieu els personatges a mà o canvieu el nombre de jugadors.",
   "prepareDrunk": "Qui tregui aquesta fitxa veurà un vilatà que no és a la bossa. Després, el grimori mostra aquest vilatà amb el recordatori del Borratxo.",
   "prepareLunatic": "Qui tregui aquesta fitxa veurà el dimoni que hi ha a la bossa.",
-  "prepareMarionette": "Qui tregui aquesta fitxa veurà un vilatà que no és a la bossa i el rebrà com a jugador bo. Després, la Marioneta espera al costat del tauler: poseu el seu recordatori a un veí bo del dimoni i feu malvat aquest jugador. Amb un Invocador o el Petit monstre, resoleu primer la maledicció.",
+  "prepareMarionette": "Un vilatà més ocupa el seu lloc. Després de repartir, poseu el seu recordatori a un veí bo del dimoni.",
   "prepareBountyHunter": "Trieu un vilatà que comenci malvat i anoteu-ne el bàndol.",
   "prepareAbilities": "Trieu l’habilitat atorgada i apliqueu els canvis de preparació que calguin.",
   "prepareHermit": "Reviseu les habilitats de foraster del guió i les seves malediccions per a aquest jugador.",

@@ -32,10 +32,10 @@ removed player and a later addition are different seats.
 Actual character, shown character, alignment, life, ghost vote, reminders and ability annotations
 are independent. As on a paper grimoire, a Drunk or Marionette sits as the character the player
 believes, under their own reminder and on their real side, and that reminder counts the real
-character as in play. The deal seats the Drunk that way but leaves the Marionette off the ring, since
-only the Storyteller can pick the Demon's neighbor. A Lunatic keeps its own token with the Demon it
-was shown. Nothing works out a shown character during play. Characters can also sit outside the
-ring.
+character as in play. The deal seats the Drunk that way, but a game starts with the Marionette off
+the ring, since only the Storyteller can pick the Demon's neighbor. A Lunatic keeps its own token
+with the Demon it was shown. Nothing works out a shown character during play. Characters can also
+sit outside the ring.
 
 ## The log records edits
 

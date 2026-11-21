@@ -6,7 +6,7 @@ import type { SeatId } from '../engine'
 
 export interface DrawToken {
   readonly character: CharacterId
-  readonly shown?: CharacterId // what a Drunk, Lunatic or Marionette sees when they draw it
+  readonly shown?: CharacterId // what a Drunk or Lunatic sees when they draw it
   readonly chosen?: true // the Storyteller chose `shown`, rather than the bag at random
   readonly seat?: SeatId // the player who took it
 }

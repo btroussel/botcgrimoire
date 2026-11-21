@@ -22,7 +22,7 @@ export const BagPicker = ({ script, count, selected, visible, onClose, onFill }:
     multi={{ min: 1, max: count, repeat: true, confirmLabel: n => t('setup.fillBagSave', { count: n }), onConfirm: ids => onFill(ids as CharacterId[]) }} />
 }
 
-// The character a Drunk, Lunatic or Marionette in the bag shows its player. Clearing hands the
+// The character a Drunk or Lunatic in the bag shows its player. Clearing hands the
 // choice back to the bag, so it is offered only once a character is chosen.
 export const ShownPicker = ({ name, choices, chosen, visible, onClose, onChoose }: {
   readonly name: string; readonly choices: readonly Listed[]; readonly chosen: CharacterId | undefined

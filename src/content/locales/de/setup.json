@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Mit diesem Skript lassen sich diese Sitze nicht passend besetzen. Deine Auswahl bleibt unverändert. Wähle die Charaktere selbst oder ändere die Spielerzahl.",
   "prepareDrunk": "Wer dieses Plättchen zieht, sieht einen Bürger, der nicht im Beutel ist. Im Grimoire liegt danach dieser Bürger mit der Erinnerung des Trunkenbolds.",
   "prepareLunatic": "Wer dieses Plättchen zieht, sieht den Dämon aus dem Beutel.",
-  "prepareMarionette": "Wer dieses Plättchen zieht, sieht einen Bürger, der nicht im Beutel ist, und bekommt ihn als guter Spieler. Die Marionette liegt danach neben dem Spielbrett: Lege ihre Erinnerung zu einem guten Nachbarn des Dämons und mache diesen Spieler böse. Bei einem Beschwörer oder Lil' Monsta löse zuerst den Jinx auf.",
+  "prepareMarionette": "Ein zusätzlicher Bürger nimmt ihren Platz ein. Lege nach dem Verteilen ihre Erinnerung zu einem guten Nachbarn des Dämons.",
   "prepareBountyHunter": "Wähle einen Bürger, der böse beginnt, und notiere seine Fraktion.",
   "prepareAbilities": "Wähle die verliehene Fähigkeit und setze die nötigen Änderungen am Aufbau um.",
   "prepareHermit": "Prüfe die Außenseiter-Fähigkeiten des Skripts und ihre Jinxes für diesen Spieler.",

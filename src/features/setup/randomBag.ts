@@ -1,4 +1,5 @@
 import type { CharacterId, Team } from '../../content'
+import { isLoose } from '../../content'
 import { baseCounts } from '../../engine'
 
 export interface BagRole {
@@ -39,7 +40,7 @@ export const randomBag = (roles: readonly BagRole[], count: number, random = Mat
   const pool = shuffled([...new Map(roles.map(role => [role.id, role])).values()], random)
   const players = Math.min(count, 15)
   const base = baseCounts(players)
-  if (!base) return pool.filter(role => primaryTeams.has(role.team) && role.id !== 'lilmonsta').slice(0, count).map(role => role.id)
+  if (!base) return pool.filter(role => primaryTeams.has(role.team) && !isLoose(role.id)).slice(0, count).map(role => role.id)
   const travellers = pool.filter(role => role.team === 'traveller').slice(0, count - players)
   if (travellers.length !== count - players) return undefined
 
@@ -70,6 +71,8 @@ export const randomBag = (roles: readonly BagRole[], count: number, random = Mat
     for (const otherMinions of minionSets(availableMinions, minionCount - (summoner ? 1 : 0))) {
       const minions = summoner ? [mode, ...otherMinions] : otherMinions
       const hasMinion = (id: string) => minions.some(role => role.id === id)
+      // A Marionette stays selected as a loose character, and an extra Townsfolk takes its seat.
+      const marionette = hasMinion('marionette') ? 1 : 0
       // A modifier lands as often as any other character of its team: the first bag tried keeps
       // those the shuffle put within their team's usual slots, and the next ones change the fewest.
       const outsiderSlots = Math.min(goodCount, Math.max(0, base.outsiders + (hasMinion('baron') ? 2 : 0)
@@ -114,7 +117,7 @@ export const randomBag = (roles: readonly BagRole[], count: number, random = Mat
         const villageIdiot = selected.find(role => role.id === 'villageidiot')
         for (const outsiderCount of shuffled([...new Set(outsiderCounts)], random)) {
           for (const extras of villageIdiot ? shuffled([0, 1, 2], random) : [0]) {
-            const takeTownsfolk = goodCount - outsiderCount - requiredTownsfolk.length - extras
+            const takeTownsfolk = goodCount + marionette - outsiderCount - requiredTownsfolk.length - extras
             const takeOutsiders = outsiderCount - requiredOutsiders.length
             if (takeTownsfolk < 0 || takeOutsiders < 0 || takeTownsfolk > townsfolk.length || takeOutsiders > outsiders.length) continue
             return [
