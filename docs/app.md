@@ -80,6 +80,13 @@ alone, the bag picks. The setup window offers no such choice: refilling the bag 
 choice the new bag still leaves free, and the bag picks for any new disguise. The deal records the
 disguise as a paper grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
 
+The Marionette must neighbor the Demon, and no draw can promise that, so the deal names no
+Marionette. As in the paper rules, its token never reaches a player: whoever draws it is dealt the
+Townsfolk it shows as a plain good token, and the Marionette goes off the ring, in play and held by
+no seat. The Storyteller then puts Is The Marionette on a good neighbor of the Demon and makes them
+evil, two ordinary board edits. Until then the off-ring token and the first night's Marionette row
+are the reminder, with no prompt of their own.
+
 Open grimoire saves the game with every seat empty and the bag face down. Let players draw has
 each player tap a token that is then theirs, so nobody feels the Storyteller chose for them; the
 Storyteller deals the drawn tokens after the last player. A refill replaces only the face-down

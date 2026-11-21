@@ -8,10 +8,11 @@ import { dealTarget, looseEvents, openingEvents, scriptLoose, seatedCharacters, 
 
 const ids = ['drunk', 'marionette', 'imp'].map(asCharacterId)
 const reduced = (payloads: readonly Payload[]) => reduce('tb', payloads.map((event, i) => ({ ...event, id: asEventId(i), audience: 'storyteller' as const, manual: true })))
-test('a chosen bag is shuffled without changing the choices, the Drunk and Marionette under their reminders', () => {
+test('a chosen bag is shuffled without changing the choices, the Drunk under its reminder and the Marionette off the ring', () => {
   const opening = openingEvents(['a', 'b', 'c', 'd'])
   const events = dealDraw(reduced(opening), fillBag(ids, listed('tb', 'en'), () => 0)!, () => 0)
-  expect(events.flatMap(e => e.kind === 'placeToken' ? [e.token[0]] : []).sort()).toEqual(['drunk', 'marionette'])
+  expect(events.flatMap(e => e.kind === 'placeToken' ? [e.token[0]] : [])).toEqual(['drunk'])
+  expect(events.flatMap(e => e.kind === 'addLoose' ? [e.character] : [])).toEqual(['marionette'])
   expect(events.flatMap(e => e.kind === 'setCharacter' ? [character(e.to).team] : []).sort()).toEqual(['demon', 'townsfolk', 'townsfolk'])
   expect(inPlay(reduced([...opening, ...events]))).toEqual(expect.arrayContaining([...ids]))
   expect(ids).toEqual(['drunk', 'marionette', 'imp'])

@@ -150,10 +150,11 @@ describe('the players draw from the bag', () => {
     expect(drawPlayer(g, draw, id('Ann'), 'en')).toMatchObject({ character: 'chef', alignment: 'good', roleName: 'Chef' })
     expect(drawPlayer(g, draw, id('Bob'), 'en')).toMatchObject({ character: 'imp', alignment: 'evil', roleName: 'Imp' })
     const events = dealDraw(g, draw, () => 0)
-    // The Drunk and the Marionette sit as what they saw, under their own reminder; the Lunatic has none.
+    // The Drunk sits as what they saw, under their own reminder; the Lunatic has none. The
+    // Marionette's player gets a plain good Chef, and the Marionette waits off the ring.
     expect(events).toEqual([
-      { kind: 'setCharacter', seat: id('Ann'), to: 'chef', alignment: 'evil' },
-      { kind: 'placeToken', token: ['marionette', 'Is The Marionette'], seat: id('Ann') },
+      { kind: 'setCharacter', seat: id('Ann'), to: 'chef', alignment: 'good' },
+      { kind: 'addLoose', character: 'marionette' },
       { kind: 'setCharacter', seat: id('Bob'), to: 'lunatic', alignment: 'good' },
       { kind: 'setShown', seat: id('Bob'), to: 'imp' },
       { kind: 'setCharacter', seat: id('Dan'), to: 'empath', alignment: 'good' },
@@ -163,8 +164,11 @@ describe('the players draw from the bag', () => {
     const dan = dealt.seats.find(seat => seat.id === id('Dan'))!
     expect(dan).toMatchObject({ character: 'empath', alignment: 'good' })
     expect(dan.shown).toBeUndefined()
-    // The Marionette plays evil, while its player still sees the good Chef they drew.
-    expect(dealt.seats.find(seat => seat.id === id('Ann'))).toMatchObject({ character: 'chef', alignment: 'evil' })
+    // Nobody is the Marionette until the Storyteller marks a neighbor of the Demon, yet it is in play.
+    const ann = dealt.seats.find(seat => seat.id === id('Ann'))!
+    expect(ann).toMatchObject({ character: 'chef', alignment: 'good' })
+    expect(ann.tokens).toEqual([])
+    expect(dealt.loose).toEqual(['marionette'])
     expect(playerIdentity(dealt, id('Ann'))).toEqual({ character: 'chef', alignment: 'good' })
     expect(inPlay(dealt)).toEqual(expect.arrayContaining(['chef', 'marionette', 'lunatic', 'empath', 'drunk']))
     expect(inPlay(dealt)).not.toContain('imp')

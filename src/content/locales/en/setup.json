@@ -60,7 +60,7 @@
   "shuffleUnavailable": "This script cannot fill these seats with a matching setup. Your selection is unchanged. Choose characters manually or change the player count.",
   "prepareDrunk": "The player who draws this token sees a Townsfolk that is not in the bag. The grimoire then shows that Townsfolk with the Drunk's reminder.",
   "prepareLunatic": "The player who draws this token sees the Demon in the bag.",
-  "prepareMarionette": "The player who draws this token sees a Townsfolk that is not in the bag. The grimoire then shows that Townsfolk with the Marionette's reminder. This player must neighbor the Demon. With a Summoner or Lil' Monsta, resolve the jinx first.",
+  "prepareMarionette": "The player who draws this token sees a Townsfolk that is not in the bag and is dealt it as a good player. The Marionette then waits beside the board: put its reminder on a good neighbor of the Demon and make that player evil. With a Summoner or Lil' Monsta, resolve the jinx first.",
   "prepareBountyHunter": "Choose one Townsfolk to start evil and record their alignment.",
   "prepareAbilities": "Choose the granted ability and apply any setup changes it requires.",
   "prepareHermit": "Review the script's Outsider abilities and their jinxes for this player.",

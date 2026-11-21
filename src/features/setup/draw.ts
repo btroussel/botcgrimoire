@@ -163,12 +163,18 @@ export const takeToken = (g: Grimoire, draw: Draw, seat: SeatId, at: number): Dr
   return { tokens: draw.tokens.map((token, i) => i === at ? { ...token, seat } : token) }
 }
 
-// A disguised token lands as in a paper grimoire: the Drunk and the Marionette as the character
-// their player saw, under their own global reminder, Is The Drunk or Is The Marionette, on the
-// side they really play, so a Marionette sits evil. The Lunatic has no such reminder, so it
-// keeps its token and records the Demon it was shown.
+// The Marionette must neighbor the Demon, which nobody knows until the tokens are dealt. As on
+// paper, its token never reaches a player: the one who draws it gets the Townsfolk it shows, as
+// a plain good token, and the Marionette waits off the ring until the Storyteller marks a good
+// neighbor of the Demon with its reminder.
+const chosenAfterTheDeal: ReadonlySet<string> = new Set(['marionette'])
+
+// Any other disguised token lands as in a paper grimoire: the Drunk as the character their player
+// saw, under Is The Drunk. The Lunatic has no such reminder, so it keeps its token and records the
+// Demon it was shown.
 const dealToken = (deal: ReturnType<typeof dealing>, seat: SeatId, token: DrawToken): Payload[] => {
   if (!token.shown) return [deal(seat, token.character)]
+  if (chosenAfterTheDeal.has(token.character)) return [deal(seat, token.shown), { kind: 'addLoose', character: token.character }]
   const marker = characterOf(token.character).reminders.find(reminder => reminder.global)
   if (!marker) return [deal(seat, token.character), { kind: 'setShown', seat, to: token.shown }]
   return [deal(seat, token.shown, token.character), { kind: 'placeToken', token: [token.character, marker.name], seat }]

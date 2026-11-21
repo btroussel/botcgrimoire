@@ -8,6 +8,7 @@ import { pickerGroups } from './seat'
 import { useEdits } from './useEdits'
 
 // The bag never deals a loose character, so the Storyteller puts it in and takes it out here.
+// A Marionette the deal left off the ring is listed too, or saving would drop it.
 export const LooseCharacters = ({ board, disabled, visible, onClose }: {
   readonly board: Grimoire
   readonly disabled: boolean
@@ -15,7 +16,7 @@ export const LooseCharacters = ({ board, disabled, visible, onClose }: {
   readonly onClose: () => void
 }) => {
   const e = useEdits()
-  const candidates = looseChoices(board.script)
+  const candidates = [...new Set([...looseChoices(board.script), ...board.loose])]
   if (candidates.length === 0) return null
   const groups: readonly PickerGroup[] = pickerGroups(candidates, e.teamLabel, palette.teamOnPaper, (id) => ({
     id,

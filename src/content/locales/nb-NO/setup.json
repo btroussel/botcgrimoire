@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Dette manuskriptet kan ikke fylle disse setene med et passende oppsett. Utvalget ditt er uendret. Velg roller selv eller endre antall spillere.",
   "prepareDrunk": "Den som trekker denne brikken, ser en Bygdefolk-rolle som ikke er i posen. I Grimoire ligger den rollen deretter med Fyllikens påminnelse.",
   "prepareLunatic": "Den som trekker denne brikken, ser Demonen i posen.",
-  "prepareMarionette": "Den som trekker denne brikken, ser en Bygdefolk-rolle som ikke er i posen. I Grimoire ligger den rollen deretter med Marionettens påminnelse. Spilleren må sitte ved siden av Demonen. Med Åndemaner eller Lille Monster i spill: løs jinxen først.",
+  "prepareMarionette": "Den som trekker denne brikken, ser en Bygdefolk-rolle som ikke er i posen, og får den som god spiller. Marionetten venter deretter ved siden av brettet: legg påminnelsen dens på en god nabo av Demonen og gjør den spilleren ond. Med Åndemaner eller Lille Monster i spill: løs jinxen først.",
   "prepareBountyHunter": "Velg én Bygdefolk som starter ond, og noter lagtilhørigheten.",
   "prepareAbilities": "Velg evnen som gis, og gjør endringene i oppsettet som den krever.",
   "prepareHermit": "Gå gjennom manuskriptets Utstøtt-evner og jinxene deres for denne spilleren.",

@@ -64,7 +64,7 @@
   "shuffleUnavailable": "Ten skrypt nie pozwala obsadzić tych miejsc pasującym zestawem. Twój wybór się nie zmienia. Wybierz postacie ręcznie albo zmień liczbę graczy.",
   "prepareDrunk": "Gracz, który wylosuje ten żeton, zobaczy Mieszczanina spoza worka. W Grymuarze leży potem ten Mieszczanin z przypominajką Pijaka.",
   "prepareLunatic": "Gracz, który wylosuje ten żeton, zobaczy Demona z worka.",
-  "prepareMarionette": "Gracz, który wylosuje ten żeton, zobaczy Mieszczanina spoza worka. W Grymuarze leży potem ten Mieszczanin z przypominajką Marionetki. Ten gracz musi siedzieć obok Demona. Z Przyzywaczem lub Potforkiem najpierw rozstrzygnij wyjątek.",
+  "prepareMarionette": "Gracz, który wylosuje ten żeton, zobaczy Mieszczanina spoza worka i dostanie go jako dobry gracz. Marionetka czeka potem obok planszy: połóż jej przypominajkę przy dobrym sąsiedzie Demona i zmień tego gracza na złego. Z Przyzywaczem lub Potforkiem najpierw rozstrzygnij wyjątek.",
   "prepareBountyHunter": "Wybierz jednego Mieszczanina, który zaczyna jako zły, i zapisz jego przynależność.",
   "prepareAbilities": "Wybierz przyznaną umiejętność i wprowadź zmiany w przygotowaniu gry, których wymaga.",
   "prepareHermit": "Przejrzyj umiejętności Outsiderów ze skryptu i ich wyjątki dla tego gracza.",
