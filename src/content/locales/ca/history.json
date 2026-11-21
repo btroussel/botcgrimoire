@@ -46,5 +46,24 @@
   "removeSeat": "{name} deixa el cercle",
   "execute": "S’executa {name}",
   "exile": "S’exilia {name}",
-  "voterGhost": "{name} (vot de jugador mort)"
+  "voterGhost": "{name} (vot de jugador mort)",
+  "step": "{phase}, pas {n} de {total}",
+  "reminderOn": "{reminder} a {name}",
+  "reminderOff": "Es retira {reminder} de {name}",
+  "seatBelieves": "{name} creu que és {character}",
+  "nominated": "Es nomina {name}",
+  "offBlock": "{name} ja no és al patíbul",
+  "moves": "{name} canvia de lloc",
+  "ghostVoteUsed": "{name} gasta el vot de jugador mort",
+  "ghostVoteBack": "{name} recupera el vot de jugador mort",
+  "renamed": "{was} ara és {name}",
+  "bluffsSet": "Coartades: {characters}",
+  "looseIn": "{character} entra a la partida",
+  "looseOut": "{character} surt de la partida",
+  "grantIn": "El narrador obté l’habilitat: {character}",
+  "grantOut": "El narrador perd l’habilitat: {character}",
+  "moreChanges": {
+    "one": "i {count} canvi més",
+    "other": "i {count} canvis més"
+  }
 }

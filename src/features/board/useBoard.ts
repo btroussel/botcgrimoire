@@ -11,6 +11,8 @@ import { canUndo, useStore } from '../../store'
 import { homePath } from '../../ui/homePath'
 import type { BoardView } from './board'
 import { boardView } from './board'
+import type { ReplayStep } from './replay'
+import { replaySteps, stepAt } from './replay'
 import { elapsedClockStart, elapsedPlayTime, gameClock } from '../../store/gameTiming'
 import { phaseLabel as phaseOf } from '../../store/gameSummary'
 import { replayStart } from '../../store/replay'
@@ -26,6 +28,7 @@ export interface BoardBinding {
   readonly elapsedMs?: number
   readonly elapsedStartedAt?: number
   readonly lookingBack: boolean // every appending control is disabled while set
+  readonly replay?: { readonly steps: readonly ReplayStep[]; readonly at: number } // while looking back: the steps and the one shown
   readonly undo?: () => void // while the live game has an action after its opening table
   readonly returnToPresent: () => void
   readonly enterReplay: () => void
@@ -75,6 +78,17 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
   const locale = store.settings.locale
   const cursor = session?.lookingAt
   const view = useMemo(() => (board && log ? boardView(board, log.slice(0, cursor), locale) : undefined), [board, log, locale, cursor])
+  const script = session?.game.script
+  const looking = cursor !== undefined
+  // The steps hang on the log, not the cursor, so stepping through them reads them once.
+  const steps = useMemo(() => (looking && log && script ? replaySteps(log, script, locale) : undefined), [looking, log, script, locale])
+  const at = steps && cursor !== undefined ? stepAt(steps, cursor) : undefined
+  // Every way into a replay lands on a step, so the slider, the arrows and the board agree: a
+  // log that ends on edits the board does not draw would otherwise open past the last step.
+  useEffect(() => {
+    const step = at !== undefined ? steps?.[at] : undefined
+    if (step && step.cursor !== cursor) lookAt(step.cursor)
+  }, [steps, at, cursor, lookAt])
 
   const clock = board?.clock
   const phaseLabel = useMemo(() => (clock ? phaseOf(clock, t) : ''), [clock, t])
@@ -85,7 +99,7 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
   }, [store, router, lookingBack, locale])
   const returnToPresent = useCallback(() => {
     leaving.current = replay
-    router.setParams({ replay: '0' })
+    router.setParams({ replay: undefined })
     store.returnToPresent()
   }, [router, store, replay])
   const enterReplay = useCallback(() => router.setParams({ replay: '1' }), [router])
@@ -117,6 +131,7 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
     ...(elapsedMs !== undefined ? { elapsedMs } : {}),
     ...(elapsedStartedAt !== undefined ? { elapsedStartedAt } : {}),
     lookingBack,
+    ...(steps && at !== undefined ? { replay: { steps, at } } : {}),
     ...(open && session && canUndo(session) ? { undo: store.undo } : {}),
     returnToPresent,
     enterReplay,

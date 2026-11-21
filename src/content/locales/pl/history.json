@@ -48,5 +48,26 @@
   "removeSeat": "{name} opuszcza krąg",
   "execute": "Egzekucja: {name}",
   "exile": "Wygnanie: {name}",
-  "voterGhost": "{name} (głos ducha)"
+  "voterGhost": "{name} (głos ducha)",
+  "step": "{phase}, krok {n} z {total}",
+  "reminderOn": "Przypominajka {reminder} dla: {name}",
+  "reminderOff": "Zdjęto przypominajkę {reminder}: {name}",
+  "seatBelieves": "{name} myśli, że jest: {character}",
+  "nominated": "Nominacja: {name}",
+  "offBlock": "{name} schodzi z szafotu",
+  "moves": "{name} zmienia miejsce",
+  "ghostVoteUsed": "{name} zużywa głos ducha",
+  "ghostVoteBack": "{name} odzyskuje głos ducha",
+  "renamed": "{was} to teraz {name}",
+  "bluffsSet": "Blefy: {characters}",
+  "looseIn": "Wchodzi do gry: {character}",
+  "looseOut": "Opuszcza grę: {character}",
+  "grantIn": "Bajarz zyskuje umiejętność: {character}",
+  "grantOut": "Bajarz traci umiejętność: {character}",
+  "moreChanges": {
+    "one": "i jeszcze {count} zmiana",
+    "few": "i jeszcze {count} zmiany",
+    "many": "i jeszcze {count} zmian",
+    "other": "i jeszcze {count} zmiany"
+  }
 }

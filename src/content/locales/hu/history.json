@@ -46,5 +46,24 @@
   "removeSeat": "{name} elhagyja a kört",
   "execute": "Kivégzés: {name}",
   "exile": "Száműzés: {name}",
-  "voterGhost": "{name} (szavazatjelölő)"
+  "voterGhost": "{name} (szavazatjelölő)",
+  "step": "{phase}, lépés: {n}/{total}",
+  "reminderOn": "{name} emlékeztetőt kap: {reminder}",
+  "reminderOff": "{name} emlékeztetője lekerül: {reminder}",
+  "seatBelieves": "{name} azt hiszi, ő: {character}",
+  "nominated": "Gyanúsított: {name}",
+  "offBlock": "{name} már nem vár kivégzésre",
+  "moves": "{name} átül",
+  "ghostVoteUsed": "{name} elhasználja a szavazatjelölőjét",
+  "ghostVoteBack": "{name} visszakapja a szavazatjelölőjét",
+  "renamed": "{was} új neve: {name}",
+  "bluffsSet": "Blöffök: {characters}",
+  "looseIn": "Játékba kerül: {character}",
+  "looseOut": "Kikerül a játékból: {character}",
+  "grantIn": "A mesélő megkapja a képességet: {character}",
+  "grantOut": "A mesélő elveszti a képességet: {character}",
+  "moreChanges": {
+    "one": "és még {count} változás",
+    "other": "és még {count} változás"
+  }
 }

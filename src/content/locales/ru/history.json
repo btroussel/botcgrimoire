@@ -48,5 +48,26 @@
   "removeSeat": "{name} покидает круг",
   "execute": "Казнь: {name}",
   "exile": "Изгнание: {name}",
-  "voterGhost": "{name} (призрачный голос)"
+  "voterGhost": "{name} (призрачный голос)",
+  "step": "{phase}, шаг {n} из {total}",
+  "reminderOn": "Метка {reminder} у игрока {name}",
+  "reminderOff": "Метка {reminder} снята с игрока {name}",
+  "seatBelieves": "{name} считает своей ролью: {character}",
+  "nominated": "Номинация: {name}",
+  "offBlock": "{name} больше не на плахе",
+  "moves": "{name} пересаживается",
+  "ghostVoteUsed": "{name} тратит призрачный голос",
+  "ghostVoteBack": "{name} вновь получает призрачный голос",
+  "renamed": "{was} теперь {name}",
+  "bluffsSet": "Блефы: {characters}",
+  "looseIn": "В игру входит: {character}",
+  "looseOut": "Из игры выходит: {character}",
+  "grantIn": "Рассказчик получает способность: {character}",
+  "grantOut": "Рассказчик теряет способность: {character}",
+  "moreChanges": {
+    "one": "и ещё {count} изменение",
+    "few": "и ещё {count} изменения",
+    "many": "и ещё {count} изменений",
+    "other": "и ещё {count} изменения"
+  }
 }

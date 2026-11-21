@@ -1,17 +1,20 @@
-import { asCharacterId } from '../../content'
+import { asCharacterId, t } from '../../content'
 import { game, info, kill, nominate, setCharacter, token, vote, wake } from '../../engine/testing/board'
 import { newGame } from '../../store/saved'
 import { appendAll, openSession } from '../../store/session'
-import { replayStops } from './replay'
+import { replaySteps, stepAt } from './replay'
 import { edits } from './seat'
 
+const replayStops = (...args: Parameters<typeof replaySteps>) => replaySteps(...args).map(step => step.cursor)
+
 describe('visible replay steps', () => {
-  test('skips wakes, nominations and living votes, preserving reminders, death and ghost votes', () => {
+  test('skips wakes, stopping at reminders, nominations, the block, death and ghost votes', () => {
     const { log } = game('tb', { legacy: true }).seat('Ann', 'poisoner').seat('Bob', 'monk')
       .night(1, [wake('Ann', 10), token('Ann', 'poisoner/Poisoned', 'Bob')])
       .day([nominate('Ann', 'Bob'), vote('Ann'), kill('Bob'), vote('Bob')])
       .add(() => ({ kind: 'phase', to: 'over' })).build()
-    expect(replayStops(log, 'tb', 'en')).toEqual([2, 3, 5, 6, 9, 10, 11])
+    // An older day puts the vote's leader on the block, so the first hand shows on the board.
+    expect(replayStops(log, 'tb', 'en')).toEqual([2, 3, 5, 6, 7, 8, 9, 10, 11])
     expect(log).toHaveLength(11)
   })
 
@@ -47,5 +50,41 @@ describe('visible replay steps', () => {
       .day([setCharacter('Ann', 'chef'), setCharacter('Bob', 'imp')]).build()
     // The legacy showing to the Demon counts; one to another seat, or after a choice, does not.
     expect(replayStops(log, 'tb', 'en')).toEqual([3, 4, 5, 7, 9, 10, 11, 12])
+  })
+})
+
+describe('what a replay step says it changed', () => {
+  const captions = (steps: ReturnType<typeof replaySteps>) => steps.map(step => step.changes.map(change => t('en', change.key, change.values)))
+
+  test('every mark the board draws is a step: nominations, the block and a seat laid out', () => {
+    const { log, id } = game().seat('Ann', 'imp').seat('Bob', 'monk').seat('Cat', 'chef').night(1).day([nominate('Ann', 'Bob')])
+      .add(id => ({ kind: 'markForExecution', seat: id('Bob') }))
+      .add(id => ({ kind: 'placeSeat', seat: id('Cat'), at: { x: 0.2, y: 0.3 } }))
+      .add(id => ({ kind: 'nominate', by: id('Cat'), of: id('Ann') }))
+      .build()
+    const steps = replaySteps(log, 'tb', 'en')
+    expect(steps.map(step => step.cursor)).toEqual([3, 4, 5, 6, 7, 8, 9])
+    expect(captions(steps).slice(3)).toEqual([['Ann nominates Bob'], ['Bob is on the block'], ['Cat moves'], ['Cat nominates Ann']])
+    expect(steps.slice(3).map(step => step.seats)).toEqual([[id('Ann'), id('Bob')], [id('Bob')], [id('Cat')], [id('Cat'), id('Ann')]])
+  })
+
+  test('a reminder moved is one step, read seat by seat round the ring', () => {
+    const table = game().seat('Ann', 'poisoner').seat('Bob', 'monk').night(1, [token('Ann', 'poisoner/Poisoned', 'Bob'), kill('Bob')]).build()
+    const session = openSession({ ...newGame('tb', 1000), log: table.log })
+    const moved = appendAll(session, edits.moveToken(table.g, table.g.seats[1]!.tokens[0]!.placedBy, table.id('Ann')), 1001)
+    expect(captions(replaySteps(moved.game.log, 'tb', 'en')).slice(-3)).toEqual([['Poisoned on Bob'], ['Bob dies'], ['Poisoned on Ann', 'Poisoned removed from Bob']])
+  })
+
+  test('a phase alone says nothing and lights no seat, even as the day marks go', () => {
+    const { log } = game().seat('Ann', 'imp').seat('Bob', 'monk').night(1).day([nominate('Ann', 'Bob')]).night(2).build()
+    const dusk = replaySteps(log, 'tb', 'en').at(-1)!
+    expect(dusk).toEqual({ cursor: log.length, seats: [], changes: [] })
+  })
+
+  test('a cursor between steps shows the step before it, and one before the first shows the first', () => {
+    const steps = replaySteps(game().seat('Ann', 'imp').seat('Bob', 'monk').add(id => ({ kind: 'wake', seat: id('Ann'), step: 1 })).build().log, 'tb', 'en')
+    expect(steps.map(step => step.cursor)).toEqual([2])
+    expect(stepAt(steps, 3)).toBe(0)
+    expect(stepAt(steps, 0)).toBe(0)
   })
 })

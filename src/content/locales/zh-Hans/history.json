@@ -45,5 +45,23 @@
   "removeSeat": "{name} 离开座位圈",
   "execute": "{name} 被处决",
   "exile": "{name} 被流放",
-  "voterGhost": "{name}（投票标记）"
+  "voterGhost": "{name}（投票标记）",
+  "step": "{phase}，第 {n} 步，共 {total} 步",
+  "reminderOn": "在 {name} 放置 {reminder}",
+  "reminderOff": "从 {name} 移除 {reminder}",
+  "seatBelieves": "{name} 以为自己是 {character}",
+  "nominated": "{name} 被提名",
+  "offBlock": "{name} 不再待处决",
+  "moves": "{name} 移动位置",
+  "ghostVoteUsed": "{name} 用掉投票标记",
+  "ghostVoteBack": "{name} 重新获得投票标记",
+  "renamed": "{was} 改名为 {name}",
+  "bluffsSet": "伪装：{characters}",
+  "looseIn": "{character} 加入游戏",
+  "looseOut": "{character} 离开游戏",
+  "grantIn": "说书人获得 {character} 的能力",
+  "grantOut": "说书人失去 {character} 的能力",
+  "moreChanges": {
+    "other": "另有 {count} 处变化"
+  }
 }

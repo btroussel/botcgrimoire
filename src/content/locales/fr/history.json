@@ -46,5 +46,24 @@
   "removeSeat": "{name} quitte le cercle",
   "execute": "{name} est exécuté",
   "exile": "{name} est exilé",
-  "voterGhost": "{name} (vote fantôme)"
+  "voterGhost": "{name} (vote fantôme)",
+  "step": "{phase}, étape {n} sur {total}",
+  "reminderOn": "{reminder} sur {name}",
+  "reminderOff": "On retire {reminder} de {name}",
+  "seatBelieves": "{name} se croit {character}",
+  "nominated": "{name} est nommé",
+  "offBlock": "{name} n’est plus sur le billot",
+  "moves": "{name} change de place",
+  "ghostVoteUsed": "{name} dépense son vote fantôme",
+  "ghostVoteBack": "{name} récupère son vote fantôme",
+  "renamed": "{was} s’appelle maintenant {name}",
+  "bluffsSet": "Bluffs : {characters}",
+  "looseIn": "{character} entre en jeu",
+  "looseOut": "{character} quitte la partie",
+  "grantIn": "Le Conteur obtient la capacité : {character}",
+  "grantOut": "Le Conteur perd la capacité : {character}",
+  "moreChanges": {
+    "one": "et {count} autre changement",
+    "other": "et {count} autres changements"
+  }
 }

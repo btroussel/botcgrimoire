@@ -46,5 +46,24 @@
   "removeSeat": "{name} forlater sirkelen",
   "execute": "{name} blir henrettet",
   "exile": "{name} blir forvist",
-  "voterGhost": "{name} (spøkelsesstemme)"
+  "voterGhost": "{name} (spøkelsesstemme)",
+  "step": "{phase}, steg {n} av {total}",
+  "reminderOn": "{reminder} på {name}",
+  "reminderOff": "{reminder} fjernet fra {name}",
+  "seatBelieves": "{name} tror seg å være {character}",
+  "nominated": "{name} blir nominert",
+  "offBlock": "{name} er ikke lenger på skafottet",
+  "moves": "{name} bytter plass",
+  "ghostVoteUsed": "{name} bruker spøkelsesstemmen sin",
+  "ghostVoteBack": "{name} får tilbake spøkelsesstemmen",
+  "renamed": "{was} heter nå {name}",
+  "bluffsSet": "Bløffer: {characters}",
+  "looseIn": "{character} kommer inn i spillet",
+  "looseOut": "{character} forlater spillet",
+  "grantIn": "Fortelleren får evnen: {character}",
+  "grantOut": "Fortelleren mister evnen: {character}",
+  "moreChanges": {
+    "one": "og {count} endring til",
+    "other": "og {count} endringer til"
+  }
 }

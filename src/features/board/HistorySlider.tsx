@@ -4,7 +4,11 @@ import type { ScrollViewInstance } from 'react-native'
 
 import { IconButton } from '../../ui/Button'
 import { PaperTexture } from '../../ui/PaperTexture'
-import { palette, space, type } from '../../ui/theme'
+import { font, palette, space } from '../../ui/theme'
+import { slack, widthAtOnePoint } from './textWidth'
+
+const labelSize = 14
+const labelFont = font.body.bold
 
 export interface HistoryTick {
   readonly cursor: number
@@ -31,7 +35,8 @@ export const HistorySlider = ({ value, min, max, ticks, onChange, label, valueTe
   const [available, setAvailable] = useState(0)
   const scroll = useRef<ScrollViewInstance>(null)
   const scrollOffset = useRef(0)
-  const widths = ticks.map(tick => Math.max(64, tick.label.length * 8 + 24))
+  // Measured rather than counted, since a night in Japanese is four wide glyphs and a digit.
+  const widths = ticks.map(tick => Math.max(64, Math.ceil(widthAtOnePoint(tick.label, labelFont) * slack * labelSize) + 18))
   const inset = Math.max(40, ...widths.map(width => width / 2))
   // Labels and the thumb share the same event scale. Crowded phases widen the scrollable track.
   let span = Math.max(1, available - 2 * inset)
@@ -58,7 +63,7 @@ export const HistorySlider = ({ value, min, max, ticks, onChange, label, valueTe
             <button type="button" aria-pressed={active?.cursor === tick.cursor} onClick={() => onChange(tick.cursor)}
               style={{ position: 'relative', width: '100%', height: 44, boxSizing: 'border-box', padding: '0 8px', border: `1px solid ${p.accent}`, borderRadius: 8, whiteSpace: 'nowrap',
                 background: 'transparent', color: active?.cursor === tick.cursor ? p.ink : p.text,
-                fontFamily: type.text.strong.fontFamily, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{tick.label}</button>
+                fontFamily: labelFont, fontSize: labelSize, fontWeight: 700, cursor: 'pointer' }}>{tick.label}</button>
           </View>)}
           <View style={{ position: 'absolute', top: 44, left: inset - 8, width: span + 16 }}>
             <input type="range" min={min} max={max} step={1} value={value} disabled={range === 0}

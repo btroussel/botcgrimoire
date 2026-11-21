@@ -63,6 +63,7 @@ export interface SeatRingProps {
   readonly free?: boolean // some seat is laid out off the circle
   readonly obstacles?: readonly BoardControlBounds[] // the corner controls a laid-out seat keeps clear of
   readonly readOnly?: boolean
+  readonly lit?: readonly SeatId[] // replay: the seats the step on show changed
   readonly t: Translate
   readonly onAddReminder?: (seat: SeatId) => void
   readonly onRemoveReminder?: (placedBy: EventId) => void
@@ -106,6 +107,7 @@ const homeReach = 0.3
 type DropTarget = SeatId | number | typeof velvet
 
 const noObstacles: readonly BoardControlBounds[] = []
+const noSeats: readonly SeatId[] = []
 
 interface Landing {
   readonly seat: SeatId
@@ -115,7 +117,7 @@ interface Landing {
 
 export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, free = false, obstacles = noObstacles, t, onAddReminder, onRemoveReminder, onMoveReminder,
   onEditNote, onGap, onTurn, onArrangeDone, onBackToCircle, turnAt, turnDocked = false, onTurnSize, onMoveSeat, onPlaceSeat, chosenSeat, onChooseSeat,
-  readOnly = false, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
+  readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
   const [expandedSeat, setExpandedSeat] = useState<string | undefined>(undefined)
@@ -324,7 +326,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             canRemove={!!onRemoveReminder && editable} canAdd={!!onAddReminder && editable && !nominationLabel}
             canDrag={canDrag} lifted={lifted?.grab.seat === seat.id ? lifted.grab.chip : undefined}
             seatLifted={liftedSeat === seat.id} parted={partingOf(i)}
-            dropTarget={lifted?.target === seat.id} swapping={liftedSeat !== undefined && lifted?.target === seat.id}
+            dropTarget={lifted?.target === seat.id || lit.includes(seat.id)} swapping={liftedSeat !== undefined && lifted?.target === seat.id}
             swapLabel={swapTarget ? t('board.swapWith', { name: mover.name }) : undefined}
             nominationLabel={nominationLabel} marked={chosen ? place : undefined} markedLabel={chosen ? action?.markedLabel(place) : undefined}
             t={t} handlers={handlers} />

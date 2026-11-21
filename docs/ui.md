@@ -275,6 +275,12 @@ input, and its phase labels never overlap: the track scrolls sideways when it ge
 replay sits apart from the timeline. A step is one action, as undo counts them, so a moved reminder
 is never seen off the board.
 
+Every action that changes what the board draws is a step, compared on the whole seat view, so a mark
+added to the seats later is a step without anyone listing it. A replay always rests on a step,
+however it was opened, so the slider, the arrows and the board agree. Each step names its changes in
+one line under the timeline, which a screen reader hears, and rings the seats it changed in brass; a
+phase alone names only the phase and rings no seat.
+
 ## The script sheet
 
 The official player sheet is the model, kept where it works and adapted where paper and phone

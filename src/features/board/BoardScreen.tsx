@@ -383,6 +383,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <View style={{ paddingTop: geometry.fitted ? 0 : utilitiesHeight }}>
           <View style={styles.ring}>
             <SeatRing seats={view.seats} band={geometry.band} geometry={ring} free={free} obstacles={geometry.obstacles} t={t} readOnly={b.lookingBack}
+              {...(b.replay ? { lit: b.replay.steps[b.replay.at]!.seats } : {})}
               {...(turnAt ? { turnAt } : {})} turnDocked={turnDocked} onTurnSize={updateTurnSize}
               panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal}
               {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
@@ -482,7 +483,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <View style={[styles.replayControls, { top: insets.top + space.md, right: insets.right + space.md }]}>
             <Button label={t('history.exitReplay')} onPress={b.returnToPresent} variant="text" />
           </View>
-          <ReplayBar bottom={insets.bottom} />
+          {b.replay ? <ReplayBar steps={b.replay.steps} at={b.replay.at} bottom={insets.bottom} /> : null}
         </> : null}
 
         <ReminderPicker target={reminderTarget} onClose={() => setReminderTarget(undefined)}
