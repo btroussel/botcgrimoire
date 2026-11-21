@@ -41,10 +41,14 @@ export interface CardSpec {
   readonly caption?: string // a seat's name under the token, for THIS PLAYER IS
 }
 
-// One seat to pick from those allowed; the first tap on one completes it.
+// One seat to pick from those allowed; the first tap on one completes it. A pick that starts from
+// a seat, as a nomination does from its nominator, marks that seat, and a seat may carry a label
+// saying what its tap does.
 export interface SeatRequest {
   readonly allowed: readonly string[]
   readonly onDone: (seat: string) => void
+  readonly chosen?: string
+  readonly label?: (name: string) => string
 }
 
 export interface SeatAction {

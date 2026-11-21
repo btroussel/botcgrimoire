@@ -162,8 +162,10 @@ name in every language. A small token keeps the label size, so a crowded or shor
 token size and no default name loses its number.
 
 The seat menu opens beside its token, wherever it covers the fewest other seats, so a neighbour
-stays tappable to nominate. It has no backdrop. Add a reminder comes first, since on a touch screen
-it is the only way to the reminder picker. [App](app.md#board-edits) owns the actions.
+stays tappable to move the menu there. It has no backdrop. Add a reminder comes first, since on a
+touch screen it is the only way to the reminder picker, then by day Nominate a player. While the
+nominee is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits)
+owns the actions.
 
 A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
 outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.

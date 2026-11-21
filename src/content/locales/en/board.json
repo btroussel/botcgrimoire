@@ -38,6 +38,7 @@
   "character": "Character",
   "makeEvil": "Make evil",
   "makeGood": "Make good",
+  "nominate": "Nominate a player",
   "nominateSelf": "Nominate self",
   "callExile": "Call for exile",
   "nominatePlayer": "Nominate {name}",

@@ -38,6 +38,7 @@
   "character": "Rol",
   "makeEvil": "Volver malvado",
   "makeGood": "Volver bueno",
+  "nominate": "Nominar a alguien",
   "nominateSelf": "Nominarse",
   "callExile": "Pedir el exilio",
   "nominatePlayer": "Nominar a {name}",

@@ -13,7 +13,7 @@ import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuClass, menuFrame, menuStyles } from '../../ui/popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
 
-export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominateSelf, onCallExile, onRemove, onRename, onLife, onGhostVote }: {
+export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominate, onNominateSelf, onCallExile, onRemove, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
   readonly name: string
   readonly alignment: Alignment
@@ -27,6 +27,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly onReminder?: () => void
   readonly onCharacter: () => void
   readonly onAlignment: () => void
+  readonly onNominate?: () => void
   readonly onNominateSelf?: () => void
   readonly onCallExile?: () => void
   readonly onRemove: () => void
@@ -86,7 +87,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     const outside = (event: MouseEvent) => {
       const target = event.target
       if (!(target instanceof Element) || menu.current?.contains(target)) return
-      // Another token must receive its click before the nominator is cleared.
+      // A tap on another token moves the menu there, so that token handles it.
       if (target.closest('[data-seat-context-target]')) return
       onClose()
     }
@@ -104,6 +105,8 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   const actions: readonly { label: string; icon: IconName; run: () => void }[] = [
     // First, as the action a Storyteller repeats most, and the only way to it on touch.
     ...(onReminder ? [{ label: t('board.addReminder'), icon: 'add' as const, run: onReminder }] : []),
+    // By day the next most repeated, and the only way to a nomination.
+    ...(onNominate ? [{ label: t('board.nominate'), icon: 'nominate' as const, run: onNominate }] : []),
     { label: t('board.changeCharacter'), icon: 'character', run: onCharacter },
     { label: t(alignment === 'good' ? 'board.makeEvil' : 'board.makeGood'), icon: 'shuffle', run: onAlignment },
     { label: t(dead ? 'board.markAlive' : 'board.markDead'), icon: dead ? 'sun' : 'skull', run: onLife },

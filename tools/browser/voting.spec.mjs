@@ -15,6 +15,7 @@ const labelsIn = locale => {
   return { script: editionName(locale, 'tb', 'Trouble Brewing'), more: setup.morePlayers, fewer: setup.fewerPlayers, count: new RegExp(`^(${count.join('|')})$`),
     shuffle: setup.shuffleBag, open: setup.manualOpen, deal: setup.dealRandom, setup: board.setup, firstNight: setup.startFirstNight,
     night: board.night.replace('{n}', '1'), day: night.startDay, dayWindow: board.day.replace('{n}', '1'),
+    nominate: board.nominate,
     nomination: (by, of) => day.nominationArrow.replace('{by}', setup.defaultSeat.replace('{n}', by)).replace('{of}', setup.defaultSeat.replace('{n}', of)),
     dock: [day.voteReset, day.mark, common.done] }
 }
@@ -44,6 +45,7 @@ const openDay = async (page, players, text = english) => {
 const seat = (page, index) => page.locator('[data-seat-context-target]').nth(index).getByRole('button').first()
 const nominate = async (page, by, of, hands = []) => {
   await seat(page, by).tap()
+  await page.getByRole('button', { name: 'Nominate a player', exact: true }).tap()
   await seat(page, of).tap()
   const controls = page.getByRole('region', { name: `Seat ${by + 1} nominates Seat ${of + 1}` })
   await expect(controls).toBeVisible()
@@ -133,6 +135,22 @@ test('No execution starts the night with the player on the block alive', async (
   await expect(page.getByText('7 / 7 alive')).toBeVisible()
 })
 
+test('by day a tap on another seat moves the menu, and the nominator lets a nomination go', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  await seat(page, 0).tap()
+  await seat(page, 2).tap()
+  await expect(page.getByRole('group', { name: 'Seat 3', exact: true })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Seat 1', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: /nominates/ })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Nominate a player', exact: true }).tap()
+  await expect(page.getByRole('group', { name: 'Seat 3', exact: true })).toHaveCount(0)
+  await seat(page, 2).tap()
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await expect(page.getByRole('button', { name: /^Seat 3 → / })).toHaveCount(0)
+})
+
 test('a seat nominates again and a dead player with no ghost vote still raises a hand', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openDay(page, 7)
@@ -214,6 +232,7 @@ test.describe(`in ${locale}`, () => {
     await page.setViewportSize({ width: 320, height: 568 })
     await openDay(page, 7, text)
     await seat(page, 0).tap()
+    await page.getByRole('button', { name: text.nominate, exact: true }).tap()
     await seat(page, 3).tap()
     const controls = page.getByRole('region', { name: text.nomination(1, 4) })
     await expect(controls).toBeVisible()

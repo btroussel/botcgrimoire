@@ -38,6 +38,7 @@
   "character": "Роль",
   "makeEvil": "Сделать злым",
   "makeGood": "Сделать добрым",
+  "nominate": "Номинировать игрока",
   "nominateSelf": "Номинировать себя",
   "callExile": "Предложить изгнание",
   "nominatePlayer": "Номинировать игрока {name}",

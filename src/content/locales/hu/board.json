@@ -38,6 +38,7 @@
   "character": "Karakter",
   "makeEvil": "Legyen gonosz",
   "makeGood": "Legyen jó",
+  "nominate": "Valaki gyanúsítása",
   "nominateSelf": "Önmaga gyanúsítása",
   "callExile": "Száműzés kezdeményezése",
   "nominatePlayer": "{name} gyanúsítása",
