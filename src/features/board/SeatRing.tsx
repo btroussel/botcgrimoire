@@ -2,8 +2,8 @@
 // token size and positions, so rendering and overlap checks use the same geometry. A
 // tap opens the seat's nearby menu, or, while a panel has asked the ring for a seat, picks it; the
 // interaction context decides which, so the ring knows nothing about votes or what a pick is
-// for. By day a seat's menu nominates: it asks the ring for the nominee, marking the nominator, whose
-// own tap lets the nomination go. A Traveller's menu also calls for their exile. The deal
+// for. By day a seat's menu nominates: it asks the ring for the nominee, marking the nominator, who
+// may nominate themselves with a tap on their own seat. A Traveller's menu also calls for their exile. The deal
 // is the ring's motion: a seat that goes from empty to dealt leaves the centre at corner size and
 // lands on its place, one after another. A ring opened just after the deal counts every seat as empty before it, so a
 // new game opens with the deal. A placed reminder can be dragged to another seat; the hook beside
@@ -269,8 +269,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
     interaction.requestSeats({
       allowed: seats.map(seat => seat.id),
       chosen: by,
-      label: name => t('board.nominatePlayer', { name }),
-      onDone: of => { if (of !== by) latest.current.nominate?.(by, of) },
+      label: (seat, name) => seat === by ? t('board.nominateSelf') : t('board.nominatePlayer', { name }),
+      onDone: of => latest.current.nominate?.(by, of),
     })
   }
   const handlers = useMemo<SeatHandlers>(() => ({
@@ -332,7 +332,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             seatLifted={liftedSeat === seat.id} parted={partingOf(i)}
             dropTarget={lifted?.target === seat.id} swapping={liftedSeat !== undefined && lifted?.target === seat.id}
             swapLabel={swapTarget ? t('board.swapWith', { name: mover.name }) : undefined}
-            pickLabel={pick?.label && allowed && pick.chosen !== seat.id ? pick.label(seat.name) : undefined}
+            pickLabel={pick?.label && allowed ? pick.label(seat.id, seat.name) : undefined}
             marked={place > 0 ? place : undefined} markedLabel={place > 0 ? action?.markedLabel(place) : undefined}
             t={t} handlers={handlers} />
         })}
@@ -384,10 +384,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           onLife={() => e.append(contextPlayer.dead ? edits.revive(contextPlayer.id) : edits.kill(contextPlayer.id))}
           onGhostVote={() => { if (contextPlayer.dead) e.append(edits.setGhostVote(contextPlayer.id, !contextPlayer.ghostVote)) }}
           onAlignment={() => e.append(edits.setAlignment(contextPlayer.id, contextPlayer.alignment === 'good' ? 'evil' : 'good'))}
-          {...(interaction.nominate ? {
-            onNominate: () => startNomination(contextPlayer.id),
-            onNominateSelf: () => { interaction.nominate?.(contextPlayer.id, contextPlayer.id); closeContext() },
-          } : {})}
+          {...(interaction.nominate ? { onNominate: () => startNomination(contextPlayer.id) } : {})}
           {...(interaction.exile && character(asCharacterId(contextPlayer.character)).team === 'traveller'
             ? { onCallExile: () => { interaction.exile?.(contextPlayer.id); closeContext() } } : {})} /> : null}
       </View>

@@ -236,7 +236,8 @@ on a reminder, a gap or a seat during a vote, only closes the drawer: a tap mean
 away must not change the game.
 
 A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
-board itself, with no banner, so the ring does not shift.
+board itself, with no banner, so the ring does not shift. Any pick on the ring, a card's player or a
+nominee, ends on a tap off the seats or Escape, since a phone has no Escape key.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
 voter is covered. They name the nomination as the day's list does, nominator then nominee, with a

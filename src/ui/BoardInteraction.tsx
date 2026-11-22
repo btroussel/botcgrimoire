@@ -8,8 +8,8 @@
 //
 // A request: `requestSeats` puts the ring in pick mode, with no prompt or phase controls. Only
 // `allowed` seats take a tap. The board calls `pickSeat` on a ring tap, which completes the
-// request and hands that seat to `onDone`; `cancelRequest` clears it. The board hides the phase
-// window while a pick is open, so the whole ring is reachable.
+// request and hands that seat to `onDone`; `cancelRequest` clears it, as a tap off the seats or
+// Escape does. The board hides the phase window while a pick is open, so the whole ring is reachable.
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
@@ -42,13 +42,13 @@ export interface CardSpec {
 }
 
 // One seat to pick from those allowed; the first tap on one completes it. A pick that starts from
-// a seat, as a nomination does from its nominator, marks that seat, and a seat may carry a label
-// saying what its tap does.
+// a seat, as a nomination does from its nominator, marks that seat, and each seat may carry a
+// label saying what its tap does.
 export interface SeatRequest {
   readonly allowed: readonly string[]
   readonly onDone: (seat: string) => void
   readonly chosen?: string
-  readonly label?: (name: string) => string
+  readonly label?: (seat: string, name: string) => string
 }
 
 export interface SeatAction {
