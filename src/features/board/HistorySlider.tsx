@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import type { ScrollViewInstance } from 'react-native'
 
 import { IconButton } from '../../ui/Button'
-import { PaperTexture } from '../../ui/PaperTexture'
-import { font, palette, space } from '../../ui/theme'
-import { slack, widthAtOnePoint } from './textWidth'
+import type { IconName } from '../../ui/icons'
+import { Icon } from '../../ui/icons'
+import { font, palette, space, tabular } from '../../ui/theme'
 
-const labelSize = 14
-const labelFont = font.body.bold
-
+// Where a phase opens on the track: its glyph and number sit over the step that shows it.
 export interface HistoryTick {
   readonly cursor: number
-  readonly label: string
+  readonly icon: IconName
+  readonly number?: number
+  readonly label: string // the phase in words, for a pointer's tooltip
 }
 
 interface Props {
@@ -29,57 +29,70 @@ interface Props {
   readonly onNext?: (() => void) | undefined
 }
 
+const row = 44
+const glyph = 16
+const digit = 8 // a bold tabular digit at 12 px, rounded up
+// Below this spacing the step marks would merge into a bar, so only the phases keep theirs.
+const leastStepGap = 6
+
 export const HistorySlider = ({ value, min, max, ticks, onChange, label, valueText, previousLabel, nextLabel, onPrevious, onNext }: Props) => {
   const p = palette
   const range = max - min
   const [available, setAvailable] = useState(0)
   const scroll = useRef<ScrollViewInstance>(null)
   const scrollOffset = useRef(0)
-  // Measured rather than counted, since a night in Japanese is four wide glyphs and a digit.
-  const widths = ticks.map(tick => Math.max(64, Math.ceil(widthAtOnePoint(tick.label, labelFont) * slack * labelSize) + 18))
-  const inset = Math.max(40, ...widths.map(width => width / 2))
-  // Labels and the thumb share the same event scale. Crowded phases widen the scrollable track.
+  const widths = ticks.map(tick => glyph + (tick.number !== undefined ? 3 + String(tick.number).length * digit : 0))
+  // The glyph sits on its step and the number runs to its right, so the right end needs the room.
+  const inset = Math.max(16, ...widths.map(width => width - glyph / 2))
+  // Marks and the thumb share one scale. Phases crowded together widen the track, which scrolls.
   let span = Math.max(1, available - 2 * inset)
   ticks.forEach((tick, index) => {
     const previous = ticks[index - 1]
     if (previous && tick.cursor > previous.cursor) span = Math.max(span,
-      ((widths[index - 1]! + widths[index]!) / 2 + 8) * range / (tick.cursor - previous.cursor))
+      (widths[index - 1]! + space.sm) * range / (tick.cursor - previous.cursor))
   })
   const width = span + 2 * inset
   const x = (cursor: number) => inset + (range > 0 ? (cursor - min) / range * span : 0)
   const active = ticks.filter(tick => tick.cursor <= value).at(-1) ?? ticks[0]
+  const phaseAt = new Set(ticks.map(tick => tick.cursor))
+  const steps = range > 0 && span / range >= leastStepGap ? Array.from({ length: range + 1 }, (_, i) => min + i) : [...phaseAt]
   useEffect(() => {
     const position = inset + (range > 0 ? (value - min) / range * span : 0)
     if (position < scrollOffset.current + 16 || position > scrollOffset.current + available - 16)
       scroll.current?.scrollTo({ x: Math.max(0, position - available / 2), animated: false })
   }, [value, available, inset, span, range, min])
   return <View style={styles.row}>
-    <IconButton icon="back" label={previousLabel} disabled={!onPrevious} onPress={onPrevious ?? (() => undefined)} style={styles.arrow} />
+    <IconButton icon="back" label={previousLabel} disabled={!onPrevious} onPress={onPrevious ?? (() => undefined)} />
     <View style={styles.track} onLayout={event => setAvailable(event.nativeEvent.layout.width)}>
       <ScrollView ref={scroll} horizontal showsHorizontalScrollIndicator={false} onScroll={event => { scrollOffset.current = event.nativeEvent.contentOffset.x }} scrollEventThrottle={16}>
-        <View style={{ width, height: 88 }}>
-          {ticks.map((tick, index) => <View key={tick.cursor} style={{ position: 'absolute', left: x(tick.cursor) - widths[index]! / 2, width: widths[index], height: 44 }}>
-            {active?.cursor === tick.cursor ? <PaperTexture radius={8} /> : null}
-            <button type="button" aria-pressed={active?.cursor === tick.cursor} onClick={() => onChange(tick.cursor)}
-              style={{ position: 'relative', width: '100%', height: 44, boxSizing: 'border-box', padding: '0 8px', border: `1px solid ${p.accent}`, borderRadius: 8, whiteSpace: 'nowrap',
-                background: 'transparent', color: active?.cursor === tick.cursor ? p.ink : p.text,
-                fontFamily: labelFont, fontSize: labelSize, fontWeight: 700, cursor: 'pointer' }}>{tick.label}</button>
-          </View>)}
-          <View style={{ position: 'absolute', top: 44, left: inset - 8, width: span + 16 }}>
+        <View style={{ width, height: row }}>
+          {/* Every step the replay can stop on, a longer brass mark where a phase opens. */}
+          {steps.map(step => <View key={step} pointerEvents="none" style={[styles.step, { left: x(step) },
+            phaseAt.has(step) ? { top: 26, height: 12, backgroundColor: p.accent } : { backgroundColor: p.muted }]} />)}
+          {ticks.map((tick, index) => {
+            const colour = active?.cursor === tick.cursor ? p.accent : p.muted
+            return <View key={tick.cursor} pointerEvents="none" aria-hidden style={[styles.mark, { left: x(tick.cursor) - glyph / 2, width: widths[index] }]}>
+              <Icon name={tick.icon} size={glyph} color={colour} />
+              {tick.number !== undefined ? <Text style={[styles.number, tabular, { color: colour }]}>{tick.number}</Text> : null}
+            </View>
+          })}
+          {/* The range input takes the whole row, so a tap on a phase's mark lands on that phase. */}
+          <View style={{ position: 'absolute', top: 0, left: inset - 8, width: span + 16 }}>
             <input type="range" min={min} max={max} step={1} value={value} disabled={range === 0}
-              aria-label={label} aria-valuetext={valueText} onChange={event => onChange(Number(event.currentTarget.value))}
-              style={{ display: 'block', width: '100%', height: 44, margin: 0, accentColor: p.accent, cursor: 'pointer' }} />
+              aria-label={label} aria-valuetext={valueText} title={active?.label} onChange={event => onChange(Number(event.currentTarget.value))}
+              style={{ display: 'block', width: '100%', height: row, margin: 0, paddingTop: 6, boxSizing: 'border-box', background: 'transparent', accentColor: p.accent, cursor: 'pointer' }} />
           </View>
-          {ticks.map(tick => <View key={tick.cursor} pointerEvents="none" style={{ position: 'absolute', top: 50, left: x(tick.cursor), width: 1, height: 6, backgroundColor: p.accent }} />)}
         </View>
       </ScrollView>
     </View>
-    <IconButton icon="chevronRight" label={nextLabel} disabled={!onNext} onPress={onNext ?? (() => undefined)} style={styles.arrow} />
+    <IconButton icon="chevronRight" label={nextLabel} disabled={!onNext} onPress={onNext ?? (() => undefined)} />
   </View>
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: space.xs },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: row },
   track: { flex: 1, minWidth: 0 },
-  arrow: { marginTop: 44 },
+  mark: { position: 'absolute', top: 0, height: glyph, flexDirection: 'row', alignItems: 'center', gap: 3 },
+  number: { fontFamily: font.body.bold, fontSize: 12, lineHeight: glyph },
+  step: { position: 'absolute', top: 30, width: 1, height: 5 },
 })

@@ -7,9 +7,12 @@ import { HistorySlider } from './HistorySlider'
 import { palette, space, type } from '../../ui/theme'
 import type { ReplayStep } from './replay'
 
-export const replayBarHeight = 124
+// The slider's one row and the caption under it.
+export const replayBarHeight = 76
 // A step that changes many seats, a deal or a dawn, says its first changes and counts the rest.
 const shownChanges = 3
+// The plaque's glyphs for setup, night and day, and a flag for the end.
+const phaseIcon = { setup: 'setup', night: 'order', day: 'sun', over: 'flag' } as const
 
 export const ReplayBar = ({ steps, at, bottom }: { readonly steps: readonly ReplayStep[]; readonly at: number; readonly bottom: number }) => {
   const { session, t, lookAt } = useStore()
@@ -27,7 +30,8 @@ export const ReplayBar = ({ steps, at, bottom }: { readonly steps: readonly Repl
   const p = palette
   return <View style={[styles.bar, { height: replayBarHeight + bottom, paddingBottom: bottom, backgroundColor: p.felt, borderTopColor: p.line }]}>
     <HistorySlider value={at} min={0} max={steps.length - 1}
-      ticks={marks.map(mark => ({ cursor: steps.findIndex(s => s.cursor === mark.cursor), label: label(mark) })).filter(mark => mark.cursor >= 0)}
+      ticks={marks.map(mark => ({ cursor: steps.findIndex(s => s.cursor === mark.cursor), icon: phaseIcon[mark.phase], label: label(mark),
+        ...mark.phase === 'night' || mark.phase === 'day' ? { number: mark.night } : {} })).filter(mark => mark.cursor >= 0)}
       onChange={index => lookAt(steps[index]?.cursor ?? cursor)} label={t('history.slider')}
       valueText={t('history.step', { phase, n: at + 1, total: steps.length })}
       onPrevious={previous ? () => lookAt(previous.cursor) : undefined}
@@ -40,5 +44,5 @@ export const ReplayBar = ({ steps, at, bottom }: { readonly steps: readonly Repl
 
 const styles = StyleSheet.create({
   bar: { borderTopWidth: 1, paddingTop: space.sm, paddingHorizontal: space.md },
-  caption: { textAlign: 'center', marginTop: -space.xs },
+  caption: { textAlign: 'center' },
 })
