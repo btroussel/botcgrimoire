@@ -38,6 +38,7 @@
   "character": "ตัวละคร",
   "makeEvil": "เปลี่ยนเป็นฝ่ายร้าย",
   "makeGood": "เปลี่ยนเป็นฝ่ายดี",
+  "nominate": "เสนอชื่อผู้เล่น",
   "nominateSelf": "เสนอชื่อตัวเอง",
   "callExile": "เรียกโหวตขับไล่",
   "nominatePlayer": "เสนอชื่อ {name}",

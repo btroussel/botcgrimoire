@@ -5,7 +5,7 @@
 // chosen token as it can, nothing unless the board is cramped, so the Storyteller always sees
 // the seat being edited. Among those places the first covering the fewest other seats' centres
 // wins: a side that covers none keeps the menu beside its token, and a neighbour's centre
-// stays tappable to nominate.
+// stays tappable to move the menu there.
 import { seatMetrics, space } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { nameHeightAt } from './ringLayout'

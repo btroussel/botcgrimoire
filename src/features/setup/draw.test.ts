@@ -1,4 +1,4 @@
-import { asCharacterId, character } from '../../content'
+import { asCharacterId } from '../../content'
 import type { CharacterId } from '../../content'
 import { asEventId, inPlay, playerIdentity, reduce } from '../../engine'
 import { game } from '../../engine/testing/board'
@@ -111,31 +111,21 @@ describe('the players draw from the bag', () => {
     for (const seed of [0, 0.5, 0.99]) expect(refillBag(g, draw, ids('drunk'), roles, () => seed)!.tokens[1]).toEqual({ character: 'drunk', shown: 'monk' })
   })
 
-  test('a Drunk, Lunatic or Marionette token shows a Townsfolk nobody holds or the Demon in play', () => {
+  test('a Drunk or Lunatic token shows a Townsfolk nobody holds or the Demon in play, and the Marionette takes no token', () => {
     const roles = listed('bmr', 'en')
     const townsfolk = roles.filter(role => role.team === 'townsfolk').map(role => role.id)
     const demons = roles.filter(role => role.team === 'demon').map(role => role.id)
     for (const seed of [0, 0.3, 0.6, 0.99]) {
       const draw = fillBag(ids('drunk', 'lunatic', 'marionette', 'zombuul', 'grandmother', 'sailor'), roles, () => seed, ids('innkeeper'))!
       const shown = Object.fromEntries(draw.tokens.map(token => [token.character, token.shown]))
+      expect(Object.keys(shown).sort()).toEqual(['drunk', 'grandmother', 'lunatic', 'sailor', 'zombuul'])
       expect(shown.lunatic).toBe('zombuul')
       expect(shown.zombuul).toBeUndefined()
-      for (const of of [shown.drunk, shown.marionette]) {
-        expect(townsfolk).toContain(of)
-        expect(['grandmother', 'sailor', 'innkeeper']).not.toContain(of)
-      }
-      expect(shown.drunk).not.toBe(shown.marionette)
+      expect(townsfolk).toContain(shown.drunk)
+      expect(['grandmother', 'sailor', 'innkeeper']).not.toContain(shown.drunk)
       expect(demons).toContain(fillBag(ids('lunatic'), roles, () => seed)!.tokens[0]!.shown)
     }
     expect(fillBag(ids('drunk'))!.tokens).toEqual([{ character: 'drunk' }])
-  })
-
-  test('a Marionette believes they are the Huntsman only when the Damsel is in play', () => {
-    const roles = ids('huntsman', 'empath', 'chef', 'damsel', 'marionette', 'imp').map(id => character(id))
-    const shown = (bag: readonly string[]) => new Set([0, 0.2, 0.4, 0.6, 0.8, 0.99].map(seed =>
-      fillBag(ids(...bag), roles, () => seed)!.tokens.find(token => token.character === 'marionette')!.shown))
-    expect(shown(['marionette', 'chef', 'imp'])).toEqual(new Set(['empath']))
-    expect(shown(['marionette', 'chef', 'damsel', 'imp'])).toEqual(new Set(['empath', 'huntsman']))
   })
 
   test('a disguised token shows its player what they believe, and lands as in a paper grimoire', () => {
@@ -198,20 +188,19 @@ describe('the players draw from the bag', () => {
 
   test('a Lunatic may be shown any Demon, and no two disguises show the same character', () => {
     const roles = listed('bmr', 'en')
-    const bag = ids('lunatic', 'zombuul', 'drunk', 'marionette')
+    const bag = ids('lunatic', 'zombuul', 'drunk', 'drunk')
     const choices = (chosen: ReadonlyMap<CharacterId, CharacterId>, character: string) =>
       bagDisguises(bag, roles, chosen).find(open => open.character === character)!.choices
     expect(choices(new Map(), 'lunatic')).toEqual(roles.filter(role => role.team === 'demon').map(role => role.id))
     const pick = choices(new Map(), 'drunk')[0]!
-    // What the Drunk shows is no choice for the Marionette, and of two choices that clash the first stays.
-    expect(choices(shows(['drunk', pick]), 'marionette')).not.toContain(pick)
-    const all = shows(['drunk', pick], ['marionette', pick], ['lunatic', 'pukka'])
-    expect(bagDisguises(bag, roles, all).map(open => [open.character, open.chosen])).toEqual([['lunatic', 'pukka'], ['drunk', pick], ['marionette', undefined]])
+    const all = shows(['drunk', pick], ['lunatic', 'pukka'])
+    expect(bagDisguises(bag, roles, all).map(open => [open.character, open.chosen])).toEqual([['lunatic', 'pukka'], ['drunk', pick]])
+    // The second Drunk is left to the bag, which never shows it what the first one sees.
     for (const seed of [0, 0.5, 0.99]) {
       const tokens = fillBag(bag, roles, () => seed, [], chosenTokens(all))!.tokens
       expect(tokens).toContainEqual({ character: 'lunatic', shown: 'pukka', chosen: true })
       expect(tokens).toContainEqual({ character: 'drunk', shown: pick, chosen: true })
-      expect(tokens.find(token => token.character === 'marionette')!.shown).not.toBe(pick)
+      expect(tokens.filter(token => token.character === 'drunk' && token.shown === pick)).toHaveLength(1)
     }
   })
 

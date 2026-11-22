@@ -38,6 +38,7 @@
   "character": "キャラクター",
   "makeEvil": "悪にする",
   "makeGood": "善にする",
+  "nominate": "告発する",
   "nominateSelf": "自分を告発",
   "callExile": "追放を求める",
   "nominatePlayer": "{name}を告発",

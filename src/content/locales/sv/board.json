@@ -38,6 +38,7 @@
   "character": "Roll",
   "makeEvil": "Gör ond",
   "makeGood": "Gör god",
+  "nominate": "Nominera någon",
   "nominateSelf": "Självnominering",
   "callExile": "Begär förvisning",
   "nominatePlayer": "Nominera {name}",

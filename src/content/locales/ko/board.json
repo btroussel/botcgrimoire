@@ -38,6 +38,7 @@
   "character": "캐릭터",
   "makeEvil": "악한 팀으로 변경",
   "makeGood": "선한 팀으로 변경",
+  "nominate": "지목하기",
   "nominateSelf": "본인 지목",
   "callExile": "추방 요청",
   "nominatePlayer": "{name} 지목",

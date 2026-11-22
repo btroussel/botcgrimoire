@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Tällä kässärillä ei voi täyttää näitä paikkoja sopivalla jakaumalla. Valintasi pysyy ennallaan. Valitse hahmot itse tai muuta pelaajamäärää.",
   "prepareDrunk": "Tämän merkin nostava pelaaja näkee Kyläläisen, joka ei ole pussissa. Loitsukirjassa on sen jälkeen tämä Kyläläinen ja Juopon muistutusmerkki.",
   "prepareLunatic": "Tämän merkin nostava pelaaja näkee pussin Demonin.",
-  "prepareMarionette": "Tämän merkin nostava pelaaja näkee Kyläläisen, joka ei ole pussissa. Loitsukirjassa on sen jälkeen tämä Kyläläinen ja Sätkynuken muistutusmerkki. Pelaajan on istuttava Demonin vieressä. Jos pelissä on Rienaaja tai Pikku Riiviö, ratkaise ensin kiusa.",
+  "prepareMarionette": "Ylimääräinen Kyläläinen ottaa sen paikan. Jaon jälkeen aseta sen muistutusmerkki Demonin hyvälle naapurille.",
   "prepareBountyHunter": "Valitse yksi Kyläläinen, joka aloittaa pahana, ja kirjaa hänen puolensa.",
   "prepareAbilities": "Valitse annettu kyky ja tee sen vaatimat muutokset valmisteluun.",
   "prepareHermit": "Käy läpi kässärin Hylkiöiden kyvyt ja niiden kiusat tälle pelaajalle.",

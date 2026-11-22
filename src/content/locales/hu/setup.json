@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Ez a szkript nem tudja megfelelő felállással feltölteni ezeket a helyeket. A választásod nem változott. Válassz karaktereket kézzel, vagy módosítsd a játékosszámot.",
   "prepareDrunk": "Aki ezt a jelölőt húzza, egy zsákon kívüli városlakót lát. A grimoárban ezután ez a városlakó áll a részeg emlékeztetőjével.",
   "prepareLunatic": "Aki ezt a jelölőt húzza, a zsákban lévő démont látja.",
-  "prepareMarionette": "Aki ezt a jelölőt húzza, egy zsákon kívüli városlakót lát. A grimoárban ezután ez a városlakó áll a marionett emlékeztetőjével. Ennek a játékosnak a démon mellett kell ülnie. Démonidéző vagy szörnyecske esetén előbb a jinxet alkalmazd.",
+  "prepareMarionette": "A helyét egy további városlakó kapja. Osztás után tedd az emlékeztetőjét a démon egyik jó szomszédjára.",
   "prepareBountyHunter": "Válassz egy városlakót, aki gonoszként kezd, és rögzítsd az oldalát.",
   "prepareAbilities": "Válaszd ki a kapott képességet, és végezd el az általa igényelt változtatásokat az előkészítésben.",
   "prepareHermit": "Nézd át a szkript kívülállóinak képességeit és jinxeit ennél a játékosnál.",

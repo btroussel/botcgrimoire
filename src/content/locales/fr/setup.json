@@ -60,7 +60,7 @@
   "shuffleUnavailable": "Ce script ne permet pas de remplir ces places avec une composition adaptée. Votre sélection est conservée. Choisissez les rôles vous-même ou modifiez le nombre de joueurs.",
   "prepareDrunk": "Le joueur qui tire ce jeton voit un Villageois absent du sac. Le grimoire montre ensuite ce Villageois avec le rappel de l'Ivrogne.",
   "prepareLunatic": "Le joueur qui tire ce jeton voit le Démon du sac.",
-  "prepareMarionette": "Le joueur qui tire ce jeton voit un Villageois absent du sac. Le grimoire montre ensuite ce Villageois avec le rappel de la Marionnette. Ce joueur doit être voisin du Démon. Avec une Invocatrice ou un Timonstre, appliquez d'abord le jinx.",
+  "prepareMarionette": "Un Villageois de plus prend sa place. Après la distribution, posez son rappel sur un voisin bon du Démon.",
   "prepareBountyHunter": "Choisissez un Villageois qui commence maléfique et notez son alignement.",
   "prepareAbilities": "Choisissez la capacité accordée et appliquez les modifications de mise en place qu'elle demande.",
   "prepareHermit": "Vérifiez les capacités des Marginaux du script et leurs jinx pour ce joueur.",

@@ -19,12 +19,15 @@ export const showsCopies = (id: CharacterId, inBag: number): boolean =>
 
 // The ordinary team counts the bag aims for, the same ones Shuffle deals: the base table up to
 // fifteen, Travellers for each player past it. Below five no team has a target. Lil' Monsta
-// sits outside the seats, so a selected one gives the Demon's seat to an extra Minion.
+// and the Marionette sit outside the seats, so a selected Lil' Monsta gives the Demon's seat to
+// an extra Minion, and a Marionette gives its Minion's seat to an extra Townsfolk.
 export const dealTarget = (count: number, bag: readonly CharacterId[] = []): Readonly<Partial<Record<Team, number>>> => {
   const base = baseCounts(Math.min(count, 15))
   if (!base) return {}
   const monsta = bag.some(id => id === 'lilmonsta') ? 1 : 0
-  return { townsfolk: base.townsfolk, outsider: base.outsiders, minion: base.minions + monsta, demon: base.demon - monsta, ...(count > 15 ? { traveller: count - 15 } : {}) }
+  const marionette = bag.some(id => id === 'marionette') ? 1 : 0
+  return { townsfolk: base.townsfolk + marionette, outsider: base.outsiders, minion: base.minions + monsta - marionette,
+    demon: base.demon - monsta, ...(count > 15 ? { traveller: count - 15 } : {}) }
 }
 
 export const trimBag = (bag: readonly CharacterId[], count: number): readonly CharacterId[] => {

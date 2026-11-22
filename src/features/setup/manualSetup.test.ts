@@ -8,11 +8,11 @@ import { dealTarget, looseEvents, openingEvents, scriptLoose, seatedCharacters, 
 
 const ids = ['drunk', 'marionette', 'imp'].map(asCharacterId)
 const reduced = (payloads: readonly Payload[]) => reduce('tb', payloads.map((event, i) => ({ ...event, id: asEventId(i), audience: 'storyteller' as const, manual: true })))
-test('a chosen bag is shuffled without changing the choices, the Drunk and Marionette under their reminders', () => {
-  const opening = openingEvents(['a', 'b', 'c', 'd'])
+test('a chosen bag is shuffled without changing the choices, the Drunk under its reminder and the Marionette off the ring', () => {
+  const opening = [...openingEvents(['a', 'b', 'c', 'd']), ...looseEvents(ids)]
   const events = dealDraw(reduced(opening), fillBag(ids, listed('tb', 'en'), () => 0)!, () => 0)
-  expect(events.flatMap(e => e.kind === 'placeToken' ? [e.token[0]] : []).sort()).toEqual(['drunk', 'marionette'])
-  expect(events.flatMap(e => e.kind === 'setCharacter' ? [character(e.to).team] : []).sort()).toEqual(['demon', 'townsfolk', 'townsfolk'])
+  expect(events.flatMap(e => e.kind === 'placeToken' ? [e.token[0]] : [])).toEqual(['drunk'])
+  expect(events.flatMap(e => e.kind === 'setCharacter' ? [character(e.to).team] : []).sort()).toEqual(['demon', 'townsfolk'])
   expect(inPlay(reduced([...opening, ...events]))).toEqual(expect.arrayContaining([...ids]))
   expect(ids).toEqual(['drunk', 'marionette', 'imp'])
   expect(shuffled(ids, () => 0)).toEqual(['marionette', 'imp', 'drunk'])
@@ -73,6 +73,29 @@ test('Lil Monsta stays loose when counting, trimming and dealing the selected ch
   expect(board.seats.map(seat => seat.character).sort()).toEqual(['baron', 'chef', 'poisoner'])
   expect(board.loose).toContain('lilmonsta')
   expect(bag).toEqual(['chef', 'lilmonsta', 'poisoner', 'baron'])
+})
+
+test('a selected Marionette starts off the ring, no player draws it, and an extra Townsfolk takes its seat', () => {
+  const bag = ['marionette', 'imp', 'chef', 'empath', 'monk', 'washerwoman'].map(asCharacterId)
+  expect(dealTarget(5, bag)).toEqual({ townsfolk: 4, outsider: 0, minion: 0, demon: 1 })
+  expect(seatedCharacters(bag)).toEqual(['imp', 'chef', 'empath', 'monk', 'washerwoman'])
+  expect(trimBag(bag, 1)).toEqual(['marionette', 'imp'])
+  const opening = [...openingEvents(['A', 'B', 'C', 'D', 'E']), ...looseEvents(bag)]
+  const board = reduced([...opening, ...dealDraw(reduced(opening), fillBag(bag, [], () => 0)!, () => 0)])
+  expect(board.loose).toEqual(['marionette'])
+  // Nobody is the Marionette until the Storyteller marks a good neighbor of the Demon.
+  expect(board.seats.flatMap(seat => seat.tokens)).toEqual([])
+  expect(board.seats.filter(seat => seat.alignment === 'evil').map(seat => seat.character)).toEqual(['imp'])
+
+  const script = { kind: 'custom', name: 'Puppets', items: ['chef', 'empath', 'monk', 'washerwoman', 'investigator', 'marionette', 'imp'] } as const
+  const roles = listed(script, 'en')
+  for (const seed of [0, 0.3, 0.7, 0.99]) {
+    const shuffledBag = randomBag(roles, 5, () => seed)!
+    expect(shuffledBag).toContain('marionette')
+    expect(seatedCharacters(shuffledBag).filter(id => character(id).team === 'townsfolk')).toHaveLength(4)
+    expect(seatedCharacters(shuffledBag)).toHaveLength(5)
+  }
+  expect(randomBag(roles, 4, () => 0)).not.toContain('marionette')
 })
 
 test('a script\'s Fabled and Loric start selected for the board and never take a seat', () => {

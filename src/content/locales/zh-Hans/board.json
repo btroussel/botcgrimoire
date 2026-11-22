@@ -38,6 +38,7 @@
   "character": "角色",
   "makeEvil": "转为邪恶阵营",
   "makeGood": "转为善良阵营",
+  "nominate": "提名玩家",
   "nominateSelf": "提名自己",
   "callExile": "发起流放",
   "nominatePlayer": "提名 {name}",
