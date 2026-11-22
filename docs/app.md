@@ -44,7 +44,8 @@ The screen stays awake while a game is open.
 
 Pick an edition or a saved custom script, choose its roles and set one to twenty seats. Nothing
 blocks a manual setup: no distribution, adjacency or disguise rule. Any character can repeat, and
-the bag can hold fewer tokens than seats, or none. Fabled, Loric and Lil' Monsta take no seat.
+the bag can hold fewer tokens than seats, or none. Fabled, Loric, Lil' Monsta and the Marionette
+take no seat.
 
 New game and the script library link to each other. New game lists the scripts as the library
 does and, for a script it does not have, opens the library on its import window. The script
@@ -59,8 +60,8 @@ applies the setup changes of the characters it picks:
   one either way, Balloonist zero or plus one, Hermit zero or minus one. Xaan, Atheist, Legion,
   Kazali and Lord of Typhon allow any count, and Xaan overrides the others.
 - Companions: the Huntsman brings the Damsel, the Choirboy the King.
-- Teams: the Summoner replaces the Demon with a Townsfolk, Lil' Monsta with an extra Minion.
-  Atheist has no evil, Kazali no starting Minions, Lord of Typhon one more Minion. Legion flips
+- Teams: the Summoner replaces the Demon with a Townsfolk, Lil' Monsta with an extra Minion, the
+  Marionette its own seat with an extra Townsfolk. Atheist has no evil, Kazali no starting Minions, Lord of Typhon one more Minion. Legion flips
   the split, the usual evil count becoming the good players. Village Idiot comes in one to three
   copies.
 
@@ -71,14 +72,18 @@ It never picks Fabled or Loric, leaves the Marionette out of Summoner and Lil' M
 keeps the old selection when no bag fits. Other jinxes, alignments, seating and granted abilities
 stay with the Storyteller, and setup notes flag the roles that need a decision.
 
-The Drunk, Lunatic and Marionette never see their own token. The bag gives the Drunk and
-Marionette a Townsfolk not in play to show, and the Lunatic a Demon in play, and no two disguises
-show the same character. A Marionette is shown the Huntsman only when the Damsel is in play, as
-their jinx asks. While choosing the characters, the Storyteller may pick what each disguise in the
-bag shows, under its setup note: a Townsfolk not in the bag, or for the Lunatic any Demon. Left
-alone, the bag picks. The setup window offers no such choice: refilling the bag there keeps a
+The Drunk and Lunatic never see their own token. The bag gives the Drunk a Townsfolk not in play
+to show, and the Lunatic a Demon in play, and no two disguises show the same character. While
+choosing the characters, the Storyteller may pick what each disguise in the bag shows, under its
+setup note: a Townsfolk not in the bag, or for the Lunatic any Demon. Left alone, the bag picks. The setup window offers no such choice: refilling the bag there keeps a
 choice the new bag still leaves free, and the bag picks for any new disguise. The deal records the
 disguise as a paper grimoire would ([Model](model.md#identity-survives-changes-to-the-ring)).
+
+The Marionette must neighbor the Demon, and no draw can promise that. As in the paper rules, its
+token stays out of the bag: selecting it adds a Townsfolk to the target, and the Marionette starts
+off the ring like Lil' Monsta. After the deal the Storyteller puts Is The Marionette on a good
+neighbor of the Demon and makes them evil, two ordinary board edits. Until then the off-ring token
+and the first night's Marionette row are the reminder.
 
 Open grimoire saves the game with every seat empty and the bag face down. Let players draw has
 each player tap a token that is then theirs, so nobody feels the Storyteller chose for them; the

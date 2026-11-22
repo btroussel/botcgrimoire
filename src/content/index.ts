@@ -95,10 +95,11 @@ export const character = (id: CharacterId): Character => {
 }
 
 // A character that takes no seat and sits outside the ring: a Fabled or Loric, which is one of the
-// game's rules, or Lil' Monsta, whom the Minions babysit.
+// game's rules, Lil' Monsta, whom the Minions babysit, or the Marionette, which the Storyteller
+// gives a good neighbor of the Demon once the players are seated.
 export const isLoose = (id: CharacterId): boolean => {
   const team = character(id).team
-  return id === 'lilmonsta' || team === 'fabled' || team === 'loric'
+  return id === 'lilmonsta' || id === 'marionette' || team === 'fabled' || team === 'loric'
 }
 
 // The registered homebrew record behind an id, when the bundled content does not know it.

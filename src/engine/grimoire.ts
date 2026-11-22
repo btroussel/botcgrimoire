@@ -67,7 +67,7 @@ export interface Grimoire {
   readonly result?: { readonly winner?: Alignment; readonly note?: string }
   readonly script: Script
   readonly seats: readonly Seat[] // clockwise, index is position
-  readonly loose: readonly CharacterId[] // in play but held by no seat: Fabled, Loric, Lil' Monsta
+  readonly loose: readonly CharacterId[] // in play but held by no seat: Fabled, Loric, Lil' Monsta, the Marionette
   readonly storyteller: { readonly abilities: readonly Grant[] }
   readonly clock: Clock
   readonly days: readonly Day[] // one per day, never cleared; today is the last

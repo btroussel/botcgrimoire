@@ -1,7 +1,7 @@
 // The players draw their own tokens: the bag lies face down, each player in seating order takes
 // one, and the Storyteller deals what they took. Until the deal nothing is on the board, so a
 // draw can stop and resume, and the Storyteller can deal the rest at random instead.
-import { asCharacterId, character as characterOf, gameText, isEmptySeat } from '../../content'
+import { character as characterOf, gameText, isEmptySeat } from '../../content'
 import type { CharacterId, Locale, Team } from '../../content'
 import { inPlay } from '../../engine'
 import type { Grimoire, Payload, SeatId } from '../../engine'
@@ -11,18 +11,17 @@ import { shuffled } from './randomBag'
 import { dealing, seatedCharacters, sideOf } from './setup'
 
 // These players never see their own token: theirs shows a character of this team instead.
-const disguises: Readonly<Record<string, Team>> = { drunk: 'townsfolk', lunatic: 'demon', marionette: 'townsfolk' }
+// The Marionette takes no token from the bag: an extra Townsfolk sits in its place, as on paper.
+const disguises: Readonly<Record<string, Team>> = { drunk: 'townsfolk', lunatic: 'demon' }
 
-// A Lunatic believes they are the Demon in play, a Drunk or Marionette a Townsfolk nobody holds.
-// A script short of those still gets a character of the team rather than the true token. The
-// Marionette and Huntsman jinx lets a Marionette believe they are the Huntsman only beside a Damsel.
+// A Lunatic believes they are the Demon in play, a Drunk a Townsfolk nobody holds. A script short
+// of those still gets a character of the team rather than the true token.
 const believed = (character: CharacterId, roles: readonly BagRole[], present: ReadonlySet<CharacterId>,
   used: ReadonlySet<CharacterId>, random: () => number): CharacterId | undefined => {
   const team = disguises[character]
   if (!team) return undefined
-  const jinxed = (id: CharacterId) => character === 'marionette' && id === 'huntsman' && !present.has(asCharacterId('damsel'))
   const candidates = shuffled(roles.filter(role => role.team === team && !used.has(role.id)), random)
-  return (candidates.find(role => present.has(role.id) === (team === 'demon') && !jinxed(role.id)) ?? candidates[0])?.id
+  return (candidates.find(role => present.has(role.id) === (team === 'demon')) ?? candidates[0])?.id
 }
 
 // What the Storyteller may pick instead: a character of the team that no other token shows,
@@ -57,7 +56,7 @@ const keptChoices = (seated: readonly CharacterId[], roles: readonly BagRole[], 
 export const chosenTokens = (shows: ReadonlyMap<CharacterId, CharacterId>): readonly DrawToken[] =>
   [...shows].map(([character, shown]) => ({ character, shown, chosen: true }))
 
-// The bag's Drunks, Lunatics and Marionettes while the characters are chosen, each with what
+// The bag's Drunks and Lunatics while the characters are chosen, each with what
 // the Storyteller picked it shows, if that still fits the bag, and what it could show.
 export const bagDisguises = (bag: readonly CharacterId[], roles: readonly BagRole[], shows: ReadonlyMap<CharacterId, CharacterId>) => {
   const seated = seatedCharacters(bag)
@@ -163,10 +162,10 @@ export const takeToken = (g: Grimoire, draw: Draw, seat: SeatId, at: number): Dr
   return { tokens: draw.tokens.map((token, i) => i === at ? { ...token, seat } : token) }
 }
 
-// A disguised token lands as in a paper grimoire: the Drunk and the Marionette as the character
-// their player saw, under their own global reminder, Is The Drunk or Is The Marionette, on the
-// side they really play, so a Marionette sits evil. The Lunatic has no such reminder, so it
-// keeps its token and records the Demon it was shown.
+// A disguised token lands as in a paper grimoire: the Drunk as the character their player saw,
+// under its global reminder Is The Drunk, on the side it really plays. A Marionette token left in
+// a bag filled by an older version lands the same way, evil. The Lunatic has no such reminder,
+// so it keeps its token and records the Demon it was shown.
 const dealToken = (deal: ReturnType<typeof dealing>, seat: SeatId, token: DrawToken): Payload[] => {
   if (!token.shown) return [deal(seat, token.character)]
   const marker = characterOf(token.character).reminders.find(reminder => reminder.global)
