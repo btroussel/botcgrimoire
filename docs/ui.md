@@ -270,7 +270,12 @@ Days and nights shows each player as they were at the time, and reads in order a
 
 ## Replay
 
-The board shrinks so the timeline at the bottom never covers a seat. The timeline is one row, so a
+The board shrinks so the timeline at the bottom never covers a seat, and lays its ring out round
+its corners as live play does: Exit replay where the toolbar was, the bluffs and the plaque at the
+foot. No vote docks in replay, so even upright the seats come down between those two, as on a board
+on its side. Only a full table on a small upright phone still needs more height and scrolls.
+
+The timeline is one row, so a
 phone on its side keeps most of its height for the board: a native range input with Previous and
 Next either side. Each phase is its glyph and number over the step that opens it (setup, the moon,
 the sun, a flag for the end), and a mark under the track shows every step it can stop on, longer

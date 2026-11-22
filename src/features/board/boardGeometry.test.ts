@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
 
-import { boardGeometry, toolbarHeight } from './boardGeometry'
+import { boardGeometry } from './boardGeometry'
 import type { BoardMeasures } from './boardGeometry'
 
 // The theme's easing curves are the only part of react-native it reads.
@@ -54,11 +54,18 @@ test('an open reference on a wide screen narrows the ring to the column it leave
   expect(open.seatsRight).toBeLessThan(closed.seatsRight)
 })
 
-test('replay keeps full bands and takes no width for the reference', () => {
-  const g = boardGeometry(board({ live: false, strip: 2 }))
-  expect(g.fitted).toBe(false)
-  expect(g.columnWidth).toBe(390)
-  expect(g.topBandHeight).toBe(toolbarHeight)
-  expect(g.band).toEqual({ width: 390, height: 844 - toolbarHeight - g.statusHeight - g.utilitiesHeight })
-  expect(g.utilitiesHeight).toBeGreaterThan(0)
+test('replay rings its seats around Exit replay, the bluffs and the plaque, and takes no width for the reference', () => {
+  const exit = { width: 120, height: 44 }
+  const bluffs = { width: 190, height: 76 }
+  for (const seats of [7, 15]) {
+    // No vote docks in replay, so even upright the seats come down between the bluffs and the plaque.
+    const g = boardGeometry(board({ live: false, toolbar: exit, bluffs, seats, height: 844 - 76 }))
+    expect(g.fitted).toBe(true)
+    expect(g.columnWidth).toBe(390)
+    const corners = [{ left: 390 - 12 - exit.width, top: 12, ...exit }, { left: 12, top: 844 - 76 - 12 - bluffs.height, ...bluffs },
+      { left: 390 - 12 - g.clockWidth, top: 844 - 76 - 12 - 68, width: g.clockWidth, height: 68 }]
+    for (const box of seatBoxes(g)) for (const corner of corners) expect(clear(box, corner)).toBe(true)
+  }
+  // A full table on a small phone still needs more height than replay leaves, so its ring scrolls.
+  expect(boardGeometry(board({ live: false, toolbar: exit, bluffs, seats: 20, height: 844 - 76 })).fitted).toBe(false)
 })

@@ -26,9 +26,9 @@ export interface BoardMeasures {
   readonly width: number // inside the safe insets
   readonly height: number // inside the safe insets, above the replay bar
   readonly landscape: boolean
-  readonly live: boolean // false in replay, where no reference, toolbar or phase control stands over the ring
+  readonly live: boolean // false in replay, where the reference takes no width
   readonly reserved: number // the width the reference drawer takes from the board
-  readonly toolbar: Size
+  readonly toolbar: Size // the top-right control: the toolbar, or Exit replay
   readonly bluffs: Size
   readonly clockHeight: number
   readonly seats: number
@@ -37,7 +37,9 @@ export interface BoardMeasures {
 }
 
 export const boardGeometry = ({ width, height, landscape, live, reserved, toolbar, bluffs, clockHeight, seats, strip, foot = false }: BoardMeasures) => {
-  const sideways = landscape && !foot
+  // The foot is two corners, the bluffs and the plaque, with seats between them, on a board on its
+  // side and in replay, where no vote docks over it.
+  const sideways = (landscape || !live) && !foot
   const columnWidth = Math.max(0, width - (live ? reserved : 0))
   const statusHeight = Math.max(layout.statusBand, space.md + Math.max(clockHeight, bluffs.height))
   const utilitiesHeight = columnWidth < 500 && strip > 0 ? tokenStripHeight + space.md : 0
@@ -46,9 +48,9 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
   // The plaque anchors to the full board corner, below the tabs, so the tabs take nothing from it.
   // The narrow width still holds "20 / 20 en vie" and its chevron on one line.
   const clockWidth = width < 380 ? 132 : 148
-  // The ring rises beside the toolbar and loose tokens wherever no seat reaches them. Portrait
-  // keeps its status band whole, since voting controls dock over it there, and so does a board on
-  // its side whose finished game docks its actions.
+  // The ring rises beside the toolbar, or Exit replay, and the loose tokens wherever no seat reaches
+  // them. A live portrait board keeps its status band whole, since voting controls dock over it
+  // there, and so does a board on its side whose finished game docks its actions.
   const controls = {
     top: [
       { left: space.md, top: space.md, width: undoSize, height: undoSize },
@@ -62,9 +64,8 @@ export const boardGeometry = ({ width, height, landscape, live, reserved, toolba
         width: clockWidth, height: clockHeight },
     ] : [],
   }
-  const aroundControls = live
-    ? fitRingAroundControls({ width: columnWidth, height: height - (sideways ? 0 : statusHeight) }, seats, seatMetrics, controls)
-    : undefined
+  // Replay lays its ring out as live play does, so a seat seen live is seen in replay too.
+  const aroundControls = fitRingAroundControls({ width: columnWidth, height: height - (sideways ? 0 : statusHeight) }, seats, seatMetrics, controls)
   const band = aroundControls?.band ?? { width: columnWidth,
     height: Math.max(0, height - toolbarHeight - statusHeight - utilitiesHeight) }
   const ring = aroundControls?.geometry ?? fitRing(band, seats, seatMetrics)

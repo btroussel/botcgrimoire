@@ -75,7 +75,7 @@ const resultWidth = 560
 // middle before they go there rather than dock at the foot.
 const votePanelHeight = 200
 // Undo, the toolbar, the plaque and the bluffs hold the four corners of a live board. Replay has
-// no undo, so its corner keeps the ornament.
+// no undo, so its corner keeps the ornament, and Exit replay stands where the toolbar was.
 const replayOrnaments = ['topLeft'] as const
 const noOrnaments = [] as const
 // A landscape board this tall has room for the bluff tray's title; a phone on its side does not.
@@ -106,6 +106,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
   const [phaseOpen, setPhaseOpen] = useState(openSetup)
   const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 50 })
+  const [exitSize, setExitSize] = useState({ width: 120, height: 44 })
   // A first guess at the tray, its title included where it shows, so the first fit is the last.
   const [bluffsSize, setBluffsSize] = useState({ width: 190, height: window.width > window.height && window.height < tallBoard ? 62 : 76 })
   const [clockHeight, setClockHeight] = useState(68)
@@ -206,8 +207,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const seatCount = b.view?.seats.length ?? 0
   const stripCount = b.view ? b.view.loose.length + b.view.grants.length : 0
   const measures = useMemo(() => ({ width: availableWidth, height: availableHeight, landscape, live,
-    reserved: reservedWidth, toolbar: toolbarSize, bluffs: bluffsSize, clockHeight, seats: seatCount, strip: stripCount }),
-  [availableWidth, availableHeight, landscape, live, reservedWidth, toolbarSize, bluffsSize, clockHeight, seatCount, stripCount])
+    reserved: reservedWidth, toolbar: live ? toolbarSize : exitSize, bluffs: bluffsSize, clockHeight, seats: seatCount, strip: stripCount }),
+  [availableWidth, availableHeight, landscape, live, reservedWidth, toolbarSize, exitSize, bluffsSize, clockHeight, seatCount, stripCount])
   const opened = useMemo(() => boardGeometry(measures), [measures])
   // Where the seats are drawn: laid out as the room, or on the circle.
   const places = useMemo(() => b.view?.seats.map(seat => seat.place) ?? [], [b.view])
@@ -480,7 +481,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           {panels[board.clock.phase]}
         </PanelVisibilityContext.Provider> : null}
         {b.lookingBack ? <>
-          <View style={[styles.replayControls, { top: insets.top + space.md, right: insets.right + space.md }]}>
+          <View onLayout={event => {
+            const { width, height } = event.nativeEvent.layout
+            setExitSize(sameSize({ width, height }))
+          }} style={[styles.replayControls, { top: insets.top + space.md, right: insets.right + space.md }]}>
             <Button label={t('history.exitReplay')} onPress={b.returnToPresent} variant="text" />
           </View>
           {b.replay ? <ReplayBar steps={b.replay.steps} at={b.replay.at} bottom={insets.bottom} /> : null}
