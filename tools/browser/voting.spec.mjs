@@ -165,6 +165,21 @@ test('by day a tap on another seat moves the menu, a tap off the seats lets a no
   await expect(page.getByRole('region', { name: 'Seat 5 nominates Seat 5', exact: true })).toBeVisible()
 })
 
+test('only the day\'s seat menu offers a nomination, and the night\'s leaves it out rather than greyed', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  const nominate = page.getByRole('group', { name: 'Seat 1', exact: true }).getByRole('button', { name: 'Nominate a player' })
+  await seat(page, 0).tap()
+  await expect(nominate).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await page.getByRole('button', { name: 'Start the next night', exact: true }).tap()
+  await expect(page.getByRole('button', { name: 'Night 2', exact: true })).toBeVisible()
+  await seat(page, 0).tap()
+  await expect(page.getByRole('group', { name: 'Seat 1', exact: true })).toBeVisible()
+  await expect(nominate).toHaveCount(0)
+})
+
 test('a seat nominates again and a dead player with no ghost vote still raises a hand', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openDay(page, 7)
