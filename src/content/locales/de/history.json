@@ -46,5 +46,24 @@
   "removeSeat": "{name} verlässt den Kreis",
   "execute": "{name} wird hingerichtet",
   "exile": "{name} wird verbannt",
-  "voterGhost": "{name} (Abstimmungsplättchen)"
+  "voterGhost": "{name} (Abstimmungsplättchen)",
+  "step": "{phase}, Schritt {n} von {total}",
+  "reminderOn": "{reminder} auf {name}",
+  "reminderOff": "{reminder} von {name} entfernt",
+  "seatBelieves": "{name} hält sich für: {character}",
+  "nominated": "{name} wird nominiert",
+  "offBlock": "{name} ist nicht mehr auf dem Richtblock",
+  "moves": "{name} wechselt den Platz",
+  "ghostVoteUsed": "{name} setzt das Abstimmungsplättchen ein",
+  "ghostVoteBack": "{name} hat das Abstimmungsplättchen wieder",
+  "renamed": "{was} heißt jetzt {name}",
+  "bluffsSet": "Bluffs: {characters}",
+  "looseIn": "{character} kommt ins Spiel",
+  "looseOut": "{character} verlässt das Spiel",
+  "grantIn": "Der Erzähler erhält die Fähigkeit: {character}",
+  "grantOut": "Der Erzähler verliert die Fähigkeit: {character}",
+  "moreChanges": {
+    "one": "und {count} weitere Änderung",
+    "other": "und {count} weitere Änderungen"
+  }
 }

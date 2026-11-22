@@ -46,5 +46,24 @@
   "removeSeat": "{name} leaves the ring",
   "execute": "{name} is executed",
   "exile": "{name} is exiled",
-  "voterGhost": "{name} (ghost vote)"
+  "voterGhost": "{name} (ghost vote)",
+  "step": "{phase}, step {n} of {total}",
+  "reminderOn": "{reminder} on {name}",
+  "reminderOff": "{reminder} removed from {name}",
+  "seatBelieves": "{name} believes they are the {character}",
+  "nominated": "{name} is nominated",
+  "offBlock": "{name} is off the block",
+  "moves": "{name} moves",
+  "ghostVoteUsed": "{name} spends their ghost vote",
+  "ghostVoteBack": "{name} has their ghost vote again",
+  "renamed": "{was} is now {name}",
+  "bluffsSet": "Bluffs: {characters}",
+  "looseIn": "The {character} joins the game",
+  "looseOut": "The {character} leaves the game",
+  "grantIn": "The Storyteller holds the {character} ability",
+  "grantOut": "The Storyteller no longer holds the {character} ability",
+  "moreChanges": {
+    "one": "and {count} more change",
+    "other": "and {count} more changes"
+  }
 }

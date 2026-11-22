@@ -38,7 +38,7 @@ export interface SeatProps {
   readonly nominator?: boolean // has nominated today
   readonly nominee?: boolean // has been nominated today
   readonly selected?: boolean | undefined // the brass ring: a hand recorded, a seat picked
-  readonly dropTarget?: boolean // the brass ring alone: a dragged reminder would land here
+  readonly dropTarget?: boolean // the brass ring alone: a dragged reminder would land here, or the replay's step changed it
   readonly pickable?: boolean // unavailable seats fade; earlier selections stay marked and readable
   readonly quietPick?: boolean // voting keeps the board unchanged apart from recorded hands
   readonly chips?: readonly SeatChip[]

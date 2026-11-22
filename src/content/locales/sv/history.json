@@ -46,5 +46,24 @@
   "removeSeat": "{name} lämnar cirkeln",
   "execute": "{name} avrättas",
   "exile": "{name} förvisas",
-  "voterGhost": "{name} (röstbricka)"
+  "voterGhost": "{name} (röstbricka)",
+  "step": "{phase}, steg {n} av {total}",
+  "reminderOn": "{reminder} på {name}",
+  "reminderOff": "{reminder} borttagen från {name}",
+  "seatBelieves": "{name} tror sig vara {character}",
+  "nominated": "{name} nomineras",
+  "offBlock": "{name} är inte längre dömd",
+  "moves": "{name} byter plats",
+  "ghostVoteUsed": "{name} använder sin röstbricka",
+  "ghostVoteBack": "{name} får tillbaka sin röstbricka",
+  "renamed": "{was} heter nu {name}",
+  "bluffsSet": "Bluffar: {characters}",
+  "looseIn": "{character} kommer med i spelet",
+  "looseOut": "{character} lämnar spelet",
+  "grantIn": "Berättaren får förmågan: {character}",
+  "grantOut": "Berättaren förlorar förmågan: {character}",
+  "moreChanges": {
+    "one": "och {count} ändring till",
+    "other": "och {count} ändringar till"
+  }
 }

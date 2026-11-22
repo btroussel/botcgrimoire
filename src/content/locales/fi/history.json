@@ -46,5 +46,24 @@
   "removeSeat": "{name} poistuu piiristä",
   "execute": "{name} teloitetaan",
   "exile": "{name} karkotetaan",
-  "voterGhost": "{name} (haamuääni)"
+  "voterGhost": "{name} (haamuääni)",
+  "step": "{phase}, vaihe {n}/{total}",
+  "reminderOn": "{reminder} pelaajalle {name}",
+  "reminderOff": "{reminder} poistettu pelaajalta {name}",
+  "seatBelieves": "{name} luulee olevansa: {character}",
+  "nominated": "{name} nimitetään",
+  "offBlock": "{name} ei ole enää pölkyllä",
+  "moves": "{name} vaihtaa paikkaa",
+  "ghostVoteUsed": "{name} käyttää haamuäänensä",
+  "ghostVoteBack": "{name} saa haamuäänensä takaisin",
+  "renamed": "{was} on nyt {name}",
+  "bluffsSet": "Bluffit: {characters}",
+  "looseIn": "{character} tulee peliin",
+  "looseOut": "{character} poistuu pelistä",
+  "grantIn": "Tarinankertoja saa kyvyn: {character}",
+  "grantOut": "Tarinankertoja menettää kyvyn: {character}",
+  "moreChanges": {
+    "one": "ja {count} muu muutos",
+    "other": "ja {count} muuta muutosta"
+  }
 }

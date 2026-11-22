@@ -46,5 +46,24 @@
   "removeSeat": "{name} sale del círculo",
   "execute": "Se ejecuta a {name}",
   "exile": "Se exilia a {name}",
-  "voterGhost": "{name} (voto fantasma)"
+  "voterGhost": "{name} (voto fantasma)",
+  "step": "{phase}, paso {n} de {total}",
+  "reminderOn": "{reminder} en {name}",
+  "reminderOff": "Se quita {reminder} de {name}",
+  "seatBelieves": "{name} se cree {character}",
+  "nominated": "Se nomina a {name}",
+  "offBlock": "{name} ya no está en el patíbulo",
+  "moves": "{name} cambia de lugar",
+  "ghostVoteUsed": "{name} usa su voto fantasma",
+  "ghostVoteBack": "{name} recupera su voto fantasma",
+  "renamed": "{was} ahora es {name}",
+  "bluffsSet": "Coartadas: {characters}",
+  "looseIn": "{character} entra a la partida",
+  "looseOut": "{character} sale de la partida",
+  "grantIn": "El Narrador obtiene la habilidad: {character}",
+  "grantOut": "El Narrador pierde la habilidad: {character}",
+  "moreChanges": {
+    "one": "y {count} cambio más",
+    "other": "y {count} cambios más"
+  }
 }

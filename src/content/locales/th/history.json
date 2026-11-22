@@ -45,5 +45,23 @@
   "removeSeat": "{name} ออกจากวง",
   "execute": "{name} ถูกประหารชีวิต",
   "exile": "{name} ถูกขับไล่",
-  "voterGhost": "{name} (โหวตของผี)"
+  "voterGhost": "{name} (โหวตของผี)",
+  "step": "{phase} ขั้นที่ {n} จาก {total}",
+  "reminderOn": "วาง {reminder} ที่ {name}",
+  "reminderOff": "เอา {reminder} ออกจาก {name}",
+  "seatBelieves": "{name} เข้าใจว่าตัวเองเป็น {character}",
+  "nominated": "{name} ถูกเสนอชื่อ",
+  "offBlock": "{name} ลงจากแท่นประหาร",
+  "moves": "{name} ย้ายที่นั่ง",
+  "ghostVoteUsed": "{name} ใช้โหวตของผี",
+  "ghostVoteBack": "{name} ได้โหวตของผีคืน",
+  "renamed": "{was} เปลี่ยนชื่อเป็น {name}",
+  "bluffsSet": "บลัฟ: {characters}",
+  "looseIn": "{character} เข้าร่วมเกม",
+  "looseOut": "{character} ออกจากเกม",
+  "grantIn": "นักเล่าเรื่องได้ความสามารถของ {character}",
+  "grantOut": "นักเล่าเรื่องเสียความสามารถของ {character}",
+  "moreChanges": {
+    "other": "และการเปลี่ยนแปลงอีก {count} รายการ"
+  }
 }

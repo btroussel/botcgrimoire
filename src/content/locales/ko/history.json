@@ -45,5 +45,23 @@
   "removeSeat": "{name}, 원에서 빠짐",
   "execute": "{name} 처형됨",
   "exile": "{name} 추방됨",
-  "voterGhost": "{name} (투표 토큰)"
+  "voterGhost": "{name} (투표 토큰)",
+  "step": "{phase}, {total}단계 중 {n}단계",
+  "reminderOn": "{name}에 {reminder} 놓음",
+  "reminderOff": "{name}에서 {reminder} 치움",
+  "seatBelieves": "{name}, 자신이 아는 캐릭터: {character}",
+  "nominated": "{name} 지목됨",
+  "offBlock": "{name}, 처형 대상에서 빠짐",
+  "moves": "{name}, 자리 이동",
+  "ghostVoteUsed": "{name}, 투표 토큰 사용",
+  "ghostVoteBack": "{name}, 투표 토큰 돌려받음",
+  "renamed": "{was} 이름 변경: {name}",
+  "bluffsSet": "블러핑: {characters}",
+  "looseIn": "게임에 합류: {character}",
+  "looseOut": "게임에서 빠짐: {character}",
+  "grantIn": "이야기꾼, {character} 능력 얻음",
+  "grantOut": "이야기꾼, {character} 능력 잃음",
+  "moreChanges": {
+    "other": "외 {count}개 변경"
+  }
 }

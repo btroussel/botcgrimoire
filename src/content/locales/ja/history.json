@@ -45,5 +45,23 @@
   "removeSeat": "{name}が輪から抜ける",
   "execute": "{name}が処刑される",
   "exile": "{name}が追放される",
-  "voterGhost": "{name}（幽霊票）"
+  "voterGhost": "{name}（幽霊票）",
+  "step": "{phase}、ステップ{n}/{total}",
+  "reminderOn": "{name}に{reminder}を置く",
+  "reminderOff": "{name}から{reminder}を外す",
+  "seatBelieves": "{name}は自分が{character}だと思い込んでいる",
+  "nominated": "{name}が告発される",
+  "offBlock": "{name}が処刑候補から外れる",
+  "moves": "{name}が席を移る",
+  "ghostVoteUsed": "{name}が幽霊票を使う",
+  "ghostVoteBack": "{name}の幽霊票が戻る",
+  "renamed": "{was}の名前が{name}になる",
+  "bluffsSet": "ブラフ：{characters}",
+  "looseIn": "{character}がゲームに加わる",
+  "looseOut": "{character}がゲームから外れる",
+  "grantIn": "ストーリーテラーが{character}の能力を得る",
+  "grantOut": "ストーリーテラーが{character}の能力を失う",
+  "moreChanges": {
+    "other": "ほか{count}件の変更"
+  }
 }

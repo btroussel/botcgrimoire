@@ -273,10 +273,25 @@ Days and nights shows each player as they were at the time, and reads in order a
 
 ## Replay
 
-The board shrinks so the timeline at the bottom never covers a seat. The timeline is a native range
-input, and its phase labels never overlap: the track scrolls sideways when it gets crowded. Exit
-replay sits apart from the timeline. A step is one action, as undo counts them, so a moved reminder
+The board shrinks so the timeline at the bottom never covers a seat, and lays its ring out round
+its corners as live play does: Exit replay where the toolbar was, the bluffs and the plaque at the
+foot. No vote docks in replay, so even upright the seats come down between those two, as on a board
+on its side. Only a full table on a small upright phone still needs more height and scrolls.
+
+The timeline is one row, so a
+phone on its side keeps most of its height for the board: a native range input with Previous and
+Next either side. Each phase is its glyph and number over the step that opens it (setup, the moon,
+the sun, a flag for the end), and a mark under the track shows every step it can stop on, longer
+and brass where a phase opens. The marks are not buttons: a tap on one lands the slider there. They
+never overlap: the track scrolls sideways when it gets crowded, and steps too close to tell apart
+keep no mark of their own. Exit replay sits apart from the timeline. A step is one action, as undo counts them, so a moved reminder
 is never seen off the board.
+
+Every action that changes what the board draws is a step, compared on the whole seat view, so a mark
+added to the seats later is a step without anyone listing it. A replay always rests on a step,
+however it was opened, so the slider, the arrows and the board agree. Each step names its changes in
+one line under the timeline, which a screen reader hears, and rings the seats it changed in brass; a
+phase alone names only the phase and rings no seat.
 
 ## The script sheet
 
