@@ -15,6 +15,7 @@ const labelsIn = locale => {
   return { script: editionName(locale, 'tb', 'Trouble Brewing'), more: setup.morePlayers, fewer: setup.fewerPlayers, count: new RegExp(`^(${count.join('|')})$`),
     shuffle: setup.shuffleBag, open: setup.manualOpen, deal: setup.dealRandom, setup: board.setup, firstNight: setup.startFirstNight,
     night: board.night.replace('{n}', '1'), day: night.startDay, dayWindow: board.day.replace('{n}', '1'),
+    nominate: board.nominate,
     nomination: (by, of) => day.nominationArrow.replace('{by}', setup.defaultSeat.replace('{n}', by)).replace('{of}', setup.defaultSeat.replace('{n}', of)),
     dock: [day.voteReset, day.mark, common.done] }
 }
@@ -44,6 +45,7 @@ const openDay = async (page, players, text = english) => {
 const seat = (page, index) => page.locator('[data-seat-context-target]').nth(index).getByRole('button').first()
 const nominate = async (page, by, of, hands = []) => {
   await seat(page, by).tap()
+  await page.getByRole('button', { name: 'Nominate a player', exact: true }).tap()
   await seat(page, of).tap()
   const controls = page.getByRole('region', { name: `Seat ${by + 1} nominates Seat ${of + 1}` })
   await expect(controls).toBeVisible()
@@ -133,6 +135,51 @@ test('No execution starts the night with the player on the block alive', async (
   await expect(page.getByText('7 / 7 alive')).toBeVisible()
 })
 
+test('by day a tap on another seat moves the menu, a tap off the seats lets a nomination go, and the nominator may pick themselves', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  const nominations = page.getByRole('region', { name: /nominates/ })
+  await seat(page, 0).tap()
+  await seat(page, 2).tap()
+  const menu = page.getByRole('group', { name: 'Seat 3', exact: true })
+  await expect(menu).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Seat 1', exact: true })).toHaveCount(0)
+  await expect(nominations).toHaveCount(0)
+  await expect(menu.getByRole('button', { name: 'Nominate self', exact: true })).toHaveCount(0)
+
+  // The middle of the ring is bare velvet while no vote is open.
+  await menu.getByRole('button', { name: 'Nominate a player', exact: true }).tap()
+  await expect(menu).toHaveCount(0)
+  const ring = await page.locator('[data-seat-context-target]').evaluateAll(seats => seats.map(seat => {
+    const { x, y, width, height } = seat.getBoundingClientRect()
+    return { x: x + width / 2, y: y + height / 2 }
+  }))
+  await page.touchscreen.tap(ring.reduce((sum, at) => sum + at.x, 0) / ring.length, ring.reduce((sum, at) => sum + at.y, 0) / ring.length)
+  await seat(page, 4).tap()
+  await expect(page.getByRole('group', { name: 'Seat 5', exact: true })).toBeVisible()
+  await expect(nominations).toHaveCount(0)
+
+  await page.getByRole('group', { name: 'Seat 5', exact: true }).getByRole('button', { name: 'Nominate a player', exact: true }).tap()
+  await expect(seat(page, 4)).toHaveAccessibleName(/Nominate self/)
+  await seat(page, 4).tap()
+  await expect(page.getByRole('region', { name: 'Seat 5 nominates Seat 5', exact: true })).toBeVisible()
+})
+
+test('only the day\'s seat menu offers a nomination, and the night\'s leaves it out rather than greyed', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openDay(page, 7)
+  const nominate = page.getByRole('group', { name: 'Seat 1', exact: true }).getByRole('button', { name: 'Nominate a player' })
+  await seat(page, 0).tap()
+  await expect(nominate).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Day 1', exact: true }).tap()
+  await page.getByRole('button', { name: 'Start the next night', exact: true }).tap()
+  await expect(page.getByRole('button', { name: 'Night 2', exact: true })).toBeVisible()
+  await seat(page, 0).tap()
+  await expect(page.getByRole('group', { name: 'Seat 1', exact: true })).toBeVisible()
+  await expect(nominate).toHaveCount(0)
+})
+
 test('a seat nominates again and a dead player with no ghost vote still raises a hand', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openDay(page, 7)
@@ -214,6 +261,7 @@ test.describe(`in ${locale}`, () => {
     await page.setViewportSize({ width: 320, height: 568 })
     await openDay(page, 7, text)
     await seat(page, 0).tap()
+    await page.getByRole('button', { name: text.nominate, exact: true }).tap()
     await seat(page, 3).tap()
     const controls = page.getByRole('region', { name: text.nomination(1, 4) })
     await expect(controls).toBeVisible()

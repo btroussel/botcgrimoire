@@ -38,6 +38,7 @@
   "character": "Personatge",
   "makeEvil": "Passa al bàndol malvat",
   "makeGood": "Passa al bàndol bo",
+  "nominate": "Nomina algú",
   "nominateSelf": "Es nomina a si mateix",
   "callExile": "Demana l’exili",
   "nominatePlayer": "Nomina {name}",

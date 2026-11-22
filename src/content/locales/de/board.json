@@ -38,6 +38,7 @@
   "character": "Charakter",
   "makeEvil": "Auf Böse setzen",
   "makeGood": "Auf Gut setzen",
+  "nominate": "Jemanden nominieren",
   "nominateSelf": "Selbst nominieren",
   "callExile": "Verbannung ausrufen",
   "nominatePlayer": "{name} nominieren",

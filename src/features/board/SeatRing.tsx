@@ -2,8 +2,8 @@
 // token size and positions, so rendering and overlap checks use the same geometry. A
 // tap opens the seat's nearby menu, or, while a panel has asked the ring for a seat, picks it; the
 // interaction context decides which, so the ring knows nothing about votes or what a pick is
-// for. By day, while a seat's menu is open, a tap on another seat records that nomination, as
-// often as the Storyteller allows it, and a Traveller's menu also calls for their exile. The deal
+// for. By day a seat's menu nominates: it asks the ring for the nominee, marking the nominator, who
+// may nominate themselves with a tap on their own seat. A Traveller's menu also calls for their exile. The deal
 // is the ring's motion: a seat that goes from empty to dealt leaves the centre at corner size and
 // lands on its place, one after another. A ring opened just after the deal counts every seat as empty before it, so a
 // new game opens with the deal. A placed reminder can be dragged to another seat; the hook beside
@@ -240,8 +240,6 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const contextIndex = !pick && !action && !onGap && !onArrangeDone ? seats.findIndex(seat => seat.id === contextSeat) : -1
   const contextPlayer = seats[contextIndex]
   const contextAt = positions[contextIndex]
-  const isNominationTarget = (seatId: string) => !readOnly && !pick && !action
-    && !!interaction.nominate && !!contextPlayer && contextPlayer.id !== seatId
   const closeContext = () => setContextSeat(undefined)
   const openSeatAction = (section: 'character' | 'remove') => {
     if (!contextPlayer) return
@@ -257,15 +255,24 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
       else { onMoveSeat?.(mover.id, seatId); onChooseSeat?.(undefined) }
     } else if (pick) { closeContext(); interaction.pickSeat(seatId) }
     else if (action) { closeContext(); if (allowed) action.onTap(seatId) }
-    else if (contextPlayer && interaction.nominate && isNominationTarget(seatId)) {
-      interaction.nominate(contextPlayer.id, seatId)
-      closeContext()
-    } else setContextSeat(contextSeat === seatId ? undefined : seatId)
+    else setContextSeat(contextSeat === seatId ? undefined : seatId)
   }
   // Each seat is handed the same functions on every render, reading the ring's latest state
   // when called, so a seat whose own values are unchanged is left alone.
-  const latest = useRef({ tapSeat, onAddReminder, onRemoveReminder, onEditNote })
-  useLayoutEffect(() => { latest.current = { tapSeat, onAddReminder, onRemoveReminder, onEditNote } })
+  const nominate = interaction.nominate
+  const latest = useRef({ tapSeat, onAddReminder, onRemoveReminder, onEditNote, nominate })
+  useLayoutEffect(() => { latest.current = { tapSeat, onAddReminder, onRemoveReminder, onEditNote, nominate } })
+  // The nominee is picked on the ring. The nomination is recorded through the day's latest
+  // handler, since an undo during the pick changes the log it numbers the vote from.
+  const startNomination = (by: SeatId) => {
+    closeContext()
+    interaction.requestSeats({
+      allowed: seats.map(seat => seat.id),
+      chosen: by,
+      label: (seat, name) => seat === by ? t('board.nominateSelf') : t('board.nominatePlayer', { name }),
+      onDone: of => latest.current.nominate?.(by, of),
+    })
+  }
   const handlers = useMemo<SeatHandlers>(() => ({
     tap: (seatId, allowed) => latest.current.tapSeat(seatId, allowed),
     openMenu: seatId => setContextSeat(seatId),
@@ -306,11 +313,10 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           if (!at) return null
           // A laid-out seat's reminders face the middle of the room, which its angle points away from.
           const reminderAngle = free ? at.angle : stackAngle(at, centre, geometry.rx, geometry.ry, { size, chip: chipSize })
-          const nominationLabel = isNominationTarget(seat.id) ? t('board.nominatePlayer', { name: seat.name }) : undefined
           const inPick = pick !== undefined || action !== undefined
           const allowed = pick ? pick.allowed.includes(seat.id) : action?.allowed.includes(seat.id) ?? false
           const place = (action?.marked.indexOf(seat.id) ?? -1) + 1
-          const chosen = place > 0
+          const chosen = place > 0 || pick?.chosen === seat.id
           // While a seat is picked up every other seat is a place it can go.
           const swapTarget = !!mover && mover.id !== seat.id
           const editable = !readOnly && !inPick && !arranging
@@ -321,12 +327,13 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             selected={inPick ? chosen : arranging ? liftedSeat === undefined && mover?.id === seat.id : contextPlayer?.id === seat.id || undefined}
             pickable={inPick ? allowed : swapTarget || undefined} allowed={allowed}
             quietPick={!!vote && !pick} readOnly={readOnly} editChips={editable}
-            canRemove={!!onRemoveReminder && editable} canAdd={!!onAddReminder && editable && !nominationLabel}
+            canRemove={!!onRemoveReminder && editable} canAdd={!!onAddReminder && editable}
             canDrag={canDrag} lifted={lifted?.grab.seat === seat.id ? lifted.grab.chip : undefined}
             seatLifted={liftedSeat === seat.id} parted={partingOf(i)}
             dropTarget={lifted?.target === seat.id} swapping={liftedSeat !== undefined && lifted?.target === seat.id}
             swapLabel={swapTarget ? t('board.swapWith', { name: mover.name }) : undefined}
-            nominationLabel={nominationLabel} marked={chosen ? place : undefined} markedLabel={chosen ? action?.markedLabel(place) : undefined}
+            pickLabel={pick?.label && allowed ? pick.label(seat.id, seat.name) : undefined}
+            marked={place > 0 ? place : undefined} markedLabel={place > 0 ? action?.markedLabel(place) : undefined}
             t={t} handlers={handlers} />
         })}
         {liftedChip ? <div ref={ghost} aria-hidden style={{ position: 'absolute', left: 0, top: 0, zIndex: 20, pointerEvents: 'none' }}>
@@ -377,7 +384,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           onLife={() => e.append(contextPlayer.dead ? edits.revive(contextPlayer.id) : edits.kill(contextPlayer.id))}
           onGhostVote={() => { if (contextPlayer.dead) e.append(edits.setGhostVote(contextPlayer.id, !contextPlayer.ghostVote)) }}
           onAlignment={() => e.append(edits.setAlignment(contextPlayer.id, contextPlayer.alignment === 'good' ? 'evil' : 'good'))}
-          {...(interaction.nominate ? { onNominateSelf: () => { interaction.nominate?.(contextPlayer.id, contextPlayer.id); closeContext() } } : {})}
+          {...(interaction.nominate ? { onNominate: () => startNomination(contextPlayer.id) } : {})}
           {...(interaction.exile && character(asCharacterId(contextPlayer.character)).team === 'traveller'
             ? { onCallExile: () => { interaction.exile?.(contextPlayer.id); closeContext() } } : {})} /> : null}
       </View>
@@ -426,7 +433,7 @@ interface RingSeatProps {
   readonly swapping: boolean // a dragged seat would trade places with this one
   readonly swapLabel: string | undefined // set while a picked-up seat could swap with this one
   readonly canAdd: boolean
-  readonly nominationLabel: string | undefined // set while this seat can be nominated from the open menu
+  readonly pickLabel: string | undefined // what a tap on this seat does during a pick that says so
   readonly marked: number | undefined // a recorded hand's place in the count, shown on its badge
   readonly markedLabel: string | undefined // and read with the seat's own name
   readonly t: Translate
@@ -439,7 +446,7 @@ const sameRingSeat = (a: RingSeatProps, b: RingSeatProps) =>
   (Object.keys(a) as (keyof RingSeatProps)[]).every(key => key === 'seat' ? sameSeat(a.seat, b.seat) : a[key] === b[key])
 
 const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raised, rank, stagger, arrived, seatCount, index, placed, selected, pickable, allowed,
-  quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, seatLifted, parted, swapping, swapLabel, canAdd, nominationLabel, marked, markedLabel, t, handlers }: RingSeatProps) {
+  quietPick, readOnly, editChips, canRemove, canDrag, lifted, dropTarget, seatLifted, parted, swapping, swapLabel, canAdd, pickLabel, marked, markedLabel, t, handlers }: RingSeatProps) {
   const reduced = useReducedMotion()
   const empty = seat.character === ''
   const chips: readonly SeatChip[] = seat.chips.map((c) => ({
@@ -470,7 +477,7 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
   return (
     <Dealt raised={raised} size={size} x={x} y={y} cx={cx} cy={cy} {...(rank !== undefined ? { rank } : {})}
       stagger={stagger} arrived={arrived} seatCount={seatCount} index={index} placed={placed} landing={() => handlers.landing(seat.id)}>
-      <div data-seat-context-target={seat.id} title={nominationLabel} style={{ opacity: seatLifted ? motion.dimOpacity : 1, transform: parted ?? 'none',
+      <div data-seat-context-target={seat.id} title={pickLabel} style={{ opacity: seatLifted ? motion.dimOpacity : 1, transform: parted ?? 'none',
         transition: `transform ${durationFor(motion.duration.mark, reduced)}ms ${motion.css.ease}, opacity ${durationFor(motion.duration.mark, reduced, true)}ms` }}>
       <Seat
 
@@ -493,14 +500,11 @@ const RingSeat = memo(function RingSeat({ seat, size, x, y, cx, cy, angle, raise
         angle={angle}
         {...(!readOnly ? { onPress: () => handlers.tap(seat.id, allowed) } : {})}
         accessibilityLabel={[label, seat.onBlock ? t('board.onBlock') : undefined, seat.nominator ? t('board.nominatorToday') : undefined,
-          seat.nominee ? t('board.nomineeToday') : undefined, nominationLabel, swapLabel, markedLabel].filter(Boolean).join('. ')}
+          seat.nominee ? t('board.nomineeToday') : undefined, pickLabel, swapLabel, markedLabel].filter(Boolean).join('. ')}
       />
       </div>
-      {nominationLabel ? <Appear pointerEvents="none" style={styles.nominationBadge}>
-        <View aria-hidden style={styles.nominationDisc}><Icon name="nominate" size={18} color={palette.onAccent} /></View>
-      </Appear> : null}
-      {swapping ? <Appear pointerEvents="none" style={styles.nominationBadge}>
-        <View aria-hidden style={styles.nominationDisc}><Icon name="swap" size={18} color={palette.onAccent} /></View>
+      {swapping ? <Appear pointerEvents="none" style={styles.swapBadge}>
+        <View aria-hidden style={styles.swapDisc}><Icon name="swap" size={18} color={palette.onAccent} /></View>
       </Appear> : null}
       {marked !== undefined ? <Appear pointerEvents="none" style={styles.votedBadge}>
         <View aria-hidden style={styles.votedDisc}><Text style={[type.text.strong, tabular, styles.votedNumber]}>{marked}</Text></View>
@@ -579,11 +583,11 @@ const Dealt = ({ size, x, y, cx, cy, rank, stagger, arrived, seatCount, index, p
 }
 
 const styles = StyleSheet.create({
-  nominationBadge: { position: 'absolute', top: 0, right: 0 },
-  nominationDisc: { width: 28, height: 28, borderRadius: 14,
+  swapBadge: { position: 'absolute', top: 0, right: 0 },
+  swapDisc: { width: 28, height: 28, borderRadius: 14,
     backgroundColor: palette.accent, borderWidth: 2, borderColor: palette.ink, alignItems: 'center', justifyContent: 'center' },
   votedBadge: { position: 'absolute', top: 0, right: 0 },
-  // An ink edge like the nomination badge, so the number reads against parchment art and the brass ring.
+  // An ink edge like the swap badge, so the number reads against parchment art and the brass ring.
   votedDisc: { minWidth: 26, height: 26, borderRadius: 13, paddingHorizontal: 3, backgroundColor: palette.accent, borderWidth: 2, borderColor: palette.ink,
     alignItems: 'center', justifyContent: 'center' },
   votedNumber: { fontSize: 14, lineHeight: 18, color: palette.onAccent, textAlign: 'center' },

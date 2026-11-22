@@ -36,6 +36,7 @@ test('Escape closes the reference and a menu before it ends a vote, and keeps it
   await page.getByRole('button', { name: 'Night 1', exact: true }).click()
   await page.getByRole('button', { name: 'Start the day', exact: true }).click()
   await seat(page, 0).click()
+  await page.getByRole('button', { name: 'Nominate a player', exact: true }).click()
   await seat(page, 2).click()
   const controls = page.getByRole('region', { name: 'Seat 1 nominates Seat 3' })
   await seat(page, 3).click()

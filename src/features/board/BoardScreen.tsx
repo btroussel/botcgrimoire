@@ -176,6 +176,17 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     document.addEventListener('keydown', keys)
     return () => document.removeEventListener('keydown', keys)
   }, [undo])
+  // A pick on the ring, such as a nomination's nominee, ends on a click off the seats, so a touch
+  // screen with no Escape can always let it go.
+  useEffect(() => {
+    if (!pick) return
+    const cancelOutside = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest('[data-seat-context-target]')) return
+      cancelRequest()
+    }
+    document.addEventListener('click', cancelOutside, true)
+    return () => document.removeEventListener('click', cancelOutside, true)
+  }, [pick, cancelRequest])
   // Arranging the seats ends on a click anywhere but its own controls and the seats, or Escape.
   // Either first puts down a seat that a tap picked up.
   const picked = chosenSeat !== undefined

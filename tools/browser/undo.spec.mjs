@@ -42,6 +42,7 @@ test('undoing Mark reopens the vote, and undoing the ending resumes the game', a
   await button(page, 'Start the day').tap()
 
   await seat(page, 0).tap()
+  await button(page, 'Nominate a player').tap()
   await seat(page, 2).tap()
   const vote = page.getByRole('region', { name: 'Seat 1 nominates Seat 3' })
   for (const hand of [3, 4, 5, 6]) await seat(page, hand).tap()

@@ -168,7 +168,9 @@ recorded edits only, so a death taken back during the night is not listed and no
 
 ### Day
 
-Tap the nominator, then the nominee; a player nominates themselves from their seat menu. Nothing
+Nominate a player in the nominator's seat menu, then tap the nominee, who may be the nominator
+themselves; a tap off the seats lets it go. A tap on another seat while a menu is open only moves
+the menu, so a day edit never records a nomination by accident. Nothing
 limits who nominates or is nominated, or how often: the day's list shows who already has, and the
 Storyteller rules on a second nomination, as a Banshee or Riot allows. Every player's hand toggles,
 in any order, with no countdown, and a dead player with no ghost vote left still votes, as a Voudon

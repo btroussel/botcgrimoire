@@ -38,6 +38,7 @@
   "character": "Hahmo",
   "makeEvil": "Tee pahaksi",
   "makeGood": "Tee hyväksi",
+  "nominate": "Nimitä pelaaja",
   "nominateSelf": "Nimitä itsesi",
   "callExile": "Vaadi karkotusta",
   "nominatePlayer": "Nimitä {name}",
