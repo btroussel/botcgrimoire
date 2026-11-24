@@ -8,6 +8,8 @@ import type { BoardColour, Translate } from '../../content'
 import type { Grimoire } from '../../engine'
 import type { GameId } from '../../store'
 import { canUndo, useStore } from '../../store'
+import type { Chapter } from '../../store/chronicle'
+import { chronicleOf } from '../../store/chronicle'
 import { homePath } from '../../ui/homePath'
 import type { BoardView } from './board'
 import { boardView } from './board'
@@ -32,6 +34,7 @@ export interface BoardBinding {
   readonly undo?: () => void // while the live game has an action after its opening table
   readonly returnToPresent: () => void
   readonly enterReplay: () => void
+  readonly chapters: readonly Chapter[] // the live game's nights and days with something recorded
   readonly goHome: () => void
   readonly playAgain: () => void // a new game for the same players, from the script list
 }
@@ -80,6 +83,7 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
   const view = useMemo(() => (board && log ? boardView(board, log.slice(0, cursor), locale) : undefined), [board, log, locale, cursor])
   const script = session?.game.script
   const looking = cursor !== undefined
+  const chapters = useMemo(() => (log && script ? chronicleOf(log, script).chapters : []), [log, script])
   // The steps hang on the log, not the cursor, so stepping through them reads them once.
   const steps = useMemo(() => (looking && log && script ? replaySteps(log, script, locale) : undefined), [looking, log, script, locale])
   const at = steps && cursor !== undefined ? stepAt(steps, cursor) : undefined
@@ -135,6 +139,7 @@ export const useBoard = (raw: string, replay = false): BoardBinding => {
     ...(open && session && canUndo(session) ? { undo: store.undo } : {}),
     returnToPresent,
     enterReplay,
+    chapters,
     goHome,
     playAgain,
   }

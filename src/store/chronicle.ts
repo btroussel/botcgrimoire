@@ -1,9 +1,9 @@
-// What happened in a game, for History: the deaths, changes and nominations the Storyteller
-// recorded each night and day, and when each player died. It reads recorded edits only, so a
-// death belongs to the phase its edit was made in, and nothing follows from any ability.
+// What happened in a game, for History: the deaths, changes, nominations and reminders the
+// Storyteller recorded each night and day, and when each player died. It reads recorded edits
+// only, so a death belongs to the phase its edit was made in, and nothing follows from any ability.
 import type { Alignment, CharacterId, Script } from '../content'
 import { isEmptySeat } from '../content'
-import type { Event, EventId, Grimoire, Phase, Seat, SeatId } from '../engine'
+import type { Event, EventId, Grimoire, Phase, Seat, SeatId, TokenInstance } from '../engine'
 import { apply, emptyGrimoire, onTheBlock, seatById, today } from '../engine'
 
 // A seat as it stood when the fact happened.
@@ -25,10 +25,19 @@ export type Fact =
   | { readonly kind: 'dies' | 'revives' | 'becomes' | 'turns' | 'joins' | 'leaves' | 'executed' | 'exiled' | 'onBlock'; readonly player: Player }
   | { readonly kind: 'nomination'; readonly by: Side; readonly of: Side; readonly hands: readonly Hand[]; readonly count: number; readonly exile?: true }
 
+// A reminder or note put on a player during a phase and still there when the phase ended. One
+// taken off again in the same phase was a slip or a move, so it leaves no trace, and taking an
+// older one off is not told: the phase that placed it is where a Storyteller looks for it.
+export interface Reminded {
+  readonly player: Player
+  readonly token: TokenInstance
+}
+
 export interface Chapter {
   readonly phase: 'night' | 'day'
   readonly night: number
   readonly facts: readonly Fact[]
+  readonly reminders: readonly Reminded[]
 }
 
 export interface Moment {
@@ -64,7 +73,7 @@ const sideOf = (g: Grimoire, id: SeatId | 'storyteller'): Side | undefined => {
 }
 
 export const chronicleOf = (log: readonly Event[], script: Script): Chronicle => {
-  const chapters: { readonly phase: 'night' | 'day'; readonly night: number; drafts: Draft[] }[] = []
+  const chapters: { readonly phase: 'night' | 'day'; readonly night: number; drafts: Draft[]; readonly placed: EventId[]; reminders: Reminded[] }[] = []
   let chapter: (typeof chapters)[number] | undefined
   let board = emptyGrimoire(script)
   let playing = false // from the first night or day on
@@ -99,6 +108,17 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
     chapter.drafts = settled
   }
 
+  const settleReminders = (g: Grimoire) => {
+    if (!chapter) return
+    chapter.reminders = chapter.placed.flatMap((id): Reminded[] => {
+      for (const seat of g.seats) {
+        const token = seat.tokens.find(t => t.placedBy === id)
+        if (token) return [{ player: playerOf(seat), token }]
+      }
+      return []
+    })
+  }
+
   // Setup and the time after the ending have no chapter, so their edits tell no story.
   const record = (draft: Draft) => chapter?.drafts.push(draft)
   const opened = (id: EventId) => chapter?.drafts.find((d): d is Extract<Draft, { kind: 'nominated' }> => d.kind === 'nominated' && d.opened === id)
@@ -111,12 +131,13 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
       // A phase edit that leaves the clock where it was continues the same chapter.
       if (event.kind === 'phase' && after.clock.phase === before.clock.phase && after.clock.night === before.clock.night) continue
       settleDay(before)
+      settleReminders(before)
       if (!playing && before.clock.phase === 'setup' && after.clock.phase !== 'setup') {
         playing = true
         meet(after)
       }
       const { phase, night } = after.clock
-      chapter = phase === 'night' || phase === 'day' ? { phase, night, drafts: [] } : undefined
+      chapter = phase === 'night' || phase === 'day' ? { phase, night, drafts: [], placed: [], reminders: [] } : undefined
       if (chapter) chapters.push(chapter)
       continue
     }
@@ -141,6 +162,10 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
       }
       for (const seat of before.seats) if (!seatById(after, seat.id)) record({ kind: 'leaves', player: playerOf(seat) })
       if (playing) meet(after)
+      if (chapter) {
+        const had = new Set(before.seats.flatMap(seat => seat.tokens.map(token => token.placedBy)))
+        for (const seat of after.seats) for (const token of seat.tokens) if (!had.has(token.placedBy)) chapter.placed.push(token.placedBy)
+      }
     }
     switch (event.kind) {
       case 'nominate': {
@@ -171,6 +196,7 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
     }
   }
   settleDay(board)
+  settleReminders(board)
 
   const players = new Map<SeatId, PlayerStory>()
   for (const seat of board.seats) {
@@ -183,9 +209,9 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
     }
   }
   return {
-    chapters: chapters.flatMap(({ phase, night, drafts }) => {
+    chapters: chapters.flatMap(({ phase, night, drafts, reminders }) => {
       const facts = drafts.filter((d): d is Fact => d.kind !== 'nominated' && d.kind !== 'marked')
-      return facts.length ? [{ phase, night, facts }] : []
+      return facts.length || reminders.length ? [{ phase, night, facts, reminders }] : []
     }),
     players,
   }

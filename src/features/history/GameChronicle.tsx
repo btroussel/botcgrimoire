@@ -1,19 +1,22 @@
 import { Fragment } from 'react'
 import { Image } from 'react-native'
 
-import type { Locale, Translate, Values } from '../../content'
+import type { CharacterId, Locale, Translate, Values } from '../../content'
 import { gameText, isEmptySeat, seatName } from '../../content'
 import { genericArt } from '../../content/generated/art'
-import type { Chapter, Fact, Player, Side } from '../../store/chronicle'
+import { isNote } from '../../engine'
+import type { Chapter, Fact, Hand, Player, Reminded, Side } from '../../store/chronicle'
 import { CharacterIcon } from '../../ui/CharacterIcon'
 import { Icon } from '../../ui/icons'
 import { palette } from '../../ui/theme'
+import { railMarker, voteToken } from './HistoryStyles'
+
+type Nomination = Extract<Fact, { kind: 'nomination' }>
 
 interface Line {
   readonly text: string
   readonly names: readonly string[] // set in bold
-  readonly icon: Player | 'skull' | 'nominate'
-  readonly hands?: string
+  readonly icon: Player | 'skull'
 }
 
 // The sentence split around the names it mentions, longest name first so "Ann" never cuts "Anna".
@@ -43,8 +46,8 @@ const runs = (text: string, strong: readonly string[]): readonly { readonly s: s
   return out
 }
 
-// One sentence per fact.
-const lineOf = (fact: Fact, locale: Locale, t: Translate): Line => {
+// One sentence per fact that is not a vote.
+const lineOf = (fact: Exclude<Fact, Nomination>, locale: Locale, t: Translate): Line => {
   const name = (player: Player) => seatName(locale, player.name)
   const role = (player: Player) => gameText(locale).role(player.character).name
   const about = (key: string, player: Player, values: Values = {}): Line =>
@@ -68,53 +71,150 @@ const lineOf = (fact: Fact, locale: Locale, t: Translate): Line => {
       return about('history.exile', fact.player)
     case 'onBlock':
       return { ...about('history.onBlock', fact.player), icon: 'skull' }
-    case 'nomination': {
-      const side = (s: Side) => (s === 'storyteller' ? t('board.storyteller') : name(s))
-      const by = side(fact.by)
-      const of = side(fact.of)
-      const hands = fact.hands.map(({ player, ghost }) => (ghost ? t('history.voterGhost', { name: name(player) }) : name(player))).join(', ')
-      // An exile records no caller, so it names only the Traveller.
-      const text = fact.exile ? t('day.manualExile', { of, count: fact.count }) : t('day.manualNomination', { by, of, count: fact.count })
-      return { text, names: fact.exile ? [of] : [by, of], icon: fact.of === 'storyteller' ? 'nominate' : fact.of, ...(hands ? { hands } : {}) }
-    }
   }
+}
+
+const Bold = ({ text, names }: { readonly text: string; readonly names: readonly string[] }) =>
+  runs(text, names).map((run, k) => (run.bold ? <strong key={k}>{run.s}</strong> : <Fragment key={k}>{run.s}</Fragment>))
+
+const HandToken = ({ hand: { player, ghost }, size }: { readonly hand: Hand; readonly size: number }) => (
+  <span className="history-hand-token" data-ghost={ghost} aria-hidden="true">
+    {isEmptySeat(player.character) ? <Icon name="player" size={size - 2} color={palette.inkMuted} />
+      : <CharacterIcon id={player.character} size={size} tint={player.alignment} lazy />}
+  </span>
+)
+
+// A vote is one line, as in the day window: who nominated whom, the voters' tokens so the sides
+// show at a glance, and the tally. The names keep their room and the tokens take what is left of
+// the line, so a narrow column shows fewer of them and never a clipped one; the tally says how
+// many there were. The voters' names open under the line on a tap, so a day of many votes stays
+// a short list. A vote with no recorded hand has nothing to open.
+const Vote = ({ fact, locale, t }: { readonly fact: Nomination; readonly locale: Locale; readonly t: Translate }) => {
+  const side = (s: Side) => (s === 'storyteller' ? t('board.storyteller') : seatName(locale, s.name))
+  const by = side(fact.by)
+  const of = side(fact.of)
+  const count = fact.count
+  // An exile records no caller, so it names only the Traveller.
+  const said = fact.exile ? t('day.manualExile', { of, count }) : t('day.manualNomination', { by, of, count })
+  const line = (
+    <>
+      <span className="history-vote-names">
+        {fact.exile ? <Bold text={t('day.exileOf', { of })} names={[of]} /> : <><strong>{by}</strong>{' → '}<strong>{of}</strong></>}
+      </span>
+      <span className="history-vote-tokens" aria-hidden="true">
+        {fact.hands.map(hand => <HandToken key={hand.player.id} hand={hand} size={voteToken} />)}
+      </span>
+      <span className="history-vote-count"><strong>{count}</strong>{t('day.votesLabel', { count })}</span>
+    </>
+  )
+  if (fact.hands.length === 0) return <div className="history-vote history-vote-line" role="group" aria-label={said}>{line}</div>
+  return (
+    <details className="history-vote">
+      <summary className="history-vote-line" aria-label={said}>
+        {line}
+        <span className="history-vote-chevron" aria-hidden="true"><Icon name="chevronDown" size={16} color={palette.inkMuted} /></span>
+      </summary>
+      <Hands hands={fact.hands} locale={locale} t={t} />
+    </details>
+  )
+}
+
+// The voters as the tokens they held, in columns, so a long vote is a small table, not a
+// paragraph. A hand raised while dead is greyed under a skull, as a dead player is on the board,
+// and says so to a screen reader.
+const Hands = ({ hands, locale, t }: { readonly hands: readonly Hand[]; readonly locale: Locale; readonly t: Translate }) => (
+  <ul className="history-hands">
+    {hands.map((hand) => {
+      const { player, ghost } = hand
+      const name = seatName(locale, player.name)
+      const said = ghost ? t('history.voterGhost', { name }) : name
+      return (
+        <li key={player.id} className="history-hand" title={said}>
+          <HandToken hand={hand} size={18} />
+          <span className="history-hand-name" aria-hidden={ghost}>{name}</span>
+          {ghost ? <>
+            <span className="history-hand-skull" aria-hidden="true"><Icon name="skull" size={13} color={palette.inkMuted} /></span>
+            <span className="history-spoken">{said}</span>
+          </> : null}
+        </li>
+      )
+    })}
+  </ul>
+)
+
+// One wrapped row of pills a phase, however many reminders it saw, so they never crowd out the
+// votes and deaths: a look at who was poisoned that night finds it under the night's title.
+const Reminders = ({ reminders, locale, t }: { readonly reminders: readonly Reminded[]; readonly locale: Locale; readonly t: Translate }) => {
+  const text = gameText(locale)
+  if (reminders.length === 0) return null
+  return (
+    <ul className="history-reminders history-placed" aria-label={t('scripts.characterReminders')}>
+      {reminders.map(({ player, token: { def: [id, reminder], note, placedBy } }) => {
+        const name = seatName(locale, player.name)
+        if (isNote([id, reminder], note)) {
+          return (
+            <li key={placedBy} className="history-reminder history-note">
+              <Icon name="edit" size={14} color={palette.inkMuted} />
+              <span>{t('history.reminderOn', { reminder: note ?? '', name })}</span>
+            </li>
+          )
+        }
+        const label = note ? `${text.reminder(reminder)}: ${note}` : text.reminder(reminder)
+        return (
+          <li key={placedBy} className="history-reminder" title={text.role(id as CharacterId).name}>
+            <CharacterIcon id={id} size={18} lazy />
+            <span>{t('history.reminderOn', { reminder: label, name })}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
 }
 
 const markerArt = { night: genericArt['dusk'], day: genericArt['dawn'] } as const
 
-export const GameChronicle = ({ chapters, locale, t }: { readonly chapters: readonly Chapter[]; readonly locale: Locale; readonly t: Translate }) => {
+interface Props {
+  readonly chapters: readonly Chapter[]
+  readonly locale: Locale
+  readonly t: Translate
+}
+
+export const GameChronicle = ({ chapters, locale, t }: Props) => {
   if (chapters.length === 0) return null
   return (
     <section className="history-chronicle" aria-label={t('history.chronicle')}>
       <h3 className="history-side-title">{t('history.chronicle')}</h3>
-      <div className="history-chapters">
-        {chapters.map((chapter, i) => (
-          <section key={i} className="history-chapter">
-            <h4 className="history-chapter-title">
-              {markerArt[chapter.phase] !== undefined ? <Image source={markerArt[chapter.phase]} style={{ width: 22, height: 22 }} accessible={false} /> : null}
-              {t(`board.${chapter.phase}`, { n: chapter.night })}
-            </h4>
-            <ul className="history-facts">
-              {chapter.facts.map((fact, j) => {
-                const line = lineOf(fact, locale, t)
-                return (
-                  <li key={j} className="history-fact">
-                    <span className="history-fact-icon" aria-hidden="true">
-                      {typeof line.icon === 'string' ? <Icon name={line.icon} size={22} color={palette.inkMuted} />
-                        : isEmptySeat(line.icon.character) ? <Icon name="player" size={22} color={palette.inkMuted} />
-                          : <CharacterIcon id={line.icon.character} size={28} tint={line.icon.alignment} lazy />}
-                    </span>
-                    <span className="history-fact-text">
-                      <span>{runs(line.text, line.names).map((run, k) => (run.bold ? <strong key={k}>{run.s}</strong> : <Fragment key={k}>{run.s}</Fragment>))}</span>
-                      {line.hands ? <span className="history-fact-hands">{line.hands}</span> : null}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <Chapters chapters={chapters} locale={locale} t={t} />
     </section>
   )
 }
+
+export const Chapters = ({ chapters, locale, t }: Props) => (
+  <div className="history-chapters">
+    {chapters.map((chapter, i) => (
+      <section key={i} className="history-chapter">
+        <h4 className="history-chapter-title">
+          {markerArt[chapter.phase] !== undefined ? <Image source={markerArt[chapter.phase]} style={{ width: railMarker, height: railMarker }} accessible={false} /> : null}
+          {t(`board.${chapter.phase}`, { n: chapter.night })}
+        </h4>
+        <Reminders reminders={chapter.reminders} locale={locale} t={t} />
+        <ul className="history-facts">
+          {chapter.facts.map((fact, j) => {
+            if (fact.kind === 'nomination') return <li key={j} className="history-fact" data-vote><Vote fact={fact} locale={locale} t={t} /></li>
+            const line = lineOf(fact, locale, t)
+            return (
+              <li key={j} className="history-fact">
+                <span className="history-fact-icon" aria-hidden="true">
+                  {typeof line.icon === 'string' ? <Icon name={line.icon} size={20} color={palette.inkMuted} />
+                    : isEmptySeat(line.icon.character) ? <Icon name="player" size={20} color={palette.inkMuted} />
+                      : <CharacterIcon id={line.icon.character} size={22} tint={line.icon.alignment} lazy />}
+                </span>
+                <span className="history-fact-text"><Bold text={line.text} names={line.names} /></span>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+    ))}
+  </div>
+)

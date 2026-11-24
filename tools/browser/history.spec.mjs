@@ -17,6 +17,7 @@ const savedGame = (script, count) => {
   events.push({ kind: 'placeToken', seat: 'seat-1', token: ['fortuneteller', 'Red Herring'], source: 'seat-5' })
   events.push({ kind: 'phase', to: 'night', night: 1 })
   events.push({ kind: 'kill', seat: 'seat-0', cause: 'storyteller' })
+  events.push({ kind: 'placeToken', seat: 'seat-2', token: ['poisoner', 'Poisoned'], source: 'seat-1' })
   events.push({ kind: 'phase', to: 'day' })
   const nomination = events.push({ kind: 'nominate', by: 'seat-2', of: 'seat-0' }) - 1
   for (const seat of ['seat-2', 'seat-3', 'seat-4']) events.push({ kind: 'vote', nomination, seat, weight: 1 })
@@ -47,16 +48,22 @@ test('French history fits a phone, keeps every player and respects reduced motio
     await expect(page.locator('.history-player')).toHaveCount(20)
     await expect(page.locator('.history-player').first()).toContainText('Alexandrine avec un nom très long')
     await expect(page.locator('.history-player').first()).toContainText('Mort · Nuit 1')
-    await expect(page.locator('.history-reminder')).toHaveCount(1)
+    await expect(page.locator('.history-player .history-reminder')).toHaveCount(2)
+    await expect(page.locator('.history-chapter .history-reminder')).toHaveCount(1)
     await expect(page.locator('.history-bluff')).toHaveCount(3)
     const chronicle = page.getByRole('region', { name: 'Jours et nuits', exact: true })
     await expect(chronicle).toContainText('Alexandrine avec un nom très long meurt')
-    await expect(chronicle).toContainText('Player 3 → Alexandrine avec un nom très long : 3 votes')
+    // A vote is one line that opens on its voters.
+    const vote = chronicle.getByLabel('Player 3 → Alexandrine avec un nom très long : 3 votes', { exact: true })
+    await expect(chronicle.locator('.history-hand').first()).toBeHidden()
+    await vote.click()
+    await expect(chronicle.locator('.history-hand').first()).toBeVisible()
+    await expect(chronicle.locator('.history-hand')).toHaveText(['Player 3', 'Player 4', 'Player 5'])
 
     for (const width of [390, 320, 844]) {
       await page.setViewportSize({ width, height: 844 })
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
-      const overflow = await page.locator('.history-player, .history-reminder, .history-fact, .history-preview-token, .history-bluff, .history-actions').evaluateAll(elements =>
+      const overflow = await page.locator('.history-player, .history-reminder, .history-fact, .history-vote-line > *, .history-hand, .history-preview-token, .history-bluff, .history-actions').evaluateAll(elements =>
         elements.filter(element => { const rect = element.getBoundingClientRect(); return rect.left < 0 || rect.right > innerWidth }).length)
       expect(overflow).toBe(0)
     }
@@ -66,4 +73,25 @@ test('French history fits a phone, keeps every player and respects reduced motio
     await expect(page.getByRole('region', { name: 'Détails de la partie', exact: true })).toBeVisible()
     await expect(page.locator('.history-player')).toHaveCount(20)
   } finally { await context.close() }
+})
+
+test('History in More lists the running game over its board, latest phase first', async ({ page }) => {
+  await open(page, '/history')
+  await importGame(page, savedGame('tb', 7))
+  await page.getByRole('button', { name: 'Resume Trouble Brewing', exact: true }).click()
+  await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('button', { name: 'History', exact: true }).click()
+  const log = page.getByRole('dialog', { name: 'History', exact: true })
+  await expect(log.getByRole('heading', { level: 4 })).toHaveText(['Day 1', 'Night 1'])
+  const vote = log.getByLabel('Player 3 → Alexandrine avec un nom très long: 3 votes', { exact: true })
+  await expect(log.locator('.history-hand').first()).toBeHidden()
+  await vote.click()
+  await expect(log.locator('.history-hand').first()).toBeVisible()
+  await expect(log.locator('.history-hand')).toHaveText(['Player 3', 'Player 4', 'Player 5'])
+  await expect(log).toContainText('Alexandrine avec un nom très long dies')
+  await expect(log.getByRole('list', { name: 'Reminder tokens', exact: true })).toHaveText('Poisoned on Player 3')
+  await log.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(log).toBeHidden()
+  await expect(page).toHaveURL(/\/game\/history-test-tb$/)
 })

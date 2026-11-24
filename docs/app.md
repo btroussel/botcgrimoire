@@ -23,7 +23,8 @@ Six folders under `src/` import downward only, and `eslint.config.js` checks it.
 
 A saved operation two features share belongs in Store, a shared visual interaction in UI. No
 feature rebuilds a character-rules interpreter above the reducer. The game route hands the board
-the setup and day windows and the day timer, so the board never imports those features.
+the setup and day windows, the day timer and the history window, so the board never imports those
+features.
 
 ## Screens
 
@@ -220,8 +221,14 @@ others ([UI](ui.md#the-board)). On a keyboard, Ctrl or Cmd with Z undoes, except
 or under an open window. [Store](store.md#the-cursor) owns the operations.
 
 History reads recorded edits only: deaths and revivals, character and side changes, seats added
-and removed, nominations and votes, each in its phase, nothing inferred from an ability. A game
-resumes or replays in one tap, and game files import as JSON. Deleting a game asks first and is
+and removed, nominations and votes, each in its phase, nothing inferred from an ability. A phase
+also keeps the reminders and notes placed in it that were still on their seat when it ended: one
+taken off again in the same phase was a slip or a move, and taking an older one off is not told,
+so the list stays the answer to who was poisoned that night. A game
+resumes or replays in one tap, and game files import as JSON. During a game, History in More
+opens the same days and nights in a window over the board, the latest phase first, so who voted
+yesterday is two taps away without leaving the game or showing a past board to mistake for the
+live one. Until something is recorded there is nothing to open. Deleting a game asks first and is
 permanent ([Store](store.md#where-it-lives)). Replay never changes the saved log
 ([Store](store.md#the-cursor)). The clock runs only while the live board is open and visible
 ([Store](store.md#recorded-time)).

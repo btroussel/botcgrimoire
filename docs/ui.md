@@ -269,7 +269,16 @@ portrait one always keeps it.
 ## History
 
 Days and nights shows each player as they were at the time, and reads in order at any width.
-[App](app.md#saved-games-and-replay) owns the facts shown.
+[App](app.md#saved-games-and-replay) owns the facts shown. It is a timeline: a rail runs down
+each phase from its sun or moon, and every line hangs off it by a dot, so a phase needs no box to
+stand apart. A phase's reminders are one wrapped row of pills on an open dot, never a line each,
+so a busy night stays as short as a quiet one. A vote is one line, as in the day window: who
+nominated whom, as many of the voters' tokens as the line holds, tinted by side, and the tally. A tap opens the voters'
+names under it in columns, three on a phone, greyed under a skull for a hand raised while dead.
+A name too long for its column is cut short on one line: the vote's own line gives names in
+full. The board's History window lists the
+same lines in one column under the newest phase, which is the one a Storyteller asks about
+mid-game, so it opens on the answer with no scrolling.
 
 ## Replay
 
