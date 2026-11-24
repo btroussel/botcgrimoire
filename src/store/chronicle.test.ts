@@ -1,7 +1,7 @@
 import type { Payload } from '../engine'
 import { asEventId } from '../engine'
 import type { Step } from '../engine/testing/board'
-import { addTraveller, execute, exile, game, kill, nominate, removeSeat, revive, setAlignment, setCharacter, vote } from '../engine/testing/board'
+import { addTraveller, execute, exile, game, kill, nominate, removeSeat, removeToken, revive, setAlignment, setCharacter, token, vote } from '../engine/testing/board'
 import type { Fact } from './chronicle'
 import { chronicleOf } from './chronicle'
 
@@ -99,5 +99,17 @@ describe('the chronicle of a game', () => {
       .day([addTraveller('Fay', 'beggar', 5, 'good'), exile('Fay'), hand('Ann'), hand('Bob'), hand('Cat'), tally(3)])
       .build()
     expect(story(b)).toEqual([['night 1', 'Ann dies'], ['day 1', 'Fay joins', 'exile → Fay: 3 (Ann†, Bob, Cat)']])
+  })
+
+  test('each phase keeps the reminders placed in it that outlast it, and tells no removal', () => {
+    const reminders = (b: ReturnType<ReturnType<typeof game>['build']>) =>
+      chronicleOf(b.log, 'tb').chapters.map(c => [`${c.phase} ${c.night}`, ...c.reminders.map(r => `${r.token.note ?? r.token.def[1]} on ${r.player.name}`)])
+    const b = table().add(token('Bob', 'fortuneteller/Red Herring', 'Cat'))
+      // Poisoned lands on Cat by mistake and moves to Dan; only where it rests is kept.
+      .night(1, [token('Ann', 'poisoner/Poisoned', 'Cat'), removeToken('Cat', 'poisoner/Poisoned'), token('Ann', 'poisoner/Poisoned', 'Dan')])
+      .day([removeToken('Dan', 'poisoner/Poisoned'), token('storyteller', 'note/', 'Eve', 'Claims Slayer')])
+      .night(2, [token('Ann', 'poisoner/Poisoned', 'Eve')])
+      .build()
+    expect(reminders(b)).toEqual([['night 1', 'Poisoned on Dan'], ['day 1', 'Claims Slayer on Eve'], ['night 2', 'Poisoned on Eve']])
   })
 })

@@ -8,7 +8,7 @@ import { hairline, palette, radius, shadows, space } from '../../ui/theme'
 import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from '../../ui/popover'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
-  onLoose, looseDisabled, onEnd, onHome }: {
+  onLoose, looseDisabled, onHistory, historyDisabled, onEnd, onHome }: {
   readonly t: Translate
   readonly arranging: boolean
   readonly arrangeDisabled: boolean
@@ -16,6 +16,8 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   readonly onArrange: () => void
   readonly onLoose: () => void
   readonly looseDisabled: boolean
+  readonly onHistory: () => void
+  readonly historyDisabled: boolean // nothing is recorded yet
   readonly onEnd: () => void
   readonly onHome: () => void
 }) {
@@ -42,6 +44,7 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
       onToggle={(event) => setMenuOpen(event.newState === 'open')} className={menuClass} style={menuSurface(176)}>
       {item({ icon: 'addSeat', label: t('board.arrangeSeats'), action: onArrange, disabled: arrangeDisabled, armed: arranging })}
       {item({ icon: 'add', label: t('board.looseTitle'), action: onLoose, disabled: looseDisabled })}
+      {item({ icon: 'history', label: t('common.history'), action: onHistory, disabled: historyDisabled })}
       {/* Leaving the game sits apart from the tools for the board. */}
       <View style={menuStyles.rule} />
       {item({ icon: 'check', label: t('board.endGame'), action: onEnd })}

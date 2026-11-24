@@ -2,6 +2,13 @@ import { font, motion, palette, radius, space, tokenMaterial, touch } from '../.
 
 // Container queries settle the roster before paint. Measuring it after mount changes its
 // number of columns and makes the open card, and every game below it, jump a second time.
+// The timeline's rail: a phase's sun or moon sits on it, and each line's dot.
+export const railMarker = 26
+const railGap = 10
+const railDot = 8
+// A voter's token in a vote's line.
+export const voteToken = 16
+
 export const HistoryStyles = () => <style>{`
   .history-count { color: ${palette.muted}; font: 16px/22px ${font.body.regular}; margin: 0; }
   .history-list { display: grid; gap: ${space.lg}px; min-width: 0; }
@@ -91,16 +98,61 @@ export const HistoryStyles = () => <style>{`
   .history-loose { grid-column: 1 / -1; }
   .history-muted { margin: 0; color: ${palette.inkMuted}; font-size: 13px; line-height: 18px; }
   .history-chronicle { margin-top: ${space.xl}px; }
+  /* The board's window is not a card, so it sets the text the card would. */
+  .history-log { color: ${palette.ink}; font: 16px/22px ${font.body.regular}; }
+  .history-log .history-chapter:last-child { padding-bottom: 0; }
   /* The chapters run down one column and then the next, so the story reads in order on any width. */
   .history-chapters { column-width: 260px; column-gap: ${space.xxl}px; }
-  .history-chapter { break-inside: avoid; padding-bottom: ${space.lg}px; }
-  .history-chapter-title { display: flex; align-items: center; gap: ${space.sm}px; margin: 0 0 ${space.sm}px; font: 19px/24px ${font.display.semibold}; }
-  .history-facts { display: grid; gap: ${space.sm}px; margin: 0; padding: 0; list-style: none; }
-  .history-fact { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: start; gap: ${space.sm}px; font-size: 15px; line-height: 20px; }
-  .history-fact-icon { display: flex; justify-content: center; }
-  .history-fact-text { display: grid; min-width: 0; overflow-wrap: anywhere; padding-top: ${space.xxs}px; }
+  /* A rail runs down each phase from its sun or moon, and every line hangs off it by a dot, so
+     the game reads as one thread and a phase needs no box to stand apart. */
+  .history-chapter { position: relative; break-inside: avoid; padding-bottom: ${space.lg}px; }
+  .history-chapter::before {
+    content: ''; position: absolute; left: ${railMarker / 2 - 1}px; top: ${railMarker + space.xs}px; bottom: ${space.xs}px;
+    width: 2px; background: ${palette.parchmentShade};
+  }
+  .history-chapter-title { display: flex; align-items: center; gap: ${railGap}px; margin: 0 0 ${space.sm}px; font: 19px/${railMarker}px ${font.display.semibold}; }
+  .history-facts { display: grid; gap: ${space.xxs}px; margin: 0 0 0 ${railMarker + railGap}px; padding: 0; list-style: none; }
+  .history-fact { position: relative; display: flex; align-items: center; gap: ${space.sm}px; min-height: 30px; font-size: 15px; line-height: 20px; }
+  .history-fact::before, .history-placed::before {
+    content: ''; position: absolute; left: ${-(railMarker / 2 + railGap + railDot / 2)}px; top: ${15 - railDot / 2}px;
+    width: ${railDot}px; height: ${railDot}px; box-sizing: border-box; border-radius: 50%; background: ${palette.inkMuted};
+  }
+  /* A vote's dot stays beside its line when the names open under it. */
+  .history-fact[data-vote]::before { top: ${touch / 2 - railDot / 2}px; }
+  .history-fact-icon { display: flex; justify-content: center; flex-shrink: 0; width: 22px; }
+  .history-fact-text { min-width: 0; overflow-wrap: anywhere; }
   .history-fact strong { font-family: ${font.body.bold}; font-weight: normal; }
-  .history-fact-hands { color: ${palette.inkMuted}; font-size: 13px; line-height: 18px; }
+  .history-vote { flex: 1; min-width: 0; }
+  .history-vote-line { display: flex; align-items: center; gap: ${space.sm}px; min-height: ${touch}px; }
+  summary.history-vote-line { cursor: pointer; list-style: none; border-radius: ${radius.chipLabel}px; -webkit-tap-highlight-color: transparent; }
+  summary.history-vote-line::-webkit-details-marker { display: none; }
+  summary.history-vote-line:focus-visible { outline: 2px solid ${palette.ink}; outline-offset: 2px; }
+  .history-vote-names { min-width: 0; overflow-wrap: anywhere; }
+  /* One row high, so the tokens that do not fit wrap out of sight whole. */
+  .history-vote-tokens {
+    display: flex; flex-wrap: wrap; justify-content: flex-end; align-content: flex-start; gap: 0 ${space.xxs}px;
+    flex: 1 1 0; min-width: 0; height: ${voteToken}px; overflow: hidden;
+  }
+  /* The gap stands for the space between a tally and its word, in the languages that have none too. */
+  .history-vote-count { display: flex; align-items: baseline; gap: 3px; flex-shrink: 0; white-space: nowrap; color: ${palette.inkMuted}; font-size: 13px; }
+  .history-vote-count strong { color: ${palette.ink}; font-size: 15px; }
+  .history-vote-chevron { display: flex; flex-shrink: 0; transition: transform ${motion.duration.mark}ms ${motion.css.ease}; }
+  .history-vote[open] .history-vote-chevron { transform: rotate(180deg); }
+  /* Columns as wide as a first name, three on a phone, so the tokens line up under each other.
+     A longer name is cut short, never broken over two lines: its token and first letters still
+     tell the voter, and the names in the vote's own line are in full. */
+  .history-hands {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: ${space.xs}px;
+    margin: 0 0 ${space.sm}px; padding: 0; list-style: none; color: ${palette.inkMuted}; font-size: 13px; line-height: 18px;
+  }
+  .history-hand { display: flex; align-items: center; gap: 3px; min-width: 0; }
+  .history-hand-token, .history-hand-skull { display: flex; flex-shrink: 0; align-items: center; }
+  .history-hand-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .history-hand-token[data-ghost="true"] { filter: ${tokenMaterial.dead}; }
+  .history-spoken { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* The reminders hang off the rail by an open dot, apart from what happened to a player. */
+  .history-placed { position: relative; margin: 0 0 ${space.sm}px ${railMarker + railGap}px; }
+  .history-placed::before { top: ${11 - railDot / 2}px; background: ${palette.parchment}; border: 2px solid ${palette.inkMuted}; }
   @container history-card (min-width: 520px) {
     .history-roster { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: ${space.xxl}px; }
   }
@@ -118,7 +170,7 @@ export const HistoryStyles = () => <style>{`
   }
   @keyframes history-appear { from { opacity: 0; } to { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
-    .history-chevron { transition: none; }
+    .history-chevron, .history-vote-chevron { transition: none; }
     .history-card, .history-roster { animation-duration: ${motion.duration.fade}ms; }
   }
 `}</style>

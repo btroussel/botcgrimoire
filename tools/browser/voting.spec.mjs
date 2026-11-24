@@ -83,10 +83,12 @@ test('Done records a failed vote, leaves the leader on the block, and History te
   await open(page, '/history')
   await page.getByRole('button', { name: 'Show details for Trouble Brewing', exact: true }).tap()
   const day = page.getByRole('region', { name: 'Days and nights', exact: true })
-  await expect(day).toContainText('Seat 1 → Seat 3: 5 votes')
-  await expect(day).toContainText('Seat 4, Seat 5, Seat 6, Seat 7, Seat 3')
+  // A vote is one line there, and its voters open under it.
+  const vote = day.getByLabel('Seat 1 → Seat 3: 5 votes', { exact: true })
+  await vote.tap()
+  await expect(vote.locator('xpath=..').locator('.history-hand')).toHaveText(['Seat 4', 'Seat 5', 'Seat 6', 'Seat 7', 'Seat 3'])
   await expect(day).toContainText('Seat 3 is on the block')
-  await expect(day).toContainText('Seat 2 → Seat 6: 1 vote')
+  await expect(day.getByLabel('Seat 2 → Seat 6: 1 vote', { exact: true })).toBeVisible()
 })
 
 test('hands are numbered in counting order, Execute ends the day, and dawn lists the night\'s deaths', async ({ page }) => {

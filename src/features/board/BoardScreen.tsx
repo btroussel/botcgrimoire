@@ -1,7 +1,7 @@
 // References reserve board width only when there is room for both. On smaller screens
 // the paper overlays the board, without shrinking the seating circle to an unusable strip.
 import { useKeepAwake } from 'expo-keep-awake'
-import type { ReactNode, RefObject } from 'react'
+import type { ComponentType, ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { emptySeat, scriptName } from '../../content'
 import type { Translate } from '../../content'
 import type { EventId, SeatId } from '../../engine'
+import type { Chapter } from '../../store/chronicle'
 import { BoardInteractionProvider, useBoardInteraction } from '../../ui/BoardInteraction'
 import { boardLayoutFor, referenceTabWidth } from './boardLayout'
 import { Button, IconButton } from '../../ui/Button'
@@ -58,6 +59,12 @@ import { VictoryAnnouncement } from './VictoryAnnouncement'
 import { GameOverActions, actionsRoom } from './GameOverActions'
 import { fitsUnder } from './victory'
 
+export interface BoardHistoryProps {
+  readonly visible: boolean
+  readonly chapters: readonly Chapter[]
+  readonly onClose: () => void
+}
+
 export interface BoardScreenProps {
   readonly id: string // the game id the route was given
   readonly replay?: boolean
@@ -65,6 +72,7 @@ export interface BoardScreenProps {
   readonly deal?: boolean // the game was dealt just before it opened, so the ring deals it
   readonly panels: BoardPanels // each phase's node renders its own Panel into the slot
   readonly timer?: ReactNode
+  readonly History: ComponentType<BoardHistoryProps> // the window History in More opens
 }
 
 // A ring holds at most twenty seats, so arranging a full one offers no add-seat markers.
@@ -92,7 +100,7 @@ export const BoardScreen = (props: BoardScreenProps) => (
   </BoardInteractionProvider>
 )
 
-const Board = ({ id, replay = false, openSetup = false, deal = false, panels, timer }: BoardScreenProps) => {
+const Board = ({ id, replay = false, openSetup = false, deal = false, panels, timer, History }: BoardScreenProps) => {
   const b = useBoard(id, replay)
   const e = useEdits()
   const interaction = useBoardInteraction()
@@ -103,6 +111,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const t = b.t
   const [showOpen, setShowOpen] = useState(false)
   const [looseOpen, setLooseOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
   const [phaseOpen, setPhaseOpen] = useState(openSetup)
   const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 50 })
@@ -262,6 +271,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   // The toolbar keeps the same handlers from render to render, so an edit leaves it alone.
   const openShow = useCallback(() => setShowOpen(true), [])
   const openLoose = useCallback(() => setLooseOpen(true), [])
+  const openHistory = useCallback(() => setHistoryOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
   const askHome = useCallback(() => setConfirmHome(true), [])
   // One mode places new seats, turns the ring and moves single seats to where the players sat
@@ -350,7 +360,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
     arrangeDisabled={seatCount >= maxSeats && (seatCount < 2 || hasCenterPanel)}
     onShow={openShow}
     onLoose={openLoose} looseDisabled={looseChoices(board.script).length === 0}
-    onEnd={openEnd} onHome={askHome}
+    onHistory={openHistory} historyDisabled={b.chapters.length === 0} onEnd={openEnd} onHome={askHome}
     />
   // A finished game leaves nothing to resume, so its Home leaves without asking.
   const actions = <GameOverActions t={t} onPlayAgain={b.playAgain} onReplay={b.enterReplay} onHome={b.goHome} />
@@ -506,6 +516,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
         <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onReopen={openShow} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
+        <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
         <EndGameDialog visible={endOpen} t={t} width={Math.min(layout.dialogWidth, window.width - 2 * space.lg)}
           onClose={() => setEndOpen(false)} onEnd={winner => {
             if (b.lookingBack || over) return

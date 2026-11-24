@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { BoardScreen } from '../../../features/board/BoardScreen'
 import { DayPanel } from '../../../features/day/DayPanel'
 import { DayTimerSummary } from '../../../features/day/DayTimer'
+import { GameLog } from '../../../features/history/GameLog'
 import { SetupPanel } from '../../../features/setup/SetupPanel'
 import { DiscoveryScreen } from '../../../features/setup/DiscoveryScreen'
 import { DrawScreen } from '../../../features/setup/DrawScreen'
@@ -29,5 +30,5 @@ export default function GameRoute() {
   }
   if (discovery) return <DiscoveryScreen key={id} id={id} cursor={discovery} />
   if (draw) return <DrawScreen key={id} id={id} cursor={draw} />
-  return <BoardScreen key={id} id={id} replay={replay === '1'} openSetup={openSetup} deal={dealing} panels={panels} timer={<DayTimerSummary />} />
+  return <BoardScreen key={id} id={id} replay={replay === '1'} openSetup={openSetup} deal={dealing} panels={panels} timer={<DayTimerSummary />} History={GameLog} />
 }
