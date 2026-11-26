@@ -1,9 +1,10 @@
 import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { HTMLAttributes, ReactNode } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import type { TextStyle } from 'react-native'
 
 import type { CharacterId, NightMarker, Team } from '../../content'
-import { character, gameText, scriptName, scriptRules } from '../../content'
+import { asCharacterId, character, gameText, scriptName, scriptRules } from '../../content'
 import { useStore } from '../../store'
 import { jinxesAmong, listed, nightOrders, sheetTeams, teamLabels } from '../../store/scriptSheet'
 import { AbilityText } from '../../ui/AbilityText'
@@ -17,8 +18,8 @@ import { PaperTexture } from '../../ui/PaperTexture'
 import { nightMarkerArt } from '../../ui/scriptSheet/Reference'
 import { RuleList } from '../../ui/scriptSheet/Rules'
 import { Segment } from './Segment'
-import { font, palette, space, touch, type } from '../../ui/theme'
-import { nightEntries, seatCharacters } from './nightReference'
+import { font, palette, ring, space, touch, type } from '../../ui/theme'
+import { nightEntries, recordedCharacters, seatCharacters } from './nightReference'
 
 export type ReferenceTab = 'characters' | 'first' | 'other'
 
@@ -31,7 +32,6 @@ export interface ReferenceRailProps {
   readonly dragging: boolean
   readonly dragHandlers: HTMLAttributes<HTMLDivElement>
   readonly onResizeKey: HTMLAttributes<HTMLDivElement>['onKeyDown']
-  readonly onExpand: () => void // open the drawer to its full width
   readonly bottomClearance: number // the status plaque floats over the paper's foot
 }
 
@@ -67,8 +67,9 @@ const ReferenceDescription = ({ expansion, width, children }: {
   // Start at the space the identity already needs. Only the extra description height grows.
   const height = heights.compact + (heights.full - heights.compact) * expansion
   return <div aria-hidden={expansion === 0} style={{ width, boxSizing: 'border-box', flexShrink: 0, minWidth: 0, height,
-    position: 'relative', overflow: 'hidden', borderLeft: `1px solid ${expansion > 0 ? palette.parchmentShade : 'transparent'}` }}>
-    <div ref={content} style={{ position: 'absolute', top: 0, left: space.sm, right: 0 }}>{children}</div>
+    position: 'relative', overflow: 'hidden' }}>
+    {/* A row that takes taps is a button, which centres its text unless told otherwise. */}
+    <div ref={content} style={{ position: 'absolute', top: 0, left: space.sm, right: 0, textAlign: 'start' }}>{children}</div>
   </div>
 }
 
@@ -79,33 +80,9 @@ interface RowLayout {
   readonly artSize: number
   readonly expansion: number
   readonly descriptionWidth: number
+  readonly foldWidth: number // the text's width when it unfolds under a compact row
+  readonly focusVisible: boolean
 }
-
-// The sheet stays mounted while closed and its store re-renders it on every edit, so each row
-// redraws only when its own text, players or the paper's opening change.
-const CharacterRow = memo(function CharacterRow({ id, team, name, ability, rules, rulesLabel, phone, nameColumnWidth, artSize, expansion, descriptionWidth }: RowLayout & {
-  readonly id: string
-  readonly team: Team
-  readonly name: string
-  readonly ability: string
-  readonly rules?: readonly string[] | undefined // the Bootlegger's homebrew rules, read after its ability as on the sheet
-  readonly rulesLabel?: string | undefined
-}) {
-  return <View style={styles.referenceRow}>
-    <View style={[styles.identity, { width: nameColumnWidth }]}>
-      <View style={[styles.art, { width: artSize }]}>
-        <CharacterIcon id={id} team={team} size={artSize} />
-      </View>
-      <View style={styles.names}>
-        <Text style={[type.text.strong, phone ? phoneRoleName : undefined, { color: palette.teamOnPaper[team] }]}>{name}</Text>
-      </View>
-    </View>
-    <ReferenceDescription expansion={expansion} width={descriptionWidth}>
-      <Text style={[type.text.body, styles.ink]}><AbilityText text={ability} /></Text>
-      {rules?.length && rulesLabel ? <RuleList label={rulesLabel} rules={rules} text={type.text.body} p={palette} /> : null}
-    </ReferenceDescription>
-  </View>
-})
 
 interface Player {
   readonly id: string
@@ -113,58 +90,148 @@ interface Player {
   readonly alive: boolean
 }
 
-interface NightRowProps extends RowLayout {
+// The sheet stays mounted while closed and its store re-renders it on every edit, so each row
+// redraws only when its own text, players or the paper's opening change.
+const samePlayers = (a: readonly Player[], b: readonly Player[]) =>
+  a.length === b.length && a.every((player, i) => player.id === b[i]!.id && player.name === b[i]!.name && player.alive === b[i]!.alive)
+const sameLayout = (a: RowLayout, b: RowLayout) => (Object.keys(a) as (keyof RowLayout)[]).every(key => a[key] === b[key])
+const sameRow = <P extends { readonly layout: RowLayout; readonly players: readonly Player[] }>(a: P, b: P) =>
+  (Object.keys(a) as (keyof P)[]).every(key => key === 'players' ? samePlayers(a.players, b.players)
+    : key === 'layout' ? sameLayout(a.layout, b.layout) : a[key] === b[key])
+
+// One row on every sheet: the art and the name, the text beside them once the paper is out, and
+// a line under it that starts at the name, so a night's rail runs past it. While the paper shows
+// names only, a tap unfolds the text under its name: one ability is read without the paper
+// covering the board.
+const Row = ({ layout, identity, text, open, onPress, rail, current }: {
+  readonly layout: RowLayout
+  readonly identity: ReactNode
+  readonly text: ((style: TextStyle) => ReactNode) | undefined
+  readonly open: boolean
+  readonly onPress: (() => void) | undefined
+  readonly rail?: 'first' | 'between' | 'last' | undefined // a night's row, by its place on the rail
+  readonly current?: boolean
+}) => {
+  const compact = layout.expansion === 0
+  const middle = space.sm + layout.artSize / 2
+  const line = <>
+    <View style={[styles.identity, { width: layout.nameColumnWidth }]}>{identity}</View>
+    {text ? <ReferenceDescription expansion={layout.expansion} width={layout.descriptionWidth}>{text(type.text.body)}</ReferenceDescription> : null}
+  </>
+  return <View>
+    <View>
+      {/* The rail stops with the row's first line, so a text unfolded under it reads on bare paper. */}
+      {rail ? <View pointerEvents="none" style={[styles.rail, { left: layout.artSize / 2 - 1 },
+        rail === 'first' && { top: middle }, rail === 'last' && { bottom: 'auto', height: middle }]} /> : null}
+      {onPress ? <Pressable accessibilityRole="button" onPress={onPress}
+        aria-expanded={compact && text ? open : undefined} aria-current={current ? 'step' : undefined}
+        style={state => [styles.rowLine, focusStyle(palette, layout.focusVisible && isFocused(state), 'paper')]}>{line}</Pressable>
+        : <View style={styles.rowLine}>{line}</View>}
+    </View>
+    {compact && open && text ? <View style={[styles.fold, { width: layout.foldWidth }]}>{text(type.text.small)}</View> : null}
+    <View pointerEvents="none" style={[styles.rowRule, { left: layout.artSize + space.sm }]} />
+  </View>
+}
+
+const Name = ({ label, color, players, deadLabel, phone }: {
+  readonly label: string; readonly color: string; readonly players: readonly Player[]; readonly deadLabel: string; readonly phone: boolean
+}) => <View style={styles.names}>
+  <Text style={[type.text.strong, phone ? phoneRoleName : undefined, { color }]}>{label}</Text>
+  {players.length ? <Text style={[type.text.small, styles.playerNames, styles.muted]}>
+    {players.map((seat, index) => <Text key={seat.id}>
+      {index ? ', ' : ''}
+      <Text style={!seat.alive ? styles.crossed : undefined}
+        accessibilityLabel={seat.alive ? seat.name : `${seat.name}, ${deadLabel}`}>
+        {seat.name}
+      </Text>
+    </Text>)}
+  </Text> : null}
+</View>
+
+interface CharacterRowProps {
+  readonly layout: RowLayout
+  readonly id: string
+  readonly team: Team
+  readonly name: string
+  readonly ability: string
+  readonly rules?: readonly string[] | undefined // the Bootlegger's homebrew rules, read after its ability as on the sheet
+  readonly rulesLabel?: string | undefined
+  readonly players: readonly Player[] // the seats holding, shown or granted this character
+  readonly deadLabel: string
+  readonly open: boolean
+  readonly onToggle: (id: string) => void
+}
+
+const CharacterRow = memo(function CharacterRow({ layout, id, team, name, ability, rules, rulesLabel, players, deadLabel, open, onToggle }: CharacterRowProps) {
+  return <Row layout={layout} open={open} onPress={layout.expansion === 0 ? () => onToggle(id) : undefined}
+    identity={<>
+      <View style={[styles.art, { width: layout.artSize }]}>
+        <CharacterIcon id={id} team={team} size={layout.artSize} />
+      </View>
+      <Name label={name} color={palette.teamOnPaper[team]} players={players} deadLabel={deadLabel} phone={layout.phone} />
+    </>}
+    text={style => <>
+      <Text style={[style, styles.ink]}><AbilityText text={ability} /></Text>
+      {rules?.length && rulesLabel ? <RuleList label={rulesLabel} rules={rules} text={style} p={palette} /> : null}
+    </>} />
+}, sameRow)
+
+interface NightRowProps {
+  readonly layout: RowLayout
+  readonly id: string
   readonly label: string
   readonly character: CharacterId | undefined
   readonly marker: NightMarker | undefined
   readonly instruction: string
-  readonly players: readonly Player[] // the seats holding, shown or granted this character
+  readonly players: readonly Player[]
   readonly deadLabel: string
+  readonly rail: 'first' | 'between' | 'last'
+  readonly current: boolean // the step being read, which wears the ring
+  readonly open: boolean
+  readonly onStep: (id: string) => void
 }
 
-const samePlayers = (a: readonly Player[], b: readonly Player[]) =>
-  a.length === b.length && a.every((player, i) => player.id === b[i]!.id && player.name === b[i]!.name && player.alive === b[i]!.alive)
-const sameNightRow = (a: NightRowProps, b: NightRowProps) =>
-  (Object.keys(a) as (keyof NightRowProps)[]).every(key => key === 'players' ? samePlayers(a.players, b.players) : a[key] === b[key])
-
-const NightRow = memo(function NightRow({ label, character: id, marker, instruction, players, deadLabel, phone, nameColumnWidth, artSize, expansion, descriptionWidth }: NightRowProps) {
+const NightRow = memo(function NightRow({ layout, id: entry, label, character: id, marker, instruction, players, deadLabel, rail, current, open, onStep }: NightRowProps) {
   const parts = nightInstruction(instruction).filter(part => part.kind !== 'reminder')
   const art = marker !== undefined ? nightMarkerArt[marker] : undefined
-  return <View style={[styles.referenceRow, styles.nightRow]}>
-    <View style={[styles.identity, { width: nameColumnWidth }]}>
-      <View style={[styles.art, { width: artSize }]}>
-        {id ? <CharacterIcon id={id} size={artSize} /> : art !== undefined ?
-          <Image source={art} style={{ width: artSize, height: artSize }} /> : null}
+  const { artSize } = layout
+  const icon = artSize - 12
+  return <Row layout={layout} open={open} onPress={() => onStep(entry)} rail={rail} current={current}
+    identity={<>
+      {/* A stop on the rail: a paper disc, so the rail passes behind the art. */}
+      <View style={[styles.stop, { width: artSize, height: artSize, borderRadius: artSize / 2 }]}>
+        {current ? <View pointerEvents="none" style={[styles.here, { borderRadius: artSize / 2 + ring.gap + ring.width }]} /> : null}
+        {id ? <CharacterIcon id={id} size={icon} /> : art !== undefined ?
+          <Image source={art} style={{ width: icon, height: icon }} /> : null}
       </View>
-      <View style={styles.names}>
-        <Text style={[type.text.strong, phone ? phoneRoleName : undefined, { color: id ? palette.teamOnPaper[character(id).team] : palette.ink }]}>{label}</Text>
-        {players.length ? <Text style={[type.text.small, styles.playerNames, styles.muted]}>
-          {players.map((seat, index) => <Text key={seat.id}>
-            {index ? ', ' : ''}
-            <Text style={!seat.alive ? styles.crossed : undefined}
-              accessibilityLabel={seat.alive ? seat.name : `${seat.name}, ${deadLabel}`}>
-              {seat.name}
-            </Text>
-          </Text>)}
-        </Text> : null}
-      </View>
-    </View>
-    {parts.length ? <ReferenceDescription expansion={expansion} width={descriptionWidth}>
-      <Text style={[type.text.body, styles.ink]}>
-        {parts.map((part, index) => <Text key={index} style={part.kind === 'emphasis' ? styles.emphasis : undefined}>{part.text}</Text>)}
-      </Text>
-    </ReferenceDescription> : null}
-  </View>
-}, sameNightRow)
+      <Name label={label} color={id ? palette.teamOnPaper[character(id).team] : palette.ink} players={players} deadLabel={deadLabel} phone={layout.phone} />
+    </>}
+    text={parts.length ? style => <Text style={[style, styles.ink]}>
+      {parts.map((part, index) => <Text key={index} style={part.kind === 'emphasis' ? styles.emphasis : undefined}>{part.text}</Text>)}
+    </Text> : undefined} />
+}, sameRow)
 
-export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, onExpand, bottomClearance }: ReferenceRailProps) => {
+type Filter = 'inPlay' | 'all'
+
+export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, dragging, dragHandlers, onResizeKey, bottomClearance }: ReferenceRailProps) => {
   const { board, t, settings } = useStore()
   const viewport = useWindowDimensions().width
   const phone = viewport <= 480
   const compactWidth = referenceCompactWidth(viewport)
   // The status plaque floats over the rail's foot, so the tabs fit and centre in the rest.
   const compactTabs = height - bottomClearance < 3 * 124 + 2 * space.xs
-  const [nightFilter, setNightFilter] = useState<'inPlay' | 'all'>('inPlay')
+  // A night lists who wakes, so it opens on what is in play; the characters are looked up by
+  // name, a bluff as often as a seat, so they open on the whole script.
+  const [filters, setFilters] = useState<{ readonly characters: Filter; readonly night: Filter }>({ characters: 'all', night: 'inPlay' })
+  const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(() => new Set())
+  const toggle = useCallback((id: string) => setUnfolded(previous => {
+    const next = new Set(previous)
+    if (!next.delete(id)) next.add(id)
+    return next
+  }), [])
+  // Where the Storyteller is reading in a night. A display choice like the filter: nothing is
+  // ticked or recorded, and a new phase starts from the first row again.
+  const [step, setStep] = useState<{ readonly moment: string; readonly night: 'first' | 'other'; readonly id: string; readonly open: boolean }>()
   const [gripFocused, setGripFocused] = useState(false)
   const focusVisible = useFocusVisible()
   const tabElements = useRef<HTMLDivElement>(null)
@@ -194,20 +261,34 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   const text = useMemo(() => gameText(locale), [locale])
   const list = useMemo(() => script ? listed(script, locale) : [], [script, locale])
   const rules = useMemo(() => script ? scriptRules(script) : [], [script])
-  const jinxes = useMemo(() => jinxesAmong(list, locale), [list, locale])
+  const recorded = useMemo(() => board ? recordedCharacters(board) : new Set<CharacterId>(), [board])
+  const shownList = useMemo(() => filters.characters === 'all' ? list : list.filter(row => recorded.has(row.id)), [filters.characters, list, recorded])
+  const jinxes = useMemo(() => jinxesAmong(shownList, locale), [shownList, locale])
   const teams = useMemo(() => teamLabels(t), [t])
   const orders = useMemo(() => script ? nightOrders(script, list, locale, marker => t(markerKeys[marker])) : { first: [], other: [] }, [script, list, locale, t])
   const night = shownTab === 'other' ? 'other' : 'first'
-  const entries = useMemo(() => board ? nightEntries(board, night, orders, text, nightFilter) : [], [board, night, orders, text, nightFilter])
+  const entries = useMemo(() => board ? nightEntries(board, night, orders, text, filters.night) : [], [board, night, orders, text, filters.night])
+  const compact = width <= compactWidth
+  const moment = board ? `${board.clock.night}:${board.clock.phase}` : ''
+  // A tap moves the ring and, on a compact drawer, opens the step's text; a second tap there
+  // folds the text and leaves the ring.
+  const readStep = useCallback((id: string) => setStep(previous => {
+    const same = previous?.moment === moment && previous.night === night && previous.id === id
+    return { moment, night, id, open: !(compact && same && previous.open) }
+  }), [moment, night, compact])
   if (!board || !script) return null
 
   // Pull out a fixed sheet: only its visible portion changes, never its typesetting.
   const artSize = phone ? 36 : 42
   const nameColumnWidth = phone ? 144 : identityWidth
-  const row: RowLayout = { phone, nameColumnWidth, artSize,
+  const row: RowLayout = { phone, nameColumnWidth, artSize, focusVisible,
     expansion: Math.max(0, Math.min(1, (width - compactWidth) / Math.max(1, maximumWidth - compactWidth))),
     descriptionWidth: Math.max(0, maximumWidth - 2 * space.md - nameColumnWidth - space.sm - 2),
+    foldWidth: Math.max(0, Math.min(compactWidth, maximumWidth) - space.md - space.sm - 1),
   }
+  const reading = step && step.moment === moment && step.night === night && entries.some(entry => entry.id === step.id) ? step : undefined
+  const currentStep = reading?.id ?? entries[0]?.id
+  const sheet = shownTab === 'characters' ? 'characters' : 'night'
   const headingWidth = Math.max(0, Math.min(maximumWidth, Math.max(compactWidth, width)) - 2 * space.md - 2)
   const playersOf = (id: string): readonly Player[] => board.seats
     .filter(seat => seatCharacters(seat).includes(id as CharacterId))
@@ -253,48 +334,51 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
     </div>
     <div role="region" aria-label={shownTab === 'characters' ? scriptName(script) : t(tabKeys[shownTab])}
       inert={!tab} aria-hidden={!tab} {...dragHandlers}
+      // The paper is wider than its opening, and focus on a row would scroll the rest into view.
+      onScroll={event => { event.currentTarget.scrollLeft = 0 }}
       style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none' }}>
     <View style={[styles.paper, { width: maximumWidth }]}>
       <PaperTexture />
       <View style={styles.binding} pointerEvents="none" />
-      <ScrollView key={shownTab} style={styles.scroll} contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]} showsVerticalScrollIndicator={false}>
-        {/* The filter reads as the sheet's heading, so its state is visible in words, not decoded from an icon. */}
-        {shownTab !== 'characters' ? <View style={[styles.filter, { width: headingWidth }]}>
-          <View style={styles.rule} />
+      {/* The filter reads as the sheet's heading on all three sheets, so its state is visible in
+          words and stays in place while the rows scroll. */}
+      <View style={styles.header}>
+        <View style={[styles.filter, { width: headingWidth }]}>
           <Segment accessibilityLabel={t('board.referenceFilter')}
-            value={nightFilter} onChange={setNightFilter}
+            value={filters[sheet]} onChange={value => setFilters(previous => ({ ...previous, [sheet]: value }))}
             options={[{ value: 'inPlay', label: t('board.referenceInPlay') }, { value: 'all', label: t('board.referenceAll') }]} />
-          <View style={styles.rule} />
-        </View> : null}
-        {/* Compact rows show names only, so a tap on one opens the drawer full, the way a drag does;
-            a drag's own release never counts as that tap, and the filter above keeps its taps. */}
-        <div onClick={row.expansion === 0 ? onExpand : undefined}
-          style={{ display: 'flex', flexDirection: 'column', cursor: row.expansion === 0 ? 'pointer' : 'auto' }}>
+        </View>
+      </View>
+      <ScrollView key={shownTab} style={styles.scroll} contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]} showsVerticalScrollIndicator={false}>
         {shownTab === 'characters' ? <>
           {sheetTeams.map(team => {
-            const rows = list.filter(row => row.team === team)
+            const rows = shownList.filter(row => row.team === team)
             if (!rows.length) return null
             return <View key={team} style={styles.team}>
               <View style={[styles.teamHeading, { width: headingWidth }]}><View style={styles.rule} />
                 <Text accessibilityRole="header" style={[type.text.label, { color: palette.teamOnPaper[team] }]}>{teams[team]}</Text>
                 <View style={styles.rule} />
               </View>
-              {rows.map(entry => <CharacterRow key={entry.id} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability}
-                {...(entry.id === 'bootlegger' ? { rules, rulesLabel: t('scripts.rules') } : {})} {...row} />)}
+              {rows.map(entry => <CharacterRow key={entry.id} layout={row} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability}
+                players={playersOf(entry.id)} deadLabel={t('board.dead')} open={unfolded.has(entry.id)} onToggle={toggle}
+                {...(entry.id === 'bootlegger' ? { rules, rulesLabel: t('scripts.rules') } : {})} />)}
             </View>
           })}
           {jinxes.length ? <View style={styles.team}>
-            <Text accessibilityRole="header" style={[type.display.title, styles.ink]}>{t('scripts.jinxes')}</Text>
-            {jinxes.map(jinx => <View key={`${jinx.a}:${jinx.b}`} style={styles.jinx}>
-              <View style={[styles.jinxArt, { width: nameColumnWidth }]}><CharacterIcon id={jinx.a} size={32} /><CharacterIcon id={jinx.b} size={32} /></View>
-              <ReferenceDescription expansion={row.expansion} width={row.descriptionWidth}>
-                <Text style={[type.text.small, styles.ink]}>{jinx.reason}</Text>
-              </ReferenceDescription>
-            </View>)}
+            <Text accessibilityRole="header" style={[type.display.title, styles.ink, styles.jinxes]}>{t('scripts.jinxes')}</Text>
+            {jinxes.map(jinx => {
+              const key = `${jinx.a}:${jinx.b}`
+              return <Row key={key} layout={row} open={unfolded.has(key)} onPress={compact ? () => toggle(key) : undefined}
+                identity={<View style={styles.jinxArt} accessibilityLabel={`${text.role(asCharacterId(jinx.a)).name}, ${text.role(asCharacterId(jinx.b)).name}`}>
+                  <CharacterIcon id={jinx.a} size={32} /><CharacterIcon id={jinx.b} size={32} />
+                </View>}
+                text={() => <Text style={[type.text.small, styles.ink]}>{jinx.reason}</Text>} />
+            })}
           </View> : null}
-        </> : entries.map(entry => <NightRow key={entry.id} label={entry.label} character={entry.character} marker={entry.marker}
-          instruction={entry.instruction} players={entry.character ? playersOf(entry.character) : []} deadLabel={t('board.dead')} {...row} />)}
-        </div>
+        </> : entries.map((entry, index) => <NightRow key={entry.id} layout={row} id={entry.id} label={entry.label} character={entry.character} marker={entry.marker}
+          instruction={entry.instruction} players={entry.character ? playersOf(entry.character) : []} deadLabel={t('board.dead')}
+          rail={index === 0 ? 'first' : index === entries.length - 1 ? 'last' : 'between'}
+          current={entry.id === currentStep} open={entry.id === currentStep && (reading?.open ?? false)} onStep={readStep} />)}
       </ScrollView>
     </View>
     </div>
@@ -313,22 +397,28 @@ const styles = StyleSheet.create({
   paper: { minHeight: 0, flexShrink: 0, backgroundColor: palette.parchment, borderColor: palette.ink, borderWidth: 1,
     borderTopLeftRadius: 7, borderBottomLeftRadius: 7, overflow: 'hidden', boxShadow: '-4px 2px 16px #0006' },
   binding: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 5, backgroundColor: palette.accent, opacity: 0.72 },
-  filter: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.xs },
+  header: { paddingLeft: space.md, paddingVertical: space.sm, borderBottomColor: palette.parchmentShade, borderBottomWidth: 1 },
+  filter: { flexDirection: 'row' },
   scroll: { flex: 1, minHeight: 0 },
   content: { paddingLeft: space.md, paddingRight: space.md, width: '100%', maxWidth: 760, alignSelf: 'center' },
   team: { gap: space.xxs, marginBottom: space.sm },
   teamHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.sm },
   rule: { flex: 1, height: 1, backgroundColor: palette.parchmentShade },
-  referenceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.xs, minHeight: 50 },
+  rowLine: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.sm },
+  rowRule: { position: 'absolute', right: 0, bottom: 0, height: 1, backgroundColor: palette.parchmentShade },
+  fold: { paddingBottom: space.sm },
+  rail: { position: 'absolute', top: 0, bottom: 0, width: 2, backgroundColor: palette.parchmentShade },
+  stop: { flexShrink: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.parchment, borderColor: palette.parchmentShade, borderWidth: 1 },
+  here: { position: 'absolute', top: -(ring.gap + ring.width + 1), right: -(ring.gap + ring.width + 1), bottom: -(ring.gap + ring.width + 1), left: -(ring.gap + ring.width + 1),
+    borderColor: palette.accent, borderWidth: ring.width },
   identity: { flexShrink: 0, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   art: { minHeight: 36, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   names: { flex: 1, minWidth: 0 },
   playerNames: { marginTop: space.xxs },
   ink: { color: palette.ink },
   muted: { color: palette.inkMuted },
-  jinx: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.xs },
+  jinxes: { paddingTop: space.sm },
   jinxArt: { flexShrink: 0, flexDirection: 'row', gap: space.xs },
-  nightRow: { borderBottomColor: palette.parchmentShade, borderBottomWidth: StyleSheet.hairlineWidth },
   crossed: { textDecorationLine: 'line-through', color: palette.inkMuted },
   emphasis: { fontFamily: font.body.bold },
 })

@@ -154,14 +154,18 @@ tokens leave out the night and reminder marks, as the setup reveal does. Showing
 nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
-display choice, never a game event ([UI](ui.md#the-board)).
+display choice, never a game event ([UI](ui.md#the-board)). The character reference opens on the
+whole script, since a bluff is looked up as often as a seat, and can be narrowed to what is in
+play, counted as the nights count it. Each character names the players who hold it.
 
 ### Night
 
 The night references follow the bundled night order and show what is in play by default, dead
 seats, loose characters and recorded characters off the script included, or the whole script.
 Below seven players, Travellers not counted, the Minion and Demon info rows drop out; an empty
-seat counts as a player. There is no checklist: reading a row records nothing.
+seat counts as a player. There is no checklist: reading a row records nothing. The ring on the
+step being read is a display choice like the filter, never saved, and each phase starts it on the
+first row again.
 
 Start the day is the second tap on the plaque, under the night's deaths: every player alive when
 the night began and dead now, so the Storyteller reads them out before confirming. It reads the

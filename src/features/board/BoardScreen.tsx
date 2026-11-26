@@ -614,7 +614,7 @@ const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, up
   return <>
     <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
       <ReferenceRail tab={tab} width={referenceWidth} bottomClearance={bottomClearance}
-        height={height} maximumWidth={drawer.maximum} onExpand={drawer.expand}
+        height={height} maximumWidth={drawer.maximum}
         dragging={drawer.dragging} dragHandlers={drawer.handlers} onResizeKey={drawer.keyboard}
         onTabChange={onTabChange} />
     </View>
