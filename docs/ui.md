@@ -258,6 +258,12 @@ cream one low on the right for the nominee, the same figure with its arrow leavi
 They come from the day's recorded nominations, exiles aside, and go at nightfall. Like the
 threshold pips they are references only: a second nomination records as the first did.
 
+End game asks its question on the velvet, with no paper: the board goes almost dark and the two
+sides sit on it as tokens over their words, since two tokens stand wider than the ring's middle.
+The cross, Escape and a tap on the velvet leave without a result. A tap on a token records the
+result at once, and the rest is only the way out: the loser greys as a dead token does, the winner
+glides to where the result shows and fades as its words rise.
+
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only. Play again, Replay and Home sit
 under the result where the middle holds them as well. On a phone they always dock at the foot in
