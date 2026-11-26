@@ -12,15 +12,24 @@ const isEmbedded = (image: unknown): boolean =>
   (typeof image === 'string' ? [image] : Array.isArray(image) ? image : []).some((src) => typeof src === 'string' && src.startsWith('data:'))
 
 const withoutArt = (item: CustomScriptItem): CustomScriptItem => {
-  if (typeof item === 'string' || !('image' in item) || !isEmbedded(item.image)) return item
-  const { image: _image, ...rest } = item
-  return rest
+  if (typeof item === 'string') return item
+  if ('image' in item && isEmbedded(item.image)) {
+    const { image: _image, ...rest } = item
+    return rest
+  }
+  if ('logo' in item && isEmbedded(item.logo)) {
+    const { logo: _logo, ...rest } = item
+    return rest
+  }
+  return item
 }
 
-// One embedded icon is tens of thousands of characters, past a chat message or a QR code, so a
-// homebrew character travels without it and the receiving app draws its team's icon. A web
-// address is short and stays.
+// One embedded image is tens of thousands of characters, past a chat message or a QR code, so a
+// homebrew character travels without its icon and the receiving app draws its team's, and a
+// script without the logo chosen for it, for the bundled one. A web address is short and stays.
 export const hasEmbeddedArt = (script: CustomScript): boolean => script.items.some((item) => typeof item !== 'string' && 'image' in item && isEmbedded(item.image))
+
+export const hasEmbeddedLogo = (script: CustomScript): boolean => script.items.some((item) => typeof item !== 'string' && 'logo' in item && isEmbedded(item.logo))
 
 const deflate = async (bytes: Uint8Array): Promise<Uint8Array> =>
   new Uint8Array(await new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())

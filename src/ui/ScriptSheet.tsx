@@ -6,11 +6,13 @@
 // and deal are one sheet with different rows lit; the feature decides which and why.
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native'
+import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native'
 
 import type { Team } from '../content'
-import { Button, IconButton } from './Button'
+import { Button, IconButton, focusStyle, isFocused } from './Button'
 import { CharacterIcon } from './CharacterIcon'
+import { useFocusVisible } from './focus'
+import { Icon } from './icons'
 import { PaperTexture } from './PaperTexture'
 import { Band, JinxLine, Row } from './scriptSheet/CharacterRows'
 import { fitPrintedRoles, printCss } from './scriptSheet/print'
@@ -18,7 +20,7 @@ import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetLogo } from '
 import { RuleList, Rules } from './scriptSheet/Rules'
 import { styles } from './scriptSheet/styles'
 import type { ScriptSheetProps, ScriptSheetRow } from './scriptSheet/types'
-import { palette, type } from './theme'
+import { motion, palette, type } from './theme'
 
 export type * from './scriptSheet/types'
 
@@ -28,12 +30,13 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
   const { width: windowWidth } = useWindowDimensions()
   const [sheetWidth, setSheetWidth] = useState<number | null>(null)
   const twoColumns = (sheetWidth ?? windowWidth) >= 640
-  const { mode, title, logo, nameField, authorField, teams, jinxes = [], counts, nightOrders, labels } = props
+  const { mode, title, logo, logoField, nameField, authorField, teams, jinxes = [], counts, nightOrders, labels } = props
   const { selected = [], onTapCharacter, onBack, backLabel, actions } = props
   const p = palette
   const teensyville = props.teensyville === true
   const [nameFocused, setNameFocused] = useState(false)
   const [authorFocused, setAuthorFocused] = useState(false)
+  const focusVisible = useFocusVisible()
 
   useEffect(() => {
     window.addEventListener('beforeprint', fitPrintedRoles)
@@ -67,7 +70,15 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
   if (!headEmpty) children.push(
     <View key="head" id="script-sheet-head" style={styles.head}>
       <View style={styles.identity}>
-        {logo !== undefined ? (
+        {logo !== undefined && logoField ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={logoField.label} onPress={logoField.onPress}
+            style={(state) => [styles.logoButton, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}>
+            <View id="script-sheet-logo"><SheetLogo source={logo} /></View>
+            <View id="script-sheet-logo-badge" style={[styles.logoBadge, { backgroundColor: p.accent }]}>
+              <Icon name="edit" color={p.onAccent} size={14} />
+            </View>
+          </Pressable>
+        ) : logo !== undefined ? (
           <View id="script-sheet-logo"><SheetLogo source={logo} /></View>
         ) : null}
         <View style={styles.identityText}>
@@ -111,6 +122,12 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
           </div>
         ) : null}
       </View>
+      {logoField?.remove || logoField?.error ? (
+        <View id="script-sheet-logo-controls" style={styles.logoControls}>
+          {logoField.error ? <Text accessibilityRole="alert" style={[type.text.small, { color: p.danger }]}>{logoField.error}</Text> : null}
+          {logoField.remove ? <Button label={logoField.remove.label} onPress={logoField.remove.onPress} variant="text" surface="paper" /> : null}
+        </View>
+      ) : null}
       {teensyville && labels.teensyville ? (
         <Text style={[type.text.small, styles.centred, { color: p.inkMuted }]}>{labels.teensyville}</Text>
       ) : null}

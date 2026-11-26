@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { CharacterId, Homebrew, Team } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
+import { pickFile } from '../../store/browser'
 import { isTeensyville, composeTarget, djinnText, jinxesAmong, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
 import { Button, IconButton } from '../../ui/Button'
@@ -27,6 +28,7 @@ import type { Draft } from './compose'
 import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, orderIds, recordsOf, toggleId } from './compose'
 import type { KeptCharacter } from './drafts'
 import { keepScript, useKept } from './drafts'
+import { logoFromFile } from './image'
 import { useSheetWords } from './useScripts'
 
 export interface ScriptComposerProps {
@@ -67,6 +69,24 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   })
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  // The image a tap on the logo picks, made into the script's own logo. Removing it brings the
+  // bundled one back, and is also how an imported script drops a link that no longer answers.
+  const [logoError, setLogoError] = useState(false)
+  const chooseLogo = async () => {
+    setLogoError(false)
+    const file = await pickFile('image/*')
+    if (!file) return
+    try {
+      const logo = await logoFromFile(file)
+      setDraft((d) => ({ ...d, logo }))
+    } catch {
+      setLogoError(true)
+    }
+  }
+  const removeLogo = () => {
+    setLogoError(false)
+    setDraft(({ logo: _logo, ...d }) => d)
+  }
 
   const own = useMemo(() => characters.map((c) => c.character), [characters])
   const carried = draft.homebrew
@@ -105,6 +125,7 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   const problem = draftProblem(namedDraft)
   const changed = namedDraft.name !== (initial.name.trim() || defaultName)
     || draft.author.trim() !== initial.author.trim()
+    || draft.logo !== initial.logo
     || draft.ids.length !== initial.ids.length
     || draft.ids.some((id) => !initial.ids.includes(id))
     || (draft.rules ?? []).join('\n') !== (initial.rules ?? []).join('\n')
@@ -130,6 +151,12 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
         <ScriptSheet teensyville={isTeensyville(counts)}
           mode="compose"
           {...(draft.logo ? { logo: { uri: draft.logo } } : editionArt.custom !== undefined ? { logo: editionArt.custom } : {})}
+          logoField={{
+            label: t(draft.logo ? 'scripts.changeLogo' : 'scripts.chooseLogo'),
+            onPress: () => void chooseLogo(),
+            ...(draft.logo ? { remove: { label: t('scripts.removeLogo'), onPress: removeLogo } } : {}),
+            ...(logoError ? { error: t('scripts.imageUnreadable') } : {}),
+          }}
           bottomInset={touch + space.lg * 2 + insets.bottom}
           nameField={{
             value: draft.name,

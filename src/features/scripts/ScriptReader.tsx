@@ -8,7 +8,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { Script } from '../../content'
-import { editionAuthor, gameText, isCustom, scriptAuthor, scriptRules } from '../../content'
+import { editionAuthor, gameText, isCustom, scriptAuthor, scriptLogo, scriptRules } from '../../content'
 import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
 import { isWeb } from '../../store/browser'
@@ -21,7 +21,6 @@ import { MenuItem, menuClass, menuSurface, togglePopover } from '../../ui/popove
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { gutter, layout, palette, radius, type } from '../../ui/theme'
 import { PageVelvet } from '../../ui/Velvet'
-import { logoOf } from './compose'
 import { ShareScript } from './ShareScript'
 import { useSheetWords } from './useScripts'
 
@@ -71,7 +70,7 @@ export const ScriptReader = ({ script, onBack, onPlay, onExport, onEdit, onCopy,
   const unknown = useMemo(() => unknownNotice(script, t), [script, t])
 
   const author = isCustom(script) ? scriptAuthor(script) : editionAuthor
-  const ownLogo = isCustom(script) ? logoOf(script) : undefined
+  const ownLogo = scriptLogo(script)
   const logo = ownLogo ? { uri: ownLogo } : editionArt[isCustom(script) ? 'custom' : script]
   const head = {
     title: isCustom(script) ? script.name : gameText(locale).edition(script).name,

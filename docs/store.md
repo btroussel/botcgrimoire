@@ -139,5 +139,5 @@ base64url. Browsers never send the fragment to the host, so the host learns noth
 opens offline. Reading also accepts the official Script Tool's links, and runs the same checks as
 an imported file. A link that inflates past a size cap is refused.
 
-Links leave out embedded `data:` icons, which are too long for a chat message or a QR code. Art
-given as a web address stays.
+Links leave out embedded `data:` images, a homebrew character's icon or the script's logo, which
+are too long for a chat message or a QR code. Art given as a web address stays.

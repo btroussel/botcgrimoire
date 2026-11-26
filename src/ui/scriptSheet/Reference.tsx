@@ -31,10 +31,11 @@ export const SheetArt = ({ source, width, height, onError }: { readonly source: 
   </View>
 )
 
-// The script's logo. A custom script's own is a web address, the only art the app fetches, so it
-// may not load: no network, or a dead link. The bundled custom logo then stands in, as it does for
-// a script that names none. The address that failed is kept, not a flag, so another logo gets its
-// own try, and this sheet never asks for the failed one again.
+// The script's logo. A custom script's own is an image it carries or a web address. The address
+// is the only art the app fetches, so it may not load: no network, or a dead link. The bundled
+// custom logo then stands in, as it does for a script that has none. The address that failed is
+// kept, not a flag, so another logo gets its own try, and this sheet never asks for the failed one
+// again.
 export const SheetLogo = ({ source }: { readonly source: ArtSource }) => {
   const [failed, setFailed] = useState<string>()
   const uri = artUri(source)

@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import type { CustomScript } from '../../content'
 import { useStore } from '../../store'
 import { isWeb } from '../../store/browser'
-import { canLink, hasEmbeddedArt, scriptFragment } from '../../store/scriptLink'
+import { canLink, hasEmbeddedArt, hasEmbeddedLogo, scriptFragment } from '../../store/scriptLink'
 import { Button } from '../../ui/Button'
 import { Sheet } from '../../ui/Sheet'
 import { palette, radius, space, type } from '../../ui/theme'
@@ -50,6 +50,7 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
   }
   const modules = useMemo(() => (link === undefined ? undefined : qrModules(link)), [link])
   const art = useMemo(() => hasEmbeddedArt(script), [script])
+  const logo = useMemo(() => hasEmbeddedLogo(script), [script])
 
   // Without a secure page or the permission there is no clipboard; the link is then shown to
   // select by hand.
@@ -79,6 +80,7 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
             <Text style={[type.text.body, { color: p.inkMuted }]}>{t('scripts.qrTooLong')}</Text>
           )}
           {art ? <Text style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.artLeftOut')}</Text> : null}
+          {logo ? <Text style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.logoLeftOut')}</Text> : null}
           <Button label={copied === 'yes' ? t('scripts.linkCopied') : t('scripts.copyLink')} icon={copied === 'yes' ? 'check' : 'link'} onPress={copy} variant="primary" surface="paper" />
           {copied === 'failed' ? (
             <View accessibilityRole="alert" style={styles.failed}>

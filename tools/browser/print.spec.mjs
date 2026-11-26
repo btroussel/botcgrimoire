@@ -60,8 +60,8 @@ test('paper lists the Travellers, Fabled and Loric beside the night orders, not 
   await expect(foot).toContainText('* Not the first night.')
 })
 
-// A custom script's own logo is a web address, the only art the app fetches. At a table with no
-// signal it never arrives, and the sheet has to show the bundled logo rather than an empty box.
+// A custom script's logo given as a web address is the only art the app fetches. At a table with
+// no signal it never arrives, and the sheet has to show the bundled logo rather than an empty box.
 const logoScript = (address) => scriptLink([{ id: '_meta', name: 'Logo Test', logo: address }, 'washerwoman', 'imp'])
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
 

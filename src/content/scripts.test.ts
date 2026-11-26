@@ -2,7 +2,7 @@ import { characters } from './index'
 import type { CharacterId, Homebrew, Team } from './types'
 import { homebrewWake } from './homebrew'
 import type { CustomScript } from './scripts'
-import { impliesBootlegger, parseScript, scriptAuthor, scriptCards, scriptCharacters, scriptFile, scriptHomebrew, scriptRules } from './scripts'
+import { embeddedLogo, impliesBootlegger, parseScript, scriptAuthor, scriptCards, scriptCharacters, scriptFile, scriptHomebrew, scriptLogo, scriptRules } from './scripts'
 
 const meta = { id: '_meta', name: 'Test night', author: 'Us' }
 
@@ -23,6 +23,22 @@ describe('parseScript', () => {
     const logo = 'https://example.invalid/logo.png'
     expect(parseScript([{ ...meta, logo }, 'imp'])).toEqual({ kind: 'custom', name: 'Test night', items: [{ ...meta, logo }, 'imp'] })
     expect(parseScript([{ ...meta, logo: 'javascript:alert(1)' }, 'imp'])).toEqual({ kind: 'custom', name: 'Test night', items: [meta, 'imp'] })
+  })
+
+  test('an embedded logo is kept, and is the one a list can draw with no network', () => {
+    const logo = 'data:image/webp;base64,AA'
+    const embedded = parseScript([{ ...meta, logo }, 'imp'])
+    expect(embedded).toEqual({ kind: 'custom', name: 'Test night', items: [{ ...meta, logo }, 'imp'] })
+    if ('errors' in embedded) return
+    expect(scriptLogo(embedded)).toBe(logo)
+    expect(embeddedLogo(embedded)).toBe(logo)
+
+    const linked = parseScript([{ ...meta, logo: 'https://example.invalid/logo.png' }, 'imp'])
+    if ('errors' in linked) return
+    expect(scriptLogo(linked)).toBe('https://example.invalid/logo.png')
+    expect(embeddedLogo(linked)).toBeUndefined()
+    expect(parseScript([{ ...meta, logo: 'data:text/html,<script>' }, 'imp'])).toEqual({ kind: 'custom', name: 'Test night', items: [meta, 'imp'] })
+    expect(embeddedLogo('tb')).toBeUndefined()
   })
 
   test('an official character written out in full is kept as its id', () => {

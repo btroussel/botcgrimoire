@@ -12,7 +12,7 @@ import { Enter } from '../../ui/Enter'
 import { backOrHome } from '../../ui/homePath'
 import { preloadArt } from '../../ui/preloadArt'
 import { Screen } from '../../ui/Screen'
-import { ScriptListRow, scriptDetails } from '../../ui/ScriptListRow'
+import { ScriptListRow, listedLogo, scriptDetails } from '../../ui/ScriptListRow'
 import { palette, space, type } from '../../ui/theme'
 import { SetupScriptSheet } from './SetupScriptSheet'
 import { chosenTokens, fillBag } from './draw'
@@ -99,7 +99,7 @@ const NewGame = ({ preset, players }: { readonly preset?: Script; readonly playe
       </View>
       <Text accessibilityRole="header" aria-level={2} style={[type.text.strong, styles.label, { color: palette.muted }]}>{t('scripts.yourScripts')}</Text>
       {store.scripts.length > 0 ? <View style={styles.list}>
-        {store.scripts.map(saved => <ScriptListRow key={saved.id} name={saved.script.name} logo={editionArt.custom}
+        {store.scripts.map(saved => <ScriptListRow key={saved.id} name={saved.script.name} logo={listedLogo(saved.script)}
           {...scriptDetails(scriptAuthor(saved.script), t('scripts.charactersCount', { count: listed(saved.script, locale).length }))}
           accessibilityLabel={saved.script.name} onPress={() => choose(saved.script)} />)}
       </View> : null}

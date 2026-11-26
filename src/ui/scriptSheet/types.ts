@@ -72,6 +72,14 @@ export interface ScriptSheetNameField {
   readonly maxLength?: number // caps typing only, so a longer value already given stays whole
 }
 
+// Compose: the logo is a button that picks an image for the script.
+export interface ScriptSheetLogoField {
+  readonly label: string // what the tap does: choose a logo, or change the one it has
+  readonly onPress: () => void
+  readonly remove?: { readonly label: string; readonly onPress: () => void } // while the script has a logo of its own
+  readonly error?: string // the picked file could not be read
+}
+
 export interface ScriptSheetProps {
   readonly scrollHeader?: ReactNode // introductory controls that scroll away with the paper
   readonly bottomInset?: number // space to scroll the last character clear of floating controls
@@ -81,6 +89,7 @@ export interface ScriptSheetProps {
   readonly title?: string
   readonly author?: string
   readonly logo?: ArtSource // the edition's logo, or the custom script's own or bundled one
+  readonly logoField?: ScriptSheetLogoField
   readonly nameField?: ScriptSheetNameField // compose: edits the title beside the logo
   readonly authorField?: ScriptSheetNameField
   readonly teams: readonly ScriptSheetTeam[] // in the fixed order, Travellers last
