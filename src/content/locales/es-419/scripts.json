@@ -49,6 +49,7 @@
   "linkCopied": "Enlace copiado",
   "copyFailed": "No se pudo copiar el enlace. Selecciónalo aquí:",
   "shareLink": "Compartir el enlace",
+  "shareFile": "Compartir el archivo",
   "saveShared": "Guardar",
   "saveSharedLabel": "Guardar en tus escenarios",
   "linkLabel": "Enlace o texto del escenario",

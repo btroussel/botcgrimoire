@@ -49,6 +49,7 @@
   "linkCopied": "Linkki kopioitu",
   "copyFailed": "Linkkiä ei voitu kopioida. Valitse se tästä:",
   "shareLink": "Jaa linkki",
+  "shareFile": "Jaa tiedosto",
   "saveShared": "Tallenna",
   "saveSharedLabel": "Tallenna kässäreihisi",
   "linkLabel": "Linkki tai kässärin teksti",

@@ -49,6 +49,7 @@
   "linkCopied": "Lien copié",
   "copyFailed": "Le lien n'a pas pu être copié. Sélectionnez-le ici :",
   "shareLink": "Partager le lien",
+  "shareFile": "Partager le fichier",
   "saveShared": "Enregistrer",
   "saveSharedLabel": "Enregistrer dans vos scripts",
   "linkLabel": "Lien ou texte du script",

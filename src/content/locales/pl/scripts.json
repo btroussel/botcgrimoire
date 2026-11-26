@@ -51,6 +51,7 @@
   "linkCopied": "Skopiowano link",
   "copyFailed": "Nie udało się skopiować linku. Zaznacz go tutaj:",
   "shareLink": "Udostępnij link",
+  "shareFile": "Udostępnij plik",
   "saveShared": "Zapisz",
   "saveSharedLabel": "Zapisz w swoich skryptach",
   "linkLabel": "Link lub tekst skryptu",

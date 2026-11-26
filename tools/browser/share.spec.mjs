@@ -122,6 +122,29 @@ test('a copied link opens the script on another device, which saves it once', as
   }
 })
 
+// A link cannot carry an embedded image, so a script that has one offers the share sheet its file.
+test('a script with a logo of its own offers its file to the share sheet', async ({ browser, baseURL }) => {
+  const { context, page } = await device(browser, baseURL)
+  try {
+    // Desktop Chromium has no share sheet, so the test stands in for one that takes a JSON file.
+    await page.addInitScript(() => {
+      navigator.canShare = (data) => (data.files ?? []).every((file) => file.name.endsWith('.json'))
+      navigator.share = async (data) => { window.shared = { name: data.files[0].name, text: await data.files[0].text() } }
+    })
+    await open(page, '/scripts')
+    const logo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const [meta, ...characters] = script('Lit Script')
+    await importAndSave(page, [{ ...meta, logo }, ...characters])
+    await page.getByRole('button', { name: 'Share', exact: true }).click()
+    await expect(page.getByText("The link leaves out the script's logo. The file keeps it.", { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Share the file', exact: true }).click()
+    await expect.poll(() => page.evaluate(() => window.shared?.name)).toBe('lit-script.json')
+    expect(JSON.parse(await page.evaluate(() => window.shared.text))[0].logo).toBe(logo)
+  } finally {
+    await context.close()
+  }
+})
+
 test('New game and the library lead to each other', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const button = (name) => page.getByRole('button', { name, exact: true })

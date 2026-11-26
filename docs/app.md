@@ -258,7 +258,9 @@ iPhone a tapped link opens in Safari, whose storage is not the installed app's.
 
 Sharing gives a QR code, a link, the share sheet or a file. The link holds the script in the URL
 fragment, which the browser never sends to the host, so nothing is uploaded
-([Store](store.md#script-links)). The link drops embedded art, which the file keeps.
+([Store](store.md#script-links)). The link drops embedded art, which the file keeps, so a script
+with a logo or icons of its own also offers its file to the share sheet where the browser can
+share one.
 Editions have no Share, since every device already has them.
 
 ### Homebrew characters

@@ -48,6 +48,7 @@
   "linkCopied": "链接已复制",
   "copyFailed": "无法复制链接。请在这里选中它：",
   "shareLink": "分享链接",
+  "shareFile": "分享文件",
   "saveShared": "保存",
   "saveSharedLabel": "保存到我的剧本",
   "linkLabel": "链接或剧本文本",

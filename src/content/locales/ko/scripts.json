@@ -48,6 +48,7 @@
   "linkCopied": "링크를 복사했습니다",
   "copyFailed": "링크를 복사하지 못했습니다. 여기에서 선택하세요:",
   "shareLink": "링크 공유",
+  "shareFile": "파일 공유",
   "saveShared": "저장",
   "saveSharedLabel": "내 스크립트에 저장",
   "linkLabel": "링크 또는 스크립트 텍스트",
