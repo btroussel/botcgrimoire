@@ -17,15 +17,13 @@
   "manualExile": {
     "other": "追放：{of}、{count}票"
   },
-  "timerAdd": "議論タイマーを追加",
-  "timerAddThirtySeconds": "30秒追加",
+  "timerAddSeconds": "{seconds}秒追加",
   "timerFinished": "時間切れ",
   "timerPause": "一時停止",
-  "timerRemove": "タイマーを削除",
   "timerReset": "リセット",
   "timerResume": "続行",
   "timerStart": "開始",
-  "timerSubtractThirtySeconds": "30秒減らす",
+  "timerSubtractSeconds": "{seconds}秒減らす",
   "timerSummary": "議論：{time}",
   "voteReset": "リセット",
   "mark": "マーク",

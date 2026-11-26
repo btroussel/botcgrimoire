@@ -17,15 +17,13 @@
   "manualExile": {
     "other": "ขับไล่: {of} ได้ {count} โหวต"
   },
-  "timerAdd": "เพิ่มตัวจับเวลาการพูดคุย",
-  "timerAddThirtySeconds": "เพิ่ม 30 วินาที",
+  "timerAddSeconds": "เพิ่ม {seconds} วินาที",
   "timerFinished": "หมดเวลา",
   "timerPause": "หยุด",
-  "timerRemove": "นำตัวจับเวลาออก",
   "timerReset": "รีเซต",
   "timerResume": "ไปต่อ",
   "timerStart": "เริ่มต้น",
-  "timerSubtractThirtySeconds": "ลด 30 วินาที",
+  "timerSubtractSeconds": "ลด {seconds} วินาที",
   "timerSummary": "พูดคุย: {time}",
   "voteReset": "รีเซต",
   "mark": "ทำเครื่องหมาย",
