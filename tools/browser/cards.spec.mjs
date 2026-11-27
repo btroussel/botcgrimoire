@@ -117,13 +117,38 @@ test('Change on a shown You are types another character, and one key shows it ag
   await expect(card.getByText('IMP', { exact: true })).toHaveCount(0)
 })
 
+test('Change on You are opens the same editor as any card: its words can be rewritten', async ({ page }) => {
+  await openBoard(page)
+  await seatCard(page, impSeat(page), 'You are')
+  const card = page.getByRole('dialog', { name: 'You are' })
+  await card.getByRole('button', { name: 'Change', exact: true }).click()
+  const field = card.getByRole('textbox', { name: 'Message' })
+  await expect(field).toHaveValue('YOU ARE')
+  await field.fill('YOU ARE NOW')
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
+  await expect(card.getByRole('heading', { name: 'YOU ARE NOW', exact: true })).toBeVisible()
+  await expect(card.getByText('IMP', { exact: true })).toBeVisible()
+})
+
+test('a card of words takes a token too', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'This is the Demon')
+  const card = page.getByRole('dialog', { name: 'This is the Demon' })
+  await card.getByRole('button', { name: 'Change', exact: true }).click()
+  await card.getByRole('radiogroup', { name: 'Keyboard', exact: true }).getByRole('radio', { name: 'Tokens', exact: true }).check()
+  await card.getByRole('button', { name: 'Imp', exact: true }).click()
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
+  await expect(card.getByRole('heading', { name: 'THIS IS THE DEMON', exact: true })).toBeVisible()
+  await expect(card.getByText('IMP', { exact: true })).toBeVisible()
+})
+
 test('This character selected you shows on the first key', async ({ page }) => {
   await openBoard(page)
   await chooseCard(page, 'This character selected you')
   const card = page.getByRole('dialog', { name: 'This character selected you' })
-  // It comes up editing: the cross leaves, and no Show waits for a single token.
+  // It comes up in the editor every card shares, its phrase written in capitals and its keys up.
   await expect(card.getByRole('button', { name: 'Close', exact: true })).toBeVisible()
-  await expect(card.getByRole('button', { name: 'Show', exact: true })).toHaveCount(0)
+  await expect(card.getByRole('textbox', { name: 'Message' })).toHaveValue('THIS CHARACTER SELECTED YOU')
   await card.getByRole('button', { name: 'Poisoner', exact: true }).click()
   await expect(card.getByRole('button', { name: 'Poisoner', exact: true })).toHaveCount(0)
   await expect(card.getByText('POISONER', { exact: true })).toBeVisible()
@@ -221,8 +246,13 @@ test('a keyboard closes the card with its one Close button', async ({ page }) =>
   await chooseCard(page, 'These are your Minions')
   const card = page.getByRole('dialog', { name: 'These are your Minions' })
   await expect(card.getByRole('heading')).toBeVisible()
-  await page.keyboard.press('Tab')
+  // The focus waits on Close as the card comes up, so Enter hands the phone back, and Tab goes
+  // on to Change and round again.
   const close = card.getByRole('button', { name: 'Close', exact: true })
+  await expect(close).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeFocused()
+  await page.keyboard.press('Tab')
   await expect(close).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(card).toBeHidden()
@@ -337,7 +367,7 @@ test('Change on the not-in-play card edits what it shows and saves nothing', asy
   await card.getByRole('button', { name: 'Change', exact: true }).click()
   // Three are on the card, so a key not chosen is dimmed and refused until one comes off.
   await expect(card.locator('[aria-disabled="true"]').first()).toBeVisible()
-  await card.getByRole('button', { name: 'Take the last token off', exact: true }).click()
+  await card.getByRole('button', { name: /^Remove / }).last().click()
   await expect(card.locator('[aria-disabled="true"]')).toHaveCount(0)
   await card.getByRole('button', { name: 'Show', exact: true }).click()
   await expect(card.locator('text')).toHaveCount(2)

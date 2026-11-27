@@ -150,8 +150,8 @@ words. It opens with neither keyboard up, so everything it offers is in view.
 While it is empty the card offers, one line each, the official phrases in the order a first night
 uses them, This is the Demon, These are your Minions, These characters are not in play and This
 character selected you, then the cards kept on this device, latest first, then the script's own
-character cards ([Content](content.md#homebrew-characters)). A phrase brings up its own card, with
-its own type and rules. A kept card or a script's card only writes the blank one: nothing reaches a
+character cards ([Content](content.md#homebrew-characters)). A phrase brings up its own card, written
+in capitals as the printed info tokens are. A kept card or a script's card only writes the blank one: nothing reaches a
 player before Show, and it can still be edited. A number or a yes is typed, since that is as fast
 as a shortcut. The star keeps the card, words and tokens, in the device's settings and never in a
 game ([Store](store.md#custom-scripts-and-settings)), and forgets it when tapped again. A kept
@@ -164,9 +164,10 @@ is about one player, and the seat is that player. So showing a card never puts t
 A card whose content is already known comes up shown: You are and This player is from their
 player's seat, the not-in-play card with the saved bluffs, and the two cards of words. One whose
 content is not known comes up empty for the Storyteller to fill: This character selected you, This
-player is on a disguised seat, and the blank card. A shown card that carries tokens has Change,
-which takes it back to editing with what it shows, and so does a written card, words only or not,
-since the Storyteller wrote it and may fix it. The other cards of words have none. Change says
+player is on a disguised seat, and the blank card. Every shown card has Change, which
+opens the one editor all cards share with what the card shows: its words can be rewritten, its
+tokens replaced or added to, and the result kept with the star. A card from a seat keeps what makes
+it safe there, the side You are tells and the name under This player is. Change says
 nothing about the game, since the player can see it.
 
 Only You are tells a side, as the official app sends one with a thumb. It starts from the

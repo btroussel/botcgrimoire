@@ -49,7 +49,6 @@ export type IconName =
   | 'info'
   | 'mail'
   | 'flag'
-  | 'backspace'
   | 'letters'
   | 'token'
   | 'star'
@@ -112,7 +111,6 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   // A pennant on its pole: the end of a game on the replay's timeline.
   flag: { d: ['M6 21V4', 'M6 4h12l-3 4.5 3 4.5H6'] },
   // A keyboard's delete key: takes the last token off a card.
-  backspace: { d: ['M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z', 'M12 9.5l5 5', 'M17 9.5l-5 5'] },
   // A capital and a small letter, for typing words; a token with its name's arc, for the keys.
   letters: { d: ['M2.5 19 8 5l5.5 14', 'M4.5 14h7', 'M21 12.5V19', 'M21 16a2.75 2.75 0 1 1-5.5 0a2.75 2.75 0 1 1 5.5 0'] },
   token: { circle: [12, 12, 9], d: ['M12 6.5l3 4-3 4-3-4z', 'M8.5 17.5h7'] },

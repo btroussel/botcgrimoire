@@ -1,8 +1,9 @@
 // The info token turned to a player: large words on felt and character tokens where needed, or
 // the tokens alone, as one block sized to the window. The token rises into place, the words
 // follow a beat later, and a hold hands the phone back. While editing, the same card is its own
-// preview above the token keys, and only the shown card is turned to a player. A note's words are
-// typed on the card itself, where the player will read them.
+// preview above its keyboards, and only the shown card is turned to a player. Every card is
+// changed in the same editor: its words are typed on the card itself, where the player will read
+// them, and its tokens come from the token keys.
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { DragEvent, MouseEvent, ReactNode, PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
@@ -33,12 +34,10 @@ export interface CardLabels {
   readonly holdHint: string // what a tap on the shown card says: hold to close
   readonly change: string
   readonly show: string
-  readonly takeLast: string // the key that takes the last token off
-  readonly done: string // the key that puts the keys away on a card of one token
   readonly takeOff: (name: string) => string // a token on the editing card
-  // A note's editor.
+  // The editor.
   readonly placeholder: string
-  readonly message: string // the note's field, for a screen reader
+  readonly message: string // the words' field, for a screen reader
   readonly keyboard: string // the switch between the two, for a screen reader
   readonly letters: string
   readonly tokens: string
@@ -72,9 +71,9 @@ export interface CardNote {
 export interface CardProps {
   readonly spec: CardSpec
   readonly editing: boolean // it comes up to be filled rather than shown
-  readonly takes: number // tokens it takes: one shows on a key's tap, none offers no Change
+  readonly takes: number // tokens it takes: a card of one shows on a key's tap
   readonly keys: readonly TokenKeyGroup[]
-  readonly note?: CardNote // set on a written note
+  readonly note: CardNote // what the blank card offers, and the star
   readonly onDismiss: () => void
   readonly labels: CardLabels
 }
@@ -94,21 +93,20 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const viewport = useViewport()
   const reduced = useReducedMotion()
 
-  // The tokens and a note's words typed live here while the card is up: showing records nothing,
+  // The tokens and the words typed live here while the card is up: showing records nothing,
   // and the cross drops whatever was typed.
   const [editing, setEditing] = useState(opensEditing)
   const [printed, setPrinted] = useState<readonly PrintedCharacter[]>(spec.characters ?? [])
   const [written, setWritten] = useState(spec.words)
-  // The blank card's two keyboards share the foot: the device's for its words, the keys for its
-  // tokens. Opened empty it starts with neither; opened to change what it shows, with the letters.
-  const [up, setUp] = useState<Up>(spec.words === '' && (spec.characters ?? []).length === 0 ? 'none' : 'letters')
-  const field = note !== undefined && editing
-  // The token keys stand up while editing, except on the blank card until its switch asks for them.
-  const dock = editing && (!note || up === 'tokens')
-  const text = note ? written : spec.words
-  // An empty card being filled holds its token's place with an empty disc, so it previews. A
-  // note's token is optional, so it holds no place.
-  const empty = editing && !note && takes > 0 && printed.length === 0
+  // The two keyboards share the foot: the device's for the words, the keys for the tokens. The
+  // blank card starts with neither. A card that comes up waiting for its token starts with the keys.
+  const [up, setUp] = useState<Up>(spec.words === '' && (spec.characters ?? []).length === 0 ? 'none' : 'tokens')
+  const field = editing
+  const dock = editing && up === 'tokens'
+  const text = written
+  // A card that takes a set number of tokens holds the first one's place with an empty disc, so
+  // it previews. The blank card's tokens are optional, so it holds no place.
+  const empty = editing && Number.isFinite(takes) && printed.length === 0
   const slots = empty ? 1 : printed.length
   const wordsOnly = slots === 0 && !spec.caption
   const numberOnly = wordsOnly && /^\d+$/.test(text.trim())
@@ -185,9 +183,9 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
     if (document.activeElement && document.activeElement !== document.body) return
     const find = (selector: string) => root.current?.querySelector<HTMLElement>(selector)
     const target = !editing ? find('[data-card-close] [role="button"]')
-      : note ? find('input[type="radio"]:checked') ?? find('input[type="radio"]') : find('[data-keys] [role="button"]:not([aria-disabled="true"])')
+      : find('input[type="radio"]:checked') ?? find('input[type="radio"]')
     target?.focus({ preventScroll: true })
-  }, [editing, dock, note])
+  }, [editing, dock])
 
   // Hold to close. The card is held screen out toward a player, so a stray thumb must not hand
   // them the grimoire: a tap only shows the hint, and a press held for `motion.duration.hold`
@@ -300,10 +298,10 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
       : now.length < takes ? [...now, character] : now)
   }
   const current: WrittenNote = { words: written.trim(), characters: printed }
-  const filled = note ? current.words !== '' || printed.length > 0 : printed.length > 0
+  const filled = current.words !== '' || printed.length > 0
   const show = () => {
     if (!filled) return
-    if (note) setWritten(current.words)
+    setWritten(current.words)
     setEditing(false)
   }
   // A preset is written, never shown: nothing reaches a player before Show. A homebrew card's
@@ -319,7 +317,8 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const side = dock && window.width > window.height
   const corner = insets.top + space.md
   const count = field ? fieldCount(written.length, noteLength) : 'hidden'
-  const bar = !editing ? null : note ? (
+  // One bar for every card: the two keyboards, the star, and Show.
+  const bar = !editing ? null : (
     <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
       <Keyboards up={up} labels={labels} onUp={setUp} />
       {/* Kept by a press that leaves the caret where it is. */}
@@ -327,12 +326,6 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
         <EdgeButton icon="star" label={labels.keep} toggle armed={filled && note.kept(current)} disabled={!filled} onPress={() => note.onKeep(current)} />
         <Button variant="brass" label={labels.show} onPress={show} disabled={!filled} />
       </KeepCaret>
-    </View>
-  ) : (
-    <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
-      {takes > 1 ? <IconButton icon="backspace" label={labels.takeLast} onPress={() => setPrinted((now) => now.slice(0, -1))} disabled={printed.length === 0} /> : <View />}
-      {takes > 1 ? <Button variant="brass" label={labels.show} onPress={show} disabled={printed.length === 0} />
-        : <IconButton icon="chevronDown" label={labels.done} onPress={show} disabled={printed.length === 0} />}
     </View>
   )
   // The card follows the visible viewport, so with the device's keyboard up the note and its bar
@@ -369,8 +362,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             ) : text !== '' ? <Animated.Text
               accessibilityRole="header"
               onLayout={(event) => setWordsHeight(event.nativeEvent.layout.height)}
-              style={[wordsStyle, styles.words, { color: p.text, opacity: words, paddingHorizontal: horizontal },
-                spec.kind === 'custom' ? { textTransform: 'none' } : {}]}
+              style={[wordsStyle, styles.words, { color: p.text, opacity: words, paddingHorizontal: horizontal }]}
             >
               {text}
             </Animated.Text> : null}
@@ -384,7 +376,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
                     // The night and reminder leaves are the Storyteller's, as on the setup reveal.
                     <View key={`${c.id}-${i}`} style={[styles.cell, { width: cell }]}>
                       <Token character={c.id} name={c.name} size={size} printName={!captioned} markers={false} {...(spec.tint ? { alignment: spec.tint } : {})}
-                        {...(editing && !note ? { accessibilityLabel: labels.takeOff(c.name), onPress: () => setPrinted((now) => now.filter((_, at) => at !== i)) } : {})} />
+ />
                       {/* On the blank card a token comes off by its own small cross, since the words above it are typed. */}
                       {field ? (
                         <View style={styles.tokenCross}>
@@ -417,11 +409,11 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             </View>
           ) : <HiddenClose label={labels.close} top={corner} onPress={close} />}
           {/* A player can see it, so it says nothing about the game. A control, so no hold starts on it. */}
-          {!editing && (note || (takes > 0 && printed.length > 0)) ? (
+          {!editing ? (
             <View style={[styles.corner, { top: corner, right: space.md }]}>
               <Button variant="text" label={labels.change} onPress={() => {
                 // Tokens alone go back to their keys, words to their caret.
-                setUp(note && written === '' ? 'tokens' : 'letters')
+                setUp(printed.length > 0 || Number.isFinite(takes) ? 'tokens' : 'letters')
                 setEditing(true)
               }} />
             </View>
@@ -438,7 +430,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             <PaperTexture />
             <ScrollView contentContainerStyle={[styles.keys, side ? styles.keysSide : null,
               { paddingBottom: insets.bottom + space.lg, paddingRight: space.sm + (side ? insets.right : 0) }, side ? { paddingTop: insets.top + space.lg } : null]}>
-              <div data-keys style={{ display: 'contents' }}><TokenKeys groups={keys} chosen={printed.map((c) => c.id)} full={!note && takes > 1 && printed.length >= takes} onPress={tapKey} /></div>
+              <div data-keys style={{ display: 'contents' }}><TokenKeys groups={keys} chosen={printed.map((c) => c.id)} full={takes > 1 && printed.length >= takes} onPress={tapKey} /></div>
             </ScrollView>
           </View>
         </KeysDock> : null}
@@ -493,14 +485,14 @@ const NoteField = ({ inputRef, value, onChange, onFocus, style, label, placehold
   const [focused, setFocused] = useState(false)
   return (
     <View>
-      <Text aria-hidden style={[style, styles.words, styles.note, styles.mirror]}>{`${value || placeholder}${value.endsWith('\n') ? ' ' : ''}`}</Text>
+      <Text aria-hidden style={[style, styles.words, styles.mirror]}>{`${value || placeholder}${value.endsWith('\n') ? ' ' : ''}`}</Text>
       <TextInput ref={inputRef} value={value} onChangeText={onChange} multiline maxLength={noteLength}
         accessibilityLabel={label} placeholder={placeholder} placeholderTextColor={palette.muted}
         onFocus={() => {
           setFocused(true)
           onFocus()
         }} onBlur={() => setFocused(false)}
-        style={[StyleSheet.absoluteFill, style, styles.words, styles.note, styles.input, { color: palette.text },
+        style={[StyleSheet.absoluteFill, style, styles.words, styles.input, { color: palette.text },
           focusStyle(palette, focused && focusVisible)]} />
     </View>
   )
@@ -625,7 +617,9 @@ const styles = StyleSheet.create({
   // The block centres in the card and scrolls once it cannot fit; the margins keep the corners
   // for Change and the hint.
   content: { flexGrow: 1, justifyContent: 'center', paddingVertical: card.margin },
-  words: { textAlign: 'center', textTransform: 'uppercase' },
+  // Shown as written: an official phrase is written in capitals, so the editor shows what the
+  // player will read.
+  words: { textAlign: 'center' },
   number: { ...type.text.tally, fontSize: 96, lineHeight: 112 },
   stage: { alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' },
@@ -648,8 +642,6 @@ const styles = StyleSheet.create({
   keys: { paddingTop: space.lg, paddingLeft: space.sm },
   hint: { borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: space.sm },
   barEnd: { alignItems: 'center', gap: space.sm },
-  // A custom card's words keep the case they were written in.
-  note: { textTransform: 'none' },
   mirror: { opacity: 0 },
   // The browser's own ring would draw on every tap; the field takes the app's ring from the keyboard.
   input: { paddingTop: 0, paddingBottom: 0, borderWidth: 0, outlineStyle: 'none', overflow: 'hidden', resize: 'none', borderRadius: radius.control } as object,

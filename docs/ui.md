@@ -290,9 +290,9 @@ Escape.
 
 A card being filled is the Storyteller's, not yet the player's, so it leaves on its cross or Escape
 and never on a hold. The keys are printed tokens grouped under their team's label, a chosen one
-ringed and checked and one that cannot be taken dimmed, never silently refused. A shown card with
-tokens keeps a quiet Change in its top corner, and so does a written note, which the Storyteller
-may fix; it is a control, so a press on it never starts a hold.
+ringed and checked and one that cannot be taken dimmed, never silently refused. Every shown
+card keeps a quiet Change in its top corner, since the Storyteller may fix any of them; it is a
+control, so a press on it never starts a hold.
 
 A card about a player starts from that player's seat. The first row of the seat's menu turns in
 place to the two such cards, so showing one needs no pick mode on the ring, no banner and no dimmed

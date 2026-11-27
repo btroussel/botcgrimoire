@@ -11,8 +11,8 @@ import type { ShowChoice, ShowKind } from './show'
 import { notePresets, opening, seatStart, showTokens } from './show'
 import { useEdits } from './useEdits'
 
-// Each card's words, sentence case here; the card sets them uppercase.
-const labelKey: Readonly<Record<ShowKind, string>> = {
+// Each card's name, sentence case, which is also its words: the card writes them in capitals.
+export const cardNameKey: Readonly<Record<ShowKind, string>> = {
   youAre: 'board.youAre',
   thisPlayerIs: 'board.cardThisPlayerIs',
   selectedYou: 'board.cardSelectedYou',
@@ -25,10 +25,13 @@ const labelKey: Readonly<Record<ShowKind, string>> = {
 // or from a seat's menu for the two cards about its player.
 export const useOpenCard = () => {
   const e = useEdits()
+  const store = useStore()
   const interaction = useBoardInteraction()
   const open = (kind: ShowKind, choice: ShowChoice) => {
     if (!e.board) return
-    const card = opening(e.board, kind, choice, e.t(labelKey[kind]), e.name)
+    // Written in capitals, as the printed info tokens are, so the editor shows what the player reads.
+    const words = e.t(cardNameKey[kind]).toLocaleUpperCase(store.settings.locale)
+    const card = opening(e.board, kind, choice, words, e.name)
     if (card) interaction.showCard(card.spec, card.editing)
   }
   const openSeat = (kind: ShowKind, seat: SeatId) => {
@@ -54,7 +57,7 @@ export const useCardNote = (onBluffs: () => void): CardNote | undefined => {
   return {
     phrases: showTokens.map((token) => ({
       key: token.kind,
-      label: e.t(labelKey[token.kind]),
+      label: e.t(cardNameKey[token.kind]),
       onPick: () => {
         // One picker for one job: with no bluffs saved, the tray's drawer chooses them and saves
         // what it shows, so the grimoire never forgets what a Demon saw.

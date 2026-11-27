@@ -48,7 +48,7 @@ import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
-import { useCardNote } from './useCards'
+import { cardNameKey, useCardNote } from './useCards'
 import { cardKeys, takes } from './show'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
@@ -545,11 +545,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}
           onCancel={() => setConfirmHome(false)}
         />
-        {interaction.card ? (
-          // The blank card's words and tokens change as they are typed, and a card's characters do
-          // too, so the dialog takes the card's name.
+        {interaction.card && cardNote ? (
+          // A card's words and tokens change as they are typed, so the dialog takes the card's name.
           <Modal visible animationType="none" onRequestClose={interaction.closeCard}
-            aria-label={interaction.card.spec.kind === 'custom' ? t('board.customNote') : interaction.card.spec.words}>
+            aria-label={t(interaction.card.spec.kind === 'custom' ? 'board.customNote' : cardNameKey[interaction.card.spec.kind])}>
             {/* Keyed, so a phrase picked on the blank card brings its own card up fresh. */}
             <Card key={interaction.card.spec.kind} spec={interaction.card.spec} editing={interaction.card.editing} takes={takes(interaction.card.spec.kind)}
               keys={cardKeys(board, interaction.card.spec.kind).map((g) => ({
@@ -558,11 +557,11 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
                 color: g.key === 'inPlay' ? p.ink : p.teamOnPaper[g.key],
                 keys: g.ids.map((id) => ({ id, name: e.name(id) })),
               }))}
-              {...(interaction.card.spec.kind === 'custom' && cardNote ? { note: cardNote } : {})}
+              note={cardNote}
               onDismiss={interaction.closeCard}
               labels={{
                 close: t('common.close'), holdHint: t('board.cardHoldToClose'), change: t('board.cardChange'),
-                show: t('board.showBluffsNow'), takeLast: t('board.cardTakeLast'), done: t('common.done'),
+                show: t('board.showBluffsNow'),
                 takeOff: (name) => t('board.removeChip', { label: name }),
                 placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), keyboard: t('board.noteKeyboard'), letters: t('board.noteLetters'),
                 tokens: t('board.noteTokens'), keep: t('board.noteKeep'),

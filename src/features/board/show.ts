@@ -52,9 +52,9 @@ export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly C
   return kind === 'thisPlayerIs' && real !== shown ? [] : [shown]
 }
 
-// How many tokens a card takes: one for a card about one character, three bluffs, and none for a
-// card of words. The blank card takes any number, under its words or alone, as the night sheet
-// shows a Washerwoman or an Undertaker their character.
+// How many tokens a card takes. A card about one character takes one, and the key that types it
+// shows the card. The bluffs take three. A card of words and the blank card take any number, under
+// their words or alone, as the night sheet shows a Washerwoman or an Undertaker their character.
 export const takes = (kind: CardKind): number => {
   switch (kind) {
     case 'youAre':
@@ -63,13 +63,15 @@ export const takes = (kind: CardKind): number => {
       return 1
     case 'notInPlay':
       return 3
-    case 'custom':
-      return Number.POSITIVE_INFINITY
     case 'thisIsTheDemon':
     case 'theseAreYourMinions':
-      return 0
+    case 'custom':
+      return Number.POSITIVE_INFINITY
   }
 }
+
+// A phrase that is complete without a token, so it shows at once.
+const wordsAlone = (kind: ShowKind): boolean => kind === 'thisIsTheDemon' || kind === 'theseAreYourMinions'
 
 export interface KeyGroup {
   readonly key: Team | 'inPlay'
@@ -80,7 +82,6 @@ export interface KeyGroup {
 // bluffs offer the good characters not in play, then those in play, since the night sheet shows
 // a Lunatic any three good characters.
 export const cardKeys = (g: Grimoire, kind: CardKind): readonly KeyGroup[] => {
-  if (takes(kind) === 0) return []
   if (kind !== 'notInPlay') return characterGroups(g.script).map((group) => ({ key: group.team, ids: group.ids }))
   const playing = goodInPlay(g)
   return [...byTeam(bluffChoices(g)).map((group) => ({ key: group.team, ids: group.ids })),
@@ -120,7 +121,7 @@ export const showing = (
   name: (id: CharacterId) => string,
 ): CardSpec | undefined => {
   const base = blank(g, kind, choice.seat, words)
-  if (!base || takes(kind) === 0) return base
+  if (!base || wordsAlone(kind)) return base
   const ids = (choice.characters ?? []) as readonly CharacterId[]
   return ids.length > 0 ? { ...base, characters: ids.map((id) => ({ id, name: name(id) })) } : undefined
 }

@@ -138,11 +138,10 @@ describe('showing a card from the board', () => {
     expect(opening(g, 'youAre', { seat: 'nobody' as SeatId }, 'w', name)).toBeUndefined()
   })
 
-  test('each card takes one token, three bluffs, any number on the blank card, or none', () => {
+  test('a card about one character takes one token, the bluffs three, and any other any number', () => {
     expect(['youAre', 'thisPlayerIs', 'selectedYou'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1])
     expect(takes('notInPlay')).toBe(3)
-    expect(takes('custom')).toBe(Number.POSITIVE_INFINITY)
-    expect(takes('thisIsTheDemon')).toBe(0)
+    expect(['custom', 'thisIsTheDemon', 'theseAreYourMinions'].map((kind) => takes(kind as 'custom'))).toEqual(Array(3).fill(Number.POSITIVE_INFINITY))
   })
 
   test('the keys run by team with the Travellers last, and the bluffs keep the good in play for the end', () => {
@@ -154,7 +153,8 @@ describe('showing a card from the board', () => {
     expect(bluffs.map((group) => group.key)).toEqual(['townsfolk', 'outsider', 'inPlay'])
     expect(bluffs.at(-1)?.ids).toEqual(expect.arrayContaining(['chef', 'drunk']))
     expect(bluffs.slice(0, -1).flatMap((group) => group.ids)).not.toContain('chef')
-    expect(cardKeys(g, 'theseAreYourMinions')).toEqual([])
+    // A card of words can be given tokens in the editor, from the same keys.
+    expect(cardKeys(g, 'theseAreYourMinions')).toEqual(all)
   })
 
   test('a note offers the kept notes, latest first, then the script\'s own cards', () => {
