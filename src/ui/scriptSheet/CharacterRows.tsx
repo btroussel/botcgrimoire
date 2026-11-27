@@ -49,10 +49,10 @@ export const Band = ({ group, color, fills, p }: { readonly group: ScriptSheetTe
 }
 
 // ---------------------------------------------------------------------------------------------
-// One character: the icon (its own tap), the name in the team's colour, the ability, and when
-// selected in deal mode, the art and text come to full opacity and the icon takes a brass check,
-// so the choice never rests on how faded a row looks. Compose lists only the chosen characters,
-// so a check there would sit on every row and say nothing.
+// One character: the icon (its own tap), the name in the team's colour, the ability. In the deal
+// a chosen row is the one with full-strength art, a bold name and a black ability; an unchosen
+// one has faint art, a regular name and muted ink. The weight is there so the choice never rests
+// on how faded a row looks, and no badge covers the art. Compose lists only the chosen characters.
 // Compose draws the reader's compact row, so the draft looks like the sheet it saves; the deal
 // keeps large art because the icon is its tap target.
 
@@ -78,18 +78,12 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
   const compact = mode !== 'deal'
   const dim = mode !== 'read' && !selected
   const longPress = onLongPress ? { onLongPress: () => onLongPress(row.id) } : {}
-  const checked = mode === 'deal' && selected
-  const portrait = <>
-    <Portrait row={row} size={compact ? readRowIcon : rowIcon * 0.9} lazy={mode === 'compose'} dim={dim} />
-    {checked ? <View aria-hidden style={[styles.check, compact ? styles.compactCheck : null, { backgroundColor: p.accent }]}>
-      <Icon name="check" color={p.onAccent} size={compact ? 14 : 16} />
-    </View> : null}
-  </>
+  const portrait = <Portrait row={row} size={compact ? readRowIcon : rowIcon * 0.9} lazy={mode === 'compose'} dim={dim} />
   // A homebrew row's words open its record: the pencil after the name says so, and the row keeps
   // one control at its end, so it stands no taller than the rows around it.
   const edit = onEdit && row.homebrew ? () => onEdit(row.id) : undefined
   const name = <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 4 }}>
-          <Text id={`script-sheet-name-${row.id}`} style={[type.text.strong, { color }]}>{row.name}{inBag !== undefined ? ` ×${inBag}` : ''}</Text>
+          <Text id={`script-sheet-name-${row.id}`} style={[dim ? type.text.body : type.text.strong, { color }]}>{row.name}{inBag !== undefined ? ` ×${inBag}` : ''}</Text>
           {edit ? <Icon name="edit" color={p.inkMuted} size={14} /> : null}
           {jinxPartners && jinxPartners.length > 0 ? (
             <span className="script-jinx-markers" aria-label={jinxPartners.map((partner) => partner.name).join(', ')}>
@@ -101,13 +95,14 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
             </span>
           ) : null}
         </View>
-  // Unchosen rows step back but their words still read on vellum; the dimmer icon carries the cue.
-  // What hangs under the row, such as the Bootlegger's rules, steps back with it.
+  // An unchosen row's words keep their full opacity, since they are read to make the choice.
+  // What hangs under the row, such as the Bootlegger's rules, has colours of its own, so it
+  // steps back by opacity.
   const stepBack = { opacity: dim ? 0.8 : 1 }
   const details = (
-    <View style={stepBack}>
+    <View>
       {name}
-      <Text id={`script-sheet-ability-${row.id}`} style={[type.text.small, { color: p.ink }]}><AbilityText text={row.ability} /></Text>
+      <Text id={`script-sheet-ability-${row.id}`} style={[type.text.small, { color: dim ? p.inkMuted : p.ink }]}><AbilityText text={row.ability} /></Text>
     </View>
   )
   // Keep the icon, character selection and any setup choices outside each other's buttons.
