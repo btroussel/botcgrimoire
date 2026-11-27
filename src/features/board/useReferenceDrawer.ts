@@ -120,8 +120,5 @@ export const useReferenceDrawer = (open: boolean, viewport: number, upright: boo
     event.preventDefault()
     settle(next)
   }
-  // A tap on a compact row asks for the rest of it, the instruction or the ability, this once:
-  // the drawer's next opening keeps the width the Storyteller last dragged it to.
-  const expand = () => { onOpen(); animate(maximum) }
-  return { width, maximum, dragging, handlers, keyboard, expand }
+  return { width, maximum, dragging, handlers, keyboard }
 }

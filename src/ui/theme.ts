@@ -189,6 +189,11 @@ export const velvetPanel: ViewStyle = { backgroundColor: '#10091799', borderColo
 // mistaken for a selection.
 export const hoverWash = { felt: '#ffffff12', paper: '#66533f14' } as const
 
+// A reference tab is cut from its sheet's paper, like the index tab of a ledger. The tabs that
+// are not open lie under an ink wash, a shade darker, so the open one reads as part of its
+// sheet; a pointer over one lifts part of the wash. The shadow falls to the left, off the sheet.
+export const indexTab = { wash: '#6b4f1c6b', hover: '#6b4f1c40', shadow: '-3px 1px 4px -1px rgba(0,0,0,0.5)' } as const
+
 // The screen gutter: lg on a phone, xl from tablet width.
 export const gutter = { phone: space.lg, tablet: space.xl } as const
 

@@ -77,7 +77,7 @@ test('the phase control on the status plaque stays reachable over the night refe
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 
-  test('a tap on a compact night row opens the reference full, once, its filter keeps its own taps, and a seat answers at once', async ({ page }) => {
+  test('a tap on a compact night row unfolds its text in place, its filter keeps its own taps, and a seat answers at once', async ({ page }) => {
     await open(page, '/new')
     await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
     // The bag is chosen, not shuffled: a shuffle can hold the Drunk, who sits under a reminder of
@@ -97,15 +97,19 @@ test.describe('with reduced motion', () => {
     await expect(page.getByRole('radio', { name: 'All', exact: true })).toBeChecked()
     expect(await width()).toBe(168)
 
+    // The text opens under the name and the paper stays where it is. A second tap folds the
+    // text and leaves the ring on the step.
+    const dusk = paper.getByRole('button', { name: 'Dusk', exact: true })
+    const instruction = paper.getByText('Start the Night Phase.', { exact: true })
+    await expect(instruction).toHaveCount(1)
     await paper.getByText('Dusk', { exact: true }).tap()
-    await expect.poll(width).toBe(382)
-
-    // The widened drawer was for that read: it opens compact again.
-    await tab.tap()
-    await expect(tab).toHaveAttribute('aria-expanded', 'false')
-    await tab.tap()
-    await expect(tab).toHaveAttribute('aria-expanded', 'true')
-    await expect.poll(width).toBe(168)
+    await expect(dusk).toHaveAttribute('aria-expanded', 'true')
+    await expect(instruction).toHaveCount(2)
+    await dusk.tap()
+    await expect(dusk).toHaveAttribute('aria-expanded', 'false')
+    await expect(dusk).toHaveAttribute('aria-current', 'step')
+    await expect(instruction).toHaveCount(1)
+    expect(await width()).toBe(168)
 
     // A seat beside the paper answers the first tap, and the drawer steps aside for its menu.
     const seat = page.locator('[data-seat-context-target]').nth(6)

@@ -22,7 +22,7 @@ export interface ReferenceEntry {
 export const seatCharacters = (seat: Seat): readonly CharacterId[] =>
   [seat.character, ...(seat.shown ? [seat.shown] : []), ...markedCharacters(seat), ...seat.abilities.map(ability => ability.of)]
 
-const recordedCharacters = (board: Grimoire): ReadonlySet<CharacterId> => new Set([
+export const recordedCharacters = (board: Grimoire): ReadonlySet<CharacterId> => new Set([
   ...board.loose, ...board.storyteller.abilities.map(ability => ability.of), ...board.seats.flatMap(seatCharacters),
 ])
 

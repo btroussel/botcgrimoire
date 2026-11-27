@@ -220,10 +220,23 @@ Undo is a small arrow alone in the top left corner, the one corner with no other
 tap aimed at Show a card or More never lands on it. The ring keeps clear of it as it does of the
 toolbar.
 
-References are drawers you drag between closed, compact and full. Compact shows names only, so a
-tap on one of its rows opens the drawer full, that once: the next opening keeps the width last
-dragged to. Nothing dims behind a drawer, the ring never jumps during a drag, and wider than a
-phone a fully open drawer leaves some board in reach.
+References are drawers you drag between closed, compact and full, and a drawer opens at the width
+last dragged to. Compact shows names only, so a tap on one of its rows unfolds that row's text
+under its name and a second tap folds it: one ability is read without the paper covering the
+board, and only a drag opens the drawer full. Nothing dims behind a drawer, the ring never jumps
+during a drag, and wider than a phone a fully open drawer leaves some board in reach.
+
+A drawer's tabs are cut from its paper, like the index tabs of a ledger. The open tab is the
+sheet's own vellum and joins it with no line between them. The others lie under an ink wash, a
+shade darker, and tuck under the sheet's edge while it is out. There is no drag handle: a paper
+tab is already the thing to pull. The resize separator is for the keyboard, and draws only while
+focused. A sheet carries no title: its open tab names it.
+
+The three sheets share one row: the art, the name with its players under it, the text beside, and
+a line under the row that starts at the name. A night's rows are the characters' rows, in the
+night's order, and the step being read wears the brass ring round its art: a tap on a step moves
+the ring there, at either width. The filter between what is in play and the whole script heads
+every sheet and stays while the rows scroll. A team's name is the word alone, in its colour.
 
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
