@@ -287,7 +287,7 @@ than one: the form edits the first and keeps the others.
 
 Each night offers a few moments around its fixed points, on one rule: whatever makes a player
 drunk or poisoned wakes before the characters it can disable, and information wakes after all of
-it but before the Chambermaid and Mathematician, who count the night. Each moment names the two
+it but before the Chambermaid and Mathematician, who count the night. The chosen moment names the two
 steps it falls between. The Storyteller can also pick an exact place in the official order. Opened
 from a script being composed, both read that script's own order, the one run at the table, and the
 exact place also lists the script's other homebrew characters where they wake, so the Storyteller

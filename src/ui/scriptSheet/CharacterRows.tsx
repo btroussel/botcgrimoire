@@ -15,8 +15,10 @@ import type { ScriptSheetJinx, ScriptSheetMode, ScriptSheetRow, ScriptSheetTeam 
 const Portrait = ({ row, size, lazy = false, dim = false }: { readonly row: ScriptSheetRow | undefined; readonly size: number; readonly lazy?: boolean; readonly dim?: boolean }) =>
   row ? <CharacterIcon id={row.id} team={row.team} size={size} lazy={lazy} {...(dim ? { style: styles.dimmed } : {})} /> : <View style={{ width: size, height: size }} />
 
-export const Band = ({ group, color, p }: { readonly group: ScriptSheetTeam; readonly color: string; readonly p: Palette; }) => {
-  const fill = group.count && group.count.of > 0 ? Math.min(1, group.count.have / group.count.of) : 0
+// The deal's band fills toward its count, since a bag is counted at a glance. Compose says the
+// count in words only: there the fill was a second, fainter copy of the number beside it.
+export const Band = ({ group, color, fills, p }: { readonly group: ScriptSheetTeam; readonly color: string; readonly fills: boolean; readonly p: Palette; }) => {
+  const fill = fills && group.count && group.count.of > 0 ? Math.min(1, group.count.have / group.count.of) : 0
   // Separate rules leave a gap for the label without an opaque patch over the paper. The add
   // control sits in that gap beside the count, so the rules keep the rows' gutters.
   const rule = (progress: number) => (
@@ -38,7 +40,7 @@ export const Band = ({ group, color, p }: { readonly group: ScriptSheetTeam; rea
           </Text>
         ) : null}
       </View>
-      {group.add && group.rows.length > 0 ? (
+      {group.add ? (
         <IconButton icon="add" label={group.add.label} onPress={group.add.onPress} surface="paper" style={styles.bandAdd} />
       ) : null}
       {rule(Math.max(0, fill * 2 - 1))}
@@ -48,8 +50,9 @@ export const Band = ({ group, color, p }: { readonly group: ScriptSheetTeam; rea
 
 // ---------------------------------------------------------------------------------------------
 // One character: the icon (its own tap), the name in the team's colour, the ability, and when
-// selected in compose or deal mode, the art and text come to full opacity and the icon takes a
-// brass check, so the choice never rests on how faded a row looks.
+// selected in deal mode, the art and text come to full opacity and the icon takes a brass check,
+// so the choice never rests on how faded a row looks. Compose lists only the chosen characters,
+// so a check there would sit on every row and say nothing.
 // Compose draws the reader's compact row, so the draft looks like the sheet it saves; the deal
 // keeps large art because the icon is its tap target.
 
@@ -75,15 +78,19 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
   const compact = mode !== 'deal'
   const dim = mode !== 'read' && !selected
   const longPress = onLongPress ? { onLongPress: () => onLongPress(row.id) } : {}
-  const checked = mode !== 'read' && selected
+  const checked = mode === 'deal' && selected
   const portrait = <>
     <Portrait row={row} size={compact ? readRowIcon : rowIcon * 0.9} lazy={mode === 'compose'} dim={dim} />
     {checked ? <View aria-hidden style={[styles.check, compact ? styles.compactCheck : null, { backgroundColor: p.accent }]}>
       <Icon name="check" color={p.onAccent} size={compact ? 14 : 16} />
     </View> : null}
   </>
+  // A homebrew row's words open its record: the pencil after the name says so, and the row keeps
+  // one control at its end, so it stands no taller than the rows around it.
+  const edit = onEdit && row.homebrew ? () => onEdit(row.id) : undefined
   const name = <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 4 }}>
           <Text id={`script-sheet-name-${row.id}`} style={[type.text.strong, { color }]}>{row.name}{inBag !== undefined ? ` ×${inBag}` : ''}</Text>
+          {edit ? <Icon name="edit" color={p.inkMuted} size={14} /> : null}
           {jinxPartners && jinxPartners.length > 0 ? (
             <span className="script-jinx-markers" aria-label={jinxPartners.map((partner) => partner.name).join(', ')}>
               {jinxPartners.map((partner) => (
@@ -128,15 +135,18 @@ export const Row = memo(function Row({ color, jinxPartners, mode, selected, onTa
             style={(state) => [styles.rowAction, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}
           >
             {details}
+          </Pressable> : edit ? <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={editLabel ?? row.name}
+            onPress={edit}
+            style={(state) => [styles.rowAction, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}
+          >
+            {details}
           </Pressable> : <View style={styles.rowAction}>{details}</View>}
           {row.below ? <View style={[styles.below, stepBack]}>{row.below}</View> : null}
         </View>
       </View>
-      {/* Stacked, the two controls leave the ability its width on a phone. */}
-      {(onEdit && row.homebrew) || (onRemove && !row.implied) ? <View style={styles.rowControls}>
-        {onEdit && row.homebrew ? <IconButton icon="edit" label={editLabel ?? row.name} onPress={() => onEdit(row.id)} surface="paper" /> : null}
-        {onRemove && !row.implied ? <IconButton icon="close" label={removeLabel ?? row.name} onPress={() => onRemove(row.id)} surface="paper" /> : null}
-      </View> : null}
+      {onRemove && !row.implied ? <IconButton icon="close" label={removeLabel ?? row.name} onPress={() => onRemove(row.id)} surface="paper" quiet /> : null}
     </View>
   )
 })

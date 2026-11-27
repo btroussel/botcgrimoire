@@ -51,7 +51,7 @@ is read from the brackets.
 - Icon buttons carry a translated name, for hover and for screen readers.
 - Selection never relies on colour alone: a selected token gets a check as well as an outline.
 - A choice among a few options is a set of native radios under a group label, one tab stop.
-- A field keeps a visible label. A field with a length limit shows its count, such as `231/250`,
+- A field keeps a visible label, which the heading right above it can be. A field with a length limit shows its count, such as `231/250`,
   once the text is in the last fifth of the limit, in the danger colour at the limit, and never
   announces it as you type.
 - Delete sits apart from the actions you use often.
@@ -343,10 +343,23 @@ sits in the toolbar and never floats at the foot, where the bag it opens has Ope
 second tap landing there would open a board nobody dealt.
 
 The toolbar is glyphs, named by their tooltips, so the paper stays the heaviest thing on the page.
-Only Save on a received script keeps its word, as the one thing that page asks. The pencil edits a
+Only Save keeps its word: on a received script it is the one thing that page asks, and in compose
+it is the only action there. The pencil edits a
 saved script and, on an edition, edits a copy, its only way to edit. A phone has no hover to name a
 glyph, so there a saved script's copy and Print go in a More menu that writes them out; New game,
 the pencil and Share stay in the bar.
+
+In compose the sheet lists only what the script holds, so a row carries no check, and a band says
+its count against the usual number in words: only the deal's band fills. Every band carries its
+team's add control. Travellers, Fabled and Loric have no usual count, so while they are empty they
+share one line of add controls under the teams and the empty sheet fits a phone. A homebrew row's
+words open its record, marked by a pencil after the name, so the row keeps one control at its end
+and stands no taller than the others. Save sits in the toolbar, and the one control floating at
+the foot opens the catalogue: it is opened for every character, where Save is pressed once.
+
+The catalogue filters teams with a row of chips that carry each team's count, since on a phone it
+covers the sheet that shows them. Writing a new character waits at the end of the list and where a
+search found nothing, which opens the editor on the name searched for.
 
 A script is listed the same way wherever it is listed, its author then its character count, so
 the list to play from and the library read as one list.
@@ -355,7 +368,8 @@ The share QR code is black on white with the standard quiet zone, whatever the v
 camera reads contrast.
 
 A custom script shows the bundled custom logo until it has its own. In compose the logo is a
-button, with the brass pencil the character editor's token has. A tap picks an image; once the
+button, marked by a pencil on a parchment disc at its corner: quieter than the brass one on the
+character editor's token, since a logo is chosen rarely. A tap picks an image; once the
 script has one, the tap opens a menu to choose another or remove it, so the head of the sheet
 never grows a control. The image is cropped to its visible pixels and keeps its shape, since a
 logo is often wide lettering. A logo given as a web address, as other

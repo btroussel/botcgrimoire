@@ -1,5 +1,7 @@
 // The sheet is the draft: selected characters and their jinxes. The catalogue stays separate
-// so adding several characters never hides the script among the whole roster. A changed draft
+// so adding several characters never hides the script among the whole roster. Save sits in the
+// toolbar, where the reader keeps its actions, and the one control floating at the foot opens the
+// catalogue, the thing done over and over while composing. A changed draft
 // is kept on the device until it is saved or discarded, and leaving it in the app asks first.
 // A homebrew character written from the catalogue, or opened from its row on the sheet, is saved
 // to the Storyteller's list. A new one joins the draft; an edited one keeps its id, so the draft
@@ -14,18 +16,19 @@ import { useStore } from '../../store'
 import { pickFile } from '../../store/browser'
 import { isTeensyville, composeTarget, djinnText, jinxesAmong, sheetGroups, teamCounts, unknownNotice } from '../../store/scriptSheet'
 import { usePhone } from '../../ui/breakpoint'
-import { Button, IconButton } from '../../ui/Button'
+import { Button } from '../../ui/Button'
 import { Confirm } from '../../ui/Confirm'
 import { PaperTexture } from '../../ui/PaperTexture'
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { PageVelvet } from '../../ui/Velvet'
 import { useViewport } from '../../ui/Viewport'
-import { gutter, layout, palette, radius, shadows, space, touch, type } from '../../ui/theme'
+import { gutter, layout, palette, radius, space, touch, type } from '../../ui/theme'
 import type { CharacterDraft } from './character'
 import { CharacterEditor } from './CharacterEditor'
 import { ScriptCharacterPicker } from './ScriptCharacterPicker'
 import type { Draft } from './compose'
 import { composeRoster, draftIds, draftNeedsBootlegger, draftProblem, fileOf, maxName, maxRules, orderIds, recordsOf, toggleId } from './compose'
+import { draftOfCharacter, limits } from './character'
 import type { KeptCharacter } from './drafts'
 import { keepScript, useKept } from './drafts'
 import { logoFromFile } from './image'
@@ -60,7 +63,6 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   const [writing, setWriting] = useState<{ readonly initial?: Homebrew; readonly resume?: CharacterDraft } | undefined>(
     () => resumeCharacter && { resume: resumeCharacter.draft, ...(resumeCharacter.initial ? { initial: resumeCharacter.initial } : {}) },
   )
-  const openCreator = useCallback(() => setWriting({}), [])
   const closeWriter = () => setWriting(undefined)
   const keepWritten = (character: Homebrew) => saveCharacter(character).then(() => {
     const id = character.id as CharacterId
@@ -102,6 +104,8 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
   // The script's homebrew characters in the order its file lists them, which a character written
   // here can wake after.
   const onSheet = useMemo(() => orderIds(shown, records).flatMap((id) => records.get(id) ?? []), [shown, records])
+  // A new character, under the name the catalogue was searched for when nothing matched it.
+  const openCreator = useCallback((name?: string) => setWriting(name ? { resume: { ...draftOfCharacter(undefined, onSheet), name: name.slice(0, limits.name) } } : {}), [onSheet])
   const chosen = useMemo(() => roster.filter((c) => shown.includes(c.id)), [roster, shown])
   const counts = useMemo(() => teamCounts(chosen), [chosen])
   const target = composeTarget(counts)
@@ -186,34 +190,32 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
           editLabel={name => t('scripts.editCharacterNamed', { name })}
           onBack={back}
           backLabel={t('common.back')}
-        />
-        <View id="script-sheet-footer" pointerEvents="box-none" style={[styles.footer, { bottom: space.lg + insets.bottom }]}>
-          {saveFailed ? (
-            <View style={[styles.failed, { backgroundColor: p.ink }]}>
-              <Text accessibilityRole="alert" style={[type.text.small, { color: p.parchment }]}>{t('scripts.saveFailed')}</Text>
+          actions={
+            <View style={styles.actions}>
+              {saveFailed ? <Text accessibilityRole="alert" style={[type.text.small, styles.failed, { color: p.danger }]}>{t('scripts.saveFailed')}</Text> : null}
+              <Button
+                label={t('scripts.saveScript')}
+                onPress={save}
+                variant="primary"
+                surface="paper"
+                disabled={problem !== undefined || saving}
+                {...(problem ? { hintOnPress: t(`scripts.${problem}`), hintBelow: true } : {})}
+              />
             </View>
-          ) : null}
-          <View style={{ backgroundColor: p.parchment, borderRadius: radius.control }}>
-            <PaperTexture radius={radius.control} />
-            <Button
-              label={t('scripts.saveScript')}
-              onPress={save}
-              variant="primary"
-              surface="paper"
-              disabled={problem !== undefined || saving}
-              {...(problem ? { hintOnPress: t(`scripts.${problem}`) } : {})}
-            />
-            {wide && picking ? null : (
-              <View style={[styles.add, { backgroundColor: p.parchment, borderColor: p.parchmentShade }]}>
-                <PaperTexture radius={radius.control} />
-                <IconButton icon="add" label={t('scripts.addCharacters')} onPress={() => openPicker('all')} surface="paper" />
-              </View>
-            )}
+          }
+        />
+        {/* Beside the open catalogue there is nothing left for it to open. */}
+        {wide && picking ? null : (
+          <View id="script-sheet-footer" pointerEvents="box-none" style={[styles.footer, { bottom: space.lg + insets.bottom }]}>
+            <View style={{ backgroundColor: p.parchment, borderRadius: radius.control }}>
+              <PaperTexture radius={radius.control} />
+              <Button label={t('scripts.addCharacters')} icon="add" onPress={() => openPicker('all')} surface="paper" />
+            </View>
           </View>
-        </View>
+        )}
       </View>
       <View style={wide && picking ? [styles.picker, { borderLeftColor: p.parchmentShade }] : styles.closedPicker}>
-        <ScriptCharacterPicker visible={picking} wide={wide} roster={roster} selected={shown} team={team} onTeamChange={setTeam} onToggle={toggle} onClose={closePicker} onCreate={openCreator} />
+        <ScriptCharacterPicker visible={picking} wide={wide} roster={roster} selected={shown} counts={counts} target={target} team={team} onTeamChange={setTeam} onToggle={toggle} onClose={closePicker} onCreate={openCreator} />
       </View>
       {/* Escape does not close it: the editor's own back asks before a written character is lost.
           Web modals stack in the order they mount, so the editor mounts only when it opens, above
@@ -251,6 +253,6 @@ const styles = StyleSheet.create({
   picker: { width: 360, borderLeftWidth: 1, borderRadius: radius.tile, overflow: 'hidden', marginLeft: space.md },
   closedPicker: { width: 0 },
   footer: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  failed: { maxWidth: 280, padding: space.sm, marginBottom: space.sm, borderRadius: radius.control },
-  add: { position: 'absolute', left: '100%', top: 0, marginLeft: space.sm, borderWidth: 1, borderRadius: radius.control, boxShadow: shadows.ticket },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1, minWidth: 0 },
+  failed: { flexShrink: 1 },
 })

@@ -259,9 +259,11 @@ const TokenPreview = ({ name, art, markers, label, disabled, onPress }: {
   )
 }
 
-// The seven sheet teams as tiles, each with its team's icon over its printed colour. Native radios
-// give one tab stop and arrow-key selection; each lies unseen over its whole tile, so a tap on the
-// icon lands on the radio itself. A narrow panel sets them three, then two and two, and a wide one
+// The seven sheet teams as tiles, each with its team's icon beside its word in the printed colour,
+// one touch target tall: a choice made once should not take a third of a phone's screen. A word
+// too long for its tile drops under the icon, and its row grows with it. Native radios give one
+// tab stop and arrow-key selection; each lies unseen over its whole tile, so a tap on the icon
+// lands on the radio itself. A narrow panel sets them three, then two and two, and a wide one
 // four over three, the teams that take a seat first; every row is full, so a team never wraps
 // alone onto a line of its own.
 const TeamChoice = ({ label, value, words, onChange }: {
@@ -287,7 +289,7 @@ const TeamChoice = ({ label, value, words, onChange }: {
   )
 }
 
-const teamIcon = 32
+const teamIcon = 20
 
 // Which side the token preview shows, the team's own first, each tile with that side's art. The
 // choice decides which image a tap on the token replaces. Native radios, as for the teams.
@@ -316,7 +318,8 @@ const SideChoice = ({ label, sides, value, words, art, onChange }: {
 const sideIcon = 24
 
 // The character it is jinxed with, by team as the sheet lists them, beside that character's icon.
-// A native select, which a phone opens as its own long-list picker. An id from an imported file
+// A native select, which a phone opens as its own long-list picker. The section's heading, right
+// above it, is the name a reader sees. An id from an imported file
 // that the app does not know stays offered under its id, so opening the form never drops it.
 const JinxChoice = ({ label, none, hint, teams, value, choices, onChange }: {
   readonly label: string
@@ -331,7 +334,6 @@ const JinxChoice = ({ label, none, hint, teams, value, choices, onChange }: {
   const groups = sheetTeams.map((team) => ({ team, rows: choices.filter((c) => c.team === team) })).filter((g) => g.rows.length > 0)
   return (
     <View style={styles.jinx}>
-      <Text style={[type.text.small, { color: palette.inkMuted }]}>{label}</Text>
       <View style={styles.jinxRow}>
         {value !== undefined ? <CharacterIcon id={value} size={jinxIcon} {...(chosen ? { team: chosen.team } : {})} /> : null}
         <select className="editor-select" aria-label={label} value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)} style={selectStyle}>
@@ -362,8 +364,8 @@ const EditorStyles = () => <style href="grimoire-character-editor" precedence="d
   .editor-preview { position: relative; display: flex; flex-direction: column; align-items: center; gap: ${space.xs}px; }
   .editor-teams { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: ${space.sm}px; }
   .editor-team {
-    position: relative; grid-column: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: ${space.xs}px; min-height: ${touch + space.xl}px; padding: ${space.sm}px ${space.xs}px; cursor: pointer;
+    position: relative; grid-column: span 2; display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center;
+    gap: 0 ${space.xs}px; min-height: ${touch}px; box-sizing: border-box; padding: ${space.xs}px ${space.xxs}px; cursor: pointer;
     border: ${border}px solid ${palette.parchmentShade}; border-radius: ${radius.control}px;
     -webkit-tap-highlight-color: transparent;
     transition: border-color ${motion.duration.mark}ms ${motion.css.ease}, background-color ${motion.duration.mark}ms ${motion.css.ease};

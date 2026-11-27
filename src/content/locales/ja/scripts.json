@@ -98,7 +98,6 @@
   "thisScript": "この台本",
   "experimental": "実験的",
   "clearFilters": "絞り込みを解除",
-  "pickerCount": "{shown}件を表示 · 台本に{selected}件",
   "nameNeeded": "台本に名前を付けてください",
   "tooFew": "キャラクターが5件以上必要です",
   "nothingMatches": "該当なし",

@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native'
 
 import type { Team } from '../content'
-import { Button, IconButton, focusStyle, isFocused } from './Button'
+import { IconButton, focusStyle, isFocused, isHovered } from './Button'
 import { CharacterIcon } from './CharacterIcon'
 import { useFocusVisible } from './focus'
 import { Icon } from './icons'
@@ -22,7 +22,7 @@ import { CountTable, NightOrder, ReferenceRow, ReferenceTeam, SheetLogo } from '
 import { RuleList, Rules } from './scriptSheet/Rules'
 import { styles } from './scriptSheet/styles'
 import type { ScriptSheetProps, ScriptSheetRow } from './scriptSheet/types'
-import { motion, palette, type } from './theme'
+import { hoverWash, motion, palette, type } from './theme'
 
 export type * from './scriptSheet/types'
 
@@ -86,8 +86,8 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
               onPress={logoField.own ? () => togglePopover(logoMenu.current, logoButton.current, { left: true, reduced }) : logoField.onPick}
               style={(state) => [styles.logoButton, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}>
               <View id="script-sheet-logo"><SheetLogo source={logo} /></View>
-              <View id="script-sheet-logo-badge" style={[styles.logoBadge, { backgroundColor: p.accent }]}>
-                <Icon name="edit" color={p.onAccent} size={14} />
+              <View id="script-sheet-logo-badge" style={[styles.logoBadge, { backgroundColor: p.parchment, borderColor: p.parchmentShade }]}>
+                <Icon name="edit" color={p.ink} size={14} />
               </View>
             </Pressable>
             {logoField.own ? (
@@ -167,7 +167,12 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     ? <Rules label={labels.rules} {...(props.rulesField ? { field: props.rulesField } : { rules: props.rules ?? [] })} p={p} />
     : null
 
+  // Compose: a team with no usual count and nothing on it yet has no band to fill, so the
+  // Travellers, Fabled and Loric still empty share one line of add controls under the teams.
+  const offered = teams.filter((group) => group.add && !group.count && group.rows.length === 0)
+
   teams.forEach((group) => {
+    if (offered.includes(group)) return
     const color = p.teamOnPaper[group.team]
     // The Fabled and Loric are few, with long text, and the Bootlegger carries its rules under
     // it: one column keeps them readable where two would leave a narrow, ragged half. Other teams
@@ -178,12 +183,7 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
     // Each team is its own block so its band sticks only until the team's last row leaves.
     children.push(
       <View key={`team-${group.team}`} id={`script-sheet-block-${group.team}`}>
-        <Band group={group} color={color} p={p} />
-        {group.rows.length === 0 && group.add ? (
-          <View style={styles.emptyTeam}>
-            <Button label={group.add.label} icon="add" onPress={group.add.onPress} surface="paper" variant="text" />
-          </View>
-        ) : null}
+        <Band group={group} color={color} fills={mode === 'deal'} p={p} />
         <View id={`script-sheet-team-${group.team}`} style={styles.rows}>
           {columns.map((column, index) => (
             <View key={index} id={`script-sheet-column-${group.team}-${index}`} style={twoColumns && columns.length > 1 ? styles.half : styles.full}>
@@ -214,6 +214,18 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
       </View>,
     )
   })
+
+  if (offered.length > 0) children.push(
+    <View key="offered" id="script-sheet-offered" style={[styles.offered, { borderTopColor: p.parchmentShade }]}>
+      {offered.map((group) => (
+        <Pressable key={group.team} accessibilityRole="button" accessibilityLabel={group.add!.label} onPress={group.add!.onPress}
+          style={(state) => [styles.offer, isHovered(state) ? { backgroundColor: hoverWash.paper } : null, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}>
+          <Icon name="add" color={p.ink} size={20} />
+          <Text style={[type.text.strong, { color: p.teamOnPaper[group.team] }]}>{group.label}</Text>
+        </Pressable>
+      ))}
+    </View>,
+  )
 
   // Always there, as on the official sheet: nearly every script has an asterisk, and guessing from
   // the night order missed some, like the Lleech, which wakes on the first night yet reads "Each night*".

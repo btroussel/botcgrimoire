@@ -1,6 +1,6 @@
 // Where a homebrew character wakes on one night, beneath the editor's heading for that night.
-// Most characters wake at one of a few moments, so those come first, each saying which two steps
-// it falls between. Any other place is chosen on the night itself: the night order as a column of
+// Most characters wake at one of a few moments, so those come first, the chosen one saying which
+// two steps it falls between. Any other place is chosen on the night itself: the night order as a column of
 // tokens with the character's own token standing in its place, where tapping a step wakes it just
 // after that step and the arrows move it one step at a time. Opened from a script, both read the
 // script's own order, the one the Storyteller will run, and the column also holds the script's
@@ -77,8 +77,9 @@ export const NightPlacement = ({ label, night, steps, script, homebrew, self, po
   )
 }
 
-// A native radio over the whole card, as the editor's team tiles are: one tab stop for the
-// group, arrow keys to choose, and the label's own text as its description.
+// A native radio over the whole row, as the editor's team tiles are: one tab stop for the
+// group, arrow keys to choose, and the label's own text as its description. The description
+// shows under the chosen moment only, and stays what a screen reader says of every one.
 const Moment = ({ group, checked, title, detail, onPick }: {
   readonly group: string
   readonly checked: boolean
@@ -93,7 +94,7 @@ const Moment = ({ group, checked, title, detail, onPick }: {
       <span className="night-moment-dot" />
       <span className="night-moment-text">
         <span style={titleStyle}>{title}</span>
-        {detail ? <span id={id} style={detailStyle}>{detail}</span> : null}
+        {detail ? <span id={id} className="night-moment-detail" style={detailStyle}>{detail}</span> : null}
       </span>
     </label>
   )
@@ -208,21 +209,25 @@ const StepRow = ({ step, label, tabbable, onPress }: {
   )
 }
 
-// The cards stack in night order, so they read as the night does. Every element is positioned
-// like the views around it, or the paper texture paints over it.
+// The moments stack in night order inside one frame, so they read as the night does and as one
+// choice, each a touch target tall. Every element is positioned like the views around it, or the
+// paper texture paints over it.
 const MomentStyles = () => <style href="grimoire-night-moments" precedence="default">{`
-  .night-moments { position: relative; display: flex; flex-direction: column; gap: ${space.sm}px; }
+  .night-moments { position: relative; display: flex; flex-direction: column; border: 1px solid ${palette.parchmentShade}; border-radius: ${radius.control}px; }
   .night-moment {
-    position: relative; display: flex; align-items: center; gap: ${space.md}px; min-height: ${touch + space.sm}px;
-    padding: ${space.xs}px ${space.md}px; cursor: pointer; border-radius: ${radius.control}px; border: 1px solid ${palette.parchmentShade};
+    position: relative; display: flex; align-items: center; gap: ${space.md}px; min-height: ${touch}px; box-sizing: border-box;
+    padding: ${space.xs}px ${space.md}px; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: border-color ${motion.duration.mark}ms ${motion.css.ease}, background-color ${motion.duration.mark}ms ${motion.css.ease};
+    transition: background-color ${motion.duration.mark}ms ${motion.css.ease};
   }
+  .night-moment + .night-moment { border-top: 1px solid ${palette.parchmentShade}; }
+  .night-moment:first-child { border-radius: ${radius.control - 1}px ${radius.control - 1}px 0 0; }
+  .night-moment:last-child { border-radius: 0 0 ${radius.control - 1}px ${radius.control - 1}px; }
   .night-moment input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
   .night-moment:hover { background-color: ${hoverWash.paper}; }
   .night-moment:active { opacity: ${motion.pressedOpacity}; }
-  .night-moment:has(input:focus-visible) { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; }
-  .night-moment:has(input:checked) { border-color: ${palette.accent}; background-color: ${palette.paperPressed}; box-shadow: inset 0 0 0 1px ${palette.accent}; }
+  .night-moment:has(input:focus-visible) { outline: ${focusRing.width}px solid ${palette.ink}; outline-offset: ${focusRing.offset}px; z-index: 1; }
+  .night-moment:has(input:checked) { background-color: ${palette.paperPressed}; box-shadow: inset 0 0 0 ${border}px ${palette.accent}; }
   /* A radio's own mark, in ink: brass alone is too faint on vellum to say which card is chosen. */
   .night-moment-dot {
     position: relative; flex: none; width: 20px; height: 20px; box-sizing: border-box; border-radius: 10px;
@@ -233,6 +238,8 @@ const MomentStyles = () => <style href="grimoire-night-moments" precedence="defa
     content: ''; position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 5px; background-color: ${palette.ink};
   }
   .night-moment-text { position: relative; display: flex; flex-direction: column; min-width: 0; }
+  .night-moment-detail { display: none; }
+  .night-moment:has(input:checked) .night-moment-detail { display: block; }
   @media (prefers-reduced-motion: reduce) { .night-moment { transition: none; } }
 `}</style>
 

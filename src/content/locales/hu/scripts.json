@@ -100,7 +100,6 @@
   "thisScript": "Ez a szkript",
   "experimental": "Kísérleti",
   "clearFilters": "Szűrők törlése",
-  "pickerCount": "{shown} látható · {selected} a szkriptben",
   "nameNeeded": "Adj nevet a szkriptnek",
   "tooFew": "Legalább öt karakter kell",
   "nothingMatches": "Nincs találat",
