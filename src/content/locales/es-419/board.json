@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Este es el Demonio",
   "cardTheseAreYourMinions": "Estos son tus Secuaces",
   "cardHoldToClose": "Mantén presionado para cerrar",
-  "showAboutWhichCharacter": "Qué rol",
-  "showBluffs": "Qué roles no están en juego",
-  "showCharactersCount": {
-    "one": "Mostrar {count} rol",
-    "other": "Mostrar {count} roles"
-  },
+  "cardChange": "Cambiar",
+  "cardTakeLast": "Quitar la última ficha",
   "sheetFirstNight": "Primera noche",
   "sheetOtherNights": "Otras noches",
   "markerDusk": "Anochecer",

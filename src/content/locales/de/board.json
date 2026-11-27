@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Dies ist der Dämon",
   "cardTheseAreYourMinions": "Dies sind deine Schergen",
   "cardHoldToClose": "Zum Schließen gedrückt halten",
-  "showAboutWhichCharacter": "Welcher Charakter",
-  "showBluffs": "Welche Charaktere nicht im Spiel sind",
-  "showCharactersCount": {
-    "one": "{count} Charakter zeigen",
-    "other": "{count} Charaktere zeigen"
-  },
+  "cardChange": "Ändern",
+  "cardTakeLast": "Letztes Plättchen entfernen",
   "sheetFirstNight": "Erste Nacht",
   "sheetOtherNights": "Weitere Nächte",
   "markerDusk": "Abend­dämmerung",

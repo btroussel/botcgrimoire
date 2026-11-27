@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "This is the Demon",
   "cardTheseAreYourMinions": "These are your Minions",
   "cardHoldToClose": "Hold to close",
-  "showAboutWhichCharacter": "Which character",
-  "showBluffs": "Which characters are not in play",
-  "showCharactersCount": {
-    "one": "Show {count} character",
-    "other": "Show {count} characters"
-  },
+  "cardChange": "Change",
+  "cardTakeLast": "Take the last token off",
   "sheetFirstNight": "First night",
   "sheetOtherNights": "Other nights",
   "markerDusk": "Dusk",

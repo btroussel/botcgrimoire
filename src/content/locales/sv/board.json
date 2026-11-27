@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Det här är Demonen",
   "cardTheseAreYourMinions": "Det här är dina Kumpaner",
   "cardHoldToClose": "Håll in för att stänga",
-  "showAboutWhichCharacter": "Vilken roll",
-  "showBluffs": "Vilka roller som inte är i spel",
-  "showCharactersCount": {
-    "one": "Visa {count} roll",
-    "other": "Visa {count} roller"
-  },
+  "cardChange": "Ändra",
+  "cardTakeLast": "Ta bort den sista brickan",
   "sheetFirstNight": "Första natten",
   "sheetOtherNights": "Övriga nätter",
   "markerDusk": "Skymning",

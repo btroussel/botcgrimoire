@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Dette er Demonen",
   "cardTheseAreYourMinions": "Dette er dine Undersåtter",
   "cardHoldToClose": "Hold inne for å lukke",
-  "showAboutWhichCharacter": "Hvilken rolle",
-  "showBluffs": "Hvilke roller er ikke i spill",
-  "showCharactersCount": {
-    "one": "Vis {count} rolle",
-    "other": "Vis {count} roller"
-  },
+  "cardChange": "Endre",
+  "cardTakeLast": "Fjern den siste brikken",
   "sheetFirstNight": "Første natt",
   "sheetOtherNights": "Andre netter",
   "markerDusk": "Skumring",

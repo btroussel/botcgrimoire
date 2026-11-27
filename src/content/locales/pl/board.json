@@ -84,14 +84,8 @@
   "cardThisIsTheDemon": "To jest Demon",
   "cardTheseAreYourMinions": "To są twoi Sługusi",
   "cardHoldToClose": "Przytrzymaj, by zamknąć",
-  "showAboutWhichCharacter": "Która postać",
-  "showBluffs": "Których postaci nie ma w grze",
-  "showCharactersCount": {
-    "one": "Pokaż {count} postać",
-    "few": "Pokaż {count} postacie",
-    "many": "Pokaż {count} postaci",
-    "other": "Pokaż {count} postaci"
-  },
+  "cardChange": "Zmień",
+  "cardTakeLast": "Usuń ostatni żeton",
   "sheetFirstNight": "Pierwsza noc",
   "sheetOtherNights": "Pozostałe noce",
   "markerDusk": "Zmierzch",

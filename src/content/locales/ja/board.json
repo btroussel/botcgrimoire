@@ -84,11 +84,8 @@
   "cardThisIsTheDemon": "この人が悪魔です",
   "cardTheseAreYourMinions": "あなたの手下は",
   "cardHoldToClose": "長押しして閉じます",
-  "showAboutWhichCharacter": "どのキャラクター",
-  "showBluffs": "存在しないキャラクター",
-  "showCharactersCount": {
-    "other": "キャラクター{count}件を見せる"
-  },
+  "cardChange": "変更",
+  "cardTakeLast": "最後のトークンを外す",
   "sheetFirstNight": "最初の夜",
   "sheetOtherNights": "他の夜",
   "markerDusk": "夕方",

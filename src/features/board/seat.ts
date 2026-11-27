@@ -28,7 +28,7 @@ export interface CharacterGroup {
   readonly ids: readonly CharacterId[]
 }
 
-const byTeam = (ids: readonly CharacterId[]): readonly CharacterGroup[] =>
+export const byTeam = (ids: readonly CharacterId[]): readonly CharacterGroup[] =>
   teams
     .map((team) => ({ team, ids: ids.filter((id) => character(id).team === team) }))
     .filter((g) => g.ids.length > 0)

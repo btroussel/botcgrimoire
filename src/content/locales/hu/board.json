@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Ő a démon",
   "cardTheseAreYourMinions": "Ők a csatlósaid",
   "cardHoldToClose": "Tartsd lenyomva a bezáráshoz",
-  "showAboutWhichCharacter": "Melyik karakter",
-  "showBluffs": "Mely karakterek nincsenek játékban",
-  "showCharactersCount": {
-    "one": "{count} karakter mutatása",
-    "other": "{count} karakter mutatása"
-  },
+  "cardChange": "Módosítás",
+  "cardTakeLast": "Az utolsó jelölő eltávolítása",
   "sheetFirstNight": "Első éjszaka",
   "sheetOtherNights": "További éjszakák",
   "markerDusk": "Alkonyat",

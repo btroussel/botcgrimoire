@@ -134,12 +134,20 @@ characters first, with no ability source to pick. A note needs text, and this ga
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
 players unless saved, since the Demon gets none there. Their picker also shows them: Show saves the
 set on screen and opens the not-in-play card with it, so what the Demon saw is what the tray
-and the log hold.
+and the log hold. The not-in-play card opens that same picker while no bluffs are saved, so there
+is one picker for the job and no way to show a Demon bluffs the grimoire forgets.
 
 The cards are the six info tokens the night sheet names, the character tokens alone, which the
 sheet asks for more often than any of them, and a written note. A homebrew character's own card
 text, from its script, adds one more card with its token
 ([Content](content.md#homebrew-characters)).
+
+A card whose content is already known comes up shown: You are and This player is once their
+player's seat is tapped, the not-in-play card with the saved bluffs, and the two cards of words.
+One whose content is not known comes up empty for the Storyteller to fill: This character selected
+you, the tokens alone, and This player is on a disguised seat. A shown card that carries tokens
+has Change, which takes it back to editing with what it shows. Change says nothing about the game,
+since the player can see it.
 
 Only You are tells a side, as the official app sends one with a thumb. It starts from the
 character its player believes and shows the side they believe, read from the board, so a side
@@ -148,12 +156,12 @@ colours, as the printed token is, so no card tells one player another's side. Th
 starts from the seat's character, or from nothing on a disguised seat: the Demon must learn a real
 Marionette or Lunatic, but a Drunk's real token must never go out on a hasty tap.
 
-The Storyteller can change or add to any card's characters, since a poisoned player may be shown
-something false, and a card about characters takes as many as they pick. The not-in-play card
-takes up to three and starts from the saved bluffs. It lists the good characters in play last,
-since a Lunatic may be shown any good characters, and its shuffle never picks them. A card's
-tokens leave out the night and reminder marks, as the setup reveal does. Showing a card records
-nothing.
+The Storyteller can change any card's characters, since a poisoned player may be shown something
+false. A card about one character takes one, and the key that types it shows the card. The tokens
+alone take as many as they pick. The not-in-play card takes up to three, and changing it changes
+only what this card shows, never the saved bluffs. It offers the good characters in play last,
+since a Lunatic may be shown any good characters. A card's tokens leave out the night and reminder
+marks, as the setup reveal does. Showing a card records nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)). The character reference opens on the

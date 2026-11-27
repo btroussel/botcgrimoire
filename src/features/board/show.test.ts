@@ -1,7 +1,7 @@
 import type { SeatId } from '../../engine'
 import { game, info, token } from '../../engine/testing/board'
 import { bluffsOf } from '../../store/bluffs'
-import { believed, seatStart, showTokens, showing } from './show'
+import { believed, cardKeys, opening, seatStart, showTokens, showing, takes } from './show'
 
 // Uppercase ids verify that card names come from the supplied locale lookup.
 const name = (id: string) => id.toUpperCase()
@@ -130,5 +130,39 @@ describe('showing a card from the board', () => {
     expect(showing(g, 'tokenOnly', {}, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: 'nobody' as SeatId, characters: ['chef'] }, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: id('Empty'), characters: ['chef'] }, 'w', name)).toBeUndefined()
+  })
+
+  test('a card whose content is known comes up shown, one whose content is not comes up editing and empty', () => {
+    const { g, id } = table().build()
+    expect(opening(g, 'youAre', { seat: id('Cat'), characters: seatStart(g, 'youAre', id('Cat')) }, 'w', name)).toEqual({
+      spec: { kind: 'youAre', words: 'w', characters: printed('empath'), tint: 'good' }, editing: false,
+    })
+    // The Drunk's seat offers nothing unasked, so the Storyteller types the character.
+    expect(opening(g, 'thisPlayerIs', { seat: id('Cat'), characters: seatStart(g, 'thisPlayerIs', id('Cat')) }, 'w', name)).toEqual({
+      spec: { kind: 'thisPlayerIs', words: 'w', characters: [], caption: 'Cat' }, editing: true,
+    })
+    expect(opening(g, 'selectedYou', {}, 'w', name)).toEqual({ spec: { kind: 'selectedYou', words: 'w', characters: [] }, editing: true })
+    expect(opening(g, 'tokenOnly', {}, 'w', name)).toEqual({ spec: { kind: 'tokenOnly', words: '', characters: [] }, editing: true })
+    expect(opening(g, 'thisIsTheDemon', {}, 'w', name)).toEqual({ spec: { kind: 'thisIsTheDemon', words: 'w' }, editing: false })
+    expect(opening(g, 'youAre', { seat: 'nobody' as SeatId }, 'w', name)).toBeUndefined()
+  })
+
+  test('each card takes one token, three bluffs, any number alone, or none', () => {
+    expect(['youAre', 'thisPlayerIs', 'selectedYou'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1])
+    expect(takes('notInPlay')).toBe(3)
+    expect(takes('tokenOnly')).toBe(Number.POSITIVE_INFINITY)
+    expect(takes('thisIsTheDemon')).toBe(0)
+  })
+
+  test('the keys run by team with the Travellers last, and the bluffs keep the good in play for the end', () => {
+    const { g } = table().build()
+    const all = cardKeys(g, 'tokenOnly')
+    expect(all.map((group) => group.key)).toEqual(['townsfolk', 'outsider', 'minion', 'demon', 'traveller'])
+    expect(all.find((group) => group.key === 'townsfolk')?.ids).toContain('chef')
+    const bluffs = cardKeys(g, 'notInPlay')
+    expect(bluffs.map((group) => group.key)).toEqual(['townsfolk', 'outsider', 'inPlay'])
+    expect(bluffs.at(-1)?.ids).toEqual(expect.arrayContaining(['chef', 'drunk']))
+    expect(bluffs.slice(0, -1).flatMap((group) => group.ids)).not.toContain('chef')
+    expect(cardKeys(g, 'theseAreYourMinions')).toEqual([])
   })
 })

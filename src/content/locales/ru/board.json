@@ -84,14 +84,8 @@
   "cardThisIsTheDemon": "Это Демон",
   "cardTheseAreYourMinions": "Это ваши Приспешники",
   "cardHoldToClose": "Удерживайте, чтобы закрыть",
-  "showAboutWhichCharacter": "Какая роль",
-  "showBluffs": "Каких ролей нет в игре",
-  "showCharactersCount": {
-    "one": "Показать {count} роль",
-    "few": "Показать {count} роли",
-    "many": "Показать {count} ролей",
-    "other": "Показать {count} роли"
-  },
+  "cardChange": "Изменить",
+  "cardTakeLast": "Убрать последний жетон",
   "sheetFirstNight": "Первая ночь",
   "sheetOtherNights": "Другие ночи",
   "markerDusk": "Закат",

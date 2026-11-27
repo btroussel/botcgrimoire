@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Tämä on Demoni",
   "cardTheseAreYourMinions": "Nämä ovat Kätyrisi",
   "cardHoldToClose": "Sulje pitämällä painettuna",
-  "showAboutWhichCharacter": "Mikä hahmo",
-  "showBluffs": "Mitkä hahmot eivät ole pelissä",
-  "showCharactersCount": {
-    "one": "Näytä {count} hahmo",
-    "other": "Näytä {count} hahmoa"
-  },
+  "cardChange": "Vaihda",
+  "cardTakeLast": "Poista viimeinen merkki",
   "sheetFirstNight": "Ensimmäinen yö",
   "sheetOtherNights": "Muut yöt",
   "markerDusk": "Iltarusko",

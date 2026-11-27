@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Voici le Démon",
   "cardTheseAreYourMinions": "Voici vos Sbires",
   "cardHoldToClose": "Maintenez appuyé pour fermer",
-  "showAboutWhichCharacter": "Quel rôle",
-  "showBluffs": "Quels rôles ne sont pas en jeu",
-  "showCharactersCount": {
-    "one": "Montrer {count} rôle",
-    "other": "Montrer {count} rôles"
-  },
+  "cardChange": "Changer",
+  "cardTakeLast": "Retirer le dernier jeton",
   "sheetFirstNight": "Première nuit",
   "sheetOtherNights": "Autres nuits",
   "markerDusk": "Crépuscule",

@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Aquest és el dimoni",
   "cardTheseAreYourMinions": "Aquests són els vostres sequaços",
   "cardHoldToClose": "Manteniu premut per a tancar",
-  "showAboutWhichCharacter": "Quin personatge",
-  "showBluffs": "Quins personatges no són a la partida",
-  "showCharactersCount": {
-    "one": "Mostra {count} personatge",
-    "other": "Mostra {count} personatges"
-  },
+  "cardChange": "Canvia",
+  "cardTakeLast": "Treu l'última fitxa",
   "sheetFirstNight": "Primera nit",
   "sheetOtherNights": "Altres nits",
   "markerDusk": "Capvespre",

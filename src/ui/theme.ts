@@ -300,7 +300,14 @@ export const card = {
   // may drift before the press counts as a scroll.
   holdRing: { size: 104, width: 4 },
   holdSlop: 10,
+  // An editing card's keys: docked at the foot of an upright window, at most this share of its
+  // height, or a column on the right of a wide one, which has no height to give.
+  keys: { heightShare: 0.45, sideShare: 0.5, sideMaximum: 420 },
 } as const
+
+// The token keyboard: printed tokens as keys, one point over the touch target so a key never
+// falls under it, seven across where the width allows.
+export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20 } as const
 
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half

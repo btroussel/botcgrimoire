@@ -84,11 +84,8 @@
   "cardThisIsTheDemon": "他是恶魔",
   "cardTheseAreYourMinions": "他们是你的爪牙",
   "cardHoldToClose": "长按以关闭",
-  "showAboutWhichCharacter": "哪个角色",
-  "showBluffs": "哪些角色不在场",
-  "showCharactersCount": {
-    "other": "展示 {count} 个角色"
-  },
+  "cardChange": "更改",
+  "cardTakeLast": "移除最后一个标记",
   "sheetFirstNight": "首个夜晚",
   "sheetOtherNights": "其他夜晚",
   "markerDusk": "黄昏",

@@ -49,6 +49,7 @@ export type IconName =
   | 'info'
   | 'mail'
   | 'flag'
+  | 'backspace'
 
 // Each glyph is one or more path strings in a 24 x 24 box; `circle` marks a lens or a disc.
 const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonly circle?: readonly [number, number, number] }>> = {
@@ -107,6 +108,8 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   mail: { d: ['M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z', 'M3 7l9 6 9-6'] },
   // A pennant on its pole: the end of a game on the replay's timeline.
   flag: { d: ['M6 21V4', 'M6 4h12l-3 4.5 3 4.5H6'] },
+  // A keyboard's delete key: takes the last token off a card.
+  backspace: { d: ['M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z', 'M12 9.5l5 5', 'M17 9.5l-5 5'] },
 }
 
 export interface IconProps {

@@ -17,39 +17,92 @@ const chooseCard = async (page, words) => {
   await page.getByRole('button', { name: words, exact: true }).click()
 }
 
-test('a card about a player starts from their character and shows the one picked instead', async ({ page }) => {
-  await openBoard(page)
-  // The Imp's seat: the deal may seat the Drunk anywhere, and a disguised seat starts empty.
-  const seat = page.locator('[data-seat-context-target]').getByRole('button', { name: /, Imp$/ }).first()
-  const [player] = (await seat.getAttribute('aria-label')).split(', ')
-
-  await chooseCard(page, 'This player is')
-  await seat.click()
-  const picker = page.getByRole('dialog', { name: 'Which character' })
-  await expect(picker.getByRole('button', { name: 'Imp', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await picker.getByRole('button', { name: 'Imp', exact: true }).click()
-  await picker.getByRole('button', { name: 'Chef', exact: true }).click()
-  await picker.getByRole('button', { name: 'Show 1 character', exact: true }).click()
-
-  const card = page.getByRole('dialog', { name: 'This player is' })
-  await expect(card.getByText('CHEF', { exact: true })).toBeVisible()
-  await expect(card.getByText(player, { exact: true })).toBeVisible()
-})
-
 // The card is held screen out toward a player, so a tap never closes it: a press held for half a
 // second does.
 const holdToClose = card => card.click({ delay: 700 })
 
+// The Imp's seat: the deal may seat the Drunk anywhere, and a disguised seat starts empty.
+const impSeat = page => page.locator('[data-seat-context-target]').getByRole('button', { name: /, Imp$/ }).first()
+
+test('a card about a player comes up shown with their character, and the sheet stays closed', async ({ page }) => {
+  await openBoard(page)
+  const seat = impSeat(page)
+  const [player] = (await seat.getAttribute('aria-label')).split(', ')
+
+  await chooseCard(page, 'This player is')
+  await expect(page.getByRole('dialog', { name: 'Show a card' })).toBeHidden()
+  await seat.click()
+  const card = page.getByRole('dialog', { name: 'This player is' })
+  await expect(card.getByText('IMP', { exact: true })).toBeVisible()
+  await expect(card.getByText(player, { exact: true })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Show', exact: true })).toHaveCount(0)
+  await holdToClose(card)
+  await expect(card).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'Show a card' })).toBeHidden()
+})
+
+test('Change on a shown You are types another character, and one key shows it again', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'You are')
+  await impSeat(page).click()
+  const card = page.getByRole('dialog', { name: 'You are' })
+  await expect(card.getByText('IMP', { exact: true })).toBeVisible()
+
+  // Change does not start a hold: the card stays up and goes back to editing.
+  await card.getByRole('button', { name: 'Change', exact: true }).click()
+  await expect(card.getByRole('button', { name: 'Imp', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await card.getByRole('button', { name: 'Chef', exact: true }).click()
+  await expect(card.getByRole('button', { name: 'Chef', exact: true })).toHaveCount(0)
+  await expect(card.getByText('CHEF', { exact: true })).toBeVisible()
+  await expect(card.getByText('IMP', { exact: true })).toHaveCount(0)
+})
+
+test('This character selected you shows on the first key', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'This character selected you')
+  const card = page.getByRole('dialog', { name: 'This character selected you' })
+  // It comes up editing: the cross leaves, and no Show waits for a single token.
+  await expect(card.getByRole('button', { name: 'Close', exact: true })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Show', exact: true })).toHaveCount(0)
+  await card.getByRole('button', { name: 'Poisoner', exact: true }).click()
+  await expect(card.getByRole('button', { name: 'Poisoner', exact: true })).toHaveCount(0)
+  await expect(card.getByText('POISONER', { exact: true })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeVisible()
+})
+
+test('the tokens alone take two tokens and show both', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'Token only')
+  const card = page.getByRole('dialog', { name: 'Token only' })
+  const show = card.getByRole('button', { name: 'Show', exact: true })
+  await expect(show).toBeDisabled()
+  await card.getByRole('button', { name: 'Chef', exact: true }).click()
+  await card.getByRole('button', { name: 'Imp', exact: true }).click()
+  // A token on the card comes off with a tap while editing, and goes back on from its key.
+  await card.getByRole('button', { name: 'Remove Imp', exact: true }).click()
+  await card.getByRole('button', { name: 'Imp', exact: true }).click()
+  await show.click()
+  await expect(show).toHaveCount(0)
+  for (const name of ['CHEF', 'IMP']) await expect(card.getByText(name, { exact: true })).toBeVisible()
+})
+
+test('an editing card leaves on its cross without showing anything', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'Token only')
+  const card = page.getByRole('dialog', { name: 'Token only' })
+  await card.getByRole('button', { name: 'Chef', exact: true }).click()
+  await card.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(card).toBeHidden()
+})
+
 test('several characters on a card stand in a column on an upright phone, as large as fits', async ({ page }) => {
   await openBoard(page)
   await chooseCard(page, 'Token only')
-  const picker = page.getByRole('dialog', { name: 'Which character' })
-  for (const name of ['Chef', 'Imp', 'Monk']) await picker.getByRole('button', { name, exact: true }).click()
-  await picker.getByRole('button', { name: 'Show 3 characters', exact: true }).click()
+  const card = page.getByRole('dialog', { name: 'Token only' })
+  for (const name of ['Chef', 'Imp', 'Monk']) await card.getByRole('button', { name, exact: true }).click()
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
 
-  // The tokens alone: the card has no words, so the characters name it. Each is large enough to
-  // print its name on the arc.
-  const card = page.getByRole('dialog', { name: 'Chef, Imp, Monk' })
+  // The tokens alone have no words. Each is large enough to print its name on the arc.
   await expect(card.getByRole('heading')).toHaveCount(0)
   const names = ['CHEF', 'IMP', 'MONK'].map(name => card.getByText(name, { exact: true }))
   for (const name of names) await expect(name).toBeVisible()
@@ -90,12 +143,11 @@ test('a long name under a token keeps its word whole on the narrowest phone', as
   await page.setViewportSize({ width: 320, height: 568 })
   await openBoard(page)
   await chooseCard(page, 'Token only')
-  const picker = page.getByRole('dialog', { name: 'Which character' })
+  const card = page.getByRole('dialog', { name: 'Token only' })
   const long = ['Washerwoman', 'Undertaker', 'Ravenkeeper']
-  for (const name of long) await picker.getByRole('button', { name, exact: true }).click()
-  await picker.getByRole('button', { name: 'Show 3 characters', exact: true }).click()
+  for (const name of long) await card.getByRole('button', { name, exact: true }).click()
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
 
-  const card = page.getByRole('dialog', { name: long.join(', ') })
   // A word broken across two lines leaves its characters on two line tops.
   for (const name of long) {
     const lines = await card.getByText(name, { exact: true }).evaluate(caption => {
@@ -105,6 +157,47 @@ test('a long name under a token keeps its word whole on the narrowest phone', as
     })
     expect(lines, name).toBe(1)
   }
+})
+
+test('the not-in-play card with no bluffs saved opens the tray\'s picker, so the tray holds what was shown', async ({ page }) => {
+  await openBoard(page)
+  const tray = page.getByRole('region', { name: "Demon's Bluffs" })
+  await expect(tray.getByRole('button', { name: /^Bluff: / })).toHaveCount(0)
+  await chooseCard(page, 'These characters are not in play')
+  const picker = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  await picker.getByRole('button', { name: 'Show', exact: true }).click()
+
+  const card = page.getByRole('dialog', { name: 'These characters are not in play' })
+  await expect(card.getByRole('heading')).toBeVisible()
+  const shown = await card.locator('text').allTextContents()
+  await holdToClose(card)
+  await expect(card).toBeHidden()
+  const saved = (await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label'))))
+    .map(label => label.replace('Bluff: ', '').toUpperCase())
+  expect(saved).toHaveLength(3)
+  expect(shown.map(name => name.trim())).toEqual(saved)
+})
+
+test('Change on the not-in-play card edits what it shows and saves nothing', async ({ page }) => {
+  await openBoard(page)
+  const tray = page.getByRole('region', { name: "Demon's Bluffs" })
+  await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
+  await page.getByRole('dialog', { name: "Demon's Bluffs" }).getByRole('button', { name: 'Save', exact: true }).click()
+  const before = await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
+  expect(before).toHaveLength(3)
+
+  await chooseCard(page, 'These characters are not in play')
+  const card = page.getByRole('dialog', { name: 'These characters are not in play' })
+  await card.getByRole('button', { name: 'Change', exact: true }).click()
+  // Three are on the card, so a key not chosen is dimmed and refused until one comes off.
+  await expect(card.locator('[aria-disabled="true"]').first()).toBeVisible()
+  await card.getByRole('button', { name: 'Take the last token off', exact: true }).click()
+  await expect(card.locator('[aria-disabled="true"]')).toHaveCount(0)
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
+  await expect(card.locator('text')).toHaveCount(2)
+  await holdToClose(card)
+  await expect(card).toBeHidden()
+  expect(await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))).toEqual(before)
 })
 
 test('the bluff picker shows the set on screen and saves it, so the tray holds what the Demon saw', async ({ page }) => {

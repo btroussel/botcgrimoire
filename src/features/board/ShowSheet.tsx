@@ -10,19 +10,15 @@ import { Button } from '../../ui/Button'
 import { Field } from '../../ui/Field'
 import type { InfoTokenItem } from './InfoTokenList'
 import { InfoTokenList } from './InfoTokenList'
-import type { PickerGroup } from '../../ui/Picker'
-import { Picker } from '../../ui/Picker'
 import { Sheet } from '../../ui/Sheet'
-import { palette } from '../../ui/theme'
-import { bluffChoices, characterGroups, goodInPlay, pickerGroups, roster } from './seat'
-import type { ShowChoice, ShowKind, ShowToken } from './show'
-import { believed, seatStart, showTokens, showing } from './show'
+import type { ShowChoice, ShowKind } from './show'
+import { believed, opening, seatStart, showTokens } from './show'
 import { useEdits } from './useEdits'
 
 export interface ShowSheetProps {
   readonly visible: boolean
   readonly onClose: () => void
-  readonly onReopen: () => void // the sheet steps aside for a seat pick on the ring, then comes back
+  readonly onBluffs: () => void // the tray's own bluffs picker, for a not-in-play card with none saved
 }
 
 // Each card's name in the list, sentence case here, which is also the words the card sets
@@ -37,31 +33,17 @@ const labelKey: Readonly<Record<ShowKind, string>> = {
   notInPlay: 'board.notInPlayWords',
 }
 
-const bluffCount = 3
-
-type Step =
-  | { readonly kind: 'tokens' }
-  | { readonly kind: 'note' }
-  | { readonly kind: 'about'; readonly token: ShowToken; readonly seat?: SeatId }
-
-export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
+export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
   const e = useEdits()
   const interaction = useBoardInteraction()
   const t = e.t
   const board = e.board
-  const [step, setStep] = useState<Step>({ kind: 'tokens' })
-  const [note, setNote] = useState('')
-  // The flow starts over each time the sheet opens, unless it comes back from a seat pick; the
-  // edge is read during render.
-  const [resume, setResume] = useState<Step | undefined>(undefined)
+  const [note, setNote] = useState<string | undefined>(undefined) // the note step while set
+  // The list comes back each time the sheet opens; the edge is read during render.
   const [wasVisible, setWasVisible] = useState(visible)
   if (visible !== wasVisible) {
     setWasVisible(visible)
-    if (visible) {
-      setStep(resume ?? { kind: 'tokens' })
-      setResume(undefined)
-      setNote('')
-    }
+    if (visible) setNote(undefined)
   }
 
   const savedBluffs = board ? bluffsOf(board, e.log) : []
@@ -75,17 +57,16 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
     kind: 'custom', key: `card/${c.character}/${c.text}`, label: c.text, characters: [c.character],
   }))]
 
-  const show = (token: ShowToken, choice: ShowChoice) => {
-    onClose()
+  const open = (kind: ShowKind, choice: ShowChoice) => {
     if (!board) return
-    const card = showing(board, token.kind, choice, t(labelKey[token.kind]), e.name)
-    if (card) interaction.showCard(card)
+    const card = opening(board, kind, choice, t(labelKey[kind]), e.name)
+    if (card) interaction.showCard(card.spec, card.editing)
   }
   const pickToken = (item: InfoTokenItem) => {
     if (item.kind === 'custom') {
       const own = item.characters?.[0] as CharacterId | undefined
       if (own === undefined) {
-        setStep({ kind: 'note' })
+        setNote('')
         return
       }
       onClose()
@@ -93,77 +74,35 @@ export const ShowSheet = ({ visible, onClose, onReopen }: ShowSheetProps) => {
       return
     }
     const token = showTokens.find((x) => x.kind === item.kind)
-    if (!token) return
-    if (token.about === 'seat' && board) {
-      onClose()
-      // A seat without a token has nothing to start from, so it takes no tap.
+    if (!token || !board) return
+    onClose()
+    if (token.about === 'seat') {
+      // A seat without a token has nothing to start from, so it takes no tap. The seat's tap
+      // brings the card up; the list has done its job.
       interaction.requestSeats({
         allowed: board.seats.filter(s => believed(board, s.id) !== undefined).map(s => s.id),
-        onDone: (seat) => {
-          setResume({ kind: 'about', token, seat: seat as SeatId })
-          onReopen()
-        },
+        onDone: (seat) => open(token.kind, { seat: seat as SeatId, characters: seatStart(board, token.kind, seat as SeatId) }),
       })
-    } else if (token.about === undefined) show(token, {})
-    else setStep({ kind: 'about', token })
-  }
-  const pickAbout = (ids: readonly string[]) => {
-    if (step.kind === 'about') show(step.token, { seat: step.seat, characters: ids })
+    } else if (token.about === 'bluffs') {
+      // One picker for one job: with none saved, the tray's picker chooses them and saves what
+      // it shows, so the grimoire never forgets what a Demon saw.
+      if (savedBluffs.length === 0) onBluffs()
+      else open(token.kind, { characters: savedBluffs })
+    } else open(token.kind, {})
   }
   const showNote = () => {
-    if (!note.trim()) return
+    if (!note?.trim()) return
     onClose()
     interaction.showCard({ kind: 'custom', words: note.trim() })
   }
 
-  const characterRows = (ids: readonly CharacterId[]): readonly PickerGroup[] =>
-    pickerGroups(roster(board?.script ?? 'tb').filter((id) => ids.includes(id)), e.teamLabel, palette.teamOnPaper,
-      (id) => ({ id, character: id, name: e.name(id) }))
-
-  const back = () => setStep({ kind: 'tokens' })
-
-  if (step.kind === 'note') return (
+  if (note !== undefined) return (
       <Sheet visible={visible} width={560} title={t('board.customNote')} onClose={onClose} closeLabel={t('common.close')}
-        onBack={back} backLabel={t('common.back')}
+        onBack={() => setNote(undefined)} backLabel={t('common.back')}
         footer={<Button label={t('board.showNote')} onPress={showNote} disabled={!note.trim()} variant="primary" surface="paper" />}>
         <Field label={t('board.noteMessage')} value={note} onChange={setNote} multiline autoFocus />
       </Sheet>
   )
-  if (step.kind === 'about' && board) {
-    // Bluffs keep to the three a Demon is shown. Any other card takes as many characters as the
-    // Storyteller picks.
-    const bluffs = step.token.about === 'bluffs'
-    const ids = bluffs ? bluffChoices(board) : characterGroups(board.script).flatMap((g) => g.ids)
-    // Good characters in play come last, for a Lunatic's bluffs, and a shuffle never picks them.
-    const playing = bluffs ? goodInPlay(board) : []
-    const groups: readonly PickerGroup[] = [...characterRows(ids), ...(playing.length > 0 ? [{
-      key: 'inPlay', label: t('board.inPlayGroup'), shuffled: false,
-      rows: playing.map((id) => ({ id, character: id, name: e.name(id) })),
-    }] : [])]
-    const offered = [...ids, ...playing]
-    const start = bluffs ? savedBluffs : step.seat ? seatStart(board, step.token.kind, step.seat) : []
-    return (
-      <Picker
-        visible={visible}
-        title={bluffs ? t('board.showBluffs') : t('board.showAboutWhichCharacter')}
-        onClose={onClose}
-        closeLabel={t('common.close')}
-        onBack={back}
-        backLabel={t('common.back')}
-        groups={groups}
-        selected={start.filter((id) => offered.includes(id))}
-        tokenGrid
-        multi={{
-          min: 1,
-          max: bluffs ? bluffCount : ids.length,
-          ...(bluffs ? { shuffleLabel: t('board.shuffleBluffs') } : {}),
-          confirmLabel: (count: number) => t('board.showCharactersCount', { count }),
-          onConfirm: pickAbout,
-        }}
-        emptyLabel={t('board.nothingMatches')}
-      />
-    )
-  }
   return (
     <Sheet visible={visible} width={480} title={t('board.show')} onClose={onClose} closeLabel={t('common.close')} contentPaddingHorizontal={8}>
       <InfoTokenList items={items} onPick={pickToken} />

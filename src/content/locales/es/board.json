@@ -84,12 +84,8 @@
   "cardThisIsTheDemon": "Este es el Demonio",
   "cardTheseAreYourMinions": "Estos son tus Esbirros",
   "cardHoldToClose": "Mantén pulsado para cerrar",
-  "showAboutWhichCharacter": "Qué personaje",
-  "showBluffs": "Qué personajes no están en juego",
-  "showCharactersCount": {
-    "one": "Mostrar {count} personaje",
-    "other": "Mostrar {count} personajes"
-  },
+  "cardChange": "Cambiar",
+  "cardTakeLast": "Quitar la última ficha",
   "sheetFirstNight": "Primera noche",
   "sheetOtherNights": "Otras noches",
   "markerDusk": "Anochecer",

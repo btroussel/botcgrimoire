@@ -51,6 +51,12 @@ export interface SeatRequest {
   readonly label?: (seat: string, name: string) => string
 }
 
+// A card on screen, and whether it came up for the Storyteller to fill or to show at once.
+export interface OpenCard {
+  readonly spec: CardSpec
+  readonly editing: boolean
+}
+
 export interface SeatAction {
   // The phase's default seat tap, overridden temporarily by an explicit pick request.
   readonly allowed: readonly string[]
@@ -79,11 +85,11 @@ export interface BoardInteraction {
   // The panel side.
   readonly requestSeats: (request: SeatRequest) => void
   readonly cancelRequest: () => void
-  readonly showCard: (card: CardSpec) => void
+  readonly showCard: (card: CardSpec, editing?: boolean) => void
   // The board side.
   readonly pick: SeatRequest | undefined
   readonly pickSeat: (seatId: string) => void
-  readonly card: CardSpec | undefined
+  readonly card: OpenCard | undefined
   readonly closeCard: () => void
 }
 
@@ -105,7 +111,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
     pickRef.current = next
     setPickState(next)
   }, [])
-  const [card, setCard] = useState<CardSpec | undefined>(undefined)
+  const [card, setCard] = useState<OpenCard | undefined>(undefined)
 
   const requestSeats = useCallback((request: SeatRequest) => setPick(request), [setPick])
 
@@ -123,7 +129,7 @@ export const BoardInteractionProvider = ({ children }: { readonly children: Reac
     [setPick],
   )
 
-  const showCard = useCallback((spec: CardSpec) => setCard(spec), [])
+  const showCard = useCallback((spec: CardSpec, editing = false) => setCard({ spec, editing }), [])
   const closeCard = useCallback(() => setCard(undefined), [])
 
   const value = useMemo<BoardInteraction>(

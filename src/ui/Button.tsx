@@ -13,7 +13,7 @@ import { PaperTexture } from './PaperTexture'
 import type { Palette } from './theme'
 import { border, focusRing, hoverWash, motion, palette, radius, shadows, space, touch, type } from './theme'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'dangerText'
+export type ButtonVariant = 'primary' | 'brass' | 'secondary' | 'text' | 'danger' | 'dangerText'
 export type Surface = 'felt' | 'paper'
 
 export interface ButtonProps {
@@ -48,6 +48,9 @@ const lookOf = (p: Palette, variant: ButtonVariant, surface: Surface, tone?: 'go
       return paper
         ? { background: p.ink, color: p.parchment, borderColor: p.ink }
         : { background: p.parchment, color: p.ink, borderColor: p.parchment }
+    // The one thing to tap next, where the step it ends is the whole screen's point.
+    case 'brass':
+      return { background: p.accent, color: p.onAccent, borderColor: p.accent }
     case 'danger':
       return { background: p.danger, color: p.onDanger, borderColor: p.danger }
     case 'secondary':
@@ -92,7 +95,7 @@ export const Button = ({
   const p = palette
   const look = lookOf(p, variant, surface, tone)
   const ticket = variant !== 'text' && variant !== 'dangerText'
-  const filled = variant === 'primary' || variant === 'danger'
+  const filled = variant === 'primary' || variant === 'brass' || variant === 'danger'
   const focusVisible = useFocusVisible()
   const [hintAttempt, setHintAttempt] = useState(0)
   useEffect(() => {

@@ -84,11 +84,8 @@
   "cardThisIsTheDemon": "นี่คือปีศาจ",
   "cardTheseAreYourMinions": "นี่คือลูกสมุนของคุณ",
   "cardHoldToClose": "กดค้างไว้เพื่อปิด",
-  "showAboutWhichCharacter": "ตัวละครไหน",
-  "showBluffs": "ตัวละครไหนที่ไม่ถูกเล่น",
-  "showCharactersCount": {
-    "other": "แสดงตัวละคร {count} ตัว"
-  },
+  "cardChange": "เปลี่ยน",
+  "cardTakeLast": "นำโทเคนสุดท้ายออก",
   "sheetFirstNight": "คืนแรก",
   "sheetOtherNights": "คืนต่อๆ ไป",
   "markerDusk": "พลบค่ำ",

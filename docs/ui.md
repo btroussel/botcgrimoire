@@ -58,7 +58,10 @@ is read from the brackets.
 
 Editing windows float in the centre with a margin on every side, phones included. They never stick
 to an edge. Their content scrolls and their actions stay inside the window. Close, Escape and a tap
-outside dismiss one.
+outside dismiss one. The one exception is the tokens on a card, typed from keys docked at the foot
+of an upright window, where a device's keyboard lives, or in a column on the right of a wide one,
+which has no height to give. The card being filled stays in view above them as its own preview, so
+the Storyteller sees exactly what the player will.
 
 ## Motion
 
@@ -263,6 +266,12 @@ and never on a tap. It is held screen out toward a player, so one stray thumb wo
 role. A tap says how to close it instead. The card leaves only once the thumb lifts, so the release
 never lands on a seat. Keyboard and screen reader users close it with a Close button that stays out
 of sight until it takes focus, or with Escape.
+
+A card being filled is the Storyteller's, not yet the player's, so it leaves on its cross or Escape
+and never on a hold. The keys are printed tokens grouped under their team's label, a chosen one
+ringed and checked and one that cannot be taken dimmed, never silently refused. A shown card with
+tokens keeps a quiet Change in its top corner; it is a control, so a press on it never starts a
+hold.
 
 A card that needs a player lets you pick on the board itself, with no banner, so the ring does not
 shift. Any pick on the ring, a card's player or a

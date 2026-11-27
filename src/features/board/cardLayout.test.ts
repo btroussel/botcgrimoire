@@ -51,6 +51,13 @@ describe('the card block', () => {
     expect(cardTokens({ width: 390, height: 844, words: 0, below: 0, count: 4, roomy: false }).columns).toBe(2)
   })
 
+  it('gives an editing card the foot a shown card keeps for its hint', () => {
+    // The box above the keys on an upright phone: 844 less a keyboard of 380 and its bar.
+    const room = { width: 390, height: 404, words: twoLines, below: 0, count: 1, roomy: false }
+    expect(cardTokens(room).size).toBe(176)
+    expect(cardTokens({ ...room, foot: 12 }).size).toBe(224)
+  })
+
   it('never draws a token below the floor, so a block that cannot fit scrolls', () => {
     expect(cardTokens({ width: 320, height: 200, words: 300, below: 0, count: 6, roomy: false }).size).toBe(48)
   })
