@@ -26,6 +26,7 @@
   "noteMessage": "Nachricht",
   "bluff": "Bluff: {name}",
   "bluffEmpty": "Bluff {n}: leer",
+  "bluffNext": "{label}, als Nächstes",
   "inPlay": "{name}, im Spiel",
   "grantFrom": "{character}, von {name}",
   "grantOwn": "{character}, beim Erzähler",

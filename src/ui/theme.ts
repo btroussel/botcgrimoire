@@ -308,8 +308,9 @@ export const card = {
 } as const
 
 // The token keyboard: printed tokens as keys, one point over the touch target so a key never
-// falls under it, seven across where the width allows.
-export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20 } as const
+// falls under it, seven across where the width allows. A team's label is tracked out a little,
+// as small capitals read better spaced.
+export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20, checkGlyph: 14, labelTracking: 0.8 } as const
 
 // The drawer the board's token sheets come up in: full width up to the pickers' old width, and
 // never so tall that the board above it is gone. Beside the seat it changes it may stop as short

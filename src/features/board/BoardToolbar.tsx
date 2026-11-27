@@ -26,6 +26,7 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   readonly onHome: () => void
 }) {
   const trigger = useRef<HTMLDivElement>(null)
+  const eye = useRef<HTMLDivElement>(null)
   const menu = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const reduced = useReducedMotion()
@@ -46,13 +47,24 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
     {/* The pick's words cover the top of the ring on a phone, so a tap on them reaches the seat
         under them rather than cancel the pick. */}
     <View pointerEvents={picking !== undefined ? 'box-none' : 'auto'} style={styles.edge}>
-      {picking !== undefined ? <View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.pick, { maxWidth: textRoom + 2 * space.xs }]}>
+      {/* Always mounted, so a screen reader hears the pick begin: a live region inserted already
+          filled is often not read. */}
+      <Text accessibilityLiveRegion="polite" style={styles.spoken}>{picking !== undefined ? `${picking}. ${hint}` : ''}</Text>
+      {picking !== undefined ? <View pointerEvents="none" aria-hidden style={[styles.pick, { maxWidth: textRoom + 2 * space.xs }]}>
         <Text style={styles.title} numberOfLines={2}>{picking}</Text>
         {hintFits ? <Text style={styles.hint} numberOfLines={1}>{hint}</Text> : null}
       </View> : null}
-      {picking !== undefined ? <EdgeButton icon="close" label={t('common.cancel')} onPress={onCancelPick} /> : null}
+      {/* The cross goes with the pick, so the focus moves on to the eye rather than fall to the page. */}
+      {picking !== undefined ? <div data-pick-cancel style={{ display: 'contents' }}>
+        <EdgeButton icon="close" label={t('common.cancel')} onPress={() => {
+          eye.current?.querySelector<HTMLElement>('[role="button"]')?.focus({ preventScroll: true })
+          onCancelPick()
+        }} />
+      </div> : null}
       {/* Brass while a card waits for its player, as More is while the seats are arranged. */}
-      <EdgeButton icon="show" label={t('board.show')} onPress={onShow} armed={picking !== undefined} />
+      <div ref={eye} style={{ display: 'contents' }}>
+        <EdgeButton icon="show" label={t('board.show')} onPress={onShow} armed={picking !== undefined} />
+      </div>
       <div ref={trigger}>
         <EdgeButton icon="more" label={t('common.more')} onPress={() => togglePopover(menu.current, trigger.current, { reduced })} expanded={menuOpen} armed={arranging} />
       </div>
@@ -71,6 +83,8 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   </>
 })
 const styles = StyleSheet.create({
+  // Read, not drawn: the pick's words for a screen reader.
+  spoken: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   edge: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
     backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },
   pick: { flexShrink: 1, minWidth: 0, paddingHorizontal: space.xs },

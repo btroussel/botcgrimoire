@@ -14,6 +14,7 @@ import { tokenArt } from '../content/generated/art'
 import { AbilityText } from './AbilityText'
 import { Art } from './Art'
 import { focusStyle, isFocused } from './Button'
+import type { Surface } from './Button'
 import { CharacterIcon, useHomebrew } from './CharacterIcon'
 import { domElement, useFocusVisible } from './focus'
 import { Icon } from './icons'
@@ -31,6 +32,8 @@ export interface TokenProps {
   readonly ability?: string // full text inside a large reference token
   readonly markers?: boolean // printed setup, wake and reminder counts; omitted on a player reveal
   readonly selected?: boolean // the brass ring
+  readonly toggle?: boolean // the ring means chosen, so it is announced as pressed; off, it only marks
+  readonly surface?: Surface // what the token lies on, for the colour of its focus outline
   readonly dim?: boolean // keep the token readable while drawing attention elsewhere
   readonly dead?: boolean // the disc fades toward grey; a seat passes it always so the face never remounts
   readonly disabled?: boolean
@@ -60,7 +63,7 @@ const advance = (glyph: string): number => /\p{M}/u.test(glyph) ? 0
 // A disc is a physical piece: pressed, it gives under the finger rather than fading.
 export const pressedScale = 0.96
 
-export const Token = ({ size, character: id, alignment, name, printName, ability, markers: showMarkers = true, selected, dim, dead, disabled = false, emptyStyle, add, onPress, onLongPress, accessibilityLabel, style }: TokenProps) => {
+export const Token = ({ size, character: id, alignment, name, printName, ability, markers: showMarkers = true, selected, toggle = true, surface = 'felt', dim, dead, disabled = false, emptyStyle, add, onPress, onLongPress, accessibilityLabel, style }: TokenProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
   const reduced = useReducedMotion()
@@ -88,7 +91,7 @@ export const Token = ({ size, character: id, alignment, name, printName, ability
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      aria-pressed={selected}
+      aria-pressed={toggle ? selected : undefined}
       aria-disabled={disabled}
       disabled={disabled}
       onPress={onPress}
@@ -96,7 +99,7 @@ export const Token = ({ size, character: id, alignment, name, printName, ability
       style={(state) => [
         styles.box,
         box,
-        focusStyle(p, !disabled && isFocused(state) && focusVisible),
+        focusStyle(p, !disabled && isFocused(state) && focusVisible, surface),
         { transform: [{ scale: !disabled && state.pressed ? pressedScale : 1 }] },
         dimStyle,
         style,

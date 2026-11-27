@@ -26,6 +26,7 @@
   "noteMessage": "메시지",
   "bluff": "블러핑: {name}",
   "bluffEmpty": "블러핑 {n}: 비어 있음",
+  "bluffNext": "{label}, 다음",
   "inPlay": "{name}, 게임에 참여 중",
   "grantFrom": "{character}, {name}에게서 받음",
   "grantOwn": "{character}, 이야기꾼 보유",

@@ -26,6 +26,7 @@
   "noteMessage": "Missatge",
   "bluff": "Coartada: {name}",
   "bluffEmpty": "Coartada {n}: buida",
+  "bluffNext": "{label}, següent",
   "inPlay": "{name}, a la partida",
   "grantFrom": "{character}, de {name}",
   "grantOwn": "{character}, propi del narrador",

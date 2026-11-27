@@ -26,6 +26,7 @@
   "noteMessage": "メッセージ",
   "bluff": "ブラフ：{name}",
   "bluffEmpty": "ブラフ{n}：空き",
+  "bluffNext": "{label}、次",
   "inPlay": "{name}、プレイ中",
   "grantFrom": "{character}、{name}から",
   "grantOwn": "{character}、ストーリーテラー自身のもの",

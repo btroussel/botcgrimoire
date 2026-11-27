@@ -26,6 +26,7 @@
   "noteMessage": "Meddelande",
   "bluff": "Bluff: {name}",
   "bluffEmpty": "Bluff {n}: tom",
+  "bluffNext": "{label}, nästa",
   "inPlay": "{name}, i spel",
   "grantFrom": "{character}, från {name}",
   "grantOwn": "{character}, berättarens egen",

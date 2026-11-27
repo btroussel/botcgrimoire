@@ -44,6 +44,8 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   // Show a card turns the menu in place to the cards about this player, and focus follows.
   const [cards, setCards] = useState(false)
   const turned = useRef(false)
+  const showLabel = useRef('')
+  useLayoutEffect(() => { showLabel.current = t('board.show') })
   const saveName = () => {
     if (!editing.current) return
     editing.current = false
@@ -55,7 +57,9 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   const reduced = useReducedMotion()
   useLayoutEffect(() => {
     if (!turned.current) { turned.current = true; return }
-    menu.current?.querySelector<HTMLElement>('[role="button"]')?.focus({ preventScroll: true })
+    // Turned, the focus goes to Back; turned back, to Show a card, where the user came from.
+    const show = cards ? undefined : menu.current?.querySelector<HTMLElement>(`[role="button"][aria-label="${CSS.escape(showLabel.current)}"]`)
+    ;(show ?? menu.current?.querySelector<HTMLElement>('[role="button"]'))?.focus({ preventScroll: true })
   }, [cards])
   // Placed from its measured size on every render, since renaming, a death or a wrapped
   // translation changes it, within the part of the band the screen shows, which a scrolled
@@ -127,6 +131,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   ]
   const row = (item: { label: string; icon: IconName; run: () => void }) =>
     <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} />
+
   return <div ref={menu} role="group" aria-label={name} data-layer className={menuClass} style={{ ...menuFrame, position: 'absolute', width,
     maxHeight: Math.max(0, viewport.height - space.sm * 2), overflowY: 'auto', zIndex: 30 }}>
     {cards && onShowCard ? <>

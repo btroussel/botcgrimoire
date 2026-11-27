@@ -26,6 +26,7 @@
   "noteMessage": "Сообщение",
   "bluff": "Блеф: {name}",
   "bluffEmpty": "Блеф {n}: пусто",
+  "bluffNext": "{label}, следующий",
   "inPlay": "{name}, в игре",
   "grantFrom": "{character}, от игрока {name}",
   "grantOwn": "{character}, у Рассказчика",

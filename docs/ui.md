@@ -237,7 +237,7 @@ a card then More, keep that order in every phase and width until the game ends, 
 own actions replace them, and their first tap always acts.
 Undo is a small arrow alone in the top left corner, the one corner with no other control, so a
 tap aimed at Show a card or More never lands on it. The ring keeps clear of it as it does of the
-toolbar.
+toolbar, except while the toolbar names a pick, when it may lie over the top seat.
 
 References are drawers you drag between closed, compact and full, and a drawer opens at the width
 last dragged to. Compact shows names only, so a tap on one of its rows unfolds that row's text
@@ -295,9 +295,9 @@ A card that needs a player lets you pick on the board itself, with no banner, so
 shift. The toolbar names the pick instead: it grows to the left over the velvet with the card's
 name, a line saying to tap a player and a cross that cancels, the eye in brass, while the corners
 that take no tap meanwhile are dimmed. The ring keeps the room it had, and a tap on the words
-reaches the seat under them. A nomination's pick keeps its own marks. Any pick on the ring, a
-card's player or a nominee, ends on a tap off the seats or Escape, since a phone has no Escape
-key.
+reaches the seat under them; the cross and the eye still take their taps where they lie over the top
+seat. A nomination's pick keeps its own marks. Any pick on the ring, a card's player or a nominee,
+ends on a tap off the seats or Escape, since a phone has no Escape key.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
 voter is covered. They name the nomination as the day's list does, nominator then nominee, with a

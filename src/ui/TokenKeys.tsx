@@ -30,7 +30,7 @@ export interface TokenKeysProps<K extends TokenKey> {
   readonly render?: (key: K, size: number, press: () => void) => ReactNode // a key drawn by the feature, in place of a character token
 }
 
-const { size, gap, across, check } = tokenKeys
+const { size, gap, across, check, checkGlyph, labelTracking } = tokenKeys
 const span = (count: number) => count * size + Math.max(0, count - 1) * gap
 
 export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, render }: TokenKeysProps<K>) => {
@@ -57,10 +57,10 @@ export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, on
                 return (
                   <View key={k.id} style={{ width: size, height: size }}>
                     <Token size={size} character={k.id} name={k.name} printName accessibilityLabel={k.name}
-                      selected={on} dim={blocked} disabled={blocked} onPress={() => onPress(k)} />
+                      selected={on} dim={blocked} disabled={blocked} surface="paper" onPress={() => onPress(k)} />
                     {/* Selection never relies on colour alone. */}
                     {on ? <View pointerEvents="none" aria-hidden style={[styles.check, { backgroundColor: p.ink, borderColor: p.accent }]}>
-                      <Icon name="check" color={p.parchment} size={check - 6} />
+                      <Icon name="check" color={p.parchment} size={checkGlyph} />
                     </View> : null}
                   </View>
                 )
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   groups: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.md },
   group: { gap: space.xs },
   heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  label: { textTransform: 'uppercase', letterSpacing: 0.8, flexShrink: 1 },
+  label: { textTransform: 'uppercase', letterSpacing: labelTracking, flexShrink: 1 },
   rule: { flex: 1, height: hairline },
   keys: { flexDirection: 'row', flexWrap: 'wrap' },
   drawn: { alignItems: 'center', justifyContent: 'center' },

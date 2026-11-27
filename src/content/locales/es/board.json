@@ -26,6 +26,7 @@
   "noteMessage": "Mensaje",
   "bluff": "Farol: {name}",
   "bluffEmpty": "Farol {n}: vacío",
+  "bluffNext": "{label}, siguiente",
   "inPlay": "{name}, en juego",
   "grantFrom": "{character}, de {name}",
   "grantOwn": "{character}, del Narrador",

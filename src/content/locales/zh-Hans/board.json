@@ -26,6 +26,7 @@
   "noteMessage": "信息",
   "bluff": "伪装：{name}",
   "bluffEmpty": "伪装 {n}：空",
+  "bluffNext": "{label}，下一个",
   "inPlay": "{name}，在场",
   "grantFrom": "{character}，来自 {name}",
   "grantOwn": "{character}，属于说书人",

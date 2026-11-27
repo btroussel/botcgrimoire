@@ -102,6 +102,7 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
     showBluffs(chosen)
   }
 
+  const wellLabel = (label: string, ringed: boolean) => (ringed ? t('board.bluffNext', { label }) : label)
   const groups = byTeam(choices).map((g) => ({
     key: g.team, label: e.teamLabel(g.team), color: p.teamOnPaper[g.team],
     keys: g.ids.map((id) => ({ id, name: e.name(id) })),
@@ -115,9 +116,10 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
         <View style={styles.wells}>
           {state.wells.map((id, index) => (
             <View key={index} style={styles.well}>
-              <Token size={drawer.well} alignment="good" selected={state.ring === index}
+              {/* The ring says where the next key goes, not a choice, so it is named rather than pressed. */}
+              <Token size={drawer.well} alignment="good" selected={state.ring === index} toggle={false} surface="paper"
                 {...(id ? { character: id, name: e.name(id) } : {})}
-                accessibilityLabel={id ? t('board.bluff', { name: e.name(id) }) : t('board.bluffEmpty', { n: index + 1 })}
+                accessibilityLabel={wellLabel(id ? t('board.bluff', { name: e.name(id) }) : t('board.bluffEmpty', { n: index + 1 }), state.ring === index)}
                 onPress={() => setState(tapWell(state, index))} />
               <Text aria-hidden numberOfLines={2} style={[type.text.label, styles.wellName, { color: p.ink }]}>{id ? e.name(id) : ''}</Text>
             </View>

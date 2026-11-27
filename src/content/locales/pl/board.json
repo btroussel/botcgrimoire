@@ -26,6 +26,7 @@
   "noteMessage": "Wiadomość",
   "bluff": "Blef: {name}",
   "bluffEmpty": "Blef {n}: pusty",
+  "bluffNext": "{label}, następny",
   "inPlay": "{name}, w grze",
   "grantFrom": "{character}, od: {name}",
   "grantOwn": "{character}, u Bajarza",

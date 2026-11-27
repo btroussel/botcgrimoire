@@ -92,7 +92,8 @@ const tallBoard = 600
 const aside = { 'aria-hidden': true, pointerEvents: 'none' } as const
 // While a card waits for its player, the controls that have nothing to do with the pick are dimmed
 // and let a tap through to the velvet, where it cancels the pick as any tap off the seats does.
-const resting = { pointerEvents: 'none' } as const
+// Inert, so a keyboard or screen reader cannot reach them either; Escape still cancels.
+const resting = { pointerEvents: 'none', inert: true } as const
 // A control measured again at the same size keeps the board's layout as it was.
 const sameSize = (next: Size) => (previous: Size) => previous.width === next.width && previous.height === next.height ? previous : next
 
@@ -197,7 +198,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   useEffect(() => {
     if (!pick) return
     const cancelOutside = (event: MouseEvent) => {
-      if (event.target instanceof Element && event.target.closest('[data-seat-context-target]')) return
+      // The pick's own cross cancels it itself, and moves the focus on.
+      if (event.target instanceof Element && event.target.closest('[data-seat-context-target], [data-pick-cancel]')) return
       cancelRequest()
     }
     document.addEventListener('click', cancelOutside, true)

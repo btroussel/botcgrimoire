@@ -26,6 +26,7 @@
   "noteMessage": "Melding",
   "bluff": "Bløff: {name}",
   "bluffEmpty": "Bløff {n}: tom",
+  "bluffNext": "{label}, neste",
   "inPlay": "{name}, i spill",
   "grantFrom": "{character}, fra {name}",
   "grantOwn": "{character}, fortellerens egen",

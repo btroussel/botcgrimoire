@@ -26,6 +26,7 @@
   "noteMessage": "ข้อความ",
   "bluff": "บลัฟ: {name}",
   "bluffEmpty": "บลัฟ {n}: ว่าง",
+  "bluffNext": "{label}, ถัดไป",
   "inPlay": "{name} ถูกเล่น",
   "grantFrom": "{character} จาก {name}",
   "grantOwn": "{character} ของนักเล่าเรื่องเอง",

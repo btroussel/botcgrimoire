@@ -54,6 +54,7 @@ test('a seat menu shows You are for its player in three taps', async ({ page }) 
   await expect(menu.getByRole('button', { name: 'Back', exact: true })).toBeFocused()
   await menu.getByRole('button', { name: 'Back', exact: true }).click()
   await expect(menu.getByRole('button', { name: 'Add a reminder', exact: true })).toBeVisible()
+  await expect(menu.getByRole('button', { name: 'Show a card', exact: true })).toBeFocused()
   await menu.getByRole('button', { name: 'Show a card', exact: true }).click()
   await menu.getByRole('button', { name: 'You are', exact: true }).click()
 
@@ -74,6 +75,8 @@ test('a card waiting for its player is named in the toolbar, and its cross cance
   await expect(hint).toBeVisible()
   // The list may still be leaving, so the name is found beside the line.
   await expect(hint.locator('..')).toContainText('This player is')
+  // A screen reader hears it through a live region that was already there.
+  await expect(page.locator('[aria-live="polite"]', { hasText: 'This player is. Tap a player' })).toHaveCount(1)
   await expect(eye).toHaveAttribute('aria-pressed', 'true')
   // What takes no tap during the pick is dimmed and out of reach.
   await expect(undo).toBeDisabled()
@@ -81,6 +84,8 @@ test('a card waiting for its player is named in the toolbar, and its cross cance
   await page.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(hint).toHaveCount(0)
   await expect(eye).not.toHaveAttribute('aria-pressed', 'true')
+  // The cross goes with the pick, so the focus moves on to the eye beside it.
+  await expect(eye).toBeFocused()
   await expect(undo).toBeEnabled()
   // The ring is back to its menus: a seat's tap brings up no card.
   const seat = impSeat(page)
@@ -243,7 +248,9 @@ test('a long name under a token keeps its word whole on the narrowest phone', as
 // The bluffs drawer's keys: every token key wears aria-pressed, and the wells are named Bluff.
 const bluffKeys = drawer => drawer.locator('[role="button"][aria-pressed]:not([aria-label^="Bluff"])')
 const keyNames = async (drawer, count) => (await bluffKeys(drawer).evaluateAll(keys => keys.map(key => key.getAttribute('aria-label')))).slice(0, count)
-const wellNames = drawer => drawer.getByRole('button', { name: /^Bluff/ }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
+// The ringed well, where the next key goes, says so in its name rather than as pressed.
+const wellNames = drawer => drawer.getByRole('button', { name: /^Bluff/ }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label').replace(/, next$/, '')))
+const ringed = drawer => drawer.getByRole('button', { name: /^Bluff.*, next$/ })
 const trayNames = tray => tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
 
 test('the not-in-play card with no bluffs saved opens the tray\'s drawer, so the tray holds what was shown', async ({ page }) => {
@@ -272,7 +279,8 @@ test('three keys fill the bluff wells in order, and a fourth key is never refuse
   const tray = page.getByRole('region', { name: "Demon's Bluffs" })
   await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
   const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
-  await expect(drawer.getByRole('button', { name: 'Bluff 1: empty', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(ringed(drawer)).toHaveAccessibleName('Bluff 1: empty, next')
+  await expect(ringed(drawer)).not.toHaveAttribute('aria-pressed')
   const [a, b, c, d] = await keyNames(drawer, 4)
   for (const name of [a, b, c]) await drawer.getByRole('button', { name, exact: true }).click()
   expect(await wellNames(drawer)).toEqual([a, b, c].map(name => `Bluff: ${name}`))
@@ -281,8 +289,9 @@ test('three keys fill the bluff wells in order, and a fourth key is never refuse
   await drawer.getByRole('button', { name: d, exact: true }).click()
   expect(await wellNames(drawer)).toEqual([a, b, d].map(name => `Bluff: ${name}`))
   // A full well empties and takes the ring, so a swap is the well, then a key.
+  await expect(ringed(drawer)).toHaveAccessibleName(`Bluff: ${d}, next`)
   await drawer.getByRole('button', { name: `Bluff: ${a}`, exact: true }).click()
-  await expect(drawer.getByRole('button', { name: 'Bluff 1: empty', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(ringed(drawer)).toHaveAccessibleName('Bluff 1: empty, next')
   await drawer.getByRole('button', { name: c, exact: true }).click()
   expect(await wellNames(drawer)).toEqual(['Bluff: ' + c, 'Bluff: ' + b, 'Bluff: ' + d])
   // A chosen key comes back out of its well.

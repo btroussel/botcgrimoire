@@ -26,6 +26,7 @@
   "noteMessage": "Viesti",
   "bluff": "Bluffi: {name}",
   "bluffEmpty": "Bluffi {n}: tyhjä",
+  "bluffNext": "{label}, seuraavaksi",
   "inPlay": "{name}, pelissä",
   "grantFrom": "{character}, pelaajalta {name}",
   "grantOwn": "{character}, Tarinankertojan oma",

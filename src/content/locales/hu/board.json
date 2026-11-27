@@ -26,6 +26,7 @@
   "noteMessage": "Üzenet",
   "bluff": "Blöff: {name}",
   "bluffEmpty": "{n}. blöff: üres",
+  "bluffNext": "{label}, következő",
   "inPlay": "{name}, játékban",
   "grantFrom": "{character}, forrás: {name}",
   "grantOwn": "{character}, a mesélőé",
