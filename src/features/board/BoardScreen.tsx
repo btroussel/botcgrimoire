@@ -571,7 +571,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
                 close: t('common.close'), holdHint: t('board.cardHoldToClose'), change: t('board.cardChange'),
                 show: t('board.showBluffsNow'), takeLast: t('board.cardTakeLast'), done: t('common.done'),
                 takeOff: (name) => t('board.removeChip', { label: name }),
-                placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), letters: t('board.noteLetters'),
+                placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), keyboard: t('board.noteKeyboard'), letters: t('board.noteLetters'),
                 tokens: t('board.noteTokens'), keep: t('board.noteKeep'), yes: t('board.noteYes'), no: t('board.noteNo'),
               }} />
           </Modal>

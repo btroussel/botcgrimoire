@@ -98,6 +98,11 @@ describe('kept notes', () => {
     expect(more).not.toContainEqual({ words: `Note ${keptLimit - 1}` })
   })
 
+  it('refuses a note longer than the field, which would not read back', () => {
+    expect(keepNote([], { words: 'x'.repeat(noteLength + 1) })).toEqual([])
+    expect(keepNote([], { words: 'x'.repeat(noteLength) })).toHaveLength(1)
+  })
+
   it('tells a note by its words and its token together', () => {
     const notes = keepNote(keepNote([], { words: 'Yes' }), { words: 'Yes', character: 'imp' })
     expect(notes).toHaveLength(2)

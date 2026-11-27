@@ -389,15 +389,25 @@ test('a typed note with a token shows both, and its bar stays above the device k
   await keyboardUp(page, 844)
   await expect.poll(bottom).toBeGreaterThan(800)
 
-  // The two keyboards swap: the caret leaves with the letters and comes back with them.
-  await card.getByRole('button', { name: 'Tokens', exact: true }).click()
+  // The two keyboards swap: the caret leaves with the letters and comes back with them. The
+  // switch is one radio group, so it is one tab stop.
+  const keyboard = card.getByRole('radiogroup', { name: 'Keyboard', exact: true })
+  await keyboard.getByRole('radio', { name: 'Tokens', exact: true }).check()
   await expect(field).not.toBeFocused()
   await card.getByRole('button', { name: 'Imp', exact: true }).click()
   // One token per note: another key replaces it.
   await card.getByRole('button', { name: 'Chef', exact: true }).click()
   await expect(card.getByRole('button', { name: 'Remove Imp', exact: true })).toHaveCount(0)
   await expect(card.getByRole('button', { name: 'Remove Chef', exact: true })).toBeVisible()
-  await card.getByRole('button', { name: 'Letters', exact: true }).click()
+  await keyboard.getByRole('radio', { name: 'Letters', exact: true }).check()
+  await expect(field).toBeFocused()
+  // A tap on the words while the keys are up is for typing, so the letters come back: the
+  // device's keyboard never stands up under the keys.
+  await keyboard.getByRole('radio', { name: 'Tokens', exact: true }).check()
+  await expect(card.getByRole('button', { name: 'Imp', exact: true })).toBeVisible()
+  await field.click()
+  await expect(keyboard.getByRole('radio', { name: 'Letters', exact: true })).toBeChecked()
+  await expect(card.getByRole('button', { name: 'Imp', exact: true })).toHaveCount(0)
   await expect(field).toBeFocused()
   await show.click()
   await expect(card.getByRole('heading', { name: 'Watch your left', exact: true })).toBeVisible()
@@ -414,6 +424,7 @@ test('a kept note is offered again after a reload, and forgetting it takes it aw
   const field = card.getByRole('textbox', { name: 'Message' })
   const keep = card.getByRole('button', { name: 'Keep this note', exact: true })
   await field.fill('Open your eyes')
+  await expect(keep).toHaveAttribute('aria-pressed', 'false')
   await keep.click()
   await expect(keep).toHaveAttribute('aria-pressed', 'true')
   await card.getByRole('button', { name: 'Close', exact: true }).click()
@@ -426,7 +437,7 @@ test('a kept note is offered again after a reload, and forgetting it takes it aw
   await expect(field).toHaveValue('Open your eyes')
   await expect(keep).toHaveAttribute('aria-pressed', 'true')
   await keep.click()
-  await expect(keep).not.toHaveAttribute('aria-pressed', 'true')
+  await expect(keep).toHaveAttribute('aria-pressed', 'false')
   // Emptied, the card offers its presets again, without the forgotten note.
   await field.fill('')
   await expect(card.getByRole('button', { name: 'Yes', exact: true })).toBeVisible()

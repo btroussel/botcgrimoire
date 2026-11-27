@@ -299,7 +299,7 @@ export const card = {
   largeWordsFrom: 600, // the words grow to heroLarge once the window is this large both ways
   // The ring that fills round the thumb while the card is held to close, and how far the thumb
   // may drift before the press counts as a scroll.
-  holdRing: { size: 104, width: 4 },
+  holdRing: { size: 104, width: 4, trackOpacity: 0.35 }, // the track under the fill stays faint
   holdSlop: 10,
   // An editing card's keys: docked at the foot of an upright window, at most this share of its
   // height, or a column on the right of a wide one, which has no height to give.

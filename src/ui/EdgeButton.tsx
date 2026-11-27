@@ -16,11 +16,12 @@ export interface EdgeButtonProps {
   readonly onPress: () => void
   readonly icon?: IconName // the glyph; without one the label is drawn as a short word
   readonly armed?: boolean // waiting for a second tap elsewhere: the brass ring and glyph
+  readonly toggle?: boolean // an on and off control, so its off state is announced too
   readonly disabled?: boolean
   readonly expanded?: boolean
 }
 
-export const EdgeButton = ({ label, onPress, icon, armed, disabled, expanded }: EdgeButtonProps) => {
+export const EdgeButton = ({ label, onPress, icon, armed, toggle, disabled, expanded }: EdgeButtonProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
   const color = armed ? p.accent : p.text
@@ -29,7 +30,7 @@ export const EdgeButton = ({ label, onPress, icon, armed, disabled, expanded }: 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
-        aria-pressed={armed || undefined}
+        aria-pressed={toggle ? !!armed : armed || undefined}
         aria-expanded={expanded}
         disabled={disabled}
         onPress={onPress}

@@ -51,9 +51,10 @@ is read from the brackets.
 - Icon buttons carry a translated name, for hover and for screen readers.
 - Selection never relies on colour alone: a selected token gets a check as well as an outline.
 - A choice among a few options is a set of native radios under a group label, one tab stop.
-- A field keeps a visible label. A field with a length limit shows its count, such as `231/250`,
-  once the text is in the last fifth of the limit, in the danger colour at the limit, and never
-  announces it as you type.
+- A field keeps a visible label. The one exception is a note's field, which is the card's own words:
+  the card is the player's preview, so it carries only a placeholder on screen and a name for screen
+  readers. A field with a length limit shows its count, such as `231/250`, once the text is in the
+  last fifth of the limit, in the danger colour at the limit, and never announces it as you type.
 - Delete sits apart from the actions you use often.
 
 Editing windows float in the centre with a margin on every side, phones included. They never stick
@@ -287,8 +288,8 @@ Escape.
 A card being filled is the Storyteller's, not yet the player's, so it leaves on its cross or Escape
 and never on a hold. The keys are printed tokens grouped under their team's label, a chosen one
 ringed and checked and one that cannot be taken dimmed, never silently refused. A shown card with
-tokens keeps a quiet Change in its top corner; it is a control, so a press on it never starts a
-hold.
+tokens keeps a quiet Change in its top corner, and so does a written note, which the Storyteller
+may fix; it is a control, so a press on it never starts a hold.
 
 A card that needs a player lets you pick on the board itself, with no banner, so the ring does not
 shift. The toolbar names the pick instead: it grows to the left over the velvet with the card's

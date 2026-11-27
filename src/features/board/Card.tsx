@@ -3,7 +3,7 @@
 // follow a beat later, and a hold hands the phone back. While editing, the same card is its own
 // preview above the token keys, and only the shown card is turned to a player. A note's words are
 // typed on the card itself, where the player will read them.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { DragEvent, MouseEvent, ReactNode, PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
 import type { TextInputInstance, TextStyle } from 'react-native'
@@ -17,8 +17,9 @@ import { fieldCount } from '../../ui/fieldCount'
 import { useFocusVisible } from '../../ui/focus'
 import { durationFor, usePresence, useReducedMotion } from '../../ui/motion'
 import { PaperTexture } from '../../ui/PaperTexture'
-import { card, font, gutter, hairline, motion, palette, radius, space, tabular, tokenSize, touch, type } from '../../ui/theme'
+import { border, card, focusRing, font, gutter, hairline, motion, palette, radius, space, tabular, tokenSize, touch, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
+import { Icon } from '../../ui/icons'
 import { Token } from '../../ui/Token'
 import type { TokenKey, TokenKeyGroup } from '../../ui/TokenKeys'
 import { TokenKeys } from '../../ui/TokenKeys'
@@ -38,6 +39,7 @@ export interface CardLabels {
   // A note's editor.
   readonly placeholder: string
   readonly message: string // the note's field, for a screen reader
+  readonly keyboard: string // the switch between the two, for a screen reader
   readonly letters: string
   readonly tokens: string
   readonly keep: string // the star: keeps the note, and forgets it once kept
@@ -100,6 +102,8 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   // A note's two keyboards share the foot: the device's for its words, the keys for its token.
   const [letters, setLetters] = useState(true)
   const field = note !== undefined && editing
+  // The token keys stand up while editing, except while a note's words are being typed.
+  const dock = editing && (!note || !letters)
   const text = note ? written : spec.words
   // An empty card being filled holds its token's place with an empty disc, so it previews. A
   // note's token is optional, so it holds no place.
@@ -157,17 +161,18 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const scale = rise.interpolate({ inputRange: [0, 1], outputRange: reduced ? [1, 1] : [0.6, 1] })
 
   // The caret comes with the letters and leaves with them, so the device's keyboard and the
-  // token keys never stand up together. It comes a frame later, since the Modal puts the focus on
-  // the dialog once its content has mounted.
+  // token keys never stand up together. It is focused in a layout effect: React renders a tap's
+  // update before the tap's event is over, and iOS raises its keyboard only for a focus made
+  // during the tap. It also puts the focus in the dialog before the Modal's trap looks for some.
   const input = useRef<TextInputInstance>(null)
   const root = useRef<HTMLDivElement>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!field) return
     if (!letters) {
       input.current?.blur()
       return
     }
-    const frame = requestAnimationFrame(() => input.current?.focus())
+    input.current?.focus()
     // The list the note was picked from gives the focus back to the eye on the board as it
     // leaves, after the card is up. Focus sent out of the card's layer comes back to the caret
     // at once, before the dialog's own trap moves it to some other control.
@@ -175,11 +180,17 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
       if (event.target instanceof Node && !layerOf(root.current)?.contains(event.target)) input.current?.focus()
     }
     document.addEventListener('focus', reclaim, true)
-    return () => {
-      cancelAnimationFrame(frame)
-      document.removeEventListener('focus', reclaim, true)
-    }
+    return () => document.removeEventListener('focus', reclaim, true)
   }, [field, letters])
+  // Tokens, a key that shows the card, Show and Change each unmount the control that was pressed,
+  // and the focus would fall to the page. It goes on to what comes next: the switch, the first
+  // key, or the shown card's one Close.
+  useLayoutEffect(() => {
+    if (document.activeElement && document.activeElement !== document.body) return
+    const target = !editing ? '[data-card-close] [role="button"]'
+      : note ? 'input[type="radio"]:checked' : '[data-keys] [role="button"]:not([aria-disabled="true"])'
+    root.current?.querySelector<HTMLElement>(target)?.focus({ preventScroll: true })
+  }, [editing, dock, note])
 
   // Hold to close. The card is held screen out toward a player, so a stray thumb must not hand
   // them the grimoire: a tap only shows the hint, and a press held for `motion.duration.hold`
@@ -303,15 +314,15 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
     if (note) setWritten(current.words)
     setEditing(false)
   }
-  // A preset is written, never shown: nothing reaches a player before Show.
+  // A preset is written, never shown: nothing reaches a player before Show. A homebrew card's
+  // words have no limit, and a field's own limit does not cut a value set from code, so it is cut
+  // here: what the star keeps then always reads back.
   const write = (preset: WrittenNote) => {
-    setWritten(preset.words)
+    setWritten(preset.words.slice(0, noteLength))
     setPrinted(preset.character ? [preset.character] : [])
   }
 
   const horizontal = phone ? gutter.phone : gutter.tablet
-  // The token keys stand up while editing, except while a note's words are being typed.
-  const dock = editing && (!note || !letters)
   // A window wider than tall has no height to give the keys, so they stand on the right.
   const side = dock && window.width > window.height
   const corner = insets.top + space.md
@@ -321,7 +332,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
       <Keyboards letters={letters} labels={labels} onLetters={setLetters} />
       {/* Kept by a press that leaves the caret where it is. */}
       <KeepCaret style={styles.barEnd}>
-        <EdgeButton icon="star" label={labels.keep} armed={filled && note.kept(current)} disabled={!filled} onPress={() => note.onKeep(current)} />
+        <EdgeButton icon="star" label={labels.keep} toggle armed={filled && note.kept(current)} disabled={!filled} onPress={() => note.onKeep(current)} />
         <Button variant="brass" label={labels.show} onPress={show} disabled={!filled} />
       </KeepCaret>
     </View>
@@ -356,7 +367,8 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
           >
             {field ? (
               <View onLayout={(event) => setWordsHeight(event.nativeEvent.layout.height)} style={{ paddingHorizontal: horizontal }}>
-                <NoteField inputRef={input} value={written} onChange={setWritten} style={wordsStyle} label={labels.message} placeholder={labels.placeholder} />
+                {/* A tap on the words, or a Tab onto them, is for typing: the letters come up. */}
+                <NoteField inputRef={input} value={written} onChange={setWritten} onFocus={() => setLetters(true)} style={wordsStyle} label={labels.message} placeholder={labels.placeholder} />
                 {/* Plain text, not a live region, as a field's count is everywhere. */}
                 {count !== 'hidden' ? (
                   <Text style={[type.text.small, tabular, styles.count, { color: count === 'full' ? p.danger : p.muted }]}>{`${written.length}/${noteLength}`}</Text>
@@ -430,7 +442,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             { backgroundColor: p.parchment, borderColor: p.accent }]}>
             <PaperTexture />
             <ScrollView contentContainerStyle={[styles.keys, { paddingBottom: insets.bottom + space.lg, paddingRight: space.sm + (side ? insets.right : 0) }]}>
-              <TokenKeys groups={keys} chosen={printed.map((c) => c.id)} full={!note && takes > 1 && printed.length >= takes} onPress={tapKey} />
+              <div data-keys style={{ display: 'contents' }}><TokenKeys groups={keys} chosen={printed.map((c) => c.id)} full={!note && takes > 1 && printed.length >= takes} onPress={tapKey} /></div>
             </ScrollView>
           </View>
         </KeysDock> : null}
@@ -457,19 +469,39 @@ const KeepCaret = ({ style, children }: { readonly style?: object; readonly chil
   <div onMouseDown={(event) => event.preventDefault()} style={{ display: 'flex', ...style }}>{children}</div>
 )
 
-// The two keyboards a note is typed from, one up at a time, as a switch of two.
-const Keyboards = ({ letters, labels, onLetters }: { readonly letters: boolean; readonly labels: CardLabels; readonly onLetters: (letters: boolean) => void }) => (
-  <View style={[styles.switch, { backgroundColor: palette.feltRaised }]}>
-    <EdgeButton icon="letters" label={labels.letters} armed={letters} onPress={() => onLetters(true)} />
-    <EdgeButton icon="token" label={labels.tokens} armed={!letters} onPress={() => onLetters(false)} />
-  </View>
-)
+// The two keyboards a note is typed from, one up at a time: native radios drawn as a switch of
+// two, so the pair is one tab stop and the arrows move between them.
+const Keyboards = ({ letters, labels, onLetters }: { readonly letters: boolean; readonly labels: CardLabels; readonly onLetters: (letters: boolean) => void }) => {
+  const name = useId()
+  const focusVisible = useFocusVisible()
+  const [focused, setFocused] = useState<boolean>()
+  return (
+    <div role="radiogroup" aria-label={labels.keyboard} style={{ display: 'flex', borderRadius: radius.control, backgroundColor: palette.feltRaised }}>
+      {([[true, 'letters', labels.letters], [false, 'token', labels.tokens]] as const).map(([on, icon, label]) => {
+        const checked = letters === on
+        return (
+          <label key={icon} title={label} style={{
+            position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: touch, height: touch,
+            boxSizing: 'border-box', cursor: 'pointer', borderRadius: radius.control, borderStyle: 'solid', borderWidth: border,
+            borderColor: checked ? palette.accent : 'transparent',
+            ...(focused === on && focusVisible ? { outline: `${focusRing.width}px solid ${palette.accent}`, outlineOffset: focusRing.offset } : {}),
+          }}>
+            <input type="radio" name={name} checked={checked} aria-label={label} onChange={() => onLetters(on)}
+              onFocus={() => setFocused(on)} onBlur={() => setFocused(undefined)} style={hiddenRadio} />
+            <Icon name={icon} color={checked ? palette.accent : palette.text} />
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+const hiddenRadio = { position: 'absolute', width: 1, height: 1, opacity: 0, margin: 0 } as const
 
 // The note's field drawn as the card's words: the same face, size and centring. A copy of its
 // words underneath sets its height, since a text area does not grow with its text everywhere.
-const NoteField = ({ inputRef, value, onChange, style, label, placeholder }: {
+const NoteField = ({ inputRef, value, onChange, onFocus, style, label, placeholder }: {
   readonly inputRef: RefObject<TextInputInstance | null>; readonly value: string; readonly onChange: (value: string) => void
-  readonly style: TextStyle; readonly label: string; readonly placeholder: string
+  readonly onFocus: () => void; readonly style: TextStyle; readonly label: string; readonly placeholder: string
 }) => {
   const focusVisible = useFocusVisible()
   const [focused, setFocused] = useState(false)
@@ -478,7 +510,10 @@ const NoteField = ({ inputRef, value, onChange, style, label, placeholder }: {
       <Text aria-hidden style={[style, styles.words, styles.note, styles.mirror]}>{`${value || placeholder}${value.endsWith('\n') ? ' ' : ''}`}</Text>
       <TextInput ref={inputRef} value={value} onChangeText={onChange} multiline maxLength={noteLength}
         accessibilityLabel={label} placeholder={placeholder} placeholderTextColor={palette.muted}
-        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        onFocus={() => {
+          setFocused(true)
+          onFocus()
+        }} onBlur={() => setFocused(false)}
         style={[StyleSheet.absoluteFill, style, styles.words, styles.note, styles.input, { color: palette.text },
           focusStyle(palette, focused && focusVisible)]} />
     </View>
@@ -543,7 +578,7 @@ const HiddenClose = ({ label, top, onPress }: { readonly label: string; readonly
   const [focused, setFocused] = useState(false)
   const shown = focused && focusVisible
   return (
-    <div onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+    <div data-card-close onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
       style={{ position: 'absolute', top, left: space.md, opacity: shown ? 1 : 0, pointerEvents: shown ? 'auto' : 'none' }}>
       <IconButton icon="close" label={label} onPress={onPress} />
     </div>
@@ -571,7 +606,7 @@ const HoldRing = ({ x, y, emptying, reduced, onEmpty }: {
   const arc = useRef<SVGCircleElement>(null)
   const latestEmpty = useRef(onEmpty)
   useLayoutEffect(() => { latestEmpty.current = onEmpty })
-  const { size, width } = card.holdRing
+  const { size, width, trackOpacity } = card.holdRing
   const radius = (size - width) / 2
   const length = 2 * Math.PI * radius
   useEffect(() => {
@@ -591,7 +626,7 @@ const HoldRing = ({ x, y, emptying, reduced, onEmpty }: {
   }, [emptying, length, reduced])
   return (
     <svg width={size} height={size} aria-hidden style={{ position: 'absolute', left: x - size / 2, top: y - size / 2, pointerEvents: 'none', transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={palette.muted} strokeOpacity={0.35} strokeWidth={width} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={palette.muted} strokeOpacity={trackOpacity} strokeWidth={width} />
       <circle ref={arc} cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={palette.accent} strokeWidth={width}
         strokeLinecap="round" strokeDasharray={length} strokeDashoffset={length} />
     </svg>
@@ -622,7 +657,6 @@ const styles = StyleSheet.create({
   keys: { paddingTop: space.lg, paddingLeft: space.sm },
   hint: { borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: space.sm },
   barEnd: { alignItems: 'center', gap: space.sm },
-  switch: { flexDirection: 'row', borderRadius: radius.control },
   // A custom card's words keep the case they were written in.
   note: { textTransform: 'none' },
   mirror: { opacity: 0 },

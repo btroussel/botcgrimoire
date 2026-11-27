@@ -36,9 +36,10 @@ const browserLocale = (): Locale => matchLocale(typeof navigator !== 'undefined'
 
 export const sameNote = (a: KeptNote, b: KeptNote): boolean => a.words === b.words && a.character === b.character
 
-// Kept first, once, and the list cut to its bound.
+// Kept first, once, and the list cut to its bound. A note longer than the field is refused, since
+// the next launch would drop it from the list.
 export const keepNote = (notes: readonly KeptNote[], note: KeptNote): readonly KeptNote[] =>
-  [note, ...notes.filter((n) => !sameNote(n, note))].slice(0, keptLimit)
+  note.words.length > noteLength ? notes : [note, ...notes.filter((n) => !sameNote(n, note))].slice(0, keptLimit)
 
 export const forgetNote = (notes: readonly KeptNote[], note: KeptNote): readonly KeptNote[] =>
   notes.filter((n) => !sameNote(n, note))

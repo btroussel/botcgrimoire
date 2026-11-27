@@ -158,12 +158,13 @@ You are and This player is also start from a seat's menu, under Show a card, whi
 up for that seat as the list does after its pick. The other cards have nothing to do with a seat
 and stay in the list.
 
-A card whose content is already known comes up shown: You are and This player is once their
-player's seat is tapped, the not-in-play card with the saved bluffs, and the two cards of words.
-One whose content is not known comes up empty for the Storyteller to fill: This character selected
-you, the tokens alone, This player is on a disguised seat, and the note. A shown card that carries tokens
-has Change, which takes it back to editing with what it shows. Change says nothing about the game,
-since the player can see it.
+A card whose content is already known comes up shown: You are and This player is once their player's
+seat is tapped, the not-in-play card with the saved bluffs, and the two cards of words. One whose
+content is not known comes up empty for the Storyteller to fill: This character selected you, the
+tokens alone, This player is on a disguised seat, and the note. A shown card that carries tokens has
+Change, which takes it back to editing with what it shows, and so does a written note, words only or
+not, since the Storyteller wrote it and may fix it. The other cards of words have none. Change says
+nothing about the game, since the player can see it.
 
 Only You are tells a side, as the official app sends one with a thumb. It starts from the
 character its player believes and shows the side they believe, read from the board, so a side
