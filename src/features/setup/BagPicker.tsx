@@ -9,7 +9,6 @@ import { listed, sheetGroups, teamLabels } from '../../store/scriptSheet'
 import { Button } from '../../ui/Button'
 import { Drawer } from '../../ui/Drawer'
 import { EdgeButton } from '../../ui/EdgeButton'
-import { Picker } from '../../ui/Picker'
 import { palette, space, tabular, tokenKeys, type } from '../../ui/theme'
 import { Token } from '../../ui/Token'
 import { TokenKeys, tokenKeysWidth } from '../../ui/TokenKeys'
@@ -18,9 +17,6 @@ import { TokenKeys, tokenKeysWidth } from '../../ui/TokenKeys'
 const keyGroups = (roles: readonly Listed[], t: Translate) =>
   sheetGroups(roles, teamLabels(t)).map(group => ({ key: group.team, label: group.label, color: palette.teamOnPaper[group.team],
     keys: group.rows.map(row => ({ id: row.id, name: row.name })) }))
-
-const tokenGroups = (roles: readonly Listed[], t: Translate) =>
-  sheetGroups(roles, teamLabels(t)).map(group => ({ key: group.team, label: group.label, color: palette.teamOnPaper[group.team], rows: group.rows.map(row => ({ id: row.id, character: row.id, name: row.name })) }))
 
 // A key puts one more copy in the bag, so a character can go in twice, and a token in the bag
 // comes back out. The bag holds as many tokens as there are seats for it.
@@ -71,10 +67,11 @@ export const ShownPicker = ({ name, choices, chosen, visible, onClose, onChoose 
   readonly visible: boolean; readonly onClose: () => void; readonly onChoose: (shown: CharacterId | undefined) => void
 }) => {
   const { t } = useStore()
-  return <Picker visible={visible} title={t('setup.disguiseTitle', { name })} onClose={onClose} closeLabel={t('common.close')}
-    groups={tokenGroups(choices, t)} tokenGrid {...(chosen ? { selected: [chosen] } : {})} onPick={id => onChoose(id as CharacterId)}
-    right={chosen ? <EdgeButton label={t('setup.disguiseClear')} onPress={() => onChoose(undefined)} /> : null}
-    emptyLabel={t('board.nothingMatches')} />
+  return <Drawer visible={visible} title={t('setup.disguiseTitle', { name })} onClose={onClose} closeLabel={t('common.close')}
+    {...(chosen ? { right: <EdgeButton label={t('setup.disguiseClear')} onPress={() => onChoose(undefined)} /> } : {})}>
+    {choices.length === 0 ? <Text style={[type.text.body, styles.empty, { color: palette.inkMuted }]}>{t('board.nothingMatches')}</Text> : null}
+    <TokenKeys groups={keyGroups(choices, t)} chosen={chosen ? [chosen] : []} onPress={k => onChoose(k.id as CharacterId)} />
+  </Drawer>
 }
 
 const styles = StyleSheet.create({

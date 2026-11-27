@@ -114,9 +114,17 @@ test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, 
   const picker = page.getByRole('dialog', { name: 'What the Drunk sees' })
   await expect(button(picker, 'Chef')).toHaveCount(0)
   await expect(button(picker, 'Clear choice')).toHaveCount(0)
+  // One key chooses and closes; Clear choice, once there is one, hands it back to the bag.
   await button(picker, 'Monk').click()
+  await expect(picker).toBeHidden()
   await button(page, 'Drunk sees: Monk').click()
   await expect(button(picker, 'Monk')).toHaveAttribute('aria-pressed', 'true')
+  await button(picker, 'Clear choice').click()
+  await expect(picker).toBeHidden()
+  await button(page, 'Choose what the Drunk sees').click()
+  await expect(button(picker, 'Monk')).not.toHaveAttribute('aria-pressed', 'true')
+  await button(picker, 'Monk').click()
+  await button(page, 'Drunk sees: Monk').click()
   await button(picker, 'Close').click()
   await button(page, 'Open grimoire').click()
   // The setup window only deals the bag.
