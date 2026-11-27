@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { HTMLAttributes, ReactNode } from 'react'
+import type { Dispatch, HTMLAttributes, ReactNode, SetStateAction } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 
 import type { CharacterId, NightMarker, Team } from '../../content'
@@ -41,6 +41,38 @@ const tabKeys = {
 const markerKeys = {
   dusk: 'board.markerDusk', dawn: 'board.markerDawn', minionInfo: 'board.markerMinionInfo', demonInfo: 'board.markerDemonInfo',
 } as const
+const tabs = Object.keys(tabKeys) as ReferenceTab[]
+// A tab's label reads bottom to top. Vertical text keeps Han, kana and Hangul upright, so every
+// script is laid on its side, as Latin letters already are.
+const tabLabel = { writingMode: 'vertical-rl', textOrientation: 'sideways', whiteSpace: 'nowrap', fontFamily: font.body.bold,
+  fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' } as const
+const tabMinimum = 124
+const tabPadding = space.xs // between a label's ends and its tab's
+
+// The labels set as the tabs set them, out of sight, to tell how long each runs. A tab cannot
+// size itself from the label it draws: the icon tabs draw none, and whether the labelled tabs
+// fit, which decides between the two, depends on these lengths.
+const TabLabelRuler = ({ labels, onMeasure }: {
+  readonly labels: readonly string[]; readonly onMeasure: Dispatch<SetStateAction<readonly number[]>>
+}) => {
+  const ruler = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const words = [...ruler.current!.children] as HTMLElement[]
+    const measure = () => {
+      const lengths = words.map(word => word.offsetHeight)
+      onMeasure(previous => lengths.every((length, index) => length === previous[index]) ? previous : lengths)
+    }
+    measure()
+    // A font that loads late or another language changes the lengths.
+    const observer = new ResizeObserver(measure)
+    words.forEach(word => observer.observe(word))
+    return () => observer.disconnect()
+  }, [onMeasure])
+  return <div ref={ruler} aria-hidden="true" style={{ ...tabLabel, position: 'absolute', width: 0, height: 0, overflow: 'hidden', visibility: 'hidden' }}>
+    {labels.map((label, index) => <span key={index} style={{ position: 'absolute' }}>{label}</span>)}
+  </div>
+}
+
 const identityWidth = 168
 const phoneRoleName = { fontSize: 14, lineHeight: 20 }
 // Descriptions begin beyond the compact opening, so the paper's edge reveals them naturally.
@@ -162,8 +194,12 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   const viewport = useWindowDimensions().width
   const phone = viewport <= 480
   const compactWidth = referenceCompactWidth(viewport)
+  // A tab is as tall as its own label needs, so a long word in one language neither runs out of
+  // its tab nor stretches the other two.
+  const [labelLengths, setLabelLengths] = useState<readonly number[]>([])
+  const tabHeights = tabs.map((_, index) => Math.max(tabMinimum, (labelLengths[index] ?? 0) + 2 * tabPadding))
   // The status plaque floats over the rail's foot, so the tabs fit and centre in the rest.
-  const compactTabs = height - bottomClearance < 3 * 124 + 2 * space.xs
+  const compactTabs = height - bottomClearance < tabHeights.reduce((sum, tabHeight) => sum + tabHeight, (tabs.length - 1) * space.xs)
   const [nightFilter, setNightFilter] = useState<'inPlay' | 'all'>('inPlay')
   const [gripFocused, setGripFocused] = useState(false)
   const focusVisible = useFocusVisible()
@@ -216,14 +252,13 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   return <View style={styles.root}>
     <div ref={tabElements} {...dragHandlers} style={{ display: 'flex', touchAction: 'none', userSelect: 'none', cursor: dragging ? 'grabbing' : 'ew-resize' }}>
     <View style={[styles.tabs, compactTabs ? styles.compactTabs : { paddingBottom: bottomClearance }]}>
-      {/* A tab's label reads bottom to top. Vertical text keeps Han, kana and Hangul upright, so
-          every script is laid on its side, as Latin letters already are. */}
-      {(Object.keys(tabKeys) as ReferenceTab[]).map(value => <Pressable key={value}
+      <TabLabelRuler labels={tabs.map(value => t(tabKeys[value]))} onMeasure={setLabelLengths} />
+      {tabs.map((value, index) => <Pressable key={value}
         nativeID={`${tabId}-${value}`}
         hitSlop={{ left: 2, right: 2 }}
         accessibilityRole="button" accessibilityLabel={t(tabKeys[value])} aria-expanded={tab === value}
         onPress={() => onTabChange(tab === value ? null : value)}
-        style={state => [styles.tab, compactTabs && styles.compactTab, tab === value && styles.activeTab,
+        style={state => [styles.tab, compactTabs ? styles.compactTab : { height: tabHeights[index] }, tab === value && styles.activeTab,
           (isHovered(state) || state.pressed) && styles.hoveredTab,
           focusStyle(palette, focusVisible && isFocused(state))]}>
         {compactTabs ? <span title={t(tabKeys[value])} aria-hidden="true"
@@ -231,8 +266,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
           <Icon name={value === 'characters' ? 'script' : 'order'} size={22} color={tab === value ? palette.parchment : palette.text} />
           {value !== 'characters' ? <span style={{ position: 'absolute', right: 0, bottom: 0, fontFamily: font.body.bold,
             fontSize: 11, lineHeight: '12px', color: tab === value ? palette.parchment : palette.text }}>{value === 'first' ? '1' : '2+'}</span> : null}
-        </span> : <span style={{ writingMode: 'vertical-rl', textOrientation: 'sideways', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13,
-          letterSpacing: 1, textTransform: 'uppercase', color: tab === value ? palette.parchment : palette.text }}>
+        </span> : <span style={{ ...tabLabel, transform: 'rotate(180deg)', color: tab === value ? palette.parchment : palette.text }}>
           {t(tabKeys[value])}
         </span>}
       </Pressable>)}
@@ -305,9 +339,9 @@ const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, flexDirection: 'row' },
   tabs: { width: referenceTabWidth, alignSelf: 'stretch', justifyContent: 'center', gap: space.xs },
   compactTabs: { justifyContent: 'flex-start' },
-  tab: { width: referenceTabWidth, minHeight: 124, maxHeight: 158, flex: 1, flexGrow: 0, alignItems: 'center', justifyContent: 'center',
+  tab: { width: referenceTabWidth, alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#100917c9', borderColor: '#ae8a4e80', borderWidth: 1, borderTopLeftRadius: 7, borderBottomLeftRadius: 7 },
-  compactTab: { width: touch, marginLeft: referenceTabWidth - touch, minHeight: touch, maxHeight: touch },
+  compactTab: { width: touch, height: touch, marginLeft: referenceTabWidth - touch },
   activeTab: { backgroundColor: palette.ink, borderColor: palette.accent, borderRightWidth: 0 },
   hoveredTab: { backgroundColor: palette.feltRaised },
   paper: { minHeight: 0, flexShrink: 0, backgroundColor: palette.parchment, borderColor: palette.ink, borderWidth: 1,

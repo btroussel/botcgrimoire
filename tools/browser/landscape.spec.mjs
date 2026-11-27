@@ -17,8 +17,8 @@ const locale = longestIn(code => labelsIn(code).tabs)
 test.describe(`${locale} landscape board`, () => {
   test.use({ locale, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, serviceWorkers: 'block', reducedMotion: 'reduce' })
 
-  test('keeps references and toolbar reachable through rotation on short screens', async ({ page }) => {
-    const text = labelsIn(locale)
+  const text = labelsIn(locale)
+  const deal = async page => {
     await open(page, '/new')
     await page.getByRole('button', { name: text.script, exact: true }).click()
     await page.getByRole('button', { name: text.shuffle, exact: true }).click()
@@ -26,6 +26,10 @@ test.describe(`${locale} landscape board`, () => {
     await page.getByRole('button', { name: text.deal, exact: true }).click()
     await expect(page.getByRole('button', { name: text.setup, exact: true })).toBeVisible()
     await expect(page.locator('[data-seat-context-target]')).toHaveCount(7)
+  }
+
+  test('keeps references and toolbar reachable through rotation on short screens', async ({ page }) => {
+    await deal(page)
 
     const expectInBounds = async locator => {
       const { width, height } = page.viewportSize()
@@ -100,13 +104,53 @@ test.describe(`${locale} landscape board`, () => {
     }
     // The tabs sit above the plaque, so they take no width from its players row.
     expect((await page.getByText(text.alive, { exact: true }).boundingBox()).height).toBeLessThan(24)
+  })
 
-    // On the smallest phone the labelled tabs still end above the plaque rather than under it.
-    await page.setViewportSize({ width: 320, height: 568 })
-    const last = page.getByRole('button', { name: text.tabs[2], exact: true })
+  test('a reference tab holds its whole label, and icons take over before the tabs reach the plaque', async ({ page }) => {
+    await deal(page)
+    const tabs = text.tabs.map(label => page.getByRole('button', { name: label, exact: true }))
+    const last = tabs[2]
+
+    // What is out of place: a word past its tab's ends, a tab over the one above it, or the
+    // stack outside the rail's room, which ends at the plaque.
+    const misplaced = async () => {
+      const plaque = await page.getByRole('button', { name: text.setup, exact: true }).boundingBox()
+      const boxes = await Promise.all(tabs.map(tab => tab.evaluate(node => {
+        const ends = ({ top, bottom }) => ({ top, bottom })
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT)
+        const range = document.createRange()
+        const words = []
+        while (walker.nextNode()) {
+          range.selectNodeContents(walker.currentNode)
+          words.push(ends(range.getBoundingClientRect()))
+        }
+        return { ...ends(node.getBoundingClientRect()), words, rail: node.parentElement.getBoundingClientRect().top }
+      })))
+      // Half a pixel forgives a box placed at a fractional offset.
+      return boxes.flatMap((box, index) => [
+        ...box.words.some(word => word.top < box.top || word.bottom > box.bottom) ? [`${text.tabs[index]} runs out of its tab`] : [],
+        ...box.top + 0.5 < (index ? boxes[index - 1].bottom : box.rail) ? [`${text.tabs[index]} starts too high`] : [],
+        ...box.bottom > plaque.y + 0.5 ? [`${text.tabs[index]} reaches the plaque`] : [],
+      ])
+    }
+
+    // An upright tablet and a phone have the height for every label.
+    for (const viewport of [{ width: 900, height: 820 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport)
+      await expect.poll(misplaced).toEqual([])
+      for (const [index, tab] of tabs.entries()) await expect(tab).toHaveText(text.tabs[index])
+    }
+
+    // Shrink a narrow window until no labelled stack could fit. The stack must fit at every
+    // height that still shows it, however long this language makes it, and the icons must be up
+    // by the end. A long label adds more height than one step takes away, so no step can pass
+    // over the heights where a stack measured too short would overflow.
+    await page.setViewportSize({ width: 320, height: 640 })
     await expect(last).toHaveText(text.tabs[2])
-    const plaque = await page.getByRole('button', { name: text.setup, exact: true }).boundingBox()
-    const tabBox = await last.boundingBox()
-    expect(tabBox.y + tabBox.height).toBeLessThanOrEqual(plaque.y)
+    for (let height = 640; height >= 480; height -= 8) {
+      await page.setViewportSize({ width: 320, height })
+      await expect.poll(misplaced).toEqual([])
+    }
+    await expect(last).not.toHaveText(text.tabs[2])
   })
 })
