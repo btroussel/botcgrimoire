@@ -3,7 +3,7 @@
 // follow a beat later, and a hold hands the phone back. While editing, the same card is its own
 // preview above the token keys, and only the shown card is turned to a player. A note's words are
 // typed on the card itself, where the player will read them.
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { DragEvent, MouseEvent, ReactNode, PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
 import type { TextInputInstance, TextStyle } from 'react-native'
@@ -190,19 +190,30 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const hintTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [closing, setClosing] = useState(false)
   const faded = useRef(false)
+  const lifted = useRef(false)
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const liftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latestDismiss = useRef(onDismiss)
   useLayoutEffect(() => { latestDismiss.current = onDismiss })
 
-  // The card leaves only once the fade has run and the thumb has lifted: lifted over the board,
-  // the release would otherwise land on whatever seat is under it.
-  const close = useCallback(() => {
+  // The card leaves only once the fade has run and the thumb's lift has passed. A touch's lift
+  // sends its mouse events and click after pointerup, so the faded card stays over the board to
+  // take them, until the click or `liftGuard`: gone sooner, they would press the seat or Undo
+  // under the thumb.
+  const leave = () => { if (faded.current && lifted.current) latestDismiss.current() }
+  const close = () => {
     setClosing(true)
+    lifted.current = !press.current
     fadeTimer.current = setTimeout(() => {
       faded.current = true
-      if (!press.current) latestDismiss.current()
+      leave()
     }, reduced ? 0 : motion.duration.cardClose)
-  }, [reduced])
+  }
+  const lift = () => {
+    clearTimeout(liftTimer.current)
+    lifted.current = true
+    leave()
+  }
 
   const showHint = () => {
     setHint(true)
@@ -212,6 +223,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   useEffect(() => () => {
     clearTimeout(hintTimer.current)
     clearTimeout(fadeTimer.current)
+    clearTimeout(liftTimer.current)
     clearTimeout(press.current?.timer)
   }, [])
 
@@ -221,7 +233,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
     clearTimeout(held.timer)
     press.current = undefined
     if (closing) {
-      if (faded.current) latestDismiss.current()
+      liftTimer.current = setTimeout(lift, motion.duration.liftGuard)
       return
     }
     setRing((r) => r && { ...r, emptying: true })
@@ -258,6 +270,13 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
     // note being typed keeps the menu, for pasting.
     onContextMenu: (event: MouseEvent<HTMLDivElement>) => { if (!editing) event.preventDefault() },
     onDragStart: (event: DragEvent<HTMLDivElement>) => event.preventDefault(),
+    // A closing card takes no taps: the lift's own click ends its wait.
+    onClickCapture: (event: MouseEvent<HTMLDivElement>) => {
+      if (!closing) return
+      event.preventDefault()
+      event.stopPropagation()
+      if (!press.current) lift()
+    },
   }
 
   // A key's tap. A card of one token shows at once, so typing it is the whole step; a card of

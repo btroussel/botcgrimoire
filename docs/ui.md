@@ -272,15 +272,17 @@ away must not change the game.
 
 A card fills the screen and hides the grimoire. Its words and tokens are one block centred in the
 window, laid out from the words' measured height, since they wrap differently in every language. A
-lone token takes as much as fits up to 72 percent of the width; several stand in a row or a
-column, whichever draws them larger. A name too small to read on the arc moves to a caption under
-its token. The corners stay clear for the card's own controls, and a block that cannot fit scrolls.
+lone token takes as much as fits with a margin either side; several stand in a row or a column,
+whichever draws them larger, and never run off the side: past the smallest size they wrap and scroll
+down. A name too small to read on the arc moves to a caption under its token. The corners stay clear
+for the card's own controls, and a block that cannot fit scrolls.
 
-A shown card closes on a press held for half a second, while a brass ring fills round the thumb,
-and never on a tap. It is held screen out toward a player, so one stray thumb would show them every
-role. A tap says how to close it instead. The card leaves only once the thumb lifts, so the release
-never lands on a seat. Keyboard and screen reader users close it with a Close button that stays out
-of sight until it takes focus, or with Escape.
+A shown card closes on a press held for half a second, while a brass ring fills round the thumb, and
+never on a tap. It is held screen out toward a player, so one stray thumb would show them every
+role. A tap says how to close it instead. The card leaves only once the thumb has lifted and the
+lift's own click has passed, so the release never lands on a seat or on Undo. Keyboard and screen
+reader users close it with a Close button that stays out of sight until it takes focus, or with
+Escape.
 
 A card being filled is the Storyteller's, not yet the player's, so it leaves on its cross or Escape
 and never on a hold. The keys are printed tokens grouped under their team's label, a chosen one

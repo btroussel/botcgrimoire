@@ -43,13 +43,19 @@ export const cardTokens = ({ width, height, words, below, count, roomy, foot = c
   }
 
   // A row or a column, whichever draws larger, and two columns once there are more than three.
-  // A tie goes to the row, which reads left to right.
-  const options = [...new Set([count, ...(count > 3 ? [2] : []), 1])]
+  // At the floor a row may not fit across, so the most columns that do fit is also tried, and the
+  // block scrolls down rather than run off the side. A tie goes to the wider, which reads left to
+  // right.
+  const atFloor = Math.floor((wide + gap) / (card.tokenMinimum + captionExtra + gap))
+  const options = [...new Set([count, Math.max(1, Math.min(count, atFloor)), ...(count > 3 ? [2] : []), 1])]
+    .sort((a, b) => b - a)
   let best: CardTokens | undefined
   for (const columns of options) {
     const named = fit(columns, false)
     const captioned = named < card.arcFrom
     const size = captioned ? fit(columns, true) : named
+    const across = columns * (size + (captioned ? captionExtra : 0)) + (columns - 1) * gap
+    if (columns > 1 && across > wide) continue
     if (!best || size > best.size) best = { size, columns, gap, captioned }
   }
   return best as CardTokens

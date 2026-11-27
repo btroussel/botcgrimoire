@@ -176,6 +176,38 @@ test('a tap leaves the card up and says how to close it, and a hold closes it', 
   await expect(card).toBeHidden()
 })
 
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true, isMobile: true })
+
+  // A touch's lift sends its mouse events and click after the hold has closed the card, at the
+  // spot under the thumb: they must not reach Undo there.
+  test('a hold over Undo closes the card and leaves the game as it was', async ({ page }) => {
+    await openBoard(page)
+    await page.locator('[data-seat-context-target]').first().getByRole('button').first().tap()
+    await page.getByRole('group', { name: 'Seat 1', exact: true }).getByRole('button', { name: 'Mark dead', exact: true }).tap()
+    const alive = page.getByText(/^\d+ \/ \d+ alive$/).first()
+    await expect(alive).toHaveText('6 / 7 alive')
+    // The menu stays up for the next edit on that seat.
+    const menus = page.locator('[role="group"][data-layer]')
+    await page.keyboard.press('Escape')
+    await expect(menus).toHaveCount(0)
+    const undo = await page.getByRole('button', { name: 'Undo', exact: true }).boundingBox()
+
+    await chooseCard(page, 'This is the Demon')
+    const card = page.getByRole('dialog', { name: 'This is the Demon' })
+    await expect(card.getByRole('heading')).toBeVisible()
+    const touch = await page.context().newCDPSession(page)
+    const at = { x: undo.x + undo.width / 2, y: undo.y + undo.height / 2 }
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at] })
+    await page.waitForTimeout(700)
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect(card).toBeHidden()
+    await page.waitForTimeout(300)
+    await expect(alive).toHaveText('6 / 7 alive')
+    await expect(menus).toHaveCount(0)
+  })
+})
+
 test('a keyboard closes the card with its one Close button', async ({ page }) => {
   await openBoard(page)
   await chooseCard(page, 'These are your Minions')

@@ -61,4 +61,17 @@ describe('the card block', () => {
   it('never draws a token below the floor, so a block that cannot fit scrolls', () => {
     expect(cardTokens({ width: 320, height: 200, words: 300, below: 0, count: 6, roomy: false }).size).toBe(48)
   })
+
+  it('never draws a block wider than the card, even at the floor', () => {
+    const cases = [
+      { width: 320, height: 568, words: oneLine, count: 8, roomy: false },
+      { width: 844, height: 390, words: oneLine, count: 12, roomy: true },
+      { width: 320, height: 300, words: twoLines, count: 5, roomy: false, foot: 12 },
+    ]
+    for (const { roomy, ...room } of cases) {
+      const { size, columns, gap, captioned } = cardTokens({ ...room, below: 0, roomy })
+      const wide = room.width - 2 * (roomy ? 24 : 16)
+      expect(columns * (size + (captioned ? 8 : 0)) + (columns - 1) * gap).toBeLessThanOrEqual(wide)
+    }
+  })
 })

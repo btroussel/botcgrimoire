@@ -383,6 +383,7 @@ export const motion = {
     holdRelease: 160, // a ring let go early empties
     holdHint: 1500, // how long a tap on a card shows how to close it
     cardClose: 150, // the card fades out once the hold completes
+    liftGuard: 400, // the faded card waits this long at most for a touch's lift to send its click
     fade: 120, // what every fade becomes under reduced motion
   },
   pressedOpacity: 0.7, // a button press is opacity; a token presses by scale instead
