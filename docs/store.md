@@ -113,7 +113,11 @@ the app was closed. Play time counts from creation, setup included, to the endin
 
 ## Custom scripts and settings
 
-Settings hold the language and the board colour, apart from any game. The first render uses
+Settings hold the language, the board colour and the kept notes, apart from any game. A kept note
+is the words and token of a card the Storyteller wants to show again; keeping one records nothing
+in a game. The list holds the thirty kept last, latest first, and a note as long as the card's
+field takes. Settings saved before the list read as none kept, and an entry of the wrong shape is
+dropped on read rather than refusing the settings. The first render uses
 English, or the language of a language's own Home ([App](app.md#search-and-sharing)), so it matches
 the static export. After that the store applies the language [App](app.md#language) picks and
 saves it; a route change never rewrites it.

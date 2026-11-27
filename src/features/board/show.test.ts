@@ -1,7 +1,8 @@
 import type { SeatId } from '../../engine'
 import { game, info, token } from '../../engine/testing/board'
 import { bluffsOf } from '../../store/bluffs'
-import { believed, cardKeys, opening, seatStart, showTokens, showing, takes } from './show'
+import { parseScript } from '../../content'
+import { believed, cardKeys, notePresets, opening, seatStart, showTokens, showing, takes } from './show'
 
 // Uppercase ids verify that card names come from the supplied locale lookup.
 const name = (id: string) => id.toUpperCase()
@@ -148,7 +149,7 @@ describe('showing a card from the board', () => {
   })
 
   test('each card takes one token, three bluffs, any number alone, or none', () => {
-    expect(['youAre', 'thisPlayerIs', 'selectedYou'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1])
+    expect(['youAre', 'thisPlayerIs', 'selectedYou', 'custom'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1, 1])
     expect(takes('notInPlay')).toBe(3)
     expect(takes('tokenOnly')).toBe(Number.POSITIVE_INFINITY)
     expect(takes('thisIsTheDemon')).toBe(0)
@@ -164,5 +165,23 @@ describe('showing a card from the board', () => {
     expect(bluffs.at(-1)?.ids).toEqual(expect.arrayContaining(['chef', 'drunk']))
     expect(bluffs.slice(0, -1).flatMap((group) => group.ids)).not.toContain('chef')
     expect(cardKeys(g, 'theseAreYourMinions')).toEqual([])
+  })
+
+  test('a note offers the kept notes, latest first, then the script\'s own cards', () => {
+    const script = parseScript([{ id: '_meta', name: 'Lit' }, 'imp', {
+      id: 'lamp', name: 'Lamp', team: 'outsider', ability: 'x', special: [{ type: 'signal', name: 'card', value: 'You are lit' }],
+    }])
+    if ('errors' in script) throw new Error(script.errors.join())
+    const kept = [
+      { words: 'Wake', character: 'imp' },
+      // A token the app does not know is left off, and a note left with nothing goes.
+      { words: 'Sleep', character: 'nobody-knows' }, { words: '', character: 'nobody-knows' },
+      // Kept from the script's own card, so it is offered once.
+      { words: 'You are lit', character: 'lamp' },
+    ]
+    expect(notePresets(kept, script)).toEqual([
+      { words: 'Wake', character: 'imp' }, { words: 'Sleep' }, { words: 'You are lit', character: 'lamp' },
+    ])
+    expect(notePresets([], 'tb')).toEqual([])
   })
 })

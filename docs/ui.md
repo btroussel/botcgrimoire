@@ -61,7 +61,9 @@ to an edge. Their content scrolls and their actions stay inside the window. Clos
 outside dismiss one. The one exception is the tokens on a card, typed from keys docked at the foot
 of an upright window, where a device's keyboard lives, or in a column on the right of a wide one,
 which has no height to give. The card being filled stays in view above them as its own preview, so
-the Storyteller sees exactly what the player will.
+the Storyteller sees exactly what the player will. A note's words are typed on the card in the
+card's own type, so the field is the preview too; its token keys and the device's keyboard take the
+same place in turn, and the card follows the visible viewport so its bar stays above the keyboard.
 
 ## Motion
 

@@ -3,21 +3,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { BoardColour, Locale } from '../content'
 import { boardColours } from '../content'
 
-import { defaultSettings, withDefaults } from './settings'
+import type { KeptNote } from './settings'
+import { defaultSettings, forgetNote, keepNote, keptLimit, noteLength, withDefaults } from './settings'
 
 afterEach(() => vi.unstubAllGlobals())
 
 describe('settings at startup', () => {
   it('renders the same defaults regardless of the export machine or browser language', () => {
     vi.stubGlobal('navigator', { language: 'fr-FR' })
-    expect(defaultSettings()).toEqual({ locale: 'en', boardColour: 'burgundy' })
+    expect(defaultSettings()).toEqual({ locale: 'en', boardColour: 'burgundy', notes: [] })
     vi.stubGlobal('navigator', { language: 'en-US' })
-    expect(defaultSettings()).toEqual({ locale: 'en', boardColour: 'burgundy' })
+    expect(defaultSettings()).toEqual({ locale: 'en', boardColour: 'burgundy', notes: [] })
   })
 
   it('renders a language\'s own page in that language from the first render', () => {
     vi.stubGlobal('navigator', { language: 'en-US' })
-    expect(defaultSettings('fr')).toEqual({ locale: 'fr', boardColour: 'burgundy' })
+    expect(defaultSettings('fr')).toEqual({ locale: 'fr', boardColour: 'burgundy', notes: [] })
   })
 
   it('uses a translated Home only when no supported locale was saved', () => {
@@ -31,8 +32,8 @@ describe('settings at startup', () => {
 
   it('uses the browser language after loading when no locale was saved', () => {
     vi.stubGlobal('navigator', { language: 'fr-CA' })
-    expect(withDefaults(undefined)).toEqual({ locale: 'fr', boardColour: 'burgundy' })
-    expect(withDefaults({})).toEqual({ locale: 'fr', boardColour: 'burgundy' })
+    expect(withDefaults(undefined)).toEqual({ locale: 'fr', boardColour: 'burgundy', notes: [] })
+    expect(withDefaults({})).toEqual({ locale: 'fr', boardColour: 'burgundy', notes: [] })
     vi.stubGlobal('navigator', { language: 'it-IT' })
     expect(withDefaults(undefined).locale).toBe('en')
   })
@@ -53,12 +54,12 @@ describe('settings at startup', () => {
 
   it('keeps a saved locale in preference to the browser defaults', () => {
     vi.stubGlobal('navigator', { language: 'fr-FR' })
-    expect(withDefaults({ locale: 'en' })).toEqual({ locale: 'en', boardColour: 'burgundy' })
+    expect(withDefaults({ locale: 'en' })).toEqual({ locale: 'en', boardColour: 'burgundy', notes: [] })
   })
 
   it('drops obsolete preferences while retaining the saved locale and board colour', () => {
     const saved = { locale: 'fr', boardColour: 'plum', obsoletePreference: true } as const
-    expect(withDefaults(saved)).toEqual({ locale: 'fr', boardColour: 'plum' })
+    expect(withDefaults(saved)).toEqual({ locale: 'fr', boardColour: 'plum', notes: [] })
   })
 })
 
@@ -68,4 +69,38 @@ it.each(boardColours)('restores the saved %s velvet', (boardColour) => {
 
 it('uses burgundy for an unsupported saved colour', () => {
   expect(withDefaults({ boardColour: 'unknown' as BoardColour }).boardColour).toBe('burgundy')
+})
+
+describe('kept notes', () => {
+  it('reads older settings without the list as none kept', () => {
+    expect(withDefaults({ locale: 'en' }).notes).toEqual([])
+  })
+
+  it('drops what is malformed and keeps the rest in order', () => {
+    const notes = [
+      { words: 'Yes', character: 'imp' }, null, 'Wake', { words: 7 }, { words: '   ' }, { words: '', character: 'chef' },
+      { words: 'x'.repeat(noteLength + 1) }, { words: ' Sleep ', character: '' }, { words: 'Yes', character: 'imp' },
+    ]
+    expect(withDefaults({ notes } as unknown as Partial<{ notes: readonly KeptNote[] }>).notes).toEqual([
+      { words: 'Yes', character: 'imp' }, { words: '', character: 'chef' }, { words: 'Sleep' },
+    ])
+    expect(withDefaults({ notes: 'many' } as unknown as Partial<{ notes: readonly KeptNote[] }>).notes).toEqual([])
+  })
+
+  it('keeps the latest first, once, and drops the oldest past the bound', () => {
+    const many = Array.from({ length: keptLimit }, (_, i) => ({ words: `Note ${i}` }))
+    const kept = keepNote(many, { words: 'Note 3' })
+    expect(kept[0]).toEqual({ words: 'Note 3' })
+    expect(kept).toHaveLength(keptLimit)
+    const more = keepNote(kept, { words: 'New', character: 'imp' })
+    expect(more).toHaveLength(keptLimit)
+    expect(more[0]).toEqual({ words: 'New', character: 'imp' })
+    expect(more).not.toContainEqual({ words: `Note ${keptLimit - 1}` })
+  })
+
+  it('tells a note by its words and its token together', () => {
+    const notes = keepNote(keepNote([], { words: 'Yes' }), { words: 'Yes', character: 'imp' })
+    expect(notes).toHaveLength(2)
+    expect(forgetNote(notes, { words: 'Yes' })).toEqual([{ words: 'Yes', character: 'imp' }])
+  })
 })

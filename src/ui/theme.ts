@@ -303,6 +303,7 @@ export const card = {
   // An editing card's keys: docked at the foot of an upright window, at most this share of its
   // height, or a column on the right of a wide one, which has no height to give.
   keys: { heightShare: 0.45, sideShare: 0.5, sideMaximum: 420 },
+  presetWidth: 440, // a written note's presets, one line each, read down a short column
 } as const
 
 // The token keyboard: printed tokens as keys, one point over the touch target so a key never

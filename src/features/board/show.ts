@@ -3,9 +3,12 @@
 // card leaves each token in its team's colours, as the printed token is, so no card tells one
 // player another's side. The Storyteller may change any card's characters, since a poisoned
 // player can be shown a false one.
-import type { CharacterId, Team } from '../../content'
+import type { CharacterId, Script, Team } from '../../content'
+import { asCharacterId, characters, homebrewOf, scriptCards, scriptCharacters } from '../../content'
 import type { Grimoire, SeatId } from '../../engine'
 import { markedCharacters, playerIdentity, seatById } from '../../engine'
+import type { KeptNote } from '../../store/settings'
+import { sameNote } from '../../store/settings'
 import type { CardKind, CardSpec } from '../../ui/BoardInteraction'
 import { bluffChoices, byTeam, characterGroups, goodInPlay } from './seat'
 
@@ -52,12 +55,14 @@ export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly C
 }
 
 // How many tokens a card takes: one for a card about one character, three bluffs, any number for
-// the tokens alone, and none for a card of words. A written note keeps its own sheet for now.
+// the tokens alone, and none for a card of words. A written note takes one under its words, as a
+// homebrew character's own card has.
 export const takes = (kind: CardKind): number => {
   switch (kind) {
     case 'youAre':
     case 'thisPlayerIs':
     case 'selectedYou':
+    case 'custom':
       return 1
     case 'notInPlay':
       return 3
@@ -65,7 +70,6 @@ export const takes = (kind: CardKind): number => {
       return Number.POSITIVE_INFINITY
     case 'thisIsTheDemon':
     case 'theseAreYourMinions':
-    case 'custom':
       return 0
   }
 }
@@ -139,4 +143,25 @@ export const opening = (
   if (shown) return { spec: shown, editing: false }
   const empty = blank(g, kind, choice.seat, words)
   return empty ? { spec: empty, editing: true } : undefined
+}
+
+// A written note offered on an empty note card, words and token as they will be written.
+export interface NotePreset {
+  readonly words: string
+  readonly character?: CharacterId
+}
+
+// After Yes, No and the digits: the notes kept on this device, latest first, then the script's own
+// character cards. A kept note's token outside this script still shows when the app knows the
+// character, and is left off when it does not, so a note never prints a blank token.
+export const notePresets = (kept: readonly KeptNote[], script: Script): readonly NotePreset[] => {
+  const own = scriptCharacters(script)
+  const known = (id: string) => own.includes(asCharacterId(id)) || characters.has(asCharacterId(id)) || homebrewOf(id) !== undefined
+  const notes = kept.flatMap((n): NotePreset[] => {
+    const character = n.character !== undefined && known(n.character) ? asCharacterId(n.character) : undefined
+    if (n.words === '' && character === undefined) return []
+    return [{ words: n.words, ...(character !== undefined ? { character } : {}) }]
+  })
+  const cards = scriptCards(script).map((c): NotePreset => ({ words: c.text, character: asCharacterId(c.character) }))
+  return [...notes, ...cards.filter((c) => !notes.some((n) => sameNote(n, c)))]
 }

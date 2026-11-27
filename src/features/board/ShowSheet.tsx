@@ -1,18 +1,16 @@
 // Manual cards ask only for content they display. Opening one never writes to the game log.
-import { useState } from 'react'
-
-import type { CharacterId } from '../../content'
-import { scriptCards } from '../../content'
 import type { SeatId } from '../../engine'
+import { useStore } from '../../store'
 import { bluffsOf } from '../../store/bluffs'
+import type { KeptNote } from '../../store/settings'
+import { forgetNote, keepNote, sameNote } from '../../store/settings'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
-import { Button } from '../../ui/Button'
-import { Field } from '../../ui/Field'
+import type { CardNote, WrittenNote } from './Card'
 import type { InfoTokenItem } from './InfoTokenList'
 import { InfoTokenList } from './InfoTokenList'
 import { Sheet } from '../../ui/Sheet'
 import type { ShowChoice, ShowKind } from './show'
-import { believed, opening, seatStart, showTokens } from './show'
+import { believed, notePresets, opening, seatStart, showTokens } from './show'
 import { useEdits } from './useEdits'
 
 export interface ShowSheetProps {
@@ -49,40 +47,44 @@ export const useOpenCard = () => {
   return { open, openSeat }
 }
 
+// A note's presets and its star. Kept notes live on this device beside the language, never in a
+// game, so showing one still records nothing.
+export const useCardNote = (): CardNote | undefined => {
+  const store = useStore()
+  const e = useEdits()
+  const notes = store.settings.notes
+  if (!e.board) return undefined
+  const stored = (n: WrittenNote): KeptNote => ({ words: n.words, ...(n.character ? { character: n.character.id } : {}) })
+  const kept = (n: WrittenNote) => notes.some((k) => sameNote(k, stored(n)))
+  return {
+    presets: notePresets(notes, e.board.script).map((n) => ({
+      words: n.words, ...(n.character !== undefined ? { character: { id: n.character, name: e.name(n.character) } } : {}),
+    })),
+    kept,
+    onKeep: (n) => store.setSettings({ notes: kept(n) ? forgetNote(notes, stored(n)) : keepNote(notes, stored(n)) }),
+  }
+}
+
 export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
   const e = useEdits()
   const interaction = useBoardInteraction()
   const { open, openSeat } = useOpenCard()
   const t = e.t
   const board = e.board
-  const [note, setNote] = useState<string | undefined>(undefined) // the note step while set
-  // The list comes back each time the sheet opens; the edge is read during render.
-  const [wasVisible, setWasVisible] = useState(visible)
-  if (visible !== wasVisible) {
-    setWasVisible(visible)
-    if (visible) setNote(undefined)
-  }
 
+  // Always the same eight: a homebrew character's own card is offered on the note instead.
   const savedBluffs = board ? bluffsOf(board, e.log) : []
   const items: readonly InfoTokenItem[] = [...showTokens.map((x) => ({
     kind: x.kind,
     label: t(labelKey[x.kind]),
     ...(x.kind === 'notInPlay' ? { characters: savedBluffs } : {}),
-  })), { kind: 'custom', label: t('board.customNote') },
-  // A homebrew character's own card, written in its script, comes after the note and shows at once.
-  ...(board ? scriptCards(board.script) : []).map((c): InfoTokenItem => ({
-    kind: 'custom', key: `card/${c.character}/${c.text}`, label: c.text, characters: [c.character],
-  }))]
+  })), { kind: 'custom', label: t('board.customNote') }]
 
   const pickToken = (item: InfoTokenItem) => {
     if (item.kind === 'custom') {
-      const own = item.characters?.[0] as CharacterId | undefined
-      if (own === undefined) {
-        setNote('')
-        return
-      }
+      // The note is written on the card itself, where the player will read it.
       onClose()
-      interaction.showCard({ kind: 'custom', words: item.label, characters: [{ id: own, name: e.name(own) }] })
+      interaction.showCard({ kind: 'custom', words: '' }, true)
       return
     }
     const token = showTokens.find((x) => x.kind === item.kind)
@@ -103,19 +105,6 @@ export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
       else open(token.kind, { characters: savedBluffs })
     } else open(token.kind, {})
   }
-  const showNote = () => {
-    if (!note?.trim()) return
-    onClose()
-    interaction.showCard({ kind: 'custom', words: note.trim() })
-  }
-
-  if (note !== undefined) return (
-      <Sheet visible={visible} width={560} title={t('board.customNote')} onClose={onClose} closeLabel={t('common.close')}
-        onBack={() => setNote(undefined)} backLabel={t('common.back')}
-        footer={<Button label={t('board.showNote')} onPress={showNote} disabled={!note.trim()} variant="primary" surface="paper" />}>
-        <Field label={t('board.noteMessage')} value={note} onChange={setNote} multiline autoFocus />
-      </Sheet>
-  )
   return (
     <Sheet visible={visible} width={480} title={t('board.show')} onClose={onClose} closeLabel={t('common.close')} contentPaddingHorizontal={8}>
       <InfoTokenList items={items} onPick={pickToken} />

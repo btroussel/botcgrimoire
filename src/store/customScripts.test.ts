@@ -5,7 +5,7 @@ import type { SavedScript, SavedScriptId } from './customScripts'
 import { closeDb, deleteScript, getSettings, listScripts, putScript, putSettings } from './db'
 import type { Settings } from './settings'
 
-const settings: Settings = { locale: 'fr', boardColour: 'burgundy' }
+const settings: Settings = { locale: 'fr', boardColour: 'burgundy', notes: [] }
 
 const saved = (id: string, updatedAt: number): SavedScript => ({
   id: id as SavedScriptId,

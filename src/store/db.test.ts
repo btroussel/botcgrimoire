@@ -145,8 +145,8 @@ describe('import', () => {
   })
 })
 
-test('the velvet preference survives closing and reopening the database', async () => {
-  const settings = { locale: 'fr', boardColour: 'plum' } as const
+test('the velvet and the kept notes survive closing and reopening the database', async () => {
+  const settings = { locale: 'fr', boardColour: 'plum', notes: [{ words: 'Yes', character: 'imp' }] } as const
   await putSettings(settings)
   await closeDb()
   expect(await getSettings()).toEqual(settings)

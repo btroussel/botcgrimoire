@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { open } from './app.mjs'
+import { open, reload } from './app.mjs'
 
 test.use({ serviceWorkers: 'block', reducedMotion: 'reduce', viewport: { width: 390, height: 844 } })
 
@@ -261,4 +261,87 @@ test('the bluff picker shows the set on screen and saves it, so the tray holds w
   await holdToClose(card)
   await expect(card).toBeHidden()
   await expect(tray.getByRole('button', { name: /^Bluff: / })).toHaveCount(3)
+})
+
+// A device's keyboard shrinks only the visible viewport. Desktop automation has no software
+// keyboard, so the test shrinks it as a phone would.
+const keyboardUp = (page, height) => page.evaluate(h => {
+  Object.defineProperty(visualViewport, 'height', { configurable: true, value: h })
+  visualViewport.dispatchEvent(new Event('resize'))
+}, height)
+
+test('a number preset writes the digit, and Show shows it at a lone number\'s size', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'Custom note')
+  const card = page.getByRole('dialog', { name: 'Custom note' })
+  const field = card.getByRole('textbox', { name: 'Message' })
+  await expect(field).toBeFocused()
+  await card.getByRole('button', { name: '3', exact: true }).click()
+  // A preset is written, never shown: the caret stays and the presets go with the first character.
+  await expect(field).toHaveValue('3')
+  await expect(field).toBeFocused()
+  await expect(card.getByRole('button', { name: 'Yes', exact: true })).toHaveCount(0)
+  await card.getByRole('button', { name: 'Show', exact: true }).click()
+  await expect(field).toHaveCount(0)
+  await expect(card.getByRole('heading', { name: '3', exact: true })).toHaveCSS('font-size', '96px')
+  await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeVisible()
+})
+
+test('a typed note with a token shows both, and its bar stays above the device keyboard', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'Custom note')
+  const card = page.getByRole('dialog', { name: 'Custom note' })
+  const field = card.getByRole('textbox', { name: 'Message' })
+  const show = card.getByRole('button', { name: 'Show', exact: true })
+  await expect(show).toBeDisabled()
+  await field.fill('Watch your left')
+  await keyboardUp(page, 400)
+  const bottom = async () => { const box = await show.boundingBox(); return box.y + box.height }
+  await expect.poll(bottom).toBeLessThanOrEqual(400)
+  // With the keyboard down the bar goes back to the foot before the next tap.
+  await keyboardUp(page, 844)
+  await expect.poll(bottom).toBeGreaterThan(800)
+
+  // The two keyboards swap: the caret leaves with the letters and comes back with them.
+  await card.getByRole('button', { name: 'Tokens', exact: true }).click()
+  await expect(field).not.toBeFocused()
+  await card.getByRole('button', { name: 'Imp', exact: true }).click()
+  // One token per note: another key replaces it.
+  await card.getByRole('button', { name: 'Chef', exact: true }).click()
+  await expect(card.getByRole('button', { name: 'Remove Imp', exact: true })).toHaveCount(0)
+  await expect(card.getByRole('button', { name: 'Remove Chef', exact: true })).toBeVisible()
+  await card.getByRole('button', { name: 'Letters', exact: true }).click()
+  await expect(field).toBeFocused()
+  await show.click()
+  await expect(card.getByRole('heading', { name: 'Watch your left', exact: true })).toBeVisible()
+  await expect(card.getByText('CHEF', { exact: true })).toBeVisible()
+  // Change goes back to the editor with what the card showed.
+  await card.getByRole('button', { name: 'Change', exact: true }).click()
+  await expect(field).toHaveValue('Watch your left')
+})
+
+test('a kept note is offered again after a reload, and forgetting it takes it away', async ({ page }) => {
+  await openBoard(page)
+  await chooseCard(page, 'Custom note')
+  const card = page.getByRole('dialog', { name: 'Custom note' })
+  const field = card.getByRole('textbox', { name: 'Message' })
+  const keep = card.getByRole('button', { name: 'Keep this note', exact: true })
+  await field.fill('Open your eyes')
+  await keep.click()
+  await expect(keep).toHaveAttribute('aria-pressed', 'true')
+  await card.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(card).toBeHidden()
+
+  await reload(page)
+  await chooseCard(page, 'Custom note')
+  const kept = card.getByRole('button', { name: 'Open your eyes', exact: true })
+  await kept.click()
+  await expect(field).toHaveValue('Open your eyes')
+  await expect(keep).toHaveAttribute('aria-pressed', 'true')
+  await keep.click()
+  await expect(keep).not.toHaveAttribute('aria-pressed', 'true')
+  // Emptied, the card offers its presets again, without the forgotten note.
+  await field.fill('')
+  await expect(card.getByRole('button', { name: 'Yes', exact: true })).toBeVisible()
+  await expect(kept).toHaveCount(0)
 })

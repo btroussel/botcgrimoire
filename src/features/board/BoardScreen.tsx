@@ -48,7 +48,7 @@ import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
-import { ShowSheet } from './ShowSheet'
+import { ShowSheet, useCardNote } from './ShowSheet'
 import { cardKeys, takes } from './show'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
@@ -105,6 +105,7 @@ export const BoardScreen = (props: BoardScreenProps) => (
 const Board = ({ id, replay = false, openSetup = false, deal = false, panels, timer, History }: BoardScreenProps) => {
   const b = useBoard(id, replay)
   const e = useEdits()
+  const cardNote = useCardNote()
   const interaction = useBoardInteraction()
   const insets = useSafeAreaInsets()
   const window = useLayoutViewport()
@@ -551,9 +552,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           onCancel={() => setConfirmHome(false)}
         />
         {interaction.card ? (
-          // The tokens alone have no words, and their characters change as they are typed.
+          // The tokens alone have no words, and a card's characters and a note's words change as
+          // they are typed, so the dialog takes the card's name.
           <Modal visible animationType="none" onRequestClose={interaction.closeCard}
-            aria-label={interaction.card.spec.words || t('board.cardTokenOnly')}>
+            aria-label={interaction.card.spec.kind === 'custom' ? t('board.customNote') : interaction.card.spec.words || t('board.cardTokenOnly')}>
             <Card spec={interaction.card.spec} editing={interaction.card.editing} takes={takes(interaction.card.spec.kind)}
               keys={cardKeys(board, interaction.card.spec.kind).map((g) => ({
                 key: g.key,
@@ -561,11 +563,14 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
                 color: g.key === 'inPlay' ? p.ink : p.teamOnPaper[g.key],
                 keys: g.ids.map((id) => ({ id, name: e.name(id) })),
               }))}
+              {...(interaction.card.spec.kind === 'custom' && cardNote ? { note: cardNote } : {})}
               onDismiss={interaction.closeCard}
               labels={{
                 close: t('common.close'), holdHint: t('board.cardHoldToClose'), change: t('board.cardChange'),
                 show: t('board.showBluffsNow'), takeLast: t('board.cardTakeLast'), done: t('common.done'),
                 takeOff: (name) => t('board.removeChip', { label: name }),
+                placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), letters: t('board.noteLetters'),
+                tokens: t('board.noteTokens'), keep: t('board.noteKeep'), yes: t('board.noteYes'), no: t('board.noteNo'),
               }} />
           </Modal>
         ) : null}
