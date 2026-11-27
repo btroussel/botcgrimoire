@@ -315,8 +315,9 @@ export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20, checkG
 
 // The drawer the board's token sheets come up in: full width up to the pickers' old width, and
 // never so tall that the board above it is gone. Beside the seat it changes it may stop as short
-// as `leastShare`, which still lists a few rows of keys. `well` is a bluff well in its dock.
-export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.4, well: 56 } as const
+// as `leastShare`, which still lists a few rows of keys. `well` is a bluff well in its dock, and
+// with less than `actions` beside the wells its buttons take the next row.
+export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.4, well: 56, actions: 240 } as const
 
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half

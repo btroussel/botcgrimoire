@@ -128,9 +128,9 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
           ))}
         </View>
         <View style={styles.actions}>
-          <Button label={t('board.showBluffsNow')} onPress={saveAndShow} surface="paper" disabled={chosen.length === 0} />
+          <Button label={t('board.showBluffsNow')} onPress={saveAndShow} surface="paper" disabled={chosen.length === 0} style={styles.action} />
           {/* Short, so Show fits beside it; the drawer's title already says what is saved. */}
-          <Button label={t('common.save')} onPress={save} variant="primary" surface="paper" />
+          <Button label={t('common.save')} onPress={save} variant="primary" surface="paper" style={styles.action} />
         </View>
       </View>}>
       {choices.length === 0 ? <Text style={[type.text.body, styles.empty, { color: p.inkMuted }]}>{t('board.nothingMatches')}</Text> : null}
@@ -149,9 +149,13 @@ const styles = StyleSheet.create({
   bluffTokens: { flexDirection: 'row', alignSelf: 'flex-start', gap: space.xs, borderRadius: 999 },
   dock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   wells: { flexDirection: 'row', gap: space.sm },
-  // Room under each well for a name of two lines, so the wells never shift as they fill.
+  // Room under each well for a name of one line, so the wells stay put as they fill; the rare
+  // name of two long words takes a second.
   well: { width: wellWidth, alignItems: 'center', gap: space.xs },
-  wellName: { textAlign: 'center', minHeight: 2 * (type.text.label.lineHeight ?? 0) },
-  actions: { flexDirection: 'row', gap: space.sm, marginLeft: 'auto' },
+  wellName: { textAlign: 'center', minHeight: type.text.label.lineHeight ?? 0 },
+  // The two buttons share whatever the wells leave: the rest of the row in a wide drawer, and a
+  // row of their own on a phone, where they fill it rather than leave half of it empty.
+  actions: { flexDirection: 'row', gap: space.sm, flexGrow: 1, flexBasis: drawer.actions },
+  action: { flex: 1 },
   empty: { paddingVertical: space.lg, textAlign: 'center' },
 })
