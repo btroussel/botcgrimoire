@@ -135,9 +135,11 @@ links under it, so it stands no taller than the groups a Storyteller comes here 
 ## Setup
 
 Each team's band fills toward the usual count for the chosen number of players. The counts are
-advisory. A chosen character comes to full strength and carries a brass check on its icon, as in
-the pickers, since a faded row alone is easy to misread in a dim room. Shuffle and Open grimoire
-float at the bottom of the sheet, under the thumb wherever you have scrolled.
+advisory. A chosen character has its art at full strength, its name in bold and its ability in
+black. An unchosen one has faint art, a regular name and muted ink. The weight of the name carries
+the choice, since a faded row alone is easy to misread in a dim room, and no badge sits on the art.
+Shuffle and Open grimoire float at the bottom of the sheet, under the thumb wherever you have
+scrolled.
 
 Discovery hands the phone from player to player, so it must never leak a role. The neutral back is
 the same for everyone. Hiding removes the face at once, with no closing animation that could leave
@@ -365,9 +367,9 @@ saved script and, on an edition, edits a copy, its only way to edit. A phone has
 glyph, so there a saved script's copy and Print go in a More menu that writes them out; New game,
 the pencil and Share stay in the bar.
 
-In compose the sheet lists only what the script holds, so a row carries no check, and a band says
-its count against the usual number in words: only the deal's band fills. Every band carries its
-team's add control. Travellers, Fabled and Loric have no usual count, so while they are empty they
+In compose the sheet lists only what the script holds, so every row is drawn as chosen, and a
+band says its count against the usual number in words: only the deal's band fills. Every band
+carries its team's add control. Travellers, Fabled and Loric have no usual count, so while they are empty they
 share one line of add controls under the teams and the empty sheet fits a phone. A homebrew row's
 words open its record, marked by a pencil after the name, so the row keeps one control at its end
 and stands no taller than the others. Save sits in the toolbar, and the one control floating at
