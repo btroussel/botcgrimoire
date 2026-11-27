@@ -7,10 +7,11 @@ import { Button, IconButton } from '../../ui/Button'
 import { Drawer } from '../../ui/Drawer'
 import { Token } from '../../ui/Token'
 import { TokenKeys } from '../../ui/TokenKeys'
-import { boardBlock, boardWell, drawer, palette, space, touch, type } from '../../ui/theme'
+import { boardBlock, boardWell, drawer, font, palette, space, touch, type } from '../../ui/theme'
 import { bluffCount, openWells, shuffleWells, tapKey, tapWell } from './bluffWells'
 import type { Wells } from './bluffWells'
 import { bluffChoices, byTeam, edits } from './seat'
+import { wholeWords } from './textWidth'
 import { useEdits } from './useEdits'
 
 // The not-in-play card the tray and its drawer show: the bluffs, in the good side's colours.
@@ -103,6 +104,7 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
   }
 
   const wellLabel = (label: string, ringed: boolean) => (ringed ? t('board.bluffNext', { label }) : label)
+  const wellNames = wholeWords(chosen.map((id) => e.name(id)), wellWidth, font.body.bold, type.text.label)
   const groups = byTeam(choices).map((g) => ({
     key: g.team, label: e.teamLabel(g.team), color: p.teamOnPaper[g.team],
     keys: g.ids.map((id) => ({ id, name: e.name(id) })),
@@ -121,7 +123,7 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
                 {...(id ? { character: id, name: e.name(id) } : {})}
                 accessibilityLabel={wellLabel(id ? t('board.bluff', { name: e.name(id) }) : t('board.bluffEmpty', { n: index + 1 }), state.ring === index)}
                 onPress={() => setState(tapWell(state, index))} />
-              <Text aria-hidden numberOfLines={2} style={[type.text.label, styles.wellName, { color: p.ink }]}>{id ? e.name(id) : ''}</Text>
+              <Text aria-hidden numberOfLines={2} style={[type.text.label, styles.wellName, wellNames, { color: p.ink }]}>{id ? e.name(id) : ''}</Text>
             </View>
           ))}
         </View>
@@ -137,6 +139,10 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
   )
 }
 
+// A well and the room beside it for its name: three still fit the narrowest phone, and the
+// longest names of one word keep their size.
+const wellWidth = drawer.well + space.xxl
+
 const styles = StyleSheet.create({
   bluffs: { flexShrink: 0, alignItems: 'center' },
   title: { color: palette.muted, maxWidth: '100%', textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
@@ -144,7 +150,7 @@ const styles = StyleSheet.create({
   dock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   wells: { flexDirection: 'row', gap: space.sm },
   // Room under each well for a name of two lines, so the wells never shift as they fill.
-  well: { width: drawer.well + space.lg, alignItems: 'center', gap: space.xs },
+  well: { width: wellWidth, alignItems: 'center', gap: space.xs },
   wellName: { textAlign: 'center', minHeight: 2 * (type.text.label.lineHeight ?? 0) },
   actions: { flexDirection: 'row', gap: space.sm, marginLeft: 'auto' },
   empty: { paddingVertical: space.lg, textAlign: 'center' },

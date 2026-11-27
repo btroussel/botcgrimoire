@@ -26,7 +26,7 @@ import { TokenKeys } from '../../ui/TokenKeys'
 import { useViewport } from '../../ui/Viewport'
 import { noteLength } from '../../store/settings'
 import { captionExtra, cardTokens } from './cardLayout'
-import { slack, widthAtOnePoint } from './textWidth'
+import { wholeWords } from './textWidth'
 
 export interface CardLabels {
   readonly close: string // the editing card's cross, and the shown card's keyboard Close
@@ -67,16 +67,6 @@ export interface CardProps {
   readonly note?: CardNote // set on a written note
   readonly onDismiss: () => void
   readonly labels: CardLabels
-}
-
-// The captions share one size, shrunk until the longest word among them fits a cell, since a
-// name broken mid-word reads as two.
-const captionFit = (names: readonly string[], width: number): TextStyle => {
-  const { fontSize = 24, lineHeight = 28 } = type.display.title
-  const words = names.flatMap((name) => name.split(/\s+/))
-  const widest = Math.max(...words.map((word) => widthAtOnePoint(word, font.display.semibold))) * slack * fontSize
-  const scale = width / widest
-  return scale < 1 ? { fontSize: Math.floor(fontSize * scale), lineHeight: Math.ceil(lineHeight * scale) } : {}
 }
 
 interface Press {
@@ -128,7 +118,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   })
   const { size, columns, gap, captioned } = tokens
   const cell = captioned ? size + captionExtra : size
-  const captionStyle = captioned ? captionFit(printed.map((c) => c.name), cell) : undefined
+  const captionStyle = captioned ? wholeWords(printed.map((c) => c.name), cell, font.display.semibold, type.display.title) : undefined
   // What the reveal keys on: a re-render with an equal card must not run it again. It runs once
   // as editing starts, not on every key, and again as the card is shown at its full size.
   const revealKey = editing ? 'editing' : [spec.kind, text, spec.caption, ...printed.map((c) => c.id)].join('|')
@@ -383,7 +373,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
               {text}
             </Animated.Text> : null}
             {field && written === '' && printed.length === 0 ? (
-              <Presets quick={[labels.yes, labels.no, ...digits]} presets={note.presets} onPick={write} />
+              <Presets quick={[[labels.yes, labels.no], digits]} presets={note.presets} onPick={write} />
             ) : null}
             {!wordsOnly ? <Animated.View style={[styles.stage, { opacity: rise, transform: [{ scale }] }, hasWords ? { marginTop: card.wordsGap } : {}]}>
               {slots > 0 ? (
@@ -522,15 +512,18 @@ const NoteField = ({ inputRef, value, onChange, onFocus, style, label, placehold
 
 // What an empty note offers to write: Yes, No and the digits, then the kept notes and the
 // script's own cards, one line each.
-const Presets = ({ quick, presets, onPick }: { readonly quick: readonly string[]; readonly presets: readonly WrittenNote[]; readonly onPick: (note: WrittenNote) => void }) => (
+const Presets = ({ quick, presets, onPick }: { readonly quick: readonly (readonly string[])[]; readonly presets: readonly WrittenNote[]; readonly onPick: (note: WrittenNote) => void }) => (
   <KeepCaret style={{ flexDirection: 'column', alignItems: 'center', marginTop: card.wordsGap, gap: space.sm, paddingLeft: space.md, paddingRight: space.md }}>
-    <View style={styles.quick}>
-      {quick.map((words) => (
-        <Preset key={words} label={words} onPress={() => onPick({ words })}>
-          <Text style={[type.text.strong, { color: palette.text }]}>{words}</Text>
-        </Preset>
-      ))}
-    </View>
+    {/* The answers on one row and the digits on the next: wrapped as one row, a narrow phone left a chip alone. */}
+    {quick.map((row) => (
+      <View key={row.join()} style={styles.quick}>
+        {row.map((words) => (
+          <Preset key={words} label={words} onPress={() => onPick({ words })}>
+            <Text style={[type.text.strong, { color: palette.text }]}>{words}</Text>
+          </Preset>
+        ))}
+      </View>
+    ))}
     {presets.map((preset) => (
       <Preset key={`${preset.words}/${preset.character?.id ?? ''}`} wide label={[preset.words, preset.character?.name].filter(Boolean).join(', ')} onPress={() => onPick(preset)}>
         {preset.character ? <Token character={preset.character.id} size={tokenSize.corner} /> : null}
@@ -664,7 +657,8 @@ const styles = StyleSheet.create({
   input: { paddingTop: 0, paddingBottom: 0, borderWidth: 0, outlineStyle: 'none', overflow: 'hidden', resize: 'none', borderRadius: radius.control } as object,
   count: { textAlign: 'center', marginTop: space.xs },
   tokenCross: { position: 'absolute', top: 0, right: 0 },
-  quick: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.sm },
+  // Close enough for the six digits to share a row on the narrowest phone.
+  quick: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.xs },
   preset: { minHeight: touch, minWidth: touch, paddingHorizontal: space.md, borderRadius: radius.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   presetWide: { justifyContent: 'flex-start', width: '100%', maxWidth: card.presetWidth },
   presetWords: { flexShrink: 1 },
