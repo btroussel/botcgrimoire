@@ -43,7 +43,7 @@ export interface CardSpec {
 
 // One seat to pick from those allowed; the first tap on one completes it. A pick that starts from
 // a seat, as a nomination does from its nominator, marks that seat, and each seat may carry a
-// label saying what its tap does. A pick with a title is named in the toolbar while it waits,
+// label saying what its tap does. A pick with a title is named on the board while it waits,
 // with a cross that cancels it; one without, as a nomination's, keeps the ring's own marks.
 export interface SeatRequest {
   readonly allowed: readonly string[]

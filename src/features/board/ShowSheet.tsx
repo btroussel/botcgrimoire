@@ -92,7 +92,7 @@ export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
     onClose()
     if (token.about === 'seat') {
       // A seat without a token has nothing to start from, so it takes no tap. The seat's tap
-      // brings the card up; the list has done its job. The toolbar names the card meanwhile.
+      // brings the card up; the list has done its job. The board names the card meanwhile.
       interaction.requestSeats({
         allowed: board.seats.filter(s => believed(board, s.id) !== undefined).map(s => s.id),
         title: t(labelKey[token.kind]),

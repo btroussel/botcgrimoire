@@ -325,6 +325,9 @@ export const layout = {
   statusBand: 88,
   contentMax: 720, // sheet content and every non-board screen cap here and centre
   dialogWidth: 320,
+  // The name of a card waiting for its player, in Undo's corner: as wide as the seats beside it
+  // leave, between a width that still holds a short word and one a long name wraps inside.
+  pickWords: { minimum: 72, maximum: 200 },
 } as const
 
 export interface Size {

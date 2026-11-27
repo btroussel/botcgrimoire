@@ -117,6 +117,16 @@ export const seatSpan = (seat: string): { readonly top: number; readonly bottom:
   return token ? { top: token.top, bottom: token.bottom, left: token.left, right: token.right } : undefined
 }
 
+// The width free beside a corner control before the nearest seat at its height, where the name
+// of a card waiting for its player stands. Read once as the pick begins, as a drawer reads its seat.
+export const roomBeside = (corner: { readonly left: number; readonly top: number; readonly bottom: number }, most: number): number => {
+  const lefts = [...document.querySelectorAll('[data-seat-context-target] [role="button"]')]
+    .map((control) => control.getBoundingClientRect())
+    .filter((box) => box.bottom > corner.top && box.top < corner.bottom && box.right > corner.left)
+    .map((box) => box.left - corner.left)
+  return Math.min(most, ...lefts)
+}
+
 // The night sheet shows the Lunatic "3 good character tokens", not the Demon's not-in-play ones, so
 // the card offers these too.
 export const goodInPlay = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, true)
