@@ -318,7 +318,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const corner = insets.top + space.md
   const count = field ? fieldCount(written.length, noteLength) : 'hidden'
   const bar = !editing ? null : note ? (
-    <View style={[styles.bar, { paddingHorizontal: horizontal }, side ? { paddingTop: insets.top + space.sm } : {}]}>
+    <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
       <Keyboards letters={letters} labels={labels} onLetters={setLetters} />
       {/* Kept by a press that leaves the caret where it is. */}
       <KeepCaret style={styles.barEnd}>
@@ -327,7 +327,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
       </KeepCaret>
     </View>
   ) : (
-    <View style={[styles.bar, { paddingHorizontal: horizontal }, side ? { paddingTop: insets.top + space.sm } : {}]}>
+    <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
       {takes > 1 ? <IconButton icon="backspace" label={labels.takeLast} onPress={() => setPrinted((now) => now.slice(0, -1))} disabled={printed.length === 0} /> : <View />}
       {takes > 1 ? <Button variant="brass" label={labels.show} onPress={show} disabled={printed.length === 0} />
         : <IconButton icon="chevronDown" label={labels.done} onPress={show} disabled={printed.length === 0} />}
@@ -424,14 +424,17 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             </View>
           ) : null}
           {!editing ? <Hint shown={hint} label={labels.holdHint} bottom={insets.bottom + space.md} /> : null}
-          {editing && !dock ? bar : null}
+          {/* Under the card it belongs to: above the keys at the foot, and beside them when they
+              stand on the right, where the paper takes the whole height. */}
+          {editing && (!dock || side) ? bar : null}
         </View>
         {dock ? <KeysDock side={side} reduced={reduced}>
-          {bar}
+          {side ? null : bar}
           <View style={[styles.paper, side ? styles.paperSide : { maxHeight: window.height * card.keys.heightShare },
             { backgroundColor: p.parchment, borderColor: p.accent }]}>
             <PaperTexture />
-            <ScrollView contentContainerStyle={[styles.keys, { paddingBottom: insets.bottom + space.lg, paddingRight: space.sm + (side ? insets.right : 0) }]}>
+            <ScrollView contentContainerStyle={[styles.keys, side ? styles.keysSide : null,
+              { paddingBottom: insets.bottom + space.lg, paddingRight: space.sm + (side ? insets.right : 0) }, side ? { paddingTop: insets.top + space.lg } : null]}>
               <div data-keys style={{ display: 'contents' }}><TokenKeys groups={keys} chosen={printed.map((c) => c.id)} full={!note && takes > 1 && printed.length >= takes} onPress={tapKey} /></div>
             </ScrollView>
           </View>
@@ -645,7 +648,11 @@ const styles = StyleSheet.create({
   // The keys lie on the sheet's paper, its top corners and brass edge, where a keyboard lives.
   paper: { overflow: 'hidden', borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet,
     borderWidth: hairline, borderBottomWidth: 0 },
-  paperSide: { flex: 1, borderRightWidth: 0, borderTopRightRadius: 0 },
+  // On the right the paper is a panel from the top edge to the foot, square, with the brass on
+  // its one free edge. Its keys stand in the middle of a tall window, under the thumb, and from
+  // the top once they need to scroll.
+  paperSide: { flex: 1, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTopWidth: 0, borderRightWidth: 0 },
+  keysSide: { flexGrow: 1, justifyContent: 'center' },
   // Narrow padding, so a 320 point phone still gets six keys across.
   keys: { paddingTop: space.lg, paddingLeft: space.sm },
   hint: { borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: space.sm },

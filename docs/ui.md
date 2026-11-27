@@ -62,9 +62,9 @@ to an edge. Their content scrolls and their actions stay inside the window. Clos
 outside dismiss one. There are two exceptions, both where what is being filled must stay in view.
 
 The tokens on a card are typed from keys docked at the foot of an upright window, where a device's
-keyboard lives, or in a column on the right of a wide one, which has no height to give. The card
-being filled stays in view above them as its own preview, so the Storyteller sees exactly what the
-player will. A note's words are typed on the card in the card's own type, so the field is the
+keyboard lives, or in a panel down the right of a wide one, which has no height to give. The card
+being filled stays in view above or beside them as its own preview, so the Storyteller sees exactly
+what the player will, and its bar stays under the card either way. A note's words are typed on the card in the card's own type, so the field is the
 preview too; its token keys and the device's keyboard take the same place in turn, and the card
 follows the visible viewport so its bar stays above the keyboard.
 
