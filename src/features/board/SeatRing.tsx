@@ -385,7 +385,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
         }]}>{interaction.centerPanel}</View> : null}
         {contextPlayer && contextAt && !readOnly ? <SeatContextMenu key={contextPlayer.id} seatId={contextPlayer.id} name={contextPlayer.name} width={contextWidth} t={t}
           alignment={contextPlayer.alignment} dead={contextPlayer.dead} ghostVote={contextPlayer.ghostVote} anchor={contextAt}
-          place={(menu, room) => placeSeatMenu({ at: contextAt, size, centre, room, menu, others: positions.filter((_, i) => i !== contextIndex && i < seats.length) })}
+          place={(menu, room) => placeSeatMenu({ at: contextAt, size, centre, room, menu, controls: obstacles, others: positions.filter((_, i) => i !== contextIndex && i < seats.length) })}
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
           {...(showCards && e.board && believed(e.board, contextPlayer.id) !== undefined
             ? { onShowCard: kind => { closeContext(); openSeat(kind, contextPlayer.id) } } : {})}

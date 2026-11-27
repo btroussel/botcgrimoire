@@ -84,4 +84,18 @@ describe('where a seat menu opens', () => {
     const place = placeSeatMenu({ at, size, ...on(band), menu, others })
     expect(overlaps(place, at, size / 2)).toBe(false)
   })
+
+  test('clear of the bluffs, since a row under them takes no tap', () => {
+    const band = { width: 1000, height: 700 }
+    const at = { x: 260, y: 600 }
+    // A neighbour's centre on the right sends the menu left, where the bluffs lie over the band.
+    const others = [{ x: 400, y: 640 }]
+    const bluffs = { left: 12, top: 610, width: 180, height: 78 }
+    const under = (place: SeatMenuPlace) => place.left < bluffs.left + bluffs.width && place.left + menu.width > bluffs.left
+      && place.top < bluffs.top + bluffs.height && place.top + menu.height > bluffs.top
+    expect(under(placeSeatMenu({ at, size, ...on(band), menu, others }))).toBe(true)
+    const place = placeSeatMenu({ at, size, ...on(band), menu, others, controls: [bluffs] })
+    expect(under(place)).toBe(false)
+    expect(overlaps(place, at, size / 2)).toBe(false)
+  })
 })
