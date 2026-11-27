@@ -86,8 +86,8 @@ export const ScriptSheet = (props: ScriptSheetProps) => {
               onPress={logoField.own ? () => togglePopover(logoMenu.current, logoButton.current, { left: true, reduced }) : logoField.onPick}
               style={(state) => [styles.logoButton, focusStyle(p, isFocused(state) && focusVisible, 'paper'), { opacity: state.pressed ? motion.pressedOpacity : 1 }]}>
               <View id="script-sheet-logo"><SheetLogo source={logo} /></View>
-              <View id="script-sheet-logo-badge" style={[styles.logoBadge, { backgroundColor: p.accent }]}>
-                <Icon name="edit" color={p.onAccent} size={14} />
+              <View id="script-sheet-logo-badge" style={[styles.logoBadge, { backgroundColor: p.parchment, borderColor: p.parchmentShade }]}>
+                <Icon name="edit" color={p.ink} size={14} />
               </View>
             </Pressable>
             {logoField.own ? (

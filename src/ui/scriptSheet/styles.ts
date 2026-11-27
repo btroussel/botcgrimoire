@@ -25,9 +25,10 @@ export const styles = StyleSheet.create({
   identity: { flexDirection: 'row', alignItems: 'center', gap: space.md, alignSelf: 'stretch' },
   identityText: { flex: 1, minWidth: 0, gap: space.xxs },
   logoButton: { flexShrink: 0, borderRadius: radius.control },
-  // The brass pencil on the logo's corner, as on the character editor's token: it says the art is chosen here.
-  logoBadge: { position: 'absolute', right: -space.xs, bottom: -space.xs, width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-    boxShadow: shadows.card },
+  // The pencil on the logo's corner says the art is chosen here, as on the character editor's
+  // token. That one is brass, the art being a step of its form; a logo is chosen rarely, so this
+  // one is a parchment disc that does not draw the eye from the script.
+  logoBadge: { position: 'absolute', right: -space.xs, bottom: -space.xs, width: 24, height: 24, borderRadius: 12, borderWidth: hairline, alignItems: 'center', justifyContent: 'center' },
   // The faint rule under the text says it is editable and turns brass on focus, in place of the
   // browser's ring. That ring has style auto, which ignores a zero width, so the style is set too.
   nameField: { alignSelf: 'stretch', minWidth: 0, minHeight: touch, padding: 0, borderBottomWidth: border, outlineStyle: 'solid', outlineWidth: 0 },

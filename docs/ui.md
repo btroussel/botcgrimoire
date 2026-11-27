@@ -368,7 +368,8 @@ The share QR code is black on white with the standard quiet zone, whatever the v
 camera reads contrast.
 
 A custom script shows the bundled custom logo until it has its own. In compose the logo is a
-button, with the brass pencil the character editor's token has. A tap picks an image; once the
+button, marked by a pencil on a parchment disc at its corner: quieter than the brass one on the
+character editor's token, since a logo is chosen rarely. A tap picks an image; once the
 script has one, the tap opens a menu to choose another or remove it, so the head of the sheet
 never grows a control. The image is cropped to its visible pixels and keeps its shape, since a
 logo is often wide lettering. A logo given as a web address, as other
