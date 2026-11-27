@@ -57,11 +57,12 @@ const drawerBox = async drawer => {
   return { x: 0, width: 10000, y: top, height: bottom - top }
 }
 
-test('a seat\'s character and reminders come up in a drawer that leaves the seat in view and ringed', async ({ page }) => {
+test('a seat\'s character and reminders come up in a drawer from the foot, which leaves a high seat in view and ringed', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openBoard(page, 7)
   const seats = page.locator('[data-seat-context-target]')
-  // The top seat, and two near the foot, where a drawer from the foot would cover them.
+  // The top seat stays in view above the drawer. Two near the foot are covered, since the keys
+  // always come up from the foot, and the title says whose they are.
   for (const index of [0, 3, 4]) {
     const token = seats.nth(index).getByRole('button').first()
     await token.click()
@@ -69,7 +70,8 @@ test('a seat\'s character and reminders come up in a drawer that leaves the seat
     const characters = page.getByRole('dialog', { name: `Character for Seat ${index + 1}` })
     await expect(characters.getByRole('button', { name: 'Chef', exact: true })).toBeVisible()
     await expect(token).toHaveAttribute('aria-pressed', 'true')
-    expect(overlap(await drawerBox(characters), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    if (index === 0) expect(overlap(await drawerBox(characters), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    expect((await drawerBox(characters)).y, `seat ${index + 1}`).toBeGreaterThan(844 * 0.15)
     await characters.getByRole('button', { name: 'Chef', exact: true }).click()
     await expect(characters).toBeHidden()
     await expect(token).toHaveAccessibleName(/, Chef$/)
@@ -82,7 +84,8 @@ test('a seat\'s character and reminders come up in a drawer that leaves the seat
     const reminders = page.getByRole('dialog', { name: `Reminder for Seat ${index + 1}` })
     await expect(reminders.getByRole('button', { name: 'Write a note', exact: true })).toBeVisible()
     await expect(token).toHaveAttribute('aria-pressed', 'true')
-    expect(overlap(await drawerBox(reminders), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    if (index === 0) expect(overlap(await drawerBox(reminders), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    expect((await drawerBox(reminders)).y, `seat ${index + 1}`).toBeGreaterThan(844 * 0.15)
     await reminders.getByRole('button', { name: /, / }).first().click()
     await expect(reminders).toBeHidden()
     await expect(chips).toHaveCount(before + 1)

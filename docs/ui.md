@@ -71,8 +71,10 @@ follows the visible viewport so its bar stays above the keyboard.
 The board's three token sheets, a seat's character, a reminder and the bluffs, are a drawer of the
 same keys that comes up from the foot, since a centred window would cover the seats it changes. It
 is full width up to a readable maximum, never so tall that the board is gone, over a light scrim
-that leaves the board readable. A seat it changes keeps the brass ring; when the drawer would cover
-that seat it takes the edge with more room and stops short of it. Reminders are keys too, under the
+that leaves the board readable. A seat it changes keeps the brass ring, and the drawer stops short
+of that seat while it can still list a few rows of keys. A seat lower than that is covered while
+the drawer is up, and the title names it: keys that came down from the top edge instead read as a
+keyboard upside down, out of the thumb's reach. Reminders are keys too, under the
 same rule labels as the characters. Everything read rather than scanned keeps the centred window:
 the list of cards, Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks
 its wells and Save at its foot, and Shuffle sits in its top row, away from Save.
