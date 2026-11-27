@@ -3,17 +3,16 @@
 import { useKeepAwake } from 'expo-keep-awake'
 import type { ComponentType, ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Modal, StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { emptySeat, scriptName } from '../../content'
-import type { Translate } from '../../content'
 import type { EventId, SeatId } from '../../engine'
 import type { Chapter } from '../../store/chronicle'
 import { BoardInteractionProvider, useBoardInteraction } from '../../ui/BoardInteraction'
 import { boardLayoutFor, referenceTabWidth } from './boardLayout'
-import { Button, IconButton } from '../../ui/Button'
+import { Button } from '../../ui/Button'
 import { EdgeButton } from '../../ui/EdgeButton'
 import { Card } from './Card'
 import { Confirm } from '../../ui/Confirm'
@@ -21,11 +20,9 @@ import { Empty } from '../../ui/Empty'
 import { domElement, layerAbove } from '../../ui/focus'
 import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
-import { PaperTexture } from '../../ui/PaperTexture'
 import { PageEnter, Screen } from '../../ui/Screen'
 import { usePhone } from '../../ui/breakpoint'
-import { usePresence } from '../../ui/motion'
-import { hairline, layout, palette, radius, scrim, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
+import { hairline, palette, radius, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Token } from '../../ui/Token'
 import { Velvet } from '../../ui/Velvet'
@@ -55,6 +52,7 @@ import { ShowSheet } from './ShowSheet'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
 import { useEdits } from './useEdits'
+import { EndGame } from './EndGame'
 import { VictoryAnnouncement } from './VictoryAnnouncement'
 import { GameOverActions, actionsRoom } from './GameOverActions'
 import { fitsUnder } from './victory'
@@ -517,7 +515,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onReopen={openShow} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
-        <EndGameDialog visible={endOpen} t={t} width={Math.min(layout.dialogWidth, window.width - 2 * space.lg)}
+        <EndGame visible={endOpen} t={t} window={window}
           onClose={() => setEndOpen(false)} onEnd={winner => {
             if (b.lookingBack || over) return
             e.append({ kind: 'endGame', winner })
@@ -621,40 +619,7 @@ const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, up
   </>
 })
 
-// The result dialog arrives and leaves like every other floating window.
-const EndGameDialog = ({ visible, width, t, onClose, onEnd }: {
-  readonly visible: boolean
-  readonly width: number
-  readonly t: Translate
-  readonly onClose: () => void
-  readonly onEnd: (winner: 'good' | 'evil') => void
-}) => {
-  const { mounted, opacity, scale } = usePresence(visible)
-  if (!mounted) return null
-  return <Modal visible transparent animationType="none" onRequestClose={onClose} aria-label={t('board.endGame')}>
-    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: scrim.dialog, opacity }]}>
-      <Pressable accessible={false} focusable={false} style={StyleSheet.absoluteFill} onPress={onClose} />
-    </Animated.View>
-    <View style={styles.endOverlay} pointerEvents={visible ? 'box-none' : 'none'}>
-      <Animated.View style={[styles.endDialog, { width, opacity, transform: [{ scale }] }]}>
-        <PaperTexture radius={radius.dialog} />
-        <View style={styles.endHeading}>
-          <Text accessibilityRole="header" style={[type.display.title, { color: palette.ink, flex: 1 }]}>{t('board.endGame')}</Text>
-          <IconButton icon="close" label={t('common.close')} surface="paper" onPress={onClose} />
-        </View>
-        {(['good', 'evil'] as const).map(winner => <Button key={winner}
-          label={t(winner === 'good' ? 'board.goodWins' : 'board.evilWins')}
-          surface="paper" variant="primary" tone={winner} onPress={() => onEnd(winner)} />)}
-      </Animated.View>
-    </View>
-  </Modal>
-}
-
 const styles = StyleSheet.create({
-  endOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.lg },
-  endDialog: { backgroundColor: palette.parchment, borderRadius: radius.dialog, padding: space.xl, gap: space.md,
-    borderWidth: hairline, borderColor: palette.accent, boxShadow: shadows.sheet },
-  endHeading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   root: { flex: 1 },
   // Above the reference, so the first tap on a toolbar control acts while the paper is out.
   floatingToolbar: { position: 'absolute', zIndex: 6 },

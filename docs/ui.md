@@ -264,6 +264,12 @@ cream one low on the right for the nominee, the same figure with its arrow leavi
 They come from the day's recorded nominations, exiles aside, and go at nightfall. Like the
 threshold pips they are references only: a second nomination records as the first did.
 
+End game asks its question on the velvet, with no paper: the board goes almost dark and the two
+sides sit on it as tokens over their words, since two tokens stand wider than the ring's middle.
+The cross, Escape and a tap on the velvet leave without a result. A tap on a token records the
+result at once, and the rest is only the way out: the loser greys as a dead token does, the winner
+glides to where the result shows and fades as its words rise.
+
 The result of End game shows at the ring's centre without covering any token or name, and never
 blocks or dims the board. In replay the seats are read only. Play again, Replay and Home sit
 under the result where the middle holds them as well. On a phone they always dock at the foot in
@@ -335,8 +341,16 @@ A script is listed the same way wherever it is listed, its author then its chara
 the list to play from and the library read as one list.
 
 The share QR code is black on white with the standard quiet zone, whatever the velvet, because a
-camera reads contrast. A custom script's web logo shows only when the network reaches it; otherwise
-the bundled art stands in, so the sheet works offline.
+camera reads contrast.
+
+A custom script shows the bundled custom logo until it has its own. In compose the logo is a
+button, with the brass pencil the character editor's token has. A tap picks an image; once the
+script has one, the tap opens a menu to choose another or remove it, so the head of the sheet
+never grows a control. The image is cropped to its visible pixels and keeps its shape, since a
+logo is often wide lettering. A logo given as a web address, as other
+tools write it, shows on the sheet only, and only when the network reaches it; otherwise the
+bundled art stands in, so the sheet works offline. A list draws a logo the script carries and
+never a linked one, which would ask every script's host each time the list opens.
 
 Printing uses A4, black on white with team colours on names, team words and the count table, which
 follows the official sheet's framed table. The logo and the title head the first page, the largest

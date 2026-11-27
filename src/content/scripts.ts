@@ -1,6 +1,6 @@
 // What a script is: an edition, or a custom script in upstream's schema (assets/schema). Both
 // resolve to an ordered list of character ids; the join says what each id means.
-import { homebrewWake, stepBefore } from './homebrew'
+import { homebrewWake, isEmbeddedImage, stepBefore } from './homebrew'
 import type { CharacterId, Edition, Homebrew, HomebrewJinx, HomebrewSpecial, Team } from './types'
 import { teams } from './types'
 import { rawRoles } from './upstream'
@@ -119,10 +119,11 @@ const homebrewExtras = (item: Record<string, unknown>): Partial<Homebrew> => {
 
 const webLink = (x: unknown): string | undefined => (typeof x === 'string' && /^https?:\/\//i.test(x) ? x : undefined)
 
-// The `_meta` fields the app keeps. The links stay links: the sheet shows the logo when the
-// network reaches it, printing included, and nothing fetches the others.
+// The `_meta` fields the app keeps. The logo is an image the Storyteller chose, embedded as a data
+// URL the way a homebrew icon is, or another tool's web address, which stays a link: the sheet
+// shows it when the network reaches it, printing included. Nothing fetches the other links.
 const metaOf = (item: Record<string, unknown>, name: string): ScriptMeta => {
-  const logo = webLink(item.logo)
+  const logo = isEmbeddedImage(item.logo) ? item.logo : webLink(item.logo)
   const almanac = webLink(item.almanac)
   const background = webLink(item.background)
   const rules = Array.isArray(item.bootlegger)
@@ -229,6 +230,15 @@ export const scriptMeta = (script: Script): ScriptMeta | undefined =>
 export const scriptAuthor = (script: Script): string | undefined => {
   const author = scriptMeta(script)?.author?.trim() ?? ''
   return author === '' ? undefined : author
+}
+
+// A custom script's own logo, embedded or linked; nothing for an edition or a script without one.
+export const scriptLogo = (script: Script): string | undefined => scriptMeta(script)?.logo
+
+// The logo a script carries in itself, which draws with no network.
+export const embeddedLogo = (script: Script): string | undefined => {
+  const logo = scriptLogo(script)
+  return isEmbeddedImage(logo) ? logo : undefined
 }
 
 // The homebrew rules a script prints for the Bootlegger, in its author's words.

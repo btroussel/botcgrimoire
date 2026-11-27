@@ -238,6 +238,9 @@ permanent ([Store](store.md#where-it-lives)). Replay never changes the saved log
 The script sheet reads, composes, imports, shares and prints scripts ([UI](ui.md#the-script-sheet)).
 A custom script can use every character the app knows, homebrew ones included, listed in the
 official order within each team, and up to ten homebrew rules ([Content](content.md#script-data)).
+It can take any image as its logo, shown wherever the script is listed and on the games played on
+it; removing the image brings the bundled custom logo back. An edition keeps its own logo, and a
+copy of one starts with the custom logo, so a variant never passes for the official script.
 Unsaved scripts and characters survive a reload or a closed tab ([Store](store.md#drafts)), and
 leaving with changes asks first. Custom scripts live on the device
 ([Store](store.md#custom-scripts-and-settings)). An account may come later; nothing may assume it.
@@ -255,7 +258,9 @@ iPhone a tapped link opens in Safari, whose storage is not the installed app's.
 
 Sharing gives a QR code, a link, the share sheet or a file. The link holds the script in the URL
 fragment, which the browser never sends to the host, so nothing is uploaded
-([Store](store.md#script-links)). The link drops embedded art, which the file keeps.
+([Store](store.md#script-links)). The link drops embedded art, which the file keeps, so a script
+with a logo or icons of its own also offers its file to the share sheet where the browser can
+share one.
 Editions have no Share, since every device already has them.
 
 ### Homebrew characters

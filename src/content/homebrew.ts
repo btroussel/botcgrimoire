@@ -116,10 +116,12 @@ export interface HomebrewArt {
   readonly evil?: HomebrewImage
 }
 
+// An image carried as a data URL, which draws with no network.
+export const isEmbeddedImage = (uri: unknown): uri is string => typeof uri === 'string' && /^data:image\/[a-z+.-]+[;,]/i.test(uri)
+
 // Only an image the record carries is drawn. A web address would need the network during a game
 // and tell a stranger's server who is playing, so it stays in the file and the team icon shows.
-const embedded = (uri: string | undefined): HomebrewImage | undefined =>
-  uri !== undefined && /^data:image\/[a-z+.-]+[;,]/i.test(uri) ? { uri } : undefined
+const embedded = (uri: string | undefined): HomebrewImage | undefined => (isEmbeddedImage(uri) ? { uri } : undefined)
 
 const drawn = new WeakMap<Homebrew, HomebrewArt | undefined>()
 

@@ -17,15 +17,13 @@
   "manualExile": {
     "other": "추방: {of}, {count}표"
   },
-  "timerAdd": "토론 타이머 추가",
-  "timerAddThirtySeconds": "30초 추가",
+  "timerAddSeconds": "{seconds}초 추가",
   "timerFinished": "시간 종료",
   "timerPause": "일시정지",
-  "timerRemove": "타이머 제거",
   "timerReset": "초기화",
   "timerResume": "재개",
   "timerStart": "시작",
-  "timerSubtractThirtySeconds": "30초 빼기",
+  "timerSubtractSeconds": "{seconds}초 빼기",
   "timerSummary": "토론: {time}",
   "voteReset": "초기화",
   "mark": "처형 예정",

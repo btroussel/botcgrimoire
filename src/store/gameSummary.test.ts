@@ -18,7 +18,6 @@ describe('a saved game as a home row', () => {
     const table = game().seat('Ann', 'imp').seat('Bob', 'poisoner').seat('Cat', 'chef').seat('Dan', 'monk').seat('Eve', 'empath')
     const row = describeGame(saved(table.night(1).day().night(2, [kill('Dan')]), now - 3 * 3_600_000), en, 'en')
     expect(row).toMatchObject({ name: 'Trouble Brewing', phase: 'Night 2', players: '5 players', when: new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(now - 3 * 3_600_000) })
-    expect(row.logo).toBe('tb')
     expect(row.a11y).toContain(row.when)
     expect(row.a11y).toContain(row.duration)
   })
@@ -37,11 +36,10 @@ describe('a saved game as a home row', () => {
     expect(describeGame(saved(game()), en, 'en')).toMatchObject({ phase: 'Setup', players: '0 players' })
   })
 
-  test('a custom script takes the custom logo and its own name', () => {
+  test('a custom script takes its own name', () => {
     const custom = { kind: 'custom' as const, name: 'Teensyville night', items: [{ id: '_meta' as const, name: 'Teensyville night' }, 'imp', 'chef'] }
     const row = describeGame({ ...newGame(custom, now), log: [] }, en, 'en')
     expect(row.name).toBe('Teensyville night')
-    expect(row.logo).toBe('custom')
   })
 
   test('the phase reads in the locale', () => {

@@ -17,15 +17,13 @@
   "manualExile": {
     "other": "流放：{of}，{count} 票"
   },
-  "timerAdd": "添加讨论计时器",
-  "timerAddThirtySeconds": "增加 30 秒",
+  "timerAddSeconds": "增加 {seconds} 秒",
   "timerFinished": "时间到",
   "timerPause": "暂停",
-  "timerRemove": "移除计时器",
   "timerReset": "重置",
   "timerResume": "继续",
   "timerStart": "开始",
-  "timerSubtractThirtySeconds": "减少 30 秒",
+  "timerSubtractSeconds": "减少 {seconds} 秒",
   "timerSummary": "讨论：{time}",
   "voteReset": "重置",
   "mark": "标记",
