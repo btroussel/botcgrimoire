@@ -73,15 +73,25 @@ export const elapsedClockStart = (game: SavedGame, activeStart: number | undefin
   return since - (elapsedPlayTime(game) ?? 0)
 }
 
-// Building a formatter costs far more than formatting with one, and History dates every game.
-const dateFormats = new Map<Locale, Intl.DateTimeFormat>()
-const dateFormat = (locale: Locale): Intl.DateTimeFormat => {
-  let format = dateFormats.get(locale)
-  if (!format) {
-    format = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
-    dateFormats.set(locale, format)
+// Building a formatter costs far more than formatting with one, and History dates every game:
+// in full on its page, and as a day under its month in the list.
+interface DateFormats {
+  readonly date: Intl.DateTimeFormat
+  readonly day: Intl.DateTimeFormat
+  readonly month: Intl.DateTimeFormat
+}
+const dateFormats = new Map<Locale, DateFormats>()
+const dateFormat = (locale: Locale): DateFormats => {
+  let formats = dateFormats.get(locale)
+  if (!formats) {
+    formats = {
+      date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }),
+      day: new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }),
+      month: new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }),
+    }
+    dateFormats.set(locale, formats)
   }
-  return format
+  return formats
 }
 
 export const gameTiming = (game: SavedGame, t: Translate, locale: Locale) => {
@@ -89,8 +99,11 @@ export const gameTiming = (game: SavedGame, t: Translate, locale: Locale) => {
   const totalMinutes = Math.floor((elapsedPlayTime(game) ?? 0) / 60_000)
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
+  const formats = dateFormat(locale)
   return {
-    date: dateFormat(locale).format(game.createdAt),
+    date: formats.date.format(game.createdAt),
+    day: formats.day.format(game.createdAt),
+    month: formats.month.format(game.createdAt),
     duration: clock.state === 'unknown' ? t('history.durationUnknown')
       : hours > 0 ? t('history.durationHours', { hours, minutes })
         : t('history.durationMinutes', { minutes }),

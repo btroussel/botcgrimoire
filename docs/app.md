@@ -230,8 +230,10 @@ History reads recorded edits only: deaths and revivals, character and side chang
 and removed, nominations and votes, each in its phase, nothing inferred from an ability. A phase
 also keeps the reminders and notes placed in it that were still on their seat when it ended: one
 taken off again in the same phase was a slip or a move, and taking an older one off is not told,
-so the list stays the answer to who was poisoned that night. A game
-resumes or replays in one tap, and game files import as JSON. During a game, History in More
+so the list stays the answer to who was poisoned that night. A reminder
+placed before the first night is told with its player, as part of the deal. A game
+resumes or replays in one tap from the list and opens on a page of its own, the place to read or
+delete it, and game files import as JSON. During a game, History in More
 opens the same days and nights in a window over the board, the latest phase first, so who voted
 yesterday is two taps away without leaving the game or showing a past board to mistake for the
 live one. Until something is recorded there is nothing to open. Deleting a game asks first and is

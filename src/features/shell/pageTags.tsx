@@ -18,7 +18,7 @@ const siteData = JSON.stringify({ '@context': 'https://schema.org', '@type': 'We
 const pageData = (url: string) => JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', url, primaryImageOfPage: `${site}/search.jpg` })
 
 // Head takes only plain tags, so this is a list rather than a component. A board in play titles
-// the document with its phase.
+// the document with its phase, and a saved game's page with its script.
 export const pageTags = (pathname: string, t: Translate, phase?: string): ReactElement<Record<string, unknown>>[] => {
   // Each language's Home is a search entry; every other route is a working screen.
   const page = homeOf(pathname)

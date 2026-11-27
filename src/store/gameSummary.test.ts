@@ -22,6 +22,14 @@ describe('a saved game as a home row', () => {
     expect(row.a11y).toContain(row.duration)
   })
 
+  test('says who sat at the table, and files the game under its day and month', () => {
+    const at = Date.UTC(2026, 10, 21, 12)
+    const table = game().seat('Ann', 'imp').seat('Bob', 'poisoner').seat('Cat', 'chef')
+    expect(describeGame({ ...saved(table.night(1)), createdAt: at }, en, 'en')).toMatchObject({ names: 'Ann, Bob, Cat', day: 'Nov 21', month: 'November 2026', over: false })
+    expect(describeGame({ ...saved(table.night(1)), createdAt: at }, fr, 'fr')).toMatchObject({ day: '21 nov.', month: 'novembre 2026' })
+    expect(describeGame(saved(table.night(1, [() => ({ kind: 'endGame', winner: 'evil' })])), en, 'en').over).toBe(true)
+  })
+
   test('the same game object keeps its row until the game, language or translator changes', () => {
     const played = saved(game().seat('Ann', 'imp').night(1))
     const row = describeGame(played, en, 'en')

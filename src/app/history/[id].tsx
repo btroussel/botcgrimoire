@@ -1,9 +1,9 @@
 import { useLocalSearchParams } from 'expo-router'
 
-import { GameHistoryScreen } from '../../features/history/GameHistoryScreen'
+import { GameScreen } from '../../features/history/GameScreen'
 
-// Keep existing saved detail links useful while history now expands in place.
-export default function GameDetailsRoute() {
+// One saved game on its own page, at the address older detail links already use.
+export default function GameRoute() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  return <GameHistoryScreen initialExpandedId={id} />
+  return <GameScreen key={id} id={id} />
 }
