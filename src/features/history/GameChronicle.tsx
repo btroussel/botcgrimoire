@@ -12,6 +12,17 @@ import { palette } from '../../ui/theme'
 import { railMarker, voteToken } from './HistoryStyles'
 
 type Nomination = Extract<Fact, { kind: 'nomination' }>
+// What a line tells: a recorded fact, or an execution and the death recorded right after it,
+// which are one thing to a reader. An execution that kills nobody keeps its own line.
+type Told = Fact | { readonly kind: 'executedDies'; readonly player: Player }
+
+const told = (facts: readonly Fact[]): readonly Told[] => facts.flatMap((fact, i): Told[] => {
+  const before = facts[i - 1]
+  const after = facts[i + 1]
+  if (fact.kind === 'dies' && before?.kind === 'executed' && before.player.id === fact.player.id) return []
+  if (fact.kind === 'executed' && after?.kind === 'dies' && after.player.id === fact.player.id) return [{ kind: 'executedDies', player: fact.player }]
+  return [fact]
+})
 
 interface Line {
   readonly text: string
@@ -47,7 +58,7 @@ const runs = (text: string, strong: readonly string[]): readonly { readonly s: s
 }
 
 // One sentence per fact that is not a vote.
-const lineOf = (fact: Exclude<Fact, Nomination>, locale: Locale, t: Translate): Line => {
+const lineOf = (fact: Exclude<Told, Nomination>, locale: Locale, t: Translate): Line => {
   const name = (player: Player) => seatName(locale, player.name)
   const role = (player: Player) => gameText(locale).role(player.character).name
   const about = (key: string, player: Player, values: Values = {}): Line =>
@@ -67,6 +78,8 @@ const lineOf = (fact: Exclude<Fact, Nomination>, locale: Locale, t: Translate): 
       return about('history.removeSeat', fact.player)
     case 'executed':
       return about('history.execute', fact.player)
+    case 'executedDies':
+      return about('history.executeDies', fact.player)
     case 'exiled':
       return about('history.exile', fact.player)
     case 'onBlock':
@@ -162,7 +175,7 @@ const Reminders = ({ reminders, locale, t }: { readonly reminders: readonly Remi
         const label = note ? `${text.reminder(reminder)}: ${note}` : text.reminder(reminder)
         return (
           <li key={placedBy} className="history-reminder" title={text.role(id as CharacterId).name}>
-            <CharacterIcon id={id} size={18} lazy />
+            <CharacterIcon id={id} size={20} lazy />
             <span>{t('history.reminderOn', { reminder: label, name })}</span>
           </li>
         )
@@ -175,31 +188,33 @@ const markerArt = { night: genericArt['dusk'], day: genericArt['dawn'] } as cons
 
 interface Props {
   readonly chapters: readonly Chapter[]
+  // How a finished game ended, as the last line of its story: the winner, in its colour.
+  readonly ending?: { readonly label: string; readonly color?: string }
   readonly locale: Locale
   readonly t: Translate
 }
 
-export const GameChronicle = ({ chapters, locale, t }: Props) => {
+export const GameChronicle = ({ chapters, ending, locale, t }: Props) => {
   if (chapters.length === 0) return null
   return (
     <section className="history-chronicle" aria-label={t('history.chronicle')}>
-      <h3 className="history-side-title">{t('history.chronicle')}</h3>
-      <Chapters chapters={chapters} locale={locale} t={t} />
+      <h2 className="history-section-title">{t('history.chronicle')}</h2>
+      <Chapters chapters={chapters} locale={locale} t={t} {...(ending ? { ending } : {})} />
     </section>
   )
 }
 
-export const Chapters = ({ chapters, locale, t }: Props) => (
+export const Chapters = ({ chapters, ending, locale, t }: Props) => (
   <div className="history-chapters">
     {chapters.map((chapter, i) => (
       <section key={i} className="history-chapter">
-        <h4 className="history-chapter-title">
+        <h3 className="history-chapter-title">
           {markerArt[chapter.phase] !== undefined ? <Image source={markerArt[chapter.phase]} style={{ width: railMarker, height: railMarker }} accessible={false} /> : null}
           {t(`board.${chapter.phase}`, { n: chapter.night })}
-        </h4>
+        </h3>
         <Reminders reminders={chapter.reminders} locale={locale} t={t} />
         <ul className="history-facts">
-          {chapter.facts.map((fact, j) => {
+          {told(chapter.facts).map((fact, j) => {
             if (fact.kind === 'nomination') return <li key={j} className="history-fact" data-vote><Vote fact={fact} locale={locale} t={t} /></li>
             const line = lineOf(fact, locale, t)
             return (
@@ -216,5 +231,14 @@ export const Chapters = ({ chapters, locale, t }: Props) => (
         </ul>
       </section>
     ))}
+    {/* The rail stops on the result, so the story says who won where it ends. */}
+    {ending ? (
+      <section className="history-chapter history-ending">
+        <h3 className="history-chapter-title" style={ending.color ? { color: ending.color } : undefined}>
+          <span className="history-flag" aria-hidden="true"><Icon name="flag" size={16} color={palette.parchment} /></span>
+          {ending.label}
+        </h3>
+      </section>
+    ) : null}
   </div>
 )

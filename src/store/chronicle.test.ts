@@ -112,4 +112,12 @@ describe('the chronicle of a game', () => {
       .build()
     expect(reminders(b)).toEqual([['night 1', 'Poisoned on Dan'], ['day 1', 'Claims Slayer on Eve'], ['night 2', 'Poisoned on Eve']])
   })
+
+  test('the reminders placed before the first night are the setup ones, and no later one is', () => {
+    const b = table().add(token('Bob', 'fortuneteller/Red Herring', 'Cat'))
+      .night(1, [token('Ann', 'poisoner/Poisoned', 'Dan')])
+      .build()
+    const herring = asEventId(b.log.findIndex(p => p.kind === 'placeToken'))
+    expect([...chronicleOf(b.log, 'tb').setup]).toEqual([herring])
+  })
 })

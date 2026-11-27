@@ -1,7 +1,7 @@
 // Saved game summaries use the complete log, independent of any replay cursor.
 import type { Alignment, Locale, Translate } from '../content'
 import type { Clock } from '../engine'
-import { scriptName } from '../content'
+import { scriptName, seatName } from '../content'
 import type { SavedGame } from './saved'
 import { boardOf } from './session'
 import { gameTiming } from './gameTiming'
@@ -13,6 +13,10 @@ export interface GameRow {
   readonly phase: string // "Night 3", "Setup", "Game over"
   readonly players: string // "9 players"
   readonly when: string // the creation date in the UI locale
+  readonly day: string // the same date without its year, for a row listed under its month
+  readonly month: string // "November 2026": the heading a finished game is listed under
+  readonly names: string // who sat at the table, in seat order
+  readonly over: boolean
   readonly duration: string
   readonly a11y: string // the row in one sentence, for a screen reader
 }
@@ -44,8 +48,9 @@ export const describeGame = (game: SavedGame, t: Translate, locale: Locale): Gam
   const winner = board.clock.phase === 'over' ? board.result?.winner : undefined
   const phase = winner ? t(winner === 'good' ? 'board.goodWins' : 'board.evilWins') : phaseLabel(board.clock, t)
   const players = t('common.players', { count: board.seats.length })
-  const { date: when, duration } = gameTiming(game, t, locale)
-  const row = { id: game.id, name, ...(winner ? { winner } : {}), phase, players, when, duration,
+  const { date: when, day, month, duration } = gameTiming(game, t, locale)
+  const names = board.seats.map((seat) => seatName(locale, seat.name)).join(', ')
+  const row = { id: game.id, name, ...(winner ? { winner } : {}), phase, players, when, day, month, names, over: board.clock.phase === 'over', duration,
     a11y: [name, phase, players, when, duration].join(', ') }
   described.set(game, { t, locale, row })
   return row

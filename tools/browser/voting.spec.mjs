@@ -81,7 +81,7 @@ test('Done records a failed vote, leaves the leader on the block, and History te
 
   // History reads the day back from the edits the taps above saved.
   await open(page, '/history')
-  await page.getByRole('button', { name: 'Show details for Trouble Brewing', exact: true }).tap()
+  await page.getByRole('link', { name: /^Trouble Brewing, / }).tap()
   const day = page.getByRole('region', { name: 'Days and nights', exact: true })
   // A vote is one line there, and its voters open under it.
   const vote = day.getByLabel('Seat 1 → Seat 3: 5 votes', { exact: true })

@@ -30,12 +30,12 @@ const savedGame = (script, count) => {
 }
 
 const importGame = async (page, game, label = 'Import game') => {
-  const count = await page.getByRole('article').count()
+  const count = await page.locator('.history-row').count()
   const chooser = page.waitForEvent('filechooser')
   await page.getByRole('button', { name: label, exact: true }).click()
   await (await chooser).setFiles({ name: 'history-test.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(game)) })
-  await expect(page.getByRole('article')).toHaveCount(count + 1)
-  await expect(page.getByText('Alexandrine avec un nom très long', { exact: true }).last()).toBeVisible()
+  await expect(page.locator('.history-row')).toHaveCount(count + 1)
+  await expect(page.locator('.history-row-names').filter({ hasText: 'Alexandrine avec un nom très long' })).toBeVisible()
 }
 
 test('French history fits a phone, keeps every player and respects reduced motion', async ({ browser, baseURL }) => {
@@ -45,10 +45,17 @@ test('French history fits a phone, keeps every player and respects reduced motio
     await open(page, '/history')
     await importGame(page, savedGame('tb', 20), 'Importer une partie')
     await expect(page.getByText('1 partie enregistrée', { exact: true })).toBeVisible()
+    // A game still running is listed first, and its row names who played. The row opens its page.
+    await expect(page.getByRole('heading', { name: 'En cours', exact: true })).toBeVisible()
+    await expect(page.locator('.history-row-names')).toContainText('20 joueurs · Alexandrine avec un nom très long, Player 2')
+    await page.getByRole('link', { name: /^Trouble Brewing, / }).click()
+    await expect(page).toHaveURL(/\/history\/history-test-tb$/)
+    await expect(page.getByRole('heading', { name: 'Trouble Brewing', exact: true, level: 1 })).toBeVisible()
     await expect(page.locator('.history-player')).toHaveCount(20)
     await expect(page.locator('.history-player').first()).toContainText('Alexandrine avec un nom très long')
-    await expect(page.locator('.history-player').first()).toContainText('Mort · Nuit 1')
-    await expect(page.locator('.history-player .history-reminder')).toHaveCount(2)
+    await expect(page.locator('.history-player').first()).toContainText('Mort, Nuit 1')
+    // A reminder dealt in setup stays on its player; one placed at night is told by its night.
+    await expect(page.locator('.history-player .history-reminder')).toHaveText(['Leurre'])
     await expect(page.locator('.history-chapter .history-reminder')).toHaveCount(1)
     await expect(page.locator('.history-bluff')).toHaveCount(3)
     const chronicle = page.getByRole('region', { name: 'Jours et nuits', exact: true })
@@ -63,15 +70,20 @@ test('French history fits a phone, keeps every player and respects reduced motio
     for (const width of [390, 320, 844]) {
       await page.setViewportSize({ width, height: 844 })
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
-      const overflow = await page.locator('.history-player, .history-reminder, .history-fact, .history-vote-line > *, .history-hand, .history-preview-token, .history-bluff, .history-actions').evaluateAll(elements =>
+      const overflow = await page.locator('.history-player, .history-fate, .history-reminder, .history-fact, .history-vote-line > *, .history-hand, .history-bluff, .history-actions').evaluateAll(elements =>
         elements.filter(element => { const rect = element.getBoundingClientRect(); return rect.left < 0 || rect.right > innerWidth }).length)
       expect(overflow).toBe(0)
     }
-    expect(await page.locator('.history-chevron').evaluate(element => getComputedStyle(element).transitionDuration)).toBe('0s')
-    const detailsId = await page.locator('.history-details').getAttribute('id')
-    await open(page, `/history/${detailsId.replace('history-details-', '')}`)
-    await expect(page.getByRole('region', { name: 'Détails de la partie', exact: true })).toBeVisible()
+    expect(await page.locator('.history-vote-chevron').first().evaluate(element => getComputedStyle(element).transitionDuration)).toBe('0s')
+    // Back returns to the list, and the page's address opens the game with no list behind it.
+    await page.getByRole('button', { name: 'Retour', exact: true }).click()
+    await expect(page).toHaveURL(/\/history$/)
+    await expect(page.locator('.history-row')).toHaveCount(1)
+    await open(page, '/history/history-test-tb')
     await expect(page.locator('.history-player')).toHaveCount(20)
+    await page.getByRole('button', { name: 'Retour', exact: true }).click()
+    await expect(page).toHaveURL(/\/history$/)
+    await expect(page.locator('.history-row')).toHaveCount(1)
   } finally { await context.close() }
 })
 
@@ -83,7 +95,7 @@ test('History in More lists the running game over its board, latest phase first'
   await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByRole('button', { name: 'History', exact: true }).click()
   const log = page.getByRole('dialog', { name: 'History', exact: true })
-  await expect(log.getByRole('heading', { level: 4 })).toHaveText(['Day 1', 'Night 1'])
+  await expect(log.getByRole('heading', { level: 3 })).toHaveText(['Day 1', 'Night 1'])
   const vote = log.getByLabel('Player 3 → Alexandrine avec un nom très long: 3 votes', { exact: true })
   await expect(log.locator('.history-hand').first()).toBeHidden()
   await vote.click()

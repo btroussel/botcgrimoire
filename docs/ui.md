@@ -291,6 +291,21 @@ portrait one always keeps it.
 
 ## History
 
+The list is for finding a game and a game's page for reading one, so a row never unfolds: a list
+that grows a page inside it loses its place, and the game its name. A row is a link and, beside
+it, one button, Resume while the game runs and Replay once it is over. It names who played, which
+is what tells two nights of one script apart. The games still running come first, then the
+finished ones under the month they were played.
+
+A game's page is paper, with the script's name in the bar. It reads in one scroll and hides
+nothing behind a tab: how the game stands or ended, the players, then the days and nights. A
+player is one row with the same things in the same places: the token, the name, the character,
+and at the end of the name's line when they died, a skull and the phase in ink. The living carry
+no label, so life is never told by green against red. On a phone the rows are one column, read
+top to bottom. A row keeps the reminders dealt during setup, beside the character, where they
+cannot be read as the next player's. One placed in play belongs to its night or day. Nothing on
+the page is set under 14 pixels: it is the screen turned round to the table after a game.
+
 Days and nights shows each player as they were at the time, and reads in order at any width.
 [App](app.md#saved-games-and-replay) owns the facts shown. It is a timeline: a rail runs down
 each phase from its sun or moon, and every line hangs off it by a dot, so a phase needs no box to
@@ -299,7 +314,8 @@ so a busy night stays as short as a quiet one. A vote is one line, as in the day
 nominated whom, as many of the voters' tokens as the line holds, tinted by side, and the tally. A tap opens the voters'
 names under it in columns, three on a phone, greyed under a skull for a hand raised while dead.
 A name too long for its column is cut short on one line: the vote's own line gives names in
-full. The board's History window lists the
+full. An execution and the death recorded right after it are one line. A finished game's rail
+ends on a flag and the result, so the story says who won where it stops. The board's History window lists the
 same lines in one column under the newest phase, which is the one a Storyteller asks about
 mid-game, so it opens on the answer with no scrolling.
 

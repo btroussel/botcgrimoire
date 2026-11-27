@@ -7,6 +7,7 @@ import { Stack, usePathname } from 'expo-router'
 import Head from 'expo-router/head'
 import { useEffect, useMemo } from 'react'
 
+import { scriptName } from '../../content'
 import { tokenArt } from '../../content/generated/art'
 import { useStore } from '../../store'
 import { phaseLabel } from '../../store/gameSummary'
@@ -39,6 +40,8 @@ export const Navigator = () => {
   const t = store.t
   const app = t('common.appName')
   const phase = pathname.startsWith('/game/') && clock !== undefined ? phaseLabel(clock, t) : undefined
+  // A saved game's page is named after its script, so two of them are told apart in the tab bar.
+  const read = pathname.startsWith('/history/') ? store.games.find((game) => pathname === `/history/${game.id}`) : undefined
   // The navigator hears every edit for the document title; the stack's options stay the same object.
   const screenOptions = useMemo(() => ({ headerShown: false, title: app, contentStyle: { backgroundColor: p.felt } }), [app, p.felt])
   return (
@@ -46,7 +49,7 @@ export const Navigator = () => {
       <Head>
         {/* The chosen language, so screen readers pick the right voice and spell-check the right dictionary. */}
         <html lang={locale} />
-        {pageTags(pathname, t, phase)}
+        {pageTags(pathname, t, phase ?? (read ? scriptName(read.script) : undefined))}
       </Head>
       <Stack screenOptions={screenOptions} />
     </VelvetColourContext>
