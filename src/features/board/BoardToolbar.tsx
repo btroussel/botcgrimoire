@@ -47,7 +47,8 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
       {item({ icon: 'history', label: t('common.history'), action: onHistory, disabled: historyDisabled })}
       {/* Leaving the game sits apart from the tools for the board. */}
       <View style={menuStyles.rule} />
-      {item({ icon: 'check', label: t('board.endGame'), action: onEnd })}
+      {/* The pennant that marks a game's end on the replay's timeline. */}
+      {item({ icon: 'flag', label: t('board.endGame'), action: onEnd })}
       {item({ icon: 'home', label: t('common.home'), action: onHome })}
     </div>
   </>
