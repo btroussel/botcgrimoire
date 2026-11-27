@@ -57,7 +57,9 @@ test('a homebrew character placed at the start of other nights stays there after
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Nightshade')
   await page.getByRole('textbox', { name: 'Ability', exact: true }).fill('Each night*, choose a player: they are poisoned tonight.')
   const nights = page.getByRole('radiogroup', { name: 'Other nights', exact: true })
-  await nights.getByRole('radio', { name: 'Before the Demon', exact: true }).check({ force: true })
+  // Never forced: the editor is still rising into place, and only an unforced check waits for the
+  // card to settle and taps it where a finger would, clear of the Save bar.
+  await nights.getByRole('radio', { name: 'Before the Demon', exact: true }).check()
   await page.getByRole('button', { name: 'Choose the exact place', exact: true }).click()
   await page.getByRole('list', { name: 'Other nights', exact: true }).getByRole('button', { name: 'Wake after Dusk', exact: true }).click()
   await expect(nights.getByRole('radio', { name: 'At the start of the night', exact: true })).toBeChecked()
@@ -84,7 +86,7 @@ test('a homebrew character written for a script is placed among that script\'s s
   const nights = page.getByRole('radiogroup', { name: 'Other nights', exact: true })
   const before = nights.getByRole('radio', { name: 'Before the Demon', exact: true })
   await expect(before).toHaveAccessibleDescription('After Monk, before Imp')
-  await before.check({ force: true })
+  await before.check()
   await page.getByRole('button', { name: 'Choose the exact place', exact: true }).click()
   const steps = page.getByRole('list', { name: 'Other nights', exact: true }).locator(':scope > [role="listitem"] > [role="button"]')
   await expect(steps).toHaveText(['Dusk', 'Monk', 'Imp', 'Empath', 'Dawn'])
@@ -96,8 +98,8 @@ test('on a script of homebrew alone, an Outsider placed after a Minion wakes aft
     await page.getByRole('button', { name: 'Create a character', exact: true }).click()
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name)
     await page.getByRole('textbox', { name: 'Ability', exact: true }).fill('You start knowing something.')
-    await page.getByRole('radio', { name: team, exact: true }).check({ force: true })
-    if (wakes) await page.getByRole('radiogroup', { name: 'First night', exact: true }).getByRole('radio', { name: 'Before the evil team', exact: true }).check({ force: true })
+    await page.getByRole('radio', { name: team, exact: true }).check()
+    if (wakes) await page.getByRole('radiogroup', { name: 'First night', exact: true }).getByRole('radio', { name: 'Before the evil team', exact: true }).check()
     await page.getByRole('button', { name: 'Save character', exact: true }).click()
     await page.getByRole('button', { name: 'Done', exact: true }).click()
   }
