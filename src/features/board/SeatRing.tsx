@@ -87,6 +87,7 @@ export interface SeatRingProps {
   readonly panelDocked?: boolean // the board draws the centre panel at its foot instead
   readonly panelAt?: Point // where the centre panel sits on a laid-out board, clear of every seat
   readonly deal?: boolean // the game was dealt just before the ring opened
+  readonly showCards?: boolean // a seat's menu offers Show a card: a game still running
 }
 
 // A lifted reminder is drawn a little larger, raised off the board. A lifted seat is drawn a
@@ -120,7 +121,7 @@ interface Landing {
 
 export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, free = false, obstacles = noObstacles, t, onAddReminder, onRemoveReminder, onMoveReminder,
   onEditNote, onGap, onTurn, onArrangeDone, onBackToCircle, turnAt, turnDocked = false, onTurnSize, onMoveSeat, onPlaceSeat, chosenSeat, onChooseSeat, ringed,
-  readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
+  readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false, showCards = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
   const { openSeat } = useOpenCard()
@@ -386,7 +387,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           alignment={contextPlayer.alignment} dead={contextPlayer.dead} ghostVote={contextPlayer.ghostVote} anchor={contextAt}
           place={(menu, room) => placeSeatMenu({ at: contextAt, size, centre, room, menu, others: positions.filter((_, i) => i !== contextIndex && i < seats.length) })}
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
-          {...(e.board && believed(e.board, contextPlayer.id) !== undefined
+          {...(showCards && e.board && believed(e.board, contextPlayer.id) !== undefined
             ? { onShowCard: kind => { closeContext(); openSeat(kind, contextPlayer.id) } } : {})}
           {...(onAddReminder ? { onReminder: () => { closeContext(); onAddReminder(contextPlayer.id) } } : {})}
           onRemove={() => openSeatAction('remove')}

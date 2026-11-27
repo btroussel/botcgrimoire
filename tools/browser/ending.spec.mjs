@@ -38,6 +38,13 @@ test.describe('on a tablet', () => {
     await expect(button(page, 'More')).toHaveCount(0)
     await expect(button(page, 'Show a card')).toHaveCount(0)
     await expect(button(page, 'Undo')).toBeVisible()
+    // Nor does a seat's menu offer a card: nothing is left to show.
+    await seat(page, 0).click()
+    const menu = page.locator('[role="group"][data-layer]')
+    await expect(menu).toBeVisible()
+    await expect(menu.getByRole('button', { name: 'Show a card', exact: true })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    await expect(menu).toHaveCount(0)
     const playAgain = await button(page, 'Play again').boundingBox()
     const home = await button(page, 'Home').boundingBox()
     const words = await page.getByRole('status').filter({ hasText: 'Good wins' }).boundingBox()

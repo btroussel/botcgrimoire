@@ -416,7 +416,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
             <SeatRing seats={view.seats} band={geometry.band} geometry={ring} free={free} obstacles={geometry.obstacles} t={t} readOnly={b.lookingBack}
               {...(b.replay ? { lit: b.replay.steps[b.replay.at]!.seats } : {})}
               {...(turnAt ? { turnAt } : {})} turnDocked={turnDocked} onTurnSize={updateTurnSize}
-              panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal}
+              panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal} showCards={live && !over}
               {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
               {...(reminderTarget !== undefined ? { ringed: reminderTarget } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}

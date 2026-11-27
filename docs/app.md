@@ -230,9 +230,9 @@ block. It ends with Done alone: the Storyteller records the death.
 
 End game asks who won, good or evil. The app never detects a win.
 
-A finished game offers three things and nothing else: Play again, Replay and Home. Show a card
-and More go, since nothing is left to show or arrange, and Undo stays, the way back from a wrong
-winner. Home leaves without asking, as there is nothing to resume.
+A finished game offers three things and nothing else: Play again, Replay and Home. Show a card, in
+the toolbar and in a seat's menu, and More go, since nothing is left to show or arrange, and Undo
+stays, the way back from a wrong winner. Home leaves without asking, as there is nothing to resume.
 
 Play again is how a group plays its next game without typing its names again. It opens New game
 on the script list with the finished game's players in the seats, in the order they sat and as
