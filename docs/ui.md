@@ -234,11 +234,13 @@ focused. A sheet carries no title: its open tab names it.
 
 The three sheets share one row: the art, the name with its players under it, and the text beside.
 No line runs between rows, since spacing sets them apart and lines made a table of the open sheet.
-A night's rows are the characters' rows, in the night's order, and the step being read lies under
-an ink wash with a brass edge, across the whole row so its text is marked with its name: a tap on
-a step moves the wash there, at either width. The filter between what is in play and the whole
-script heads every sheet and stays while the rows scroll. A team's name is the word alone, in its
-colour.
+A night's rows are the characters' rows, in the night's order. On every sheet the row being read
+lies under an ink wash with a brass edge, across the whole row so its text is marked with its
+name. A tap lays the wash at either width, a tap on another row moves it and a second tap on the
+same row takes it away. At the compact width the row's text unfolds with the wash, so one row is
+open at a time. Each sheet keeps its own row, and no row is washed until one is tapped. The filter
+between what is in play and the whole script heads every sheet and stays while the rows scroll. A
+team's name is the word alone, in its colour.
 
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
