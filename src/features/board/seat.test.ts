@@ -5,7 +5,7 @@ import { asCharacterId, registerHomebrew, scriptHomebrew } from '../../content'
 import { deserialize, newGame, serialize } from '../../store/saved'
 import { appendAll, boardOf, openSession, redo, undo } from '../../store/session'
 import { boardView } from './board'
-import { bluffChoices, characterGroups, edits, goodInPlay, pickerGroups, reminderGroups, roster, writtenNotes } from './seat'
+import { bluffChoices, byTeam, characterGroups, edits, goodInPlay, reminderGroups, roster, writtenNotes } from './seat'
 
 const characterIds = (...ids: readonly string[]) => ids.map(asCharacterId)
 const manual = (payload: Payload): Event => ({ ...payload, id: asEventId(100), audience: 'storyteller', manual: true })
@@ -34,17 +34,14 @@ describe('the pickers', () => {
     expect(roster(script)).toEqual(['imp', 'chef'])
   })
 
-  test('picker groups follow the team order, drop empty teams and build each row', () => {
-    const colors = { townsfolk: 'blue', outsider: 'blue', minion: 'red', demon: 'red', traveller: 'purple', fabled: 'gold', loric: 'green' }
-    const groups = pickerGroups(characterIds('imp', 'chef', 'scapegoat', 'poisoner', 'washerwoman'), (team) => team.toUpperCase(), colors,
-      (id, team) => `${team}:${id}`)
-    expect(groups).toEqual([
-      { key: 'townsfolk', label: 'TOWNSFOLK', color: 'blue', rows: ['townsfolk:chef', 'townsfolk:washerwoman'] },
-      { key: 'minion', label: 'MINION', color: 'red', rows: ['minion:poisoner'] },
-      { key: 'demon', label: 'DEMON', color: 'red', rows: ['demon:imp'] },
-      { key: 'traveller', label: 'TRAVELLER', color: 'purple', rows: ['traveller:scapegoat'] },
+  test('characters by team follow the team order and drop empty teams', () => {
+    expect(byTeam(characterIds('imp', 'chef', 'scapegoat', 'poisoner', 'washerwoman'))).toEqual([
+      { team: 'townsfolk', ids: ['chef', 'washerwoman'] },
+      { team: 'minion', ids: ['poisoner'] },
+      { team: 'demon', ids: ['imp'] },
+      { team: 'traveller', ids: ['scapegoat'] },
     ])
-    expect(pickerGroups([], (team) => team, colors, (id) => id)).toEqual([])
+    expect(byTeam([])).toEqual([])
   })
 
   test('reminders separate characters in play from the rest of the script without duplicates', () => {

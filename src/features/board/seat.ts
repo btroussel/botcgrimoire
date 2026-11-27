@@ -36,17 +36,6 @@ export const byTeam = (ids: readonly CharacterId[]): readonly CharacterGroup[] =
 // The roster by team in the sheet's fixed order.
 export const characterGroups = (script: Script): readonly CharacterGroup[] => byTeam(roster(script))
 
-// A picker's groups: the characters by team in the same order, each team under its label and
-// colour, and a team with none of them left out. The caller says what a row shows.
-export const pickerGroups = <Row>(
-  ids: readonly CharacterId[],
-  label: (team: Team) => string,
-  colors: Readonly<Record<Team, string>>,
-  row: (id: CharacterId, team: Team) => Row,
-): readonly { readonly key: Team; readonly label: string; readonly color: string; readonly rows: readonly Row[] }[] =>
-  byTeam(ids).map((g) => ({ key: g.team, label: label(g.team), color: colors[g.team], rows: g.ids.map((id) => row(id, g.team)) }))
-
-
 // Reminders from characters in play come first, wherever the token will be placed.
 export interface ReminderEntry {
   readonly key: string
