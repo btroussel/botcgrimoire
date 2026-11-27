@@ -132,7 +132,9 @@ it off and places it again, with no new kind of edit, so one undo puts it back w
 Any seat, an empty one too, takes any reminder from the script or its loose characters, recorded
 characters first, with no ability source to pick. A note needs text, and this game's notes come
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
-players unless saved, since the Demon gets none there.
+players unless saved, since the Demon gets none there. Their picker also shows them: Show saves the
+set on screen and opens the not-in-play card with it, so what the Demon saw is what the tray
+and the log hold.
 
 The cards are the six info tokens the night sheet names, the character tokens alone, which the
 sheet asks for more often than any of them, and a written note. A homebrew character's own card
