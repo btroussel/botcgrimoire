@@ -8,27 +8,11 @@ import { font, hairline, palette, radius, shadows, space, touch, type } from '..
 import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from '../../ui/popover'
 import { slack, widthAtOnePoint } from './textWidth'
 
-// The card a pick waits for, named in Undo's corner: nothing is recorded during a pick, so Undo
-// has no use there, and beside the eye the words lay over the top seat of a phone's ring. They
-// take no taps, so a seat they reach is still picked through them.
-export const PickWords = ({ title, hint, room }: {
-  readonly title: string
-  readonly hint: string
-  readonly room: number // the width the seats beside the corner leave
-}) => {
-  // The name wraps where the seats leave it little width; the line under it drops when it cannot
-  // fit whole, since half a hint says nothing.
-  const hintFits = widthAtOnePoint(hint, font.body.bold) * Number(type.text.label.fontSize) * slack <= room - 2 * space.sm
-  return <View pointerEvents="none" aria-hidden style={[styles.pick, { maxWidth: room }]}>
-    <Text style={styles.title} numberOfLines={2}>{title}</Text>
-    {hintFits ? <Text style={styles.hint} numberOfLines={1}>{hint}</Text> : null}
-  </View>
-}
-
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
-  onLoose, looseDisabled, onHistory, historyDisabled, onEnd, onHome, picking, onCancelPick }: {
+  onLoose, looseDisabled, onHistory, historyDisabled, onEnd, onHome, picking, pickRoom, onCancelPick }: {
   readonly t: Translate
-  readonly picking?: string | undefined // the card a seat pick is for, while it waits
+  readonly picking?: string | undefined // the card a seat pick is for, named here while it waits
+  readonly pickRoom: number // how far the toolbar may grow to the left before it reaches Undo
   readonly onCancelPick: () => void
   readonly arranging: boolean
   readonly arrangeDisabled: boolean
@@ -54,11 +38,22 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   const item = ({ icon, label, action, disabled = false, armed = false }: {
     icon: IconName; label: string; action: () => void; disabled?: boolean; armed?: boolean }) =>
     <MenuItem icon={icon} label={label} onPress={() => choose(action)} disabled={disabled} armed={armed} />
+  // The pick's words take what the cross leaves. A line that would not fit whole drops, so the
+  // name keeps the room on the narrowest phone.
+  const textRoom = pickRoom - touch - 2 * space.xs
+  const hint = t('board.cardTapPlayer')
+  const hintFits = widthAtOnePoint(hint, font.body.bold) * Number(type.text.label.fontSize) * slack <= textRoom
   return <>
-    <View style={styles.edge}>
+    {/* The pick's words cover the top of the ring on a phone, so a tap on them reaches the seat
+        under them rather than cancel the pick. */}
+    <View pointerEvents={picking !== undefined ? 'box-none' : 'auto'} style={styles.edge}>
       {/* Always mounted, so a screen reader hears the pick begin: a live region inserted already
-          filled is often not read. The words drawn in Undo's corner are hidden from it. */}
-      <Text accessibilityLiveRegion="polite" style={styles.spoken}>{picking !== undefined ? `${picking}. ${t('board.cardTapPlayer')}` : ''}</Text>
+          filled is often not read. */}
+      <Text accessibilityLiveRegion="polite" style={styles.spoken}>{picking !== undefined ? `${picking}. ${hint}` : ''}</Text>
+      {picking !== undefined ? <View pointerEvents="none" aria-hidden style={[styles.pick, { maxWidth: textRoom + 2 * space.xs }]}>
+        <Text style={styles.title} numberOfLines={2}>{picking}</Text>
+        {hintFits ? <Text style={styles.hint} numberOfLines={1}>{hint}</Text> : null}
+      </View> : null}
       {/* The cross goes with the pick, so the focus moves on to the eye rather than fall to the page. */}
       {picking !== undefined ? <div data-pick-cancel style={{ display: 'contents' }}>
         <EdgeButton icon="close" label={t('common.cancel')} onPress={() => {
@@ -92,8 +87,7 @@ const styles = StyleSheet.create({
   spoken: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   edge: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
     backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },
-  // As tall as Undo, whose frame it stands in.
-  pick: { minHeight: touch, justifyContent: 'center', paddingHorizontal: space.sm },
+  pick: { flexShrink: 1, minWidth: 0, paddingHorizontal: space.xs },
   title: { ...type.text.seatName, color: palette.text },
   hint: { ...type.text.label, color: palette.muted },
 })

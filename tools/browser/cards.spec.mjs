@@ -64,7 +64,7 @@ test('a seat menu shows You are for its player in three taps', async ({ page }) 
   await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeVisible()
 })
 
-test('a card waiting for its player is named in Undo\'s corner, and the toolbar\'s cross cancels the pick', async ({ page }) => {
+test('a card waiting for its player is named in the toolbar, and its cross cancels the pick', async ({ page }) => {
   await openBoard(page)
   const undo = page.getByRole('button', { name: 'Undo', exact: true })
   const eye = page.getByRole('button', { name: 'Show a card', exact: true })
@@ -78,14 +78,8 @@ test('a card waiting for its player is named in Undo\'s corner, and the toolbar\
   // A screen reader hears it through a live region that was already there.
   await expect(page.locator('[aria-live="polite"]', { hasText: 'This player is. Tap a player' })).toHaveCount(1)
   await expect(eye).toHaveAttribute('aria-pressed', 'true')
-  // A pick records nothing to undo, so its words stand where Undo was, clear of every seat.
-  await expect(undo).toHaveCount(0)
-  const words = await hint.locator('..').boundingBox()
-  for (const token of await page.locator('[data-seat-context-target]').getByRole('button').all()) {
-    const box = await token.boundingBox()
-    const apart = box.x >= words.x + words.width || box.x + box.width <= words.x || box.y >= words.y + words.height || box.y + box.height <= words.y
-    expect(apart, await token.getAttribute('aria-label')).toBe(true)
-  }
+  // What takes no tap during the pick is dimmed and out of reach.
+  await expect(undo).toBeDisabled()
 
   await page.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(hint).toHaveCount(0)

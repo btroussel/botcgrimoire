@@ -22,7 +22,7 @@ import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
 import { PageEnter, Screen } from '../../ui/Screen'
 import { usePhone } from '../../ui/breakpoint'
-import { hairline, layout, motion, palette, radius, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
+import { hairline, motion, palette, radius, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Token } from '../../ui/Token'
 import { Velvet } from '../../ui/Velvet'
@@ -30,7 +30,7 @@ import { useLayoutViewport } from '../../ui/Viewport'
 import { looseChoices } from './board'
 import { BluffPicker, BoardBluffs } from './BoardBluffs'
 import { evilLearnsTeam } from './nightReference'
-import { BoardToolbar, PickWords } from './BoardToolbar'
+import { BoardToolbar } from './BoardToolbar'
 import { LooseCharacters } from './LooseCharacters'
 import { PhasePlaque } from './PhasePlaque'
 import { NoteEditor } from './NoteEditor'
@@ -46,7 +46,7 @@ import { centreSpot, isFree, layoutPositions, toPlace } from './freeLayout'
 import type { Point } from './freeLayout'
 import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
-import { edits, roomBeside } from './seat'
+import { edits } from './seat'
 import { SeatRing } from './SeatRing'
 import { ShowSheet, useCardNote } from './ShowSheet'
 import { cardKeys, takes } from './show'
@@ -145,17 +145,6 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const choosingSeats = !!interaction.pick || !!interaction.seatAction
   const { pick, cancelRequest } = interaction
   const naming = pick?.title
-  // The pick's words stop short of the seats beside Undo's corner, measured as the pick begins.
-  const [pickRoom, setPickRoom] = useState<number>(layout.pickWords.maximum)
-  const [named, setNamed] = useState(naming)
-  if (naming !== named) {
-    setNamed(naming)
-    if (naming !== undefined) {
-      const top = insets.top + space.md
-      const room = roomBeside({ left: insets.left + space.md, top, bottom: top + undoSize }, layout.pickWords.maximum) - space.sm
-      setPickRoom(Math.max(layout.pickWords.minimum, room))
-    }
-  }
   const hasCenterPanel = !!interaction.centerPanel
   const [hadCenterPanel, setHadCenterPanel] = useState(hasCenterPanel)
   if (hadCenterPanel !== hasCenterPanel) {
@@ -377,6 +366,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const phaseAction = live && !over
   const toolbar = <BoardToolbar t={t}
     picking={naming} onCancelPick={cancelRequest}
+    pickRoom={availableWidth - 2 * space.md - space.sm - undoSize - toolbarSize.width}
     arranging={arranging} onArrange={toggleArrange}
     arrangeDisabled={seatCount >= maxSeats && (seatCount < 2 || hasCenterPanel)}
     onShow={openShow}
@@ -505,8 +495,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         {actionsDocked ? <GameOverActions t={t} docked onPlayAgain={b.playAgain} onReplay={b.enterReplay} onHome={b.goHome}
           style={[styles.dockedPanel, styles.dockedActions, { left: insets.left, right: insets.right, bottom: insets.bottom + space.md }]} /> : null}
         {/* A finished game needs neither Show a card nor More: what it offers is under the result. */}
-        {/* A pick's cross grows the toolbar over the velvet, so the ring keeps the room it had
-            and no seat moves. */}
+        {/* A pick named in the toolbar grows it over the velvet, so the ring keeps the room it
+            had and no seat moves. */}
         {live && !over ? <View onLayout={event => {
           const { width, height } = event.nativeEvent.layout
           if (naming === undefined) setToolbarSize(sameSize({ width, height }))
@@ -514,11 +504,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Alone in its corner, away from Show a card and More: nothing puts an undone action
             back, so a tap aimed at another control must never land here. */}
-        {live ? <View pointerEvents={naming !== undefined ? 'none' : 'auto'}
-          style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
-          {/* A pick records nothing, so its card's name takes Undo's corner while it waits. */}
-          {naming !== undefined ? <PickWords title={naming} hint={t('board.cardTapPlayer')} room={pickRoom} />
-            : <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo} />}
+        {live ? <View style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
+          <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo || naming !== undefined} />
         </View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
         <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={seatsRight} board={tableView}
