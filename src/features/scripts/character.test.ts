@@ -327,4 +327,10 @@ describe('the icon made from an image', () => {
     expect(fitWithin(1000, 500, 288)).toEqual({ width: 288, height: 144 })
     expect(fitWithin(100, 50, 288)).toEqual({ width: 100, height: 50 })
   })
+
+  test('a logo fits a box wider than tall, whichever side binds', () => {
+    expect(fitWithin(1200, 300, 336, 228)).toEqual({ width: 336, height: 84 })
+    expect(fitWithin(500, 540, 336, 228)).toEqual({ width: 211, height: 228 })
+    expect(fitWithin(200, 100, 336, 228)).toEqual({ width: 200, height: 100 })
+  })
 })

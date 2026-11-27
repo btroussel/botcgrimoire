@@ -165,6 +165,16 @@ describe('homebrew characters in a draft', () => {
     expect(draft.logo).toBe(logo)
     expect(fileOf(draft).items[0]).toEqual({ id: '_meta', name: 'Home', logo })
   })
+
+  test('writes the image chosen as the logo into the file, and none once it is removed', () => {
+    const logo = 'data:image/webp;base64,AA'
+    const draft = { ...emptyDraft, name: 'Home', logo, ids: [id('imp')] }
+    const script = fileOf(draft)
+    expect(script.items[0]).toEqual({ id: '_meta', name: 'Home', logo })
+    expect(draftOf({ id: 's1' as SavedScriptId, script, updatedAt: 1 }).logo).toBe(logo)
+    const { logo: _logo, ...removed } = draft
+    expect(fileOf(removed).items[0]).toEqual({ id: '_meta', name: 'Home' })
+  })
 })
 
 describe('draftProblem', () => {

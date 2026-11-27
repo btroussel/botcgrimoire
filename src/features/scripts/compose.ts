@@ -16,7 +16,7 @@ export interface Draft {
   readonly id?: SavedScriptId // set when editing a saved script, so saving replaces it
   readonly name: string
   readonly author: string
-  readonly logo?: string // an imported script's logo link, kept through an edit
+  readonly logo?: string // the image chosen here, embedded as a data URL, or an imported script's logo link
   readonly kept?: KeptMeta
   readonly rules?: readonly string[] // the Bootlegger's homebrew rules as typed; a blank one is dropped on saving
   readonly ids: readonly CharacterId[]
@@ -30,8 +30,6 @@ export const maxRules = 10
 
 // The schema's `_meta.name` allows fifty characters, so a longer name makes a file other tools reject.
 export const maxName = 50
-
-export const logoOf = (script: CustomScript): string | undefined => scriptMeta(script)?.logo
 
 // The draft a saved script opens as: every character it lists, the homebrew ones with the
 // records the script carries, so saving it again keeps them.

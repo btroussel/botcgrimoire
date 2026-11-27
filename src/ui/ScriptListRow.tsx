@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
+import type { Script } from '../content'
+import { embeddedLogo, isCustom } from '../content'
+import { editionArt } from '../content/generated/art'
+import type { ArtSource } from './Art'
 import { Art } from './Art'
 import { useWindowWidth } from './breakpoint'
 import { focusStyle } from './Button'
@@ -18,8 +22,16 @@ import { motion, palette, radius, scriptListLogo, shadows, space, type } from '.
 export const scriptDetails = (author: string | undefined, count: string): { readonly detail: string; readonly detail2?: string } =>
   author ? { detail: author, detail2: count } : { detail: count }
 
+// A script's logo wherever it is listed: the image it carries, else its edition's art or the
+// bundled custom one. A logo given as a web address is left to the sheet, the one place that
+// fetches: a list would ask every script's host each time it opens.
+export const listedLogo = (script: Script): ArtSource | undefined => {
+  const own = embeddedLogo(script)
+  return own !== undefined ? { uri: own } : editionArt[isCustom(script) ? 'custom' : script]
+}
+
 export const ScriptListRow = ({ logo, leading, name, detail, detail2, accessibilityLabel, onPress, onLongPress, right }: {
-  readonly logo?: number | undefined
+  readonly logo?: ArtSource | undefined
   readonly leading?: ReactNode // drawn in place of a logo
   readonly name: string
   readonly detail: string

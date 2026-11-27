@@ -50,7 +50,7 @@ export const printCss = `
   #script-sheet * { color: ${print.ink} !important; background-color: transparent !important; box-shadow: none !important; outline: none !important; }
   #script-sheet-scroll { flex: none !important; height: auto !important; }
   /* The unknown-id notice speaks to the Storyteller about this app, not to the players. */
-  #script-sheet-toolbar, #script-sheet-footer, #script-sheet-notice, #script-sheet .paper-texture { display: none !important; }
+  #script-sheet-toolbar, #script-sheet-footer, #script-sheet-notice, #script-sheet-logo-badge, #script-sheet .paper-texture { display: none !important; }
   [id^="script-sheet-band-"] { position: static !important; break-after: avoid; }
   #script-sheet-references { break-before: page; }
   /* Travellers, Fabled and Loric print on the second page, so their bands leave the first. */

@@ -54,13 +54,15 @@ export const MenuItem = ({ icon, label, onPress, disabled = false, armed = false
 }
 
 // Opens a menu against the edge of its control nearest the board's centre: below a
-// toolbar button, above the status plaque. Both align to the control's right edge.
+// toolbar button, above the status plaque. Both align to the control's right edge; a control at
+// the left of its page, as the logo on a script being composed, takes the menu from its left edge.
 export const togglePopover = (popup: HTMLDivElement | null, anchorElement: HTMLDivElement | null,
-  { above = false, reduced }: { readonly above?: boolean; readonly reduced: boolean }) => {
+  { above = false, left = false, reduced }: { readonly above?: boolean; readonly left?: boolean; readonly reduced: boolean }) => {
   const anchor = anchorElement?.getBoundingClientRect()
   if (!popup || !anchor) return
   if (popup.matches(':popover-open')) { popup.hidePopover(); return }
-  popup.style.right = `${Math.max(space.xs, window.innerWidth - anchor.right)}px`
+  popup.style.left = left ? `${Math.max(space.xs, anchor.left)}px` : 'auto'
+  popup.style.right = left ? 'auto' : `${Math.max(space.xs, window.innerWidth - anchor.right)}px`
   popup.style.top = above ? 'auto' : `${anchor.bottom + space.xs}px`
   popup.style.bottom = above ? `${window.innerHeight - anchor.top + space.xs}px` : 'auto'
   popup.style.maxHeight = `${Math.max(touch, (above ? anchor.top : window.innerHeight - anchor.bottom) - 2 * space.xs)}px`
