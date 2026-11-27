@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { expect, test } from '@playwright/test'
 
 import { open, reload } from './app.mjs'
@@ -481,3 +483,48 @@ test('a kept note is offered again after a reload, and forgetting it takes it aw
   await expect(card.getByRole('button', { name: 'This is the Demon', exact: true })).toBeVisible()
   await expect(kept).toHaveCount(0)
 })
+
+// The keys are laid out from whatever the script holds, so a team may have one character, none
+// or dozens. Two scripts at the ends: five characters with no Outsider or Traveller, and every
+// character the app bundles.
+const bundled = JSON.parse(readFileSync(new URL('../../assets/data/raw/release/roles.json', import.meta.url), 'utf8'))
+const teamsOf = ids => ['townsfolk', 'outsider', 'minion', 'demon', 'traveller'].filter(team => ids.some(id => bundled.find(role => role.id === id)?.team === team))
+const everyone = ['townsfolk', 'outsider', 'minion', 'demon', 'traveller'].flatMap(team => bundled.filter(role => role.team === team).map(role => role.id))
+const headings = { townsfolk: 'Townsfolk', outsider: 'Outsiders', minion: 'Minions', demon: 'Demons', traveller: 'Travellers' }
+
+for (const [name, ids, players] of [['Tiny', ['washerwoman', 'empath', 'monk', 'poisoner', 'imp'], 5], ['Whale', everyone, 10]]) {
+  test(`the token keys hold a script of ${ids.length} characters, each team on its own rows`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await open(page, '/scripts')
+    await page.getByRole('button', { name: 'Import a script', exact: true }).click()
+    const chooser = page.waitForEvent('filechooser')
+    await page.getByRole('button', { name: 'Choose a file', exact: true }).click()
+    await (await chooser).setFiles({ name: 'script.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify([{ id: '_meta', name, author: 'Probe' }, ...ids])) })
+    await page.getByRole('button', { name: 'Save to your scripts', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible()
+
+    await open(page, '/new')
+    await page.getByRole('button', { name, exact: true }).click()
+    const count = page.getByText(/^\d+ players?$/).first()
+    await expect(async () => {
+      const current = Number((await count.textContent()).match(/\d+/)[0])
+      if (current !== players) await page.getByRole('button', { name: current < players ? 'More players' : 'Fewer players', exact: true }).click()
+      expect(Number((await count.textContent()).match(/\d+/)[0])).toBe(players)
+    }).toPass()
+    await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+    await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
+    await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
+
+    const card = await openTokens(page)
+    const keys = card.locator('[data-keys] [role="button"]')
+    await expect(keys).toHaveCount(ids.length)
+    // A team with no character has no row, and the others keep their order.
+    await expect(card.locator('[data-keys] [role="heading"]')).toHaveText(teamsOf(ids).map(team => headings[team]))
+    // The last key of the last team is reached by a scroll, typed and shown.
+    const last = await keys.last().getAttribute('aria-label')
+    await keys.last().click()
+    await expect(card.getByRole('button', { name: `Remove ${last}`, exact: true })).toBeVisible()
+    await card.getByRole('button', { name: 'Show', exact: true }).click()
+    await expect(card.getByText(last.toUpperCase(), { exact: true })).toBeVisible()
+  })
+}
