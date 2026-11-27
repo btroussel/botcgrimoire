@@ -277,10 +277,11 @@ export const tokenShadow = (size: number): string => {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Token sizes, named for where they are drawn. Large tokens and board seats print the name.
+// Token sizes, named for where they are drawn. Board seats print the name, and so does any token
+// from `named` up, whose arc is large enough to read it.
 // `corner` is the board's small disc: a granted ability in the corner strip, a gap where a seat
 // can be added, and a dealt token as it leaves the centre.
-export const tokenSize = { board: 104, sheet: 96, chip: 48, show: 200, corner: 36 } as const
+export const tokenSize = { board: 104, sheet: 96, chip: 48, named: 200, corner: 36 } as const
 
 // The card a player reads: its words and tokens are one block, sized to the window and centred.
 export const card = {

@@ -70,12 +70,12 @@ follows the visible viewport so its bar stays above the keyboard.
 
 The board's three token sheets, a seat's character, a reminder and the bluffs, are a drawer of the
 same keys that comes up from the foot, since a centred window would cover the seats it changes. It
-is full width up to a readable maximum, at most four fifths of the window, over a light scrim that
-leaves the board readable. A seat it changes keeps the brass ring; when the drawer would cover that
-seat it takes the edge with more room and stops short of it. Reminders are keys too, under the same
-rule labels as the characters. Everything read rather than scanned keeps the centred window: the
-list of cards, Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks its
-wells and Save at its foot, and Shuffle sits in its top row, away from Save.
+is full width up to a readable maximum, never so tall that the board is gone, over a light scrim
+that leaves the board readable. A seat it changes keeps the brass ring; when the drawer would cover
+that seat it takes the edge with more room and stops short of it. Reminders are keys too, under the
+same rule labels as the characters. Everything read rather than scanned keeps the centred window:
+the list of cards, Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks
+its wells and Save at its foot, and Shuffle sits in its top row, away from Save.
 
 ## Motion
 
@@ -182,7 +182,7 @@ The seat menu opens beside its token, wherever it covers the fewest other seats,
 stays tappable to move the menu there. It has no backdrop. On a seat with a token, Show a card
 comes first and turns the menu in place to the two cards about a player, so You are, shown to every
 player on the first night, is three taps from the board. Add a reminder follows, since on a touch
-screen it is the only way to the reminder picker, then by day Nominate a player. While the nominee
+screen it is the only way to the reminder drawer, then by day Nominate a player. While the nominee
 is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits) owns
 the actions.
 
@@ -196,7 +196,7 @@ Stacked reminders always show each one's rim and name, or for a note under anoth
 letters, and spread out on hover or tap. With a mouse or keyboard, a plus for adding a reminder
 appears on the seat you point at. Touch screens never show it.
 
-A note's text stays within its disc's slot, three lines at most, on the board and in the picker, so
+A note's text stays within its disc's slot, three lines at most, on the board and in the drawer, so
 a long note never runs over a neighbour or a name. A tap opens the whole text in its window.
 
 A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it

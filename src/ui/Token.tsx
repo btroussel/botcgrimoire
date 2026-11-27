@@ -68,7 +68,7 @@ export const Token = ({ size, character: id, alignment, name, printName, ability
   const focusVisible = useFocusVisible()
   const reduced = useReducedMotion()
   const box = { width: size, height: size, borderRadius: size / 2 }
-  const drawn = <TokenFace size={size} named={printName || size >= tokenSize.show} showMarkers={showMarkers}
+  const drawn = <TokenFace size={size} named={printName || size >= tokenSize.named} showMarkers={showMarkers}
     {...(id !== undefined ? { id } : {})} {...(alignment ? { alignment } : {})} {...(name !== undefined ? { name } : {})}
     {...(ability !== undefined ? { ability } : {})}
     {...(emptyStyle !== undefined ? { emptyStyle } : {})} {...(add ? { add } : {})} />

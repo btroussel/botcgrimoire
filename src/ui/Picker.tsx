@@ -47,8 +47,6 @@ export interface PickerProps {
   readonly title: string
   readonly onClose: () => void
   readonly closeLabel: string
-  readonly onBack?: () => void
-  readonly backLabel?: string
   readonly groups: readonly PickerGroup[]
   readonly onPick?: (id: string) => void // single choice: picks and the feature closes
   readonly selected?: readonly string[]
@@ -59,7 +57,7 @@ export interface PickerProps {
   readonly emptyLabel: string
 }
 
-export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel, groups, onPick, selected = [], multi, compactReference = false, tokenGrid = false, right, emptyLabel }: PickerProps) => {
+export const Picker = ({ visible, title, onClose, closeLabel, groups, onPick, selected = [], multi, compactReference = false, tokenGrid = false, right, emptyLabel }: PickerProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
   const [tokenGridWidth, setTokenGridWidth] = useState(0)
@@ -99,7 +97,6 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
   return (
     <Sheet visible={visible} title={title} onClose={onClose} closeLabel={closeLabel} width={640}
       right={compactReference && multi ? <>{right}<EdgeButton label={multi.confirmLabel(chosen.length)} onPress={() => multi.onConfirm(chosen)} disabled={chosen.length > multi.max || chosen.length < (multi.min ?? multi.max)} /></> : right}
-      {...(onBack ? { onBack } : {})} {...(backLabel ? { backLabel } : {})}
       {...(footer ? { footer } : {})} {...(compactReference ? { contentPaddingHorizontal: space.md } : {})}>
       {groups.every((g) => g.rows.length === 0) ? <Text style={[type.text.body, styles.empty, { color: p.inkMuted }]}>{emptyLabel}</Text> : null}
       {tokenGrid ? groups.filter(g => g.rows.length > 0).map(g => {
