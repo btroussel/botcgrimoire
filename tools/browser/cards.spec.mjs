@@ -41,6 +41,55 @@ test('a card about a player comes up shown with their character, and the sheet s
   await expect(page.getByRole('dialog', { name: 'Show a card' })).toBeHidden()
 })
 
+test('a seat menu shows You are for its player in three taps', async ({ page }) => {
+  await openBoard(page)
+  const seat = impSeat(page)
+  const [player] = (await seat.getAttribute('aria-label')).split(', ')
+  await seat.click()
+  const menu = page.getByRole('group', { name: player, exact: true })
+  await menu.getByRole('button', { name: 'Show a card', exact: true }).click()
+  // The menu turns in place to the two cards about a player; the others stay under the eye.
+  await expect(menu.getByRole('button', { name: 'Add a reminder', exact: true })).toHaveCount(0)
+  await expect(menu.getByRole('button', { name: 'Token only', exact: true })).toHaveCount(0)
+  await expect(menu.getByRole('button', { name: 'Back', exact: true })).toBeFocused()
+  await menu.getByRole('button', { name: 'Back', exact: true }).click()
+  await expect(menu.getByRole('button', { name: 'Add a reminder', exact: true })).toBeVisible()
+  await menu.getByRole('button', { name: 'Show a card', exact: true }).click()
+  await menu.getByRole('button', { name: 'You are', exact: true }).click()
+
+  await expect(menu).toHaveCount(0)
+  const card = page.getByRole('dialog', { name: 'You are' })
+  await expect(card.getByText('IMP', { exact: true })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeVisible()
+})
+
+test('a card waiting for its player is named in the toolbar, and its cross cancels the pick', async ({ page }) => {
+  await openBoard(page)
+  const undo = page.getByRole('button', { name: 'Undo', exact: true })
+  const eye = page.getByRole('button', { name: 'Show a card', exact: true })
+  await expect(undo).toBeEnabled()
+  await chooseCard(page, 'This player is')
+
+  const hint = page.getByText('Tap a player', { exact: true })
+  await expect(hint).toBeVisible()
+  // The list may still be leaving, so the name is found beside the line.
+  await expect(hint.locator('..')).toContainText('This player is')
+  await expect(eye).toHaveAttribute('aria-pressed', 'true')
+  // What takes no tap during the pick is dimmed and out of reach.
+  await expect(undo).toBeDisabled()
+
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(hint).toHaveCount(0)
+  await expect(eye).not.toHaveAttribute('aria-pressed', 'true')
+  await expect(undo).toBeEnabled()
+  // The ring is back to its menus: a seat's tap brings up no card.
+  const seat = impSeat(page)
+  const [player] = (await seat.getAttribute('aria-label')).split(', ')
+  await seat.click()
+  await expect(page.getByRole('group', { name: player, exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'This player is' })).toHaveCount(0)
+})
+
 test('Change on a shown You are types another character, and one key shows it again', async ({ page }) => {
   await openBoard(page)
   await chooseCard(page, 'You are')

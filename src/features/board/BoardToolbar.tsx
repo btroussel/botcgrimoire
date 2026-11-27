@@ -1,15 +1,19 @@
 import { memo, useRef, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { Translate } from '../../content'
 import { EdgeButton } from '../../ui/EdgeButton'
 import type { IconName } from '../../ui/icons'
 import { useReducedMotion } from '../../ui/motion'
-import { hairline, palette, radius, shadows, space } from '../../ui/theme'
+import { font, hairline, palette, radius, shadows, space, touch, type } from '../../ui/theme'
 import { MenuItem, menuClass, menuStyles, menuSurface, togglePopover } from '../../ui/popover'
+import { slack, widthAtOnePoint } from './textWidth'
 
 export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDisabled, onShow, onArrange,
-  onLoose, looseDisabled, onHistory, historyDisabled, onEnd, onHome }: {
+  onLoose, looseDisabled, onHistory, historyDisabled, onEnd, onHome, picking, pickRoom, onCancelPick }: {
   readonly t: Translate
+  readonly picking?: string | undefined // the card a seat pick is for, named here while it waits
+  readonly pickRoom: number // how far the toolbar may grow to the left before it reaches Undo
+  readonly onCancelPick: () => void
   readonly arranging: boolean
   readonly arrangeDisabled: boolean
   readonly onShow: () => void
@@ -33,9 +37,22 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
   const item = ({ icon, label, action, disabled = false, armed = false }: {
     icon: IconName; label: string; action: () => void; disabled?: boolean; armed?: boolean }) =>
     <MenuItem icon={icon} label={label} onPress={() => choose(action)} disabled={disabled} armed={armed} />
+  // The pick's words take what the cross leaves. A line that would not fit whole drops, so the
+  // name keeps the room on the narrowest phone.
+  const textRoom = pickRoom - touch - 2 * space.xs
+  const hint = t('board.cardTapPlayer')
+  const hintFits = widthAtOnePoint(hint, font.body.bold) * Number(type.text.label.fontSize) * slack <= textRoom
   return <>
-    <View style={styles.edge}>
-      <EdgeButton icon="show" label={t('board.show')} onPress={onShow} />
+    {/* The pick's words cover the top of the ring on a phone, so a tap on them reaches the seat
+        under them rather than cancel the pick. */}
+    <View pointerEvents={picking !== undefined ? 'box-none' : 'auto'} style={styles.edge}>
+      {picking !== undefined ? <View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.pick, { maxWidth: textRoom + 2 * space.xs }]}>
+        <Text style={styles.title} numberOfLines={2}>{picking}</Text>
+        {hintFits ? <Text style={styles.hint} numberOfLines={1}>{hint}</Text> : null}
+      </View> : null}
+      {picking !== undefined ? <EdgeButton icon="close" label={t('common.cancel')} onPress={onCancelPick} /> : null}
+      {/* Brass while a card waits for its player, as More is while the seats are arranged. */}
+      <EdgeButton icon="show" label={t('board.show')} onPress={onShow} armed={picking !== undefined} />
       <div ref={trigger}>
         <EdgeButton icon="more" label={t('common.more')} onPress={() => togglePopover(menu.current, trigger.current, { reduced })} expanded={menuOpen} armed={arranging} />
       </div>
@@ -56,4 +73,7 @@ export const BoardToolbar = memo(function BoardToolbar({ t, arranging, arrangeDi
 const styles = StyleSheet.create({
   edge: { flexDirection: 'row', alignItems: 'center', padding: space.xxs, borderRadius: radius.control,
     backgroundColor: palette.ink, borderWidth: hairline, borderColor: palette.inkMuted, boxShadow: shadows.lifted },
+  pick: { flexShrink: 1, minWidth: 0, paddingHorizontal: space.xs },
+  title: { ...type.text.seatName, color: palette.text },
+  hint: { ...type.text.label, color: palette.muted },
 })

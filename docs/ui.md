@@ -165,10 +165,12 @@ name in every language. A small token keeps the label size, so a crowded or shor
 token size and no default name loses its number.
 
 The seat menu opens beside its token, wherever it covers the fewest other seats, so a neighbour
-stays tappable to move the menu there. It has no backdrop. Add a reminder comes first, since on a
-touch screen it is the only way to the reminder picker, then by day Nominate a player. While the
-nominee is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits)
-owns the actions.
+stays tappable to move the menu there. It has no backdrop. On a seat with a token, Show a card
+comes first and turns the menu in place to the two cards about a player, so You are, shown to every
+player on the first night, is three taps from the board. Add a reminder follows, since on a touch
+screen it is the only way to the reminder picker, then by day Nominate a player. While the nominee
+is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits) owns
+the actions.
 
 A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
 outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
@@ -274,8 +276,12 @@ tokens keeps a quiet Change in its top corner; it is a control, so a press on it
 hold.
 
 A card that needs a player lets you pick on the board itself, with no banner, so the ring does not
-shift. Any pick on the ring, a card's player or a
-nominee, ends on a tap off the seats or Escape, since a phone has no Escape key.
+shift. The toolbar names the pick instead: it grows to the left over the velvet with the card's
+name, a line saying to tap a player and a cross that cancels, the eye in brass, while the corners
+that take no tap meanwhile are dimmed. The ring keeps the room it had, and a tap on the words
+reaches the seat under them. A nomination's pick keeps its own marks. Any pick on the ring, a
+card's player or a nominee, ends on a tap off the seats or Escape, since a phone has no Escape
+key.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
 voter is covered. They name the nomination as the day's list does, nominator then nominee, with a

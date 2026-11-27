@@ -22,7 +22,7 @@ import type { BoardPanels } from '../../ui/Panel'
 import { PanelVisibilityContext } from '../../ui/Panel'
 import { PageEnter, Screen } from '../../ui/Screen'
 import { usePhone } from '../../ui/breakpoint'
-import { hairline, palette, radius, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
+import { hairline, motion, palette, radius, seatMetrics, shadows, space, tokenSize, type } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { Token } from '../../ui/Token'
 import { Velvet } from '../../ui/Velvet'
@@ -40,7 +40,7 @@ import { ReplayBar, replayBarHeight } from './ReplayBar'
 import { ReferenceRail } from './ReferenceRail'
 import type { ReferenceTab } from './ReferenceRail'
 import { useReferenceDrawer } from './useReferenceDrawer'
-import { boardGeometry, centrePanelWidth, tokenStripHeight, toolbarHeight } from './boardGeometry'
+import { boardGeometry, centrePanelWidth, tokenStripHeight, toolbarHeight, undoSize } from './boardGeometry'
 import { ArrangeControls, hintRoom } from './ArrangeControls'
 import { centreSpot, isFree, layoutPositions, toPlace } from './freeLayout'
 import type { Point } from './freeLayout'
@@ -90,6 +90,9 @@ const tallBoard = 600
 // Docked actions take the foot from the bluffs and the plaque, which stay measured where they
 // were, so the ring does not move as the game ends.
 const aside = { 'aria-hidden': true, pointerEvents: 'none' } as const
+// While a card waits for its player, the controls that have nothing to do with the pick are dimmed
+// and let a tap through to the velvet, where it cancels the pick as any tap off the seats does.
+const resting = { pointerEvents: 'none' } as const
 // A control measured again at the same size keeps the board's layout as it was.
 const sameSize = (next: Size) => (previous: Size) => previous.width === next.width && previous.height === next.height ? previous : next
 
@@ -138,6 +141,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   if (!arranging && chosenSeat !== undefined) setChosenSeat(undefined)
   const choosingSeats = !!interaction.pick || !!interaction.seatAction
   const { pick, cancelRequest } = interaction
+  const naming = pick?.title
   const hasCenterPanel = !!interaction.centerPanel
   const [hadCenterPanel, setHadCenterPanel] = useState(hasCenterPanel)
   if (hadCenterPanel !== hasCenterPanel) {
@@ -357,6 +361,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
 
   const phaseAction = live && !over
   const toolbar = <BoardToolbar t={t}
+    picking={naming} onCancelPick={cancelRequest}
+    pickRoom={availableWidth - 2 * space.md - space.sm - undoSize - toolbarSize.width}
     arranging={arranging} onArrange={toggleArrange}
     arrangeDisabled={seatCount >= maxSeats && (seatCount < 2 || hasCenterPanel)}
     onShow={openShow}
@@ -425,7 +431,8 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           <View onLayout={event => {
             const { width, height } = event.nativeEvent.layout
             setBluffsSize(sameSize({ width, height }))
-          }} {...(actionsDocked ? aside : {})} style={actionsDocked ? styles.aside : null}>
+          }} {...(actionsDocked ? aside : naming !== undefined ? resting : {})}
+          style={actionsDocked ? styles.aside : naming !== undefined ? styles.resting : null}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
               ? <BoardBluffs bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} onOpen={openBluffs} />
@@ -445,9 +452,9 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <View ref={tableView} style={[styles.root, styles.row]}>
           {table}
         </View>
-        <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)} {...(actionsDocked ? aside : {})}
+        <View onLayout={event => setClockHeight(event.nativeEvent.layout.height)} {...(actionsDocked ? aside : naming !== undefined ? resting : {})}
           style={[styles.clockCorner, { right: insets.right + space.md, bottom: insets.bottom + space.md + (b.lookingBack ? replayBarHeight : 0) },
-            actionsDocked ? styles.aside : null]}>
+            actionsDocked ? styles.aside : naming !== undefined ? styles.resting : null]}>
           <PhasePlaque t={t} windowOpen={phaseAction && (phaseOpen || choosingSeats)}
             clock={{ width: clockWidth,
               // A result on the velvet says the game is over; an older ending without one needs saying here.
@@ -483,19 +490,21 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         {actionsDocked ? <GameOverActions t={t} docked onPlayAgain={b.playAgain} onReplay={b.enterReplay} onHome={b.goHome}
           style={[styles.dockedPanel, styles.dockedActions, { left: insets.left, right: insets.right, bottom: insets.bottom + space.md }]} /> : null}
         {/* A finished game needs neither Show a card nor More: what it offers is under the result. */}
+        {/* A pick named in the toolbar grows it over the velvet, so the ring keeps the room it
+            had and no seat moves. */}
         {live && !over ? <View onLayout={event => {
           const { width, height } = event.nativeEvent.layout
-          setToolbarSize(sameSize({ width, height }))
-        }}
+          if (naming === undefined) setToolbarSize(sameSize({ width, height }))
+        }} pointerEvents="box-none"
           style={[styles.floatingToolbar, { top: insets.top + space.md, right: insets.right + space.md }]}>{toolbar}</View> : null}
         {/* Alone in its corner, away from Show a card and More: nothing puts an undone action
             back, so a tap aimed at another control must never land here. */}
         {live ? <View style={[styles.floatingToolbar, styles.undo, { top: insets.top + space.md, left: insets.left + space.md }]}>
-          <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo} />
+          <EdgeButton icon="undo" label={t('common.undo')} onPress={() => undo?.()} disabled={!undo || naming !== undefined} />
         </View> : null}
         {/* Mounted in replay too, hidden, so the drawer remembers its position for the board session. */}
         <ReferenceDrawer shown={live} tab={referenceTab} viewport={availableWidth} upright={!landscape} seatsRight={seatsRight} board={tableView}
-          seatTapsAct={!choosingSeats && !arranging}
+          seatTapsAct={!choosingSeats && !arranging} resting={naming !== undefined}
           top={insets.top + toolbarHeight} right={insets.right} bottom={insets.bottom + space.sm}
           height={window.height - insets.top - insets.bottom - toolbarHeight - space.sm} bottomClearance={clockHeight + space.md}
           onTabChange={changeReference} onOpen={openReference} onClose={closeReference} onReserve={setReservedWidth} />
@@ -572,6 +581,7 @@ interface ReferenceDrawerProps {
   readonly upright: boolean // a window no wider than it is tall, which docks the drawer sooner
   readonly board: RefObject<ViewInstance | null> // the table: seats, ring and bluffs, under the drawer
   readonly seatTapsAct: boolean // a seat tap only opens its menu: no vote, pick or arrangement is running
+  readonly resting: boolean // a named pick is waiting, so the tabs and paper are dimmed
   readonly seatsRight: number // the right edge of the rightmost token, in board coordinates
   readonly top: number
   readonly right: number
@@ -587,7 +597,7 @@ interface ReferenceDrawerProps {
 // The reference and its drawer. The width changes on every frame of a slide or a drag, so it
 // stays here, and the board hears only the width it gives up: below the docking minimum's width
 // that never changes, so the ring and the corners are left alone while the paper moves.
-const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, seatTapsAct, top, right, bottom, height,
+const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, upright, seatsRight, board, seatTapsAct, resting: dimmed, top, right, bottom, height,
   bottomClearance, onTabChange, onOpen, onClose, onReserve }: ReferenceDrawerProps) {
   const drawer = useReferenceDrawer(tab !== null, viewport, upright, onOpen, onClose, onReserve)
   const { referenceWidth } = boardLayoutFor(viewport, drawer.width, upright)
@@ -627,7 +637,7 @@ const ReferenceDrawer = memo(function ReferenceDrawer({ shown, tab, viewport, up
   }, [closing, seatTapsAct, board, onClose])
   if (!shown) return null
   return <>
-    <View style={[styles.referenceRail, { top, right, zIndex: 5, bottom }]}>
+    <View {...(dimmed ? resting : {})} style={[styles.referenceRail, { top, right, zIndex: 5, bottom }, dimmed ? styles.resting : null]}>
       <ReferenceRail tab={tab} width={referenceWidth} bottomClearance={bottomClearance}
         height={height} maximumWidth={drawer.maximum}
         dragging={drawer.dragging} dragHandlers={drawer.handlers} onResizeKey={drawer.keyboard}
@@ -659,6 +669,7 @@ const styles = StyleSheet.create({
   dockedPanel: { position: 'absolute', zIndex: 7 },
   dockedActions: { alignItems: 'center' },
   aside: { opacity: 0 },
+  resting: { opacity: motion.disabledOpacity },
   grant: { alignItems: 'center', width: tokenSize.corner + space.xl },
   grantName: { textAlign: 'center', width: tokenSize.corner + space.xl },
 })

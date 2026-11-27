@@ -142,6 +142,10 @@ sheet asks for more often than any of them, and a written note. A homebrew chara
 text, from its script, adds one more card with its token
 ([Content](content.md#homebrew-characters)).
 
+You are and This player is also start from a seat's menu, under Show a card, which brings the card
+up for that seat as the list does after its pick. The other cards have nothing to do with a seat
+and stay in the list.
+
 A card whose content is already known comes up shown: You are and This player is once their
 player's seat is tapped, the not-in-play card with the saved bluffs, and the two cards of words.
 One whose content is not known comes up empty for the Storyteller to fill: This character selected

@@ -6,7 +6,7 @@
 // (docs/app.md); ui/ knows no engine type, so a seat is a plain string id here, and a card is the
 // props the Card piece takes and nothing about the event it will append.
 //
-// A request: `requestSeats` puts the ring in pick mode, with no prompt or phase controls. Only
+// A request: `requestSeats` puts the ring in pick mode, with no prompt on the ring and no phase controls. Only
 // `allowed` seats take a tap. The board calls `pickSeat` on a ring tap, which completes the
 // request and hands that seat to `onDone`; `cancelRequest` clears it, as a tap off the seats or
 // Escape does. The board hides the phase window while a pick is open, so the whole ring is reachable.
@@ -43,12 +43,14 @@ export interface CardSpec {
 
 // One seat to pick from those allowed; the first tap on one completes it. A pick that starts from
 // a seat, as a nomination does from its nominator, marks that seat, and each seat may carry a
-// label saying what its tap does.
+// label saying what its tap does. A pick with a title is named in the toolbar while it waits,
+// with a cross that cancels it; one without, as a nomination's, keeps the ring's own marks.
 export interface SeatRequest {
   readonly allowed: readonly string[]
   readonly onDone: (seat: string) => void
   readonly chosen?: string
   readonly label?: (seat: string, name: string) => string
+  readonly title?: string
 }
 
 // A card on screen, and whether it came up for the Storyteller to fill or to show at once.

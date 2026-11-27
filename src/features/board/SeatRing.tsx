@@ -41,6 +41,8 @@ import { countStartBetween, countStartOnRing, seatPositions, stackAngle } from '
 import { gapMarkerSize } from './ringLayout'
 import type { BoardControlBounds, RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
+import { believed } from './show'
+import { useOpenCard } from './ShowSheet'
 import { placeSeatMenu } from './seatMenu'
 import { SeatActionDialog } from './SeatActionDialog'
 import type { SeatDialogAction } from './SeatActionDialog'
@@ -120,6 +122,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
+  const { openSeat } = useOpenCard()
   const [expandedSeat, setExpandedSeat] = useState<string | undefined>(undefined)
   const [contextSeat, setContextSeat] = useState<string | undefined>(undefined)
   // The last seat dialog stays mounted after it closes, so it can leave like every other window.
@@ -380,6 +383,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
           alignment={contextPlayer.alignment} dead={contextPlayer.dead} ghostVote={contextPlayer.ghostVote} anchor={contextAt}
           place={(menu, room) => placeSeatMenu({ at: contextAt, size, centre, room, menu, others: positions.filter((_, i) => i !== contextIndex && i < seats.length) })}
           onClose={closeContext} onCharacter={() => openSeatAction('character')}
+          {...(e.board && believed(e.board, contextPlayer.id) !== undefined
+            ? { onShowCard: kind => { closeContext(); openSeat(kind, contextPlayer.id) } } : {})}
           {...(onAddReminder ? { onReminder: () => { closeContext(); onAddReminder(contextPlayer.id) } } : {})}
           onRemove={() => openSeatAction('remove')}
           onRename={name => e.append(edits.renameSeat(contextPlayer.id, name))}

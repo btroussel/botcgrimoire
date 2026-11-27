@@ -33,9 +33,26 @@ const labelKey: Readonly<Record<ShowKind, string>> = {
   notInPlay: 'board.notInPlayWords',
 }
 
+// Brings a card up as opening() decides, shown or ready to fill. The list and a seat's menu
+// share it, so a card about a player comes up the same from either.
+export const useOpenCard = () => {
+  const e = useEdits()
+  const interaction = useBoardInteraction()
+  const open = (kind: ShowKind, choice: ShowChoice) => {
+    if (!e.board) return
+    const card = opening(e.board, kind, choice, e.t(labelKey[kind]), e.name)
+    if (card) interaction.showCard(card.spec, card.editing)
+  }
+  const openSeat = (kind: ShowKind, seat: SeatId) => {
+    if (e.board) open(kind, { seat, characters: seatStart(e.board, kind, seat) })
+  }
+  return { open, openSeat }
+}
+
 export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
   const e = useEdits()
   const interaction = useBoardInteraction()
+  const { open, openSeat } = useOpenCard()
   const t = e.t
   const board = e.board
   const [note, setNote] = useState<string | undefined>(undefined) // the note step while set
@@ -57,11 +74,6 @@ export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
     kind: 'custom', key: `card/${c.character}/${c.text}`, label: c.text, characters: [c.character],
   }))]
 
-  const open = (kind: ShowKind, choice: ShowChoice) => {
-    if (!board) return
-    const card = opening(board, kind, choice, t(labelKey[kind]), e.name)
-    if (card) interaction.showCard(card.spec, card.editing)
-  }
   const pickToken = (item: InfoTokenItem) => {
     if (item.kind === 'custom') {
       const own = item.characters?.[0] as CharacterId | undefined
@@ -78,10 +90,11 @@ export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
     onClose()
     if (token.about === 'seat') {
       // A seat without a token has nothing to start from, so it takes no tap. The seat's tap
-      // brings the card up; the list has done its job.
+      // brings the card up; the list has done its job. The toolbar names the card meanwhile.
       interaction.requestSeats({
         allowed: board.seats.filter(s => believed(board, s.id) !== undefined).map(s => s.id),
-        onDone: (seat) => open(token.kind, { seat: seat as SeatId, characters: seatStart(board, token.kind, seat as SeatId) }),
+        title: t(labelKey[token.kind]),
+        onDone: (seat) => openSeat(token.kind, seat as SeatId),
       })
     } else if (token.about === 'bluffs') {
       // One picker for one job: with none saved, the tray's picker chooses them and saves what
