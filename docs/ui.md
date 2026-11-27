@@ -225,6 +225,12 @@ tap on one of its rows opens the drawer full, that once: the next opening keeps 
 dragged to. Nothing dims behind a drawer, the ring never jumps during a drag, and wider than a
 phone a fully open drawer leaves some board in reach.
 
+A drawer's tabs are cut from its paper, like the index tabs of a ledger. The open tab is the
+sheet's own vellum and joins it with no line between them. The others lie under an ink wash, a
+shade darker, and tuck under the sheet's edge while it is out. There is no drag handle: a paper
+tab is already the thing to pull. The resize separator is for the keyboard, and draws only while
+focused. Each sheet opens on its title in Grenze, the script's name or the night's, on one line.
+
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
 the compact drawer docks beside it and covers no seat. A window on its side is short, so its ring
