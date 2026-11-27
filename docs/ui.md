@@ -232,11 +232,13 @@ shade darker, and tuck under the sheet's edge while it is out. There is no drag 
 tab is already the thing to pull. The resize separator is for the keyboard, and draws only while
 focused. A sheet carries no title: its open tab names it.
 
-The three sheets share one row: the art, the name with its players under it, the text beside, and
-a line under the row that starts at the name. A night's rows are the characters' rows, in the
-night's order, and the step being read wears the brass ring round its art: a tap on a step moves
-the ring there, at either width. The filter between what is in play and the whole script heads
-every sheet and stays while the rows scroll. A team's name is the word alone, in its colour.
+The three sheets share one row: the art, the name with its players under it, and the text beside.
+No line runs between rows, since spacing sets them apart and lines made a table of the open sheet.
+A night's rows are the characters' rows, in the night's order, and the step being read lies under
+an ink wash with a brass edge, across the whole row so its text is marked with its name: a tap on
+a step moves the wash there, at either width. The filter between what is in play and the whole
+script heads every sheet and stays while the rows scroll. A team's name is the word alone, in its
+colour.
 
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points

@@ -18,7 +18,7 @@ import { PaperTexture } from '../../ui/PaperTexture'
 import { nightMarkerArt } from '../../ui/scriptSheet/Reference'
 import { RuleList } from '../../ui/scriptSheet/Rules'
 import { Segment } from './Segment'
-import { font, indexTab, palette, ring, space, touch, type } from '../../ui/theme'
+import { font, indexTab, palette, space, touch, type } from '../../ui/theme'
 import { nightEntries, recordedCharacters, seatCharacters } from './nightReference'
 
 export type ReferenceTab = 'characters' | 'first' | 'other'
@@ -135,10 +135,10 @@ const sameRow = <P extends { readonly layout: RowLayout; readonly players: reado
   (Object.keys(a) as (keyof P)[]).every(key => key === 'players' ? samePlayers(a.players, b.players)
     : key === 'layout' ? sameLayout(a.layout, b.layout) : a[key] === b[key])
 
-// One row on every sheet: the art and the name, the text beside them once the paper is out, and
-// a line under it that starts at the name, clear of the art and of the ring a night puts round
-// it. While the paper shows names only, a tap unfolds the text under its name: one ability is
-// read without the paper covering the board.
+// One row on every sheet: the art and the name, and the text beside them once the paper is out.
+// Spacing alone sets the rows apart: a line under each was a stub while the paper showed names
+// and made a table of the open sheet. While the paper shows names only, a tap unfolds the text
+// under its name: one ability is read without the paper covering the board.
 const Row = ({ layout, identity, text, open, onPress, current }: {
   readonly layout: RowLayout
   readonly identity: ReactNode
@@ -153,12 +153,12 @@ const Row = ({ layout, identity, text, open, onPress, current }: {
     {text ? <ReferenceDescription expansion={layout.expansion} width={layout.descriptionWidth}>{text(type.text.body)}</ReferenceDescription> : null}
   </>
   return <View>
+    {current ? <View pointerEvents="none" style={styles.here} /> : null}
     {onPress ? <Pressable accessibilityRole="button" onPress={onPress}
       aria-expanded={compact && text ? open : undefined} aria-current={current ? 'step' : undefined}
       style={state => [styles.rowLine, focusStyle(palette, layout.focusVisible && isFocused(state), 'paper')]}>{line}</Pressable>
       : <View style={styles.rowLine}>{line}</View>}
     {compact && open && text ? <View style={[styles.fold, { width: layout.foldWidth }]}>{text(type.text.small)}</View> : null}
-    <View pointerEvents="none" style={[styles.rowRule, { left: layout.artSize + space.sm }]} />
   </View>
 }
 
@@ -214,7 +214,7 @@ interface NightRowProps {
   readonly instruction: string
   readonly players: readonly Player[]
   readonly deadLabel: string
-  readonly current: boolean // the step being read, which wears the ring
+  readonly current: boolean // the step being read, which lies under the wash
   readonly open: boolean
   readonly onStep: (id: string) => void
 }
@@ -226,7 +226,6 @@ const NightRow = memo(function NightRow({ layout, id: entry, label, character: i
   return <Row layout={layout} open={open} onPress={() => onStep(entry)} current={current}
     identity={<>
       <View style={[styles.art, { width: artSize }]}>
-        {current ? <View pointerEvents="none" style={[styles.here, { borderRadius: artSize / 2 + ring.gap + ring.width }]} /> : null}
         {id ? <CharacterIcon id={id} size={artSize} /> : art !== undefined ?
           <Image source={art} style={{ width: artSize, height: artSize }} /> : null}
       </View>
@@ -300,8 +299,8 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   const entries = useMemo(() => board ? nightEntries(board, night, orders, text, filters.night) : [], [board, night, orders, text, filters.night])
   const compact = width <= compactWidth
   const moment = board ? `${board.clock.night}:${board.clock.phase}` : ''
-  // A tap moves the ring and, on a compact drawer, opens the step's text; a second tap there
-  // folds the text and leaves the ring.
+  // A tap moves the wash and, on a compact drawer, opens the step's text; a second tap there
+  // folds the text and leaves the wash.
   const readStep = useCallback((id: string) => setStep(previous => {
     const same = previous?.moment === moment && previous.night === night && previous.id === id
     return { moment, night, id, open: !(compact && same && previous.open) }
@@ -390,7 +389,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
             const rows = shownList.filter(row => row.team === team)
             if (!rows.length) return null
             return <View key={team} style={styles.team}>
-              {/* The word alone: every row below it already ends in a line. */}
+              {/* The word alone: its colour and the gap above it already set the team apart. */}
               <Text accessibilityRole="header" style={[type.text.label, styles.teamHeading, { color: palette.teamOnPaper[team], width: headingWidth }]}>{teams[team]}</Text>
               {rows.map(entry => <CharacterRow key={entry.id} layout={row} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability}
                 players={playersOf(entry.id)} deadLabel={t('board.dead')} open={unfolded.has(entry.id)} onToggle={toggle}
@@ -442,14 +441,11 @@ const styles = StyleSheet.create({
   team: { gap: space.xxs, marginBottom: space.sm },
   teamHeading: { paddingTop: space.md, paddingBottom: space.xxs },
   rowLine: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.sm },
-  // The row's line is what ties a text to its name, so it is drawn in half-strength coffee: the
-  // rule colour is too close to the vellum to find in a dim room.
-  rowRule: { position: 'absolute', right: 0, bottom: 0, height: 1, backgroundColor: palette.inkMuted, opacity: 0.5 },
   fold: { paddingBottom: space.sm },
-  here: { position: 'absolute', top: -(ring.gap + ring.width), right: -(ring.gap + ring.width), bottom: -(ring.gap + ring.width), left: -(ring.gap + ring.width),
-    borderColor: palette.accent, borderWidth: ring.width,
-    // Brass alone is faint on vellum, so the ring is edged in coffee on both sides.
-    boxShadow: `0 0 0 1px ${palette.inkMuted}, inset 0 0 0 1px ${palette.inkMuted}` },
+  // The step being read. The wash covers the whole row, so the text being read is marked with its
+  // name, and reaches into the sheet's margin, where the brass edge has room.
+  here: { position: 'absolute', top: space.xxs, bottom: space.xxs, left: -space.sm, right: -space.sm, borderRadius: 6,
+    backgroundColor: palette.paperPressed, borderLeftColor: palette.accent, borderLeftWidth: 4 },
   identity: { flexShrink: 0, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   art: { minHeight: 36, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   names: { flex: 1, minWidth: 0 },
