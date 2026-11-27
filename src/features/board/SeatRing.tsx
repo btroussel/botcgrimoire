@@ -82,6 +82,7 @@ export interface SeatRingProps {
   readonly onMoveSeat?: (seat: SeatId, to: SeatId | number, spot?: Point) => void
   readonly onPlaceSeat?: (seat: SeatId, at: Point) => void // let go over the velvet, at a spot clear of the rest
   readonly chosenSeat?: SeatId // arranging: the seat a tap picked up, which the next tap moves
+  readonly ringed?: SeatId // the seat a drawer is changing, which keeps the brass ring meanwhile
   readonly onChooseSeat?: (seat: SeatId | undefined) => void
   readonly panelDocked?: boolean // the board draws the centre panel at its foot instead
   readonly panelAt?: Point // where the centre panel sits on a laid-out board, clear of every seat
@@ -118,7 +119,7 @@ interface Landing {
 }
 
 export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry, free = false, obstacles = noObstacles, t, onAddReminder, onRemoveReminder, onMoveReminder,
-  onEditNote, onGap, onTurn, onArrangeDone, onBackToCircle, turnAt, turnDocked = false, onTurnSize, onMoveSeat, onPlaceSeat, chosenSeat, onChooseSeat,
+  onEditNote, onGap, onTurn, onArrangeDone, onBackToCircle, turnAt, turnDocked = false, onTurnSize, onMoveSeat, onPlaceSeat, chosenSeat, onChooseSeat, ringed,
   readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
@@ -244,6 +245,8 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   const centre = { x: band.width / 2, y: band.height / 2 }
   const contextIndex = !pick && !action && !onGap && !onArrangeDone ? seats.findIndex(seat => seat.id === contextSeat) : -1
   const contextPlayer = seats[contextIndex]
+  // The seat whose character or reminder a drawer is choosing.
+  const drawerSeat = dialogOpen && dialog?.kind === 'character' ? dialog.seatId : ringed
   const contextAt = positions[contextIndex]
   const closeContext = () => setContextSeat(undefined)
   const openSeatAction = (section: 'character' | 'remove') => {
@@ -329,7 +332,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
             angle={reminderAngle} raised={expandedSeat === seat.id} rank={tracked.ranks.get(seat.id)}
             stagger={tracked.ranks.has(seat.id) ? stagger : 0} arrived={tracked.arrived.has(seat.id)} seatCount={seats.length} index={i}
             placed={seat.place ? `${seat.place.x},${seat.place.y}` : ''}
-            selected={inPick ? chosen : arranging ? liftedSeat === undefined && mover?.id === seat.id : contextPlayer?.id === seat.id || undefined}
+            selected={inPick ? chosen : arranging ? liftedSeat === undefined && mover?.id === seat.id : contextPlayer?.id === seat.id || drawerSeat === seat.id || undefined}
             pickable={inPick ? allowed : swapTarget || undefined} allowed={allowed}
             quietPick={!!vote && !pick} readOnly={readOnly} editChips={editable}
             canRemove={!!onRemoveReminder && editable} canAdd={!!onAddReminder && editable}

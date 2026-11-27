@@ -88,7 +88,8 @@ export const palette: Palette = {
 
 // The scrims behind a sheet and behind the one dialog. `table` puts the board almost out behind
 // the two tokens that end a game: they stand wider than the ring's middle, over the seats.
-export const scrim = { sheet: 'rgba(0,0,0,0.35)', dialog: 'rgba(0,0,0,0.5)', table: 'rgba(10,5,7,0.86)' } as const
+// `drawer` is light, since the seats a drawer fills stay readable behind it.
+export const scrim = { sheet: 'rgba(0,0,0,0.35)', drawer: 'rgba(0,0,0,0.18)', dialog: 'rgba(0,0,0,0.5)', table: 'rgba(10,5,7,0.86)' } as const
 
 // ---------------------------------------------------------------------------------------------
 // Type. Two bundled faces. Grenze for display only: a serif with blackletter bones, the game's
@@ -309,6 +310,11 @@ export const card = {
 // The token keyboard: printed tokens as keys, one point over the touch target so a key never
 // falls under it, seven across where the width allows.
 export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20 } as const
+
+// The drawer the board's token sheets come up in: full width up to the pickers' old width, and
+// never so tall that the board above it is gone. Beside the seat it changes it may stop as short
+// as `leastShare`, which still lists a few rows of keys. `well` is a bluff well in its dock.
+export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.4, well: 56 } as const
 
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half

@@ -49,6 +49,43 @@ test.describe('seat menu on touch screens', () => {
   }
 })
 
+// The paper a drawer holds, from its title to its lowest control.
+const drawerBox = async drawer => {
+  const boxes = [await drawer.getByRole('heading').first().boundingBox(), ...await drawer.getByRole('button').evaluateAll(buttons => buttons.map(b => b.getBoundingClientRect().toJSON()))]
+  const top = Math.min(...boxes.map(b => b.y))
+  const bottom = Math.max(...boxes.map(b => b.y + b.height))
+  return { x: 0, width: 10000, y: top, height: bottom - top }
+}
+
+test('a seat\'s character and reminders come up in a drawer that leaves the seat in view and ringed', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openBoard(page, 7)
+  const seats = page.locator('[data-seat-context-target]')
+  // The top seat, and two near the foot, where a drawer from the foot would cover them.
+  for (const index of [0, 3, 4]) {
+    const token = seats.nth(index).getByRole('button').first()
+    await token.click()
+    await page.getByRole('group', { name: `Seat ${index + 1}`, exact: true }).getByRole('button', { name: 'Change character', exact: true }).click()
+    const characters = page.getByRole('dialog', { name: `Character for Seat ${index + 1}` })
+    await expect(characters.getByRole('button', { name: 'Chef', exact: true })).toBeVisible()
+    await expect(token).toHaveAttribute('aria-pressed', 'true')
+    expect(overlap(await drawerBox(characters), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    await characters.getByRole('button', { name: 'Chef', exact: true }).click()
+    await expect(characters).toBeHidden()
+    await expect(token).toHaveAccessibleName(/, Chef$/)
+
+    await token.click()
+    await page.getByRole('group', { name: `Seat ${index + 1}`, exact: true }).getByRole('button', { name: 'Add a reminder', exact: true }).click()
+    const reminders = page.getByRole('dialog', { name: `Reminder for Seat ${index + 1}` })
+    await expect(reminders.getByRole('button', { name: 'Write a note', exact: true })).toBeVisible()
+    await expect(token).toHaveAttribute('aria-pressed', 'true')
+    expect(overlap(await drawerBox(reminders), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    await reminders.getByRole('button', { name: /, / }).first().click()
+    await expect(reminders).toBeHidden()
+    await expect(seats.nth(index).locator('[data-chip] [role="button"]')).toHaveCount(1)
+  }
+})
+
 test('arranging the seats adds a seat and turns the ring in one pass, and survives a reload', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openBoard(page, 5)

@@ -111,6 +111,12 @@ const goodByPlay = (g: Grimoire, recorded: boolean): readonly CharacterId[] => {
 // The bluff catalogue excludes recorded characters.
 export const bluffChoices = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, false)
 
+// Where a seat's token stands in the window, so a drawer that changes the seat can leave it in view.
+export const seatSpan = (seat: string): { readonly top: number; readonly bottom: number; readonly left: number; readonly right: number } | undefined => {
+  const token = document.querySelector(`[data-seat-context-target="${seat}"] [role="button"]`)?.getBoundingClientRect()
+  return token ? { top: token.top, bottom: token.bottom, left: token.left, right: token.right } : undefined
+}
+
 // The night sheet shows the Lunatic "3 good character tokens", not the Demon's not-in-play ones, so
 // the card offers these too.
 export const goodInPlay = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, true)

@@ -58,12 +58,23 @@ is read from the brackets.
 
 Editing windows float in the centre with a margin on every side, phones included. They never stick
 to an edge. Their content scrolls and their actions stay inside the window. Close, Escape and a tap
-outside dismiss one. The one exception is the tokens on a card, typed from keys docked at the foot
-of an upright window, where a device's keyboard lives, or in a column on the right of a wide one,
-which has no height to give. The card being filled stays in view above them as its own preview, so
-the Storyteller sees exactly what the player will. A note's words are typed on the card in the
-card's own type, so the field is the preview too; its token keys and the device's keyboard take the
-same place in turn, and the card follows the visible viewport so its bar stays above the keyboard.
+outside dismiss one. There are two exceptions, both where what is being filled must stay in view.
+
+The tokens on a card are typed from keys docked at the foot of an upright window, where a device's
+keyboard lives, or in a column on the right of a wide one, which has no height to give. The card
+being filled stays in view above them as its own preview, so the Storyteller sees exactly what the
+player will. A note's words are typed on the card in the card's own type, so the field is the
+preview too; its token keys and the device's keyboard take the same place in turn, and the card
+follows the visible viewport so its bar stays above the keyboard.
+
+The board's three token sheets, a seat's character, a reminder and the bluffs, are a drawer of the
+same keys that comes up from the foot, since a centred window would cover the seats it changes. It
+is full width up to a readable maximum, at most four fifths of the window, over a light scrim that
+leaves the board readable. A seat it changes keeps the brass ring; when the drawer would cover that
+seat it takes the edge with more room and stops short of it. Reminders are keys too, under the same
+rule labels as the characters. Everything read rather than scanned keeps the centred window: the
+list of cards, Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks its
+wells and Save at its foot, and Shuffle sits in its top row, away from Save.
 
 ## Motion
 

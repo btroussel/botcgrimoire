@@ -114,6 +114,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const t = b.t
   const [showOpen, setShowOpen] = useState(false)
   const [bluffsOpen, setBluffsOpen] = useState(false)
+  const [bluffsWell, setBluffsWell] = useState<number>()
   const [looseOpen, setLooseOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
@@ -275,7 +276,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const editNote = useCallback((placedBy: EventId) => setNoteTarget({ kind: 'placed', placedBy }), [])
   // The toolbar keeps the same handlers from render to render, so an edit leaves it alone.
   const openShow = useCallback(() => setShowOpen(true), [])
-  const openBluffs = useCallback(() => setBluffsOpen(true), [])
+  const openBluffs = useCallback((well?: number) => { setBluffsWell(well); setBluffsOpen(true) }, [])
   const openLoose = useCallback(() => setLooseOpen(true), [])
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
@@ -417,6 +418,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
               {...(turnAt ? { turnAt } : {})} turnDocked={turnDocked} onTurnSize={updateTurnSize}
               panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal}
               {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
+              {...(reminderTarget !== undefined ? { ringed: reminderTarget } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
               {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(free ? { onBackToCircle: backToCircle } : {}),
                 ...(seatCount > 1 ? { onTurn: turnSeats, onMoveSeat: moveSeat, onPlaceSeat: placeSeat,
@@ -526,7 +528,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           onWriteNote={seat => { setReminderTarget(undefined); setNoteTarget({ kind: 'new', seat }) }} />
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
         <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onBluffs={openBluffs} />
-        <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
+        <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} well={bluffsWell} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
         <EndGame visible={endOpen} t={t} window={window}

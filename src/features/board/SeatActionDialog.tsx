@@ -3,10 +3,11 @@ import { useState } from 'react'
 import type { CharacterId } from '../../content'
 import { emptySeat, isEmptySeat } from '../../content'
 import { Confirm } from '../../ui/Confirm'
+import { Drawer } from '../../ui/Drawer'
 import { EdgeButton } from '../../ui/EdgeButton'
-import { Picker } from '../../ui/Picker'
 import { palette } from '../../ui/theme'
-import { edits, pickerGroups, roster } from './seat'
+import { TokenKeys } from '../../ui/TokenKeys'
+import { characterGroups, edits, seatSpan } from './seat'
 import { useEdits } from './useEdits'
 
 export interface SeatDialogAction {
@@ -15,7 +16,8 @@ export interface SeatDialogAction {
 }
 
 // These actions finish at the board, with no player-details screen underneath. A closing dialog
-// keeps the seat it was opened for, so Remove the seat can fade out after its seat has gone.
+// keeps the seat it was opened for, so Remove the seat can fade out after its seat has gone. The
+// character comes up in a drawer that leaves the seat in view, from wherever it stood as it opened.
 export const SeatActionDialog = ({ action, visible, onClose }: {
   readonly action: SeatDialogAction
   readonly visible: boolean
@@ -25,6 +27,12 @@ export const SeatActionDialog = ({ action, visible, onClose }: {
   const found = e.board?.seats.find(candidate => candidate.id === action.seatId)
   const [kept, setKept] = useState(found)
   if (found && found !== kept) setKept(found)
+  const [span, setSpan] = useState(() => seatSpan(action.seatId))
+  const [opened, setOpened] = useState(visible)
+  if (visible !== opened) {
+    setOpened(visible)
+    if (visible) setSpan(seatSpan(action.seatId))
+  }
   const seat = found ?? kept
   if (!seat || !e.board || e.lookingBack) return null
   if (action.kind === 'remove') return <Confirm visible={visible}
@@ -34,10 +42,11 @@ export const SeatActionDialog = ({ action, visible, onClose }: {
 
   const choose = (to: string) => { e.append(edits.setCharacter(seat.id, to as CharacterId)); onClose() }
   const empty = isEmptySeat(seat.character)
-  return <Picker visible={visible} title={e.t('board.character')} onClose={onClose} closeLabel={e.t('common.close')}
-    groups={pickerGroups(roster(e.board.script), e.teamLabel, palette.teamOnPaper,
-      characterId => ({ id: characterId, character: characterId, name: e.name(characterId) }))}
-    tokenGrid {...(!empty ? { selected: [seat.character] } : {})} onPick={choose}
-    right={!empty ? <EdgeButton label={e.t('board.clearCharacter')} onPress={() => choose(emptySeat)} /> : null}
-    emptyLabel={e.t('board.nothingMatches')} />
+  const groups = characterGroups(e.board.script).map(g => ({ key: g.team, label: e.teamLabel(g.team), color: palette.teamOnPaper[g.team],
+    keys: g.ids.map(id => ({ id, name: e.name(id) })) }))
+  return <Drawer visible={visible} title={e.t('board.characterFor', { name: seat.name })} onClose={onClose} closeLabel={e.t('common.close')}
+    {...(span ? { avoid: span } : {})}
+    {...(!empty ? { right: <EdgeButton label={e.t('board.clearCharacter')} onPress={() => choose(emptySeat)} /> } : {})}>
+    <TokenKeys groups={groups} chosen={empty ? [] : [seat.character]} onPress={k => choose(k.id)} />
+  </Drawer>
 }

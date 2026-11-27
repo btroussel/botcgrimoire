@@ -208,31 +208,85 @@ test('a long name under a token keeps its word whole on the narrowest phone', as
   }
 })
 
-test('the not-in-play card with no bluffs saved opens the tray\'s picker, so the tray holds what was shown', async ({ page }) => {
+// The bluffs drawer's keys: every token key wears aria-pressed, and the wells are named Bluff.
+const bluffKeys = drawer => drawer.locator('[role="button"][aria-pressed]:not([aria-label^="Bluff"])')
+const keyNames = async (drawer, count) => (await bluffKeys(drawer).evaluateAll(keys => keys.map(key => key.getAttribute('aria-label')))).slice(0, count)
+const wellNames = drawer => drawer.getByRole('button', { name: /^Bluff/ }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
+const trayNames = tray => tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
+
+test('the not-in-play card with no bluffs saved opens the tray\'s drawer, so the tray holds what was shown', async ({ page }) => {
   await openBoard(page)
   const tray = page.getByRole('region', { name: "Demon's Bluffs" })
   await expect(tray.getByRole('button', { name: /^Bluff: / })).toHaveCount(0)
   await chooseCard(page, 'These characters are not in play')
-  const picker = page.getByRole('dialog', { name: "Demon's Bluffs" })
-  await picker.getByRole('button', { name: 'Show', exact: true }).click()
+  const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  // It opens empty: a random draw would cost a hand pick its taps to undo.
+  await expect(drawer.getByRole('button', { name: 'Show', exact: true })).toBeDisabled()
+  for (const name of await keyNames(drawer, 3)) await drawer.getByRole('button', { name, exact: true }).click()
+  await drawer.getByRole('button', { name: 'Show', exact: true }).click()
 
   const card = page.getByRole('dialog', { name: 'These characters are not in play' })
   await expect(card.getByRole('heading')).toBeVisible()
   const shown = await card.locator('text').allTextContents()
   await holdToClose(card)
   await expect(card).toBeHidden()
-  const saved = (await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label'))))
-    .map(label => label.replace('Bluff: ', '').toUpperCase())
+  const saved = (await trayNames(tray)).map(label => label.replace('Bluff: ', '').toUpperCase())
   expect(saved).toHaveLength(3)
   expect(shown.map(name => name.trim())).toEqual(saved)
+})
+
+test('three keys fill the bluff wells in order, and a fourth key is never refused', async ({ page }) => {
+  await openBoard(page)
+  const tray = page.getByRole('region', { name: "Demon's Bluffs" })
+  await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
+  const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  await expect(drawer.getByRole('button', { name: 'Bluff 1: empty', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  const [a, b, c, d] = await keyNames(drawer, 4)
+  for (const name of [a, b, c]) await drawer.getByRole('button', { name, exact: true }).click()
+  expect(await wellNames(drawer)).toEqual([a, b, c].map(name => `Bluff: ${name}`))
+  // With every well full the ring stays on the last, so the next key replaces it.
+  await expect(drawer.locator('[aria-disabled="true"]')).toHaveCount(0)
+  await drawer.getByRole('button', { name: d, exact: true }).click()
+  expect(await wellNames(drawer)).toEqual([a, b, d].map(name => `Bluff: ${name}`))
+  // A full well empties and takes the ring, so a swap is the well, then a key.
+  await drawer.getByRole('button', { name: `Bluff: ${a}`, exact: true }).click()
+  await expect(drawer.getByRole('button', { name: 'Bluff 1: empty', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await drawer.getByRole('button', { name: c, exact: true }).click()
+  expect(await wellNames(drawer)).toEqual(['Bluff: ' + c, 'Bluff: ' + b, 'Bluff: ' + d])
+  // A chosen key comes back out of its well.
+  await drawer.getByRole('button', { name: b, exact: true }).click()
+  expect(await wellNames(drawer)).toEqual(['Bluff: ' + c, 'Bluff 2: empty', 'Bluff: ' + d])
+  await drawer.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(drawer).toBeHidden()
+  expect(await trayNames(tray)).toEqual([c, d].map(name => `Bluff: ${name}`))
+})
+
+test('Shuffle fills the empty wells and keeps a hand pick', async ({ page }) => {
+  await openBoard(page)
+  const tray = page.getByRole('region', { name: "Demon's Bluffs" })
+  // The third well opens ringed, so the hand pick goes there.
+  await tray.getByRole('button', { name: 'Set bluffs', exact: true }).nth(2).click()
+  const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  const [pick] = await keyNames(drawer, 1)
+  await drawer.getByRole('button', { name: pick, exact: true }).click()
+  await drawer.getByRole('button', { name: 'Shuffle bluffs', exact: true }).click()
+  const wells = await wellNames(drawer)
+  expect(wells).toHaveLength(3)
+  expect(wells[2]).toBe(`Bluff: ${pick}`)
+  expect(new Set(wells).size).toBe(3)
+  expect(wells.every(well => well.startsWith('Bluff: '))).toBe(true)
+  await drawer.getByRole('button', { name: 'Save', exact: true }).click()
+  expect(await trayNames(tray)).toEqual(wells)
 })
 
 test('Change on the not-in-play card edits what it shows and saves nothing', async ({ page }) => {
   await openBoard(page)
   const tray = page.getByRole('region', { name: "Demon's Bluffs" })
   await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
-  await page.getByRole('dialog', { name: "Demon's Bluffs" }).getByRole('button', { name: 'Save', exact: true }).click()
-  const before = await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))
+  const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  await drawer.getByRole('button', { name: 'Shuffle bluffs', exact: true }).click()
+  await drawer.getByRole('button', { name: 'Save', exact: true }).click()
+  const before = await trayNames(tray)
   expect(before).toHaveLength(3)
 
   await chooseCard(page, 'These characters are not in play')
@@ -246,15 +300,16 @@ test('Change on the not-in-play card edits what it shows and saves nothing', asy
   await expect(card.locator('text')).toHaveCount(2)
   await holdToClose(card)
   await expect(card).toBeHidden()
-  expect(await tray.getByRole('button', { name: /^Bluff: / }).evaluateAll(wells => wells.map(well => well.getAttribute('aria-label')))).toEqual(before)
+  expect(await trayNames(tray)).toEqual(before)
 })
 
-test('the bluff picker shows the set on screen and saves it, so the tray holds what the Demon saw', async ({ page }) => {
+test('the bluffs drawer shows the set on screen and saves it, so the tray holds what the Demon saw', async ({ page }) => {
   await openBoard(page)
   const tray = page.getByRole('region', { name: "Demon's Bluffs" })
   await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
-  const picker = page.getByRole('dialog', { name: "Demon's Bluffs" })
-  await picker.getByRole('button', { name: 'Show', exact: true }).click()
+  const drawer = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  await drawer.getByRole('button', { name: 'Shuffle bluffs', exact: true }).click()
+  await drawer.getByRole('button', { name: 'Show', exact: true }).click()
 
   const card = page.getByRole('dialog', { name: 'These characters are not in play' })
   await expect(card.getByRole('heading')).toBeVisible()

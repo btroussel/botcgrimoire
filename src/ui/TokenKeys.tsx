@@ -1,7 +1,9 @@
 // The token keyboard: printed character tokens as keys, grouped under their team's label in the
 // order the feature gives. It knows nothing about what a token means: the feature passes the keys,
-// which are chosen, whether more can be taken, and what a tap does.
+// which are chosen, whether more can be taken, and what a tap does. A feature whose keys are not
+// characters, such as reminders, draws each key itself and keeps the same groups and columns.
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { Icon } from './icons'
@@ -13,24 +15,25 @@ export interface TokenKey {
   readonly name: string // in the locale: the key's name for a screen reader and its print
 }
 
-export interface TokenKeyGroup {
+export interface TokenKeyGroup<K extends TokenKey = TokenKey> {
   readonly key: string
   readonly label: string
   readonly color: string // the team's colour on paper
-  readonly keys: readonly TokenKey[]
+  readonly keys: readonly K[]
 }
 
-export interface TokenKeysProps {
-  readonly groups: readonly TokenKeyGroup[]
+export interface TokenKeysProps<K extends TokenKey> {
+  readonly groups: readonly TokenKeyGroup<K>[]
   readonly chosen: readonly string[]
   readonly full?: boolean // nothing more can be taken: every key not chosen dims and takes no tap
-  readonly onPress: (key: TokenKey) => void
+  readonly onPress: (key: K) => void
+  readonly render?: (key: K, size: number, press: () => void) => ReactNode // a key drawn by the feature, in place of a character token
 }
 
 const { size, gap, across, check } = tokenKeys
 const span = (count: number) => count * size + Math.max(0, count - 1) * gap
 
-export const TokenKeys = ({ groups, chosen, full = false, onPress }: TokenKeysProps) => {
+export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, render }: TokenKeysProps<K>) => {
   const p = palette
   const [width, setWidth] = useState(0)
   const columns = Math.max(1, Math.min(across, Math.floor((width + gap) / (size + gap))))
@@ -50,6 +53,7 @@ export const TokenKeys = ({ groups, chosen, full = false, onPress }: TokenKeysPr
               {g.keys.map((k) => {
                 const on = chosen.includes(k.id)
                 const blocked = full && !on
+                if (render) return <View key={k.id} style={[styles.drawn, { width: size, height: size }]}>{render(k, size, () => onPress(k))}</View>
                 return (
                   <View key={k.id} style={{ width: size, height: size }}>
                     <Token size={size} character={k.id} name={k.name} printName accessibilityLabel={k.name}
@@ -77,6 +81,7 @@ const styles = StyleSheet.create({
   label: { textTransform: 'uppercase', letterSpacing: 0.8, flexShrink: 1 },
   rule: { flex: 1, height: hairline },
   keys: { flexDirection: 'row', flexWrap: 'wrap' },
+  drawn: { alignItems: 'center', justifyContent: 'center' },
   check: { position: 'absolute', top: -space.xs, right: -space.xs, width: check, height: check, borderRadius: check / 2,
     borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 })

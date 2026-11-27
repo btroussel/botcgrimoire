@@ -132,10 +132,15 @@ it off and places it again, with no new kind of edit, so one undo puts it back w
 Any seat, an empty one too, takes any reminder from the script or its loose characters, recorded
 characters first, with no ability source to pick. A note needs text, and this game's notes come
 back in the picker. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below seven
-players unless saved, since the Demon gets none there. Their picker also shows them: Show saves the
-set on screen and opens the not-in-play card with it, so what the Demon saw is what the tray
-and the log hold. The not-in-play card opens that same picker while no bluffs are saved, so there
-is one picker for the job and no way to show a Demon bluffs the grimoire forgets.
+players unless saved, since the Demon gets none there. Their drawer opens with the saved bluffs in
+its three wells, or empty, never a random draw that a hand pick would first have to undo. One well
+is ringed and takes the next key, then the ring moves to the next empty well; a tap on a full well
+empties and rings it, and a tap on a chosen key takes it back out, so no tap is refused. A well on
+the tray opens the drawer with that well ringed. Shuffle fills only the empty wells, so a hand pick
+stays, and draws all three afresh when none is empty. The drawer also shows them: Show saves the set
+on screen and opens the not-in-play card with it, so what the Demon saw is what the tray and the log
+hold. The not-in-play card opens that same drawer while no bluffs are saved, so there is one
+surface for the job and no way to show a Demon bluffs the grimoire forgets.
 
 The cards are the six info tokens the night sheet names, the character tokens alone, which the
 sheet asks for more often than any of them, and a written note: the same eight on every script.

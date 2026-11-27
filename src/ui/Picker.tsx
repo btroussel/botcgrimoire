@@ -1,5 +1,5 @@
-// One sheet for every choice from a list: a character for a seat or a card, the bluffs, the bag,
-// the loose Fabled and Loric, the app's language.
+// One sheet for every choice from a list that is read rather than scanned beside the seats: the
+// bag, the loose Fabled and Loric, a script's characters, the app's language.
 // Grouped rows with a check on what is chosen.
 // A tap picks and closes unless the picker is `multi`, where the footer's
 // primary confirms the set. It knows nothing about what a row means; the feature fills the rows
@@ -11,7 +11,7 @@ import { teams } from '../content'
 import { AbilityText } from './AbilityText'
 import { CharacterIcon } from './CharacterIcon'
 
-import { Button, IconButton, focusStyle, isFocused } from './Button'
+import { Button, focusStyle, isFocused } from './Button'
 import { EdgeButton } from './EdgeButton'
 import { useFocusVisible } from './focus'
 import { Icon } from './icons'
@@ -32,20 +32,14 @@ export interface PickerGroup {
   readonly label?: string
   readonly color?: string
   readonly rows: readonly PickerRow[]
-  readonly shuffled?: boolean // false leaves the group to a deliberate tap, out of shuffles
 }
 
 export interface PickerMulti {
   readonly max: number
   readonly min?: number // the footer wakes from this many chosen; exactly `max` when omitted
-  readonly shuffleLabel?: string // opt in to random defaults and a shuffle control
   readonly repeat?: boolean // a long press on a token chooses it once more, as for a bag's repeats
   readonly confirmLabel: (count: number) => string
   readonly onConfirm: (ids: readonly string[]) => void
-  // A second use of the same set beside the primary, such as showing the bluffs as they are
-  // chosen. It takes the set on screen, which the feature cannot read from outside.
-  // A word with no icon: an icon's compartment cut the word off on a 320 point phone.
-  readonly also?: { readonly label: string; readonly onConfirm: (ids: readonly string[]) => void }
 }
 
 export interface PickerProps {
@@ -65,17 +59,6 @@ export interface PickerProps {
   readonly emptyLabel: string
 }
 
-const shufflable = (groups: readonly PickerGroup[]): readonly PickerGroup[] => groups.filter((g) => g.shuffled !== false)
-
-const randomSelection = (groups: readonly PickerGroup[], max: number): readonly string[] => {
-  const pool = [...new Set(shufflable(groups).flatMap((g) => g.rows.map((r) => r.id)))]
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
-  }
-  return pool.slice(0, max)
-}
-
 export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel, groups, onPick, selected = [], multi, compactReference = false, tokenGrid = false, right, emptyLabel }: PickerProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
@@ -83,16 +66,13 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
   // Seven across where there is room, so Trouble Brewing's thirteen Townsfolk take two rows.
   const gridColumns = Math.max(1, Math.min(7, Math.floor((tokenGridWidth + space.sm) / (touch + space.sm))))
   const gridTokenSize = tokenGridWidth > 0 ? Math.max(touch, Math.min(88, Math.floor((tokenGridWidth - (gridColumns - 1) * space.sm) / gridColumns))) : 64
-  const initialSelection = () => selected.length === 0 && multi?.shuffleLabel !== undefined ? randomSelection(groups, multi.max) : selected
-  const [chosen, setChosen] = useState<readonly string[]>(() => visible ? initialSelection() : selected)
+  const [chosen, setChosen] = useState<readonly string[]>(selected)
   // The set starts over each time the sheet opens; the edge is read during render
   // so the same open state passing again changes nothing.
   const [wasVisible, setWasVisible] = useState(visible)
   if (visible !== wasVisible) {
     setWasVisible(visible)
-    if (visible) {
-      setChosen(initialSelection())
-    }
+    if (visible) setChosen(selected)
   }
 
   const tap = (row: PickerRow) => {
@@ -109,23 +89,9 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
     if (multi && chosen.length < multi.max) setChosen([...chosen, row.id])
   }
 
-  const shuffle = multi?.shuffleLabel !== undefined ? (
-    <IconButton
-      icon="shuffle"
-      label={multi.shuffleLabel}
-      onPress={() => setChosen(randomSelection(groups, multi.max))}
-      disabled={!shufflable(groups).some((g) => g.rows.length > 0)}
-
-      surface="paper"
-    />
-  ) : undefined
-
   const outOfRange = multi ? chosen.length > multi.max || chosen.length < (multi.min ?? multi.max) : false
   const footer = multi && !compactReference ? (
     <View style={[styles.actions, tokenGrid && styles.compactActions]}>
-      {shuffle}
-      {multi.also ? <Button style={styles.compactConfirm} label={multi.also.label}
-        onPress={() => multi.also?.onConfirm(chosen)} surface="paper" disabled={outOfRange || chosen.length === 0} /> : null}
       <Button style={tokenGrid ? styles.compactConfirm : styles.confirm} label={multi.confirmLabel(chosen.length)} onPress={() => multi.onConfirm(chosen)} variant="primary" surface="paper" disabled={outOfRange} />
     </View>
   ) : undefined

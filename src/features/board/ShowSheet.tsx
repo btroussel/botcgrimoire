@@ -16,7 +16,7 @@ import { useEdits } from './useEdits'
 export interface ShowSheetProps {
   readonly visible: boolean
   readonly onClose: () => void
-  readonly onBluffs: () => void // the tray's own bluffs picker, for a not-in-play card with none saved
+  readonly onBluffs: () => void // the tray's own bluffs drawer, for a not-in-play card with none saved
 }
 
 // Each card's name in the list, sentence case here, which is also the words the card sets
