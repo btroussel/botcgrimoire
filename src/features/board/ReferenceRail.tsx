@@ -442,10 +442,14 @@ const styles = StyleSheet.create({
   team: { gap: space.xxs, marginBottom: space.sm },
   teamHeading: { paddingTop: space.md, paddingBottom: space.xxs },
   rowLine: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.sm },
-  rowRule: { position: 'absolute', right: 0, bottom: 0, height: 1, backgroundColor: palette.parchmentShade },
+  // The row's line is what ties a text to its name, so it is drawn in half-strength coffee: the
+  // rule colour is too close to the vellum to find in a dim room.
+  rowRule: { position: 'absolute', right: 0, bottom: 0, height: 1, backgroundColor: palette.inkMuted, opacity: 0.5 },
   fold: { paddingBottom: space.sm },
   here: { position: 'absolute', top: -(ring.gap + ring.width), right: -(ring.gap + ring.width), bottom: -(ring.gap + ring.width), left: -(ring.gap + ring.width),
-    borderColor: palette.accent, borderWidth: ring.width },
+    borderColor: palette.accent, borderWidth: ring.width,
+    // Brass alone is faint on vellum, so the ring is edged in coffee on both sides.
+    boxShadow: `0 0 0 1px ${palette.inkMuted}, inset 0 0 0 1px ${palette.inkMuted}` },
   identity: { flexShrink: 0, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   art: { minHeight: 36, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   names: { flex: 1, minWidth: 0 },
