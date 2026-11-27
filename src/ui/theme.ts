@@ -86,8 +86,9 @@ export const palette: Palette = {
   evilOnFelt: '#e0574b',
 }
 
-// The scrims behind a sheet and behind the one dialog.
-export const scrim = { sheet: 'rgba(0,0,0,0.35)', dialog: 'rgba(0,0,0,0.5)' } as const
+// The scrims behind a sheet and behind the one dialog. `table` puts the board almost out behind
+// the two tokens that end a game: they stand wider than the ring's middle, over the seats.
+export const scrim = { sheet: 'rgba(0,0,0,0.35)', dialog: 'rgba(0,0,0,0.5)', table: 'rgba(10,5,7,0.86)' } as const
 
 // ---------------------------------------------------------------------------------------------
 // Type. Two bundled faces. Grenze for display only: a serif with blackletter bones, the game's

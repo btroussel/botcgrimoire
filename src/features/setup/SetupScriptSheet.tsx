@@ -3,10 +3,10 @@ import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native
 
 import type { CharacterId, Script } from '../../content'
 import { editionAuthor, gameText, isLoose, scriptAuthor, scriptName, scriptRules } from '../../content'
-import { editionArt } from '../../content/generated/art'
 import { useStore } from '../../store'
 import { djinnText, jinxesAmong, listed, sheetGroups, sheetLabels, teamLabels, unknownNotice } from '../../store/scriptSheet'
 import { Button, IconButton } from '../../ui/Button'
+import { listedLogo } from '../../ui/ScriptListRow'
 import { ScriptSheet } from '../../ui/ScriptSheet'
 import { Token } from '../../ui/Token'
 import { palette, radius, shadows, space, tabular, touch, type } from '../../ui/theme'
@@ -133,7 +133,7 @@ export const SetupScriptSheet = ({ script, count, bag, shows, busy, error, onCou
     labels={sheetLabels(t)}
     scrollHeader={<View style={[styles.heading, compact && styles.stacked]}>
       <View style={[styles.identity, compact && styles.stackedIdentity]}>
-        <Image source={editionArt[typeof script === 'string' ? script : 'custom']} style={styles.logo} resizeMode="contain" />
+        <Image source={listedLogo(script)} style={styles.logo} resizeMode="contain" />
         <View style={styles.identityText}>
           <Text style={[type.text.strong, { color: palette.ink }]}>{typeof script === 'string' ? text.edition(script).name : scriptName(script)}</Text>
           {author ? <Text style={[type.text.small, { color: palette.inkMuted }]}>{t('scripts.byAuthor', { author })}</Text> : null}

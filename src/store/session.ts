@@ -4,8 +4,8 @@ import type { Locale, Script } from '../content'
 import { seatName } from '../content'
 import type { Event, Grimoire, Payload } from '../engine'
 import { apply, asEventId, emptyGrimoire, isBoardEdit } from '../engine'
-import { changeDayTimer, dayTimerAfterEvents } from './dayTimer'
-import type { DayTimerAction } from './dayTimer'
+import { changeDayTimer, dayTimerAfterEvents, defaultDayTimer } from './dayTimer'
+import type { DayTimer, DayTimerAction } from './dayTimer'
 import type { Draw } from './draw'
 import type { SavedGame } from './saved'
 import { bluffsOf, sameBluffs } from './bluffs'
@@ -30,11 +30,15 @@ const withLog = (s: Session, log: readonly Event[], now: number): SavedGame => {
   return { ...game, log, updatedAt: now, ...(timer ? { dayTimer: timer } : {}) }
 }
 
+// The day's timer as the screen shows it: the saved one, or the untouched default.
+export const dayTimerOf = (s: Session): DayTimer =>
+  s.game.dayTimer ?? defaultDayTimer(boardOf(s).seats.filter(seat => seat.alive).length)
+
+// Pausing or resetting a timer nobody has touched changes nothing, so it stays unsaved.
 export const updateDayTimer = (s: Session, action: DayTimerAction, now: number): Session => {
   if (isLookingBack(s) || boardOf(s).clock.phase !== 'day') return s
-  const { dayTimer, ...game } = s.game
-  const next = changeDayTimer(dayTimer, action, now)
-  return { ...s, game: { ...game, ...(next ? { dayTimer: next } : {}) } }
+  if (!s.game.dayTimer && (action === 'pause' || action === 'reset')) return s
+  return { ...s, game: { ...s.game, dayTimer: changeDayTimer(dayTimerOf(s), action, now) } }
 }
 
 // The bag is set aside until the deal, so filling it or taking a token records no event.

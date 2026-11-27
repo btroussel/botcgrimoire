@@ -80,7 +80,9 @@ test.describe('with reduced motion', () => {
   test('a tap on a compact night row opens the reference full, once, its filter keeps its own taps, and a seat answers at once', async ({ page }) => {
     await open(page, '/new')
     await page.getByRole('button', { name: 'Trouble Brewing', exact: true }).click()
-    await page.getByRole('button', { name: 'Shuffle characters', exact: true }).click()
+    // The bag is chosen, not shuffled: a shuffle can hold the Drunk, who sits under a reminder of
+    // its own, and a seat with two reminders folds them into a stack that a tap opens first.
+    for (const name of ['Chef', 'Empath', 'Monk', 'Slayer', 'Mayor', 'Poisoner', 'Imp']) await page.getByRole('button', { name, exact: true }).click()
     await page.getByRole('button', { name: 'Open grimoire', exact: true }).click()
     await page.getByRole('button', { name: 'Deal at random', exact: true }).click()
     await page.getByRole('button', { name: 'Setup', exact: true }).tap()

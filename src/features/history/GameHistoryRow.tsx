@@ -3,7 +3,6 @@ import { Image, StyleSheet } from 'react-native'
 
 import type { Locale, Translate } from '../../content'
 import { gameText, isEmptySeat } from '../../content'
-import { editionArt } from '../../content/generated/art'
 import type { SavedGame } from '../../store'
 import { boardOf, inLocale } from '../../store'
 import { bluffsOf } from '../../store/bluffs'
@@ -13,6 +12,7 @@ import { Button } from '../../ui/Button'
 import { CharacterIcon } from '../../ui/CharacterIcon'
 import { Icon } from '../../ui/icons'
 import { PaperTexture } from '../../ui/PaperTexture'
+import { listedLogo } from '../../ui/ScriptListRow'
 import { palette, radius, space } from '../../ui/theme'
 import { GameChronicle } from './GameChronicle'
 import { PlayerRoster } from './PlayerRoster'
@@ -58,7 +58,7 @@ export const GameHistoryRow = memo(function GameHistoryRow({ game, row, locale, 
       <button type="button" className="history-summary" onClick={() => onToggle(game.id)}
         aria-label={t(expanded ? 'history.collapseDetails' : 'history.expandDetails', { name: row.name })}
         aria-describedby={`${phaseId} ${summaryId}`} aria-expanded={expanded} aria-controls={regionId}>
-        <Image source={editionArt[row.logo]} style={{ width: 60, height: 68 }} resizeMode="contain" accessible={false} />
+        <Image source={listedLogo(game.script)} style={{ width: 60, height: 68 }} resizeMode="contain" accessible={false} />
         <span className="history-heading">
           <span className="history-title-line">
             <span className="history-title" id={headingId}>{row.name}</span>

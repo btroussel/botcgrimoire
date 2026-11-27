@@ -58,7 +58,7 @@ const grenzeGlyph = /[\p{Script=Latin}\p{Script=Common}]/u
 const advance = (glyph: string): number => /\p{M}/u.test(glyph) ? 0
   : wideGlyph.test(glyph) ? glyphAdvance.wide : grenzeGlyph.test(glyph) ? glyphAdvance.grenze : glyphAdvance.fallback
 // A disc is a physical piece: pressed, it gives under the finger rather than fading.
-const pressedScale = 0.96
+export const pressedScale = 0.96
 
 export const Token = ({ size, character: id, alignment, name, printName, ability, markers: showMarkers = true, selected, dim, dead, disabled = false, emptyStyle, add, onPress, onLongPress, accessibilityLabel, style }: TokenProps) => {
   const p = palette

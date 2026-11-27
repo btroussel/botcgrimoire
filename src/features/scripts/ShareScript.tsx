@@ -1,16 +1,18 @@
 // Sharing a custom script (docs/app.md, Scripts): the link as a QR code for a phone across the
 // table, copied, handed to the device's share sheet, or the script as a file. The link carries
-// the whole script, so nothing is uploaded and the receiver needs no signal once installed.
+// the whole script but for its embedded images, so nothing is uploaded and the receiver needs no
+// signal once installed.
 import { useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import type { CustomScript } from '../../content'
-import { useStore } from '../../store'
+import { serializeScript, useStore } from '../../store'
 import { isWeb } from '../../store/browser'
-import { canLink, hasEmbeddedArt, scriptFragment } from '../../store/scriptLink'
+import { canLink, hasEmbeddedArt, hasEmbeddedLogo, scriptFragment } from '../../store/scriptLink'
 import { Button } from '../../ui/Button'
 import { Sheet } from '../../ui/Sheet'
 import { palette, radius, space, type } from '../../ui/theme'
+import { fileName } from './compose'
 import { QrCode, qrModules } from './QrCode'
 
 export interface ShareScriptProps {
@@ -50,6 +52,7 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
   }
   const modules = useMemo(() => (link === undefined ? undefined : qrModules(link)), [link])
   const art = useMemo(() => hasEmbeddedArt(script), [script])
+  const logo = useMemo(() => hasEmbeddedLogo(script), [script])
 
   // Without a secure page or the permission there is no clipboard; the link is then shown to
   // select by hand.
@@ -65,6 +68,17 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
   const share = () => {
     if (link !== undefined) navigator.share({ title: script.name, url: link }).catch(() => undefined)
   }
+  // The file keeps the images the link leaves out. Where the browser can hand a file to the share
+  // sheet, a script with such images goes to a chat app whole in one step; elsewhere Export
+  // downloads it. Not every browser shares a JSON file, so it is asked.
+  const file = useMemo(
+    () => (canShare && (art || logo) ? new File([serializeScript(script)], fileName(script.name), { type: 'application/json' }) : undefined),
+    [script, art, logo],
+  )
+  const canShareFile = file !== undefined && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })
+  const shareFile = () => {
+    if (file !== undefined) navigator.share({ title: script.name, files: [file] }).catch(() => undefined)
+  }
 
   return (
     <Sheet visible={visible} title={t('scripts.shareTitle')} onClose={close} closeLabel={t('common.close')}>
@@ -79,6 +93,7 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
             <Text style={[type.text.body, { color: p.inkMuted }]}>{t('scripts.qrTooLong')}</Text>
           )}
           {art ? <Text style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.artLeftOut')}</Text> : null}
+          {logo ? <Text style={[type.text.small, { color: p.inkMuted }]}>{t('scripts.logoLeftOut')}</Text> : null}
           <Button label={copied === 'yes' ? t('scripts.linkCopied') : t('scripts.copyLink')} icon={copied === 'yes' ? 'check' : 'link'} onPress={copy} variant="primary" surface="paper" />
           {copied === 'failed' ? (
             <View accessibilityRole="alert" style={styles.failed}>
@@ -89,6 +104,7 @@ export const ShareScript = ({ visible, script, onClose, onExport }: ShareScriptP
           {canShare ? <Button label={t('scripts.shareLink')} icon="share" onPress={share} surface="paper" /> : null}
         </>
       )}
+      {canShareFile ? <Button label={t('scripts.shareFile')} icon="share" onPress={shareFile} surface="paper" /> : null}
       <Button label={t('scripts.export')} icon="script" onPress={onExport} surface="paper" />
     </Sheet>
   )
