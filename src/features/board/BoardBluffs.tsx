@@ -13,6 +13,8 @@ import { useEdits } from './useEdits'
 const bluffCount = 3
 
 // The display and picker share one owner, so selecting bluffs stays separate from showing them.
+// The picker also shows them: the Storyteller often chooses at the Demon's wake and shows at once,
+// and once chosen they are shown far more often than changed.
 export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit, titled }: {
   readonly board: Grimoire
   readonly bluffs: readonly CharacterId[]
@@ -36,14 +38,22 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit, ti
     if (canEdit) e.append(edits.setBluffs(ids as readonly CharacterId[]))
     setBluffsOpen(false)
   }
-  const showBluffs = () => {
-    if (bluffs.length === 0) return
+  const showBluffs = (ids: readonly CharacterId[]) => {
+    if (ids.length === 0) return
     interaction.showCard({
       kind: 'notInPlay',
       words: t('board.notInPlayWords'),
-      characters: bluffs.map((c) => ({ id: c, name: e.name(c) })),
+      characters: ids.map((c) => ({ id: c, name: e.name(c) })),
       tint: 'good',
     })
+  }
+  // Showing from the picker saves the set first, so the tray and the log hold what the Demon saw.
+  const setAndShow = (ids: readonly string[]) => {
+    const next = ids as readonly CharacterId[]
+    const same = next.length === bluffs.length && next.every((id, i) => id === bluffs[i])
+    if (canEdit && !same) e.append(edits.setBluffs(next))
+    setBluffsOpen(false)
+    showBluffs(next)
   }
 
 
@@ -59,7 +69,7 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit, ti
                   {...(c ? { character: c, printName: true, name: e.name(c) } : {})}
                   alignment="good"
                   accessibilityLabel={c ? t('board.bluff', { name: e.name(c) }) : t('board.setBluffs')}
-                  {...(canEdit ? { onPress: () => setBluffsOpen(true), ...(c ? { onLongPress: showBluffs } : {}) } : {})}
+                  {...(canEdit ? { onPress: () => setBluffsOpen(true), ...(c ? { onLongPress: () => showBluffs(bluffs) } : {}) } : {})}
                 />
               })}
             </View>
@@ -77,8 +87,10 @@ export const BoardBluffs = ({ board, bluffs, boardWidth, clockWidth, canEdit, ti
             max: bluffCount,
             min: 0,
             shuffleLabel: t('board.shuffleBluffs'),
-            confirmLabel: () => t('board.setBluffs'),
+            // Short, so Show fits beside it; the sheet's title already says what is saved.
+            confirmLabel: () => t('common.save'),
             onConfirm: setBluffs,
+            also: { label: t('board.showBluffsNow'), onConfirm: setAndShow },
           }}
           emptyLabel={t('board.nothingMatches')}
         />

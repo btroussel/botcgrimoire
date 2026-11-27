@@ -73,3 +73,17 @@ test('a long name under a token keeps its word whole on the narrowest phone', as
     expect(lines, name).toBe(1)
   }
 })
+
+test('the bluff picker shows the set on screen and saves it, so the tray holds what the Demon saw', async ({ page }) => {
+  await openBoard(page)
+  const tray = page.getByRole('region', { name: "Demon's Bluffs" })
+  await tray.getByRole('button', { name: 'Set bluffs', exact: true }).first().click()
+  const picker = page.getByRole('dialog', { name: "Demon's Bluffs" })
+  await picker.getByRole('button', { name: 'Show', exact: true }).click()
+
+  const card = page.getByRole('dialog', { name: 'These characters are not in play' })
+  await expect(card.getByRole('heading')).toBeVisible()
+  await card.getByRole('button', { name: 'Close', exact: true }).first().click()
+  await expect(card).toBeHidden()
+  await expect(tray.getByRole('button', { name: /^Bluff: / })).toHaveCount(3)
+})

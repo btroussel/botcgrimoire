@@ -42,6 +42,10 @@ export interface PickerMulti {
   readonly repeat?: boolean // a long press on a token chooses it once more, as for a bag's repeats
   readonly confirmLabel: (count: number) => string
   readonly onConfirm: (ids: readonly string[]) => void
+  // A second use of the same set beside the primary, such as showing the bluffs as they are
+  // chosen. It takes the set on screen, which the feature cannot read from outside.
+  // A word with no icon: an icon's compartment cut the word off on a 320 point phone.
+  readonly also?: { readonly label: string; readonly onConfirm: (ids: readonly string[]) => void }
 }
 
 export interface PickerProps {
@@ -116,10 +120,13 @@ export const Picker = ({ visible, title, onClose, closeLabel, onBack, backLabel,
     />
   ) : undefined
 
+  const outOfRange = multi ? chosen.length > multi.max || chosen.length < (multi.min ?? multi.max) : false
   const footer = multi && !compactReference ? (
     <View style={[styles.actions, tokenGrid && styles.compactActions]}>
       {shuffle}
-      <Button style={tokenGrid ? styles.compactConfirm : styles.confirm} label={multi.confirmLabel(chosen.length)} onPress={() => multi.onConfirm(chosen)} variant="primary" surface="paper" disabled={chosen.length > multi.max || chosen.length < (multi.min ?? multi.max)} />
+      {multi.also ? <Button style={styles.compactConfirm} label={multi.also.label}
+        onPress={() => multi.also?.onConfirm(chosen)} surface="paper" disabled={outOfRange || chosen.length === 0} /> : null}
+      <Button style={tokenGrid ? styles.compactConfirm : styles.confirm} label={multi.confirmLabel(chosen.length)} onPress={() => multi.onConfirm(chosen)} variant="primary" surface="paper" disabled={outOfRange} />
     </View>
   ) : undefined
 
