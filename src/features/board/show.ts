@@ -18,19 +18,17 @@ export type ShowAbout = 'characters' | 'bluffs'
 
 export interface ShowToken {
   readonly kind: ShowKind
-  readonly about?: ShowAbout // omitted for fixed-text cards that open immediately
+  readonly about?: ShowAbout // omitted for fixed-text cards that show at once
 }
 
-// The cards the eye lists: the character tokens alone, which the night sheet asks for most, and
-// the info tokens it names that are about no seat. You are and This player is are about one
-// player, so they start from that player's seat and nowhere else. The list shows them two by two,
-// in this order.
+// The info tokens the night sheet names that are about no seat, offered as phrases on the blank
+// card in the order a first night uses them. You are and This player is are about one player and
+// start from that player's seat. Tokens alone are the blank card with no words.
 export const showTokens: readonly ShowToken[] = [
-  { kind: 'tokenOnly', about: 'characters' },
-  { kind: 'selectedYou', about: 'characters' },
   { kind: 'thisIsTheDemon' },
   { kind: 'theseAreYourMinions' },
   { kind: 'notInPlay', about: 'bluffs' },
+  { kind: 'selectedYou', about: 'characters' },
 ]
 
 // What the Storyteller picked: the seat a seat card is about, then the characters to print.
@@ -54,19 +52,18 @@ export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly C
   return kind === 'thisPlayerIs' && real !== shown ? [] : [shown]
 }
 
-// How many tokens a card takes: one for a card about one character, three bluffs, any number for
-// the tokens alone, and none for a card of words. A written note takes one under its words, as a
-// homebrew character's own card has.
+// How many tokens a card takes: one for a card about one character, three bluffs, and none for a
+// card of words. The blank card takes any number, under its words or alone, as the night sheet
+// shows a Washerwoman or an Undertaker their character.
 export const takes = (kind: CardKind): number => {
   switch (kind) {
     case 'youAre':
     case 'thisPlayerIs':
     case 'selectedYou':
-    case 'custom':
       return 1
     case 'notInPlay':
       return 3
-    case 'tokenOnly':
+    case 'custom':
       return Number.POSITIVE_INFINITY
     case 'thisIsTheDemon':
     case 'theseAreYourMinions':
@@ -107,9 +104,6 @@ export const blank = (g: Grimoire, kind: ShowKind, seat: SeatId | undefined, wor
     case 'thisIsTheDemon':
     case 'theseAreYourMinions':
       return { kind, words }
-    case 'tokenOnly':
-      // The tokens alone, as the night sheet shows a Washerwoman or an Undertaker their character.
-      return { kind, words: '', characters: [] }
     case 'selectedYou':
       return { kind, words, characters: [] }
     case 'notInPlay':
@@ -145,23 +139,23 @@ export const opening = (
   return empty ? { spec: empty, editing: true } : undefined
 }
 
-// A written note offered on an empty note card, words and token as they will be written.
+// A card offered on the blank card, words and tokens as they will be written.
 export interface NotePreset {
   readonly words: string
-  readonly character?: CharacterId
+  readonly characters?: readonly CharacterId[]
 }
 
-// After Yes, No and the digits: the notes kept on this device, latest first, then the script's own
-// character cards. A kept note's token outside this script still shows when the app knows the
-// character, and is left off when it does not, so a note never prints a blank token.
+// The notes kept on this device, latest first, then the script's own character cards. A kept
+// token outside this script still shows when the app knows the character, and is left off when it
+// does not, so a card never prints a blank token.
 export const notePresets = (kept: readonly KeptNote[], script: Script): readonly NotePreset[] => {
   const own = scriptCharacters(script)
   const known = (id: string) => own.includes(asCharacterId(id)) || characters.has(asCharacterId(id)) || homebrewOf(id) !== undefined
   const notes = kept.flatMap((n): NotePreset[] => {
-    const character = n.character !== undefined && known(n.character) ? asCharacterId(n.character) : undefined
-    if (n.words === '' && character === undefined) return []
-    return [{ words: n.words, ...(character !== undefined ? { character } : {}) }]
+    const tokens = (n.characters ?? []).filter(known).map(asCharacterId)
+    if (n.words === '' && tokens.length === 0) return []
+    return [{ words: n.words, ...(tokens.length > 0 ? { characters: tokens } : {}) }]
   })
-  const cards = scriptCards(script).map((c): NotePreset => ({ words: c.text, character: asCharacterId(c.character) }))
+  const cards = scriptCards(script).map((c): NotePreset => ({ words: c.text, characters: [asCharacterId(c.character)] }))
   return [...notes, ...cards.filter((c) => !notes.some((n) => sameNote(n, c)))]
 }

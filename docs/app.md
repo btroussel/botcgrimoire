@@ -141,28 +141,32 @@ it, so what the Demon saw is what the tray and the log hold. The not-in-play car
 drawer while no bluffs are saved, so there is one surface for the job and no way to show a Demon
 bluffs the grimoire forgets.
 
-The cards are the six info tokens the night sheet names, the character tokens alone, which the
-sheet asks for more often than any of them, and a written note: the same eight on every script.
+Show a card opens one blank card, and every card about no seat is made from it. The card is words,
+tokens or both, written where the player will read them: a tap on its words raises the device's
+keyboard, and its switch raises the token keys. It takes any number of tokens, so the tokens
+alone, which the night sheet asks for more often than any info token, are the blank card with no
+words. It opens with neither keyboard up, so everything it offers is in view.
 
-A note is written on the card itself, where the player will read it, with one optional token under
-its words, as a homebrew character's own card has. While it is empty it offers Yes, No and the
-digits up to five, then the notes kept on this device, latest first, then the script's own
-character cards ([Content](content.md#homebrew-characters)). A preset only writes the card: nothing
-reaches a player before Show, and it can still be edited. The star keeps the note, words and token,
-in the device's settings and never in a game ([Store](store.md#custom-scripts-and-settings)), and
-forgets it when tapped again. A kept token this script lacks still shows when the app knows the
-character, and is left off when it does not.
+While it is empty the card offers, one line each, the official phrases in the order a first night
+uses them, This is the Demon, These are your Minions, These characters are not in play and This
+character selected you, then the cards kept on this device, latest first, then the script's own
+character cards ([Content](content.md#homebrew-characters)). A phrase brings up its own card, with
+its own type and rules. A kept card or a script's card only writes the blank one: nothing reaches a
+player before Show, and it can still be edited. A number or a yes is typed, since that is as fast
+as a shortcut. The star keeps the card, words and tokens, in the device's settings and never in a
+game ([Store](store.md#custom-scripts-and-settings)), and forgets it when tapped again. A kept
+token this script lacks still shows when the app knows the character, and is left off when it
+does not.
 
 You are and This player is start from a seat's menu, under Show a card, and from nowhere else: each
-is about one player, and the seat is that player. The eye lists the cards about no seat, so
-showing a card never puts the ring in a pick.
+is about one player, and the seat is that player. So showing a card never puts the ring in a pick.
 
 A card whose content is already known comes up shown: You are and This player is from their
 player's seat, the not-in-play card with the saved bluffs, and the two cards of words. One whose
-content is not known comes up empty for the Storyteller to fill: This character selected you, the
-tokens alone, This player is on a disguised seat, and the note. A shown card that carries tokens has
-Change, which takes it back to editing with what it shows, and so does a written note, words only or
-not, since the Storyteller wrote it and may fix it. The other cards of words have none. Change says
+content is not known comes up empty for the Storyteller to fill: This character selected you, This
+player is on a disguised seat, and the blank card. A shown card that carries tokens has Change,
+which takes it back to editing with what it shows, and so does a written card, words only or not,
+since the Storyteller wrote it and may fix it. The other cards of words have none. Change says
 nothing about the game, since the player can see it.
 
 Only You are tells a side, as the official app sends one with a thumb. It starts from the
@@ -173,8 +177,8 @@ starts from the seat's character, or from nothing on a disguised seat: the Demon
 Marionette or Lunatic, but a Drunk's real token must never go out on a hasty tap.
 
 The Storyteller can change any card's characters, since a poisoned player may be shown something
-false. A card about one character takes one, and the key that types it shows the card. The tokens
-alone take as many as they pick. The not-in-play card takes up to three, and changing it changes
+false. A card about one character takes one, and the key that types it shows the card. The blank
+card takes as many as are typed, and waits for Show. The not-in-play card takes up to three, and changing it changes
 only what this card shows, never the saved bluffs. It offers the good characters in play last,
 since a Lunatic may be shown any good characters. A card's tokens leave out the night and reminder
 marks, as the setup reveal does. Showing a card records nothing.

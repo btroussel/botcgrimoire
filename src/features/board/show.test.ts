@@ -96,16 +96,8 @@ describe('showing a card from the board', () => {
     })
   })
 
-  test('the tokens alone carry no words, whatever the list calls them', () => {
-    const { g } = table().build()
-    expect(showing(g, 'tokenOnly', { characters: ['chef'] }, 'Token only', name)).toEqual({
-      kind: 'tokenOnly', words: '', characters: printed('chef'),
-    })
-  })
-
   test('several characters on one card keep their own sides', () => {
     const { g } = table().build()
-    expect(showing(g, 'tokenOnly', { characters: ['empath', 'imp'] }, 'w', name)).toEqual({ kind: 'tokenOnly', words: '', characters: printed('empath', 'imp') })
     expect(showing(g, 'selectedYou', { characters: ['empath', 'imp'] }, 'w', name)).toEqual({ kind: 'selectedYou', words: 'w', characters: printed('empath', 'imp') })
   })
 
@@ -128,7 +120,6 @@ describe('showing a card from the board', () => {
     expect(showing(g, 'thisPlayerIs', { seat: id('Dan') }, 'w', name)).toBeUndefined()
     expect(showing(g, 'notInPlay', {}, 'w', name)).toBeUndefined()
     expect(showing(g, 'selectedYou', { characters: [] }, 'w', name)).toBeUndefined()
-    expect(showing(g, 'tokenOnly', {}, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: 'nobody' as SeatId, characters: ['chef'] }, 'w', name)).toBeUndefined()
     expect(showing(g, 'youAre', { seat: id('Empty'), characters: ['chef'] }, 'w', name)).toBeUndefined()
   })
@@ -143,21 +134,20 @@ describe('showing a card from the board', () => {
       spec: { kind: 'thisPlayerIs', words: 'w', characters: [], caption: 'Cat' }, editing: true,
     })
     expect(opening(g, 'selectedYou', {}, 'w', name)).toEqual({ spec: { kind: 'selectedYou', words: 'w', characters: [] }, editing: true })
-    expect(opening(g, 'tokenOnly', {}, 'w', name)).toEqual({ spec: { kind: 'tokenOnly', words: '', characters: [] }, editing: true })
     expect(opening(g, 'thisIsTheDemon', {}, 'w', name)).toEqual({ spec: { kind: 'thisIsTheDemon', words: 'w' }, editing: false })
     expect(opening(g, 'youAre', { seat: 'nobody' as SeatId }, 'w', name)).toBeUndefined()
   })
 
-  test('each card takes one token, three bluffs, any number alone, or none', () => {
-    expect(['youAre', 'thisPlayerIs', 'selectedYou', 'custom'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1, 1])
+  test('each card takes one token, three bluffs, any number on the blank card, or none', () => {
+    expect(['youAre', 'thisPlayerIs', 'selectedYou'].map((kind) => takes(kind as 'youAre'))).toEqual([1, 1, 1])
     expect(takes('notInPlay')).toBe(3)
-    expect(takes('tokenOnly')).toBe(Number.POSITIVE_INFINITY)
+    expect(takes('custom')).toBe(Number.POSITIVE_INFINITY)
     expect(takes('thisIsTheDemon')).toBe(0)
   })
 
   test('the keys run by team with the Travellers last, and the bluffs keep the good in play for the end', () => {
     const { g } = table().build()
-    const all = cardKeys(g, 'tokenOnly')
+    const all = cardKeys(g, 'custom')
     expect(all.map((group) => group.key)).toEqual(['townsfolk', 'outsider', 'minion', 'demon', 'traveller'])
     expect(all.find((group) => group.key === 'townsfolk')?.ids).toContain('chef')
     const bluffs = cardKeys(g, 'notInPlay')
@@ -173,14 +163,16 @@ describe('showing a card from the board', () => {
     }])
     if ('errors' in script) throw new Error(script.errors.join())
     const kept = [
-      { words: 'Wake', character: 'imp' },
+      { words: 'Wake', characters: ['imp'] },
       // A token the app does not know is left off, and a note left with nothing goes.
-      { words: 'Sleep', character: 'nobody-knows' }, { words: '', character: 'nobody-knows' },
+      { words: 'Sleep', characters: ['nobody-knows'] }, { words: '', characters: ['nobody-knows'] },
       // Kept from the script's own card, so it is offered once.
-      { words: 'You are lit', character: 'lamp' },
+      { words: 'You are lit', characters: ['lamp'] },
+      // The tokens alone, as a Washerwoman is shown two characters.
+      { words: '', characters: ['imp', 'lamp'] },
     ]
     expect(notePresets(kept, script)).toEqual([
-      { words: 'Wake', character: 'imp' }, { words: 'Sleep' }, { words: 'You are lit', character: 'lamp' },
+      { words: 'Wake', characters: ['imp'] }, { words: 'Sleep' }, { words: 'You are lit', characters: ['lamp'] }, { words: '', characters: ['imp', 'lamp'] },
     ])
     expect(notePresets([], 'tb')).toEqual([])
   })

@@ -48,7 +48,7 @@ import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
-import { ShowSheet, useCardNote } from './ShowSheet'
+import { useCardNote } from './useCards'
 import { cardKeys, takes } from './show'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
@@ -102,16 +102,16 @@ export const BoardScreen = (props: BoardScreenProps) => (
 const Board = ({ id, replay = false, openSetup = false, deal = false, panels, timer, History }: BoardScreenProps) => {
   const b = useBoard(id, replay)
   const e = useEdits()
-  const cardNote = useCardNote()
   const interaction = useBoardInteraction()
   const insets = useSafeAreaInsets()
   const window = useLayoutViewport()
   const phone = usePhone()
   const p = palette
   const t = b.t
-  const [showOpen, setShowOpen] = useState(false)
   const [bluffsOpen, setBluffsOpen] = useState(false)
   const [bluffsWell, setBluffsWell] = useState<number>()
+  const openBluffs = useCallback((well?: number) => { setBluffsWell(well); setBluffsOpen(true) }, [])
+  const cardNote = useCardNote(openBluffs)
   const [looseOpen, setLooseOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
@@ -271,8 +271,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   }, [edited, appendAll])
   const editNote = useCallback((placedBy: EventId) => setNoteTarget({ kind: 'placed', placedBy }), [])
   // The toolbar keeps the same handlers from render to render, so an edit leaves it alone.
-  const openShow = useCallback(() => setShowOpen(true), [])
-  const openBluffs = useCallback((well?: number) => { setBluffsWell(well); setBluffsOpen(true) }, [])
+  // The eye opens the blank card: its phrases are the cards about no seat, and anything else is
+  // written or typed in tokens on it.
+  const { showCard } = interaction
+  const openShow = useCallback(() => showCard({ kind: 'custom', words: '' }, true), [showCard])
   const openLoose = useCallback(() => setLooseOpen(true), [])
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
@@ -518,7 +520,6 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <ReminderPicker target={reminderTarget} onClose={() => setReminderTarget(undefined)}
           onWriteNote={seat => { setReminderTarget(undefined); setNoteTarget({ kind: 'new', seat }) }} />
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
-        <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onBluffs={openBluffs} />
         <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} well={bluffsWell} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
@@ -545,11 +546,12 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           onCancel={() => setConfirmHome(false)}
         />
         {interaction.card ? (
-          // The tokens alone have no words, and a card's characters and a note's words change as
-          // they are typed, so the dialog takes the card's name.
+          // The blank card's words and tokens change as they are typed, and a card's characters do
+          // too, so the dialog takes the card's name.
           <Modal visible animationType="none" onRequestClose={interaction.closeCard}
-            aria-label={interaction.card.spec.kind === 'custom' ? t('board.customNote') : interaction.card.spec.words || t('board.cardTokenOnly')}>
-            <Card spec={interaction.card.spec} editing={interaction.card.editing} takes={takes(interaction.card.spec.kind)}
+            aria-label={interaction.card.spec.kind === 'custom' ? t('board.customNote') : interaction.card.spec.words}>
+            {/* Keyed, so a phrase picked on the blank card brings its own card up fresh. */}
+            <Card key={interaction.card.spec.kind} spec={interaction.card.spec} editing={interaction.card.editing} takes={takes(interaction.card.spec.kind)}
               keys={cardKeys(board, interaction.card.spec.kind).map((g) => ({
                 key: g.key,
                 label: g.key === 'inPlay' ? t('board.inPlayGroup') : e.teamLabel(g.key),
@@ -563,7 +565,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
                 show: t('board.showBluffsNow'), takeLast: t('board.cardTakeLast'), done: t('common.done'),
                 takeOff: (name) => t('board.removeChip', { label: name }),
                 placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), keyboard: t('board.noteKeyboard'), letters: t('board.noteLetters'),
-                tokens: t('board.noteTokens'), keep: t('board.noteKeep'), yes: t('board.noteYes'), no: t('board.noteNo'),
+                tokens: t('board.noteTokens'), keep: t('board.noteKeep'),
               }} />
           </Modal>
         ) : null}

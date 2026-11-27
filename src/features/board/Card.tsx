@@ -43,18 +43,28 @@ export interface CardLabels {
   readonly letters: string
   readonly tokens: string
   readonly keep: string // the star: keeps the note, and forgets it once kept
-  readonly yes: string
-  readonly no: string
 }
 
-// A note as written on the card: its words and the one token under them.
+// The blank card as written: its words and the tokens under them, or the tokens alone.
 export interface WrittenNote {
   readonly words: string
-  readonly character?: PrintedCharacter
+  readonly characters: readonly PrintedCharacter[]
 }
 
+// One of the official phrases the blank card offers: picking it brings up that card.
+export interface CardPhrase {
+  readonly key: string
+  readonly label: string
+  readonly onPick: () => void
+}
+
+// Which keyboard is up on the blank card. It opens with neither, so everything it offers is in
+// view: a tap on the words raises the device's, and the switch raises the token keys.
+type Up = 'none' | 'letters' | 'tokens'
+
 export interface CardNote {
-  readonly presets: readonly WrittenNote[] // the kept notes, then the script's own cards
+  readonly phrases: readonly CardPhrase[] // the info tokens about no seat
+  readonly presets: readonly WrittenNote[] // the kept cards, then the script's own
   readonly kept: (note: WrittenNote) => boolean
   readonly onKeep: (note: WrittenNote) => void // keeps the note, or forgets it once kept
 }
@@ -89,11 +99,12 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const [editing, setEditing] = useState(opensEditing)
   const [printed, setPrinted] = useState<readonly PrintedCharacter[]>(spec.characters ?? [])
   const [written, setWritten] = useState(spec.words)
-  // A note's two keyboards share the foot: the device's for its words, the keys for its token.
-  const [letters, setLetters] = useState(true)
+  // The blank card's two keyboards share the foot: the device's for its words, the keys for its
+  // tokens. Opened empty it starts with neither; opened to change what it shows, with the letters.
+  const [up, setUp] = useState<Up>(spec.words === '' && (spec.characters ?? []).length === 0 ? 'none' : 'letters')
   const field = note !== undefined && editing
-  // The token keys stand up while editing, except while a note's words are being typed.
-  const dock = editing && (!note || !letters)
+  // The token keys stand up while editing, except on the blank card until its switch asks for them.
+  const dock = editing && (!note || up === 'tokens')
   const text = note ? written : spec.words
   // An empty card being filled holds its token's place with an empty disc, so it previews. A
   // note's token is optional, so it holds no place.
@@ -155,31 +166,27 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   // update before the tap's event is over, and iOS raises its keyboard only for a focus made
   // during the tap. It also puts the focus in the dialog before the Modal's trap looks for some.
   const input = useRef<TextInputInstance>(null)
+  const closeLabel = labels.close
   const root = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     if (!field) return
-    if (!letters) {
+    if (up === 'letters') input.current?.focus()
+    else {
       input.current?.blur()
-      return
+      // At rest the focus waits on the cross: left to the dialog's trap it would land in the
+      // words, the first control in the card, and raise the device's keyboard unasked.
+      if (up === 'none') root.current?.querySelector<HTMLElement>(`[role="button"][aria-label="${CSS.escape(closeLabel)}"]`)?.focus({ preventScroll: true })
     }
-    input.current?.focus()
-    // The list the note was picked from gives the focus back to the eye on the board as it
-    // leaves, after the card is up. Focus sent out of the card's layer comes back to the caret
-    // at once, before the dialog's own trap moves it to some other control.
-    const reclaim = (event: FocusEvent) => {
-      if (event.target instanceof Node && !layerOf(root.current)?.contains(event.target)) input.current?.focus()
-    }
-    document.addEventListener('focus', reclaim, true)
-    return () => document.removeEventListener('focus', reclaim, true)
-  }, [field, letters])
+  }, [field, up, closeLabel])
   // Tokens, a key that shows the card, Show and Change each unmount the control that was pressed,
   // and the focus would fall to the page. It goes on to what comes next: the switch, the first
   // key, or the shown card's one Close.
   useLayoutEffect(() => {
     if (document.activeElement && document.activeElement !== document.body) return
-    const target = !editing ? '[data-card-close] [role="button"]'
-      : note ? 'input[type="radio"]:checked' : '[data-keys] [role="button"]:not([aria-disabled="true"])'
-    root.current?.querySelector<HTMLElement>(target)?.focus({ preventScroll: true })
+    const find = (selector: string) => root.current?.querySelector<HTMLElement>(selector)
+    const target = !editing ? find('[data-card-close] [role="button"]')
+      : note ? find('input[type="radio"]:checked') ?? find('input[type="radio"]') : find('[data-keys] [role="button"]:not([aria-disabled="true"])')
+    target?.focus({ preventScroll: true })
   }, [editing, dock, note])
 
   // Hold to close. The card is held screen out toward a player, so a stray thumb must not hand
@@ -281,14 +288,9 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   }
 
   // A key's tap. A card of one token shows at once, so typing it is the whole step; a card of
-  // several takes or gives back the key and waits for Show. A note's token sits under its words
-  // and waits for Show with them, and another key replaces it.
+  // several, the blank card among them, takes or gives back the key and waits for Show.
   const tapKey = (key: TokenKey) => {
     const character = { id: key.id, name: key.name }
-    if (note) {
-      setPrinted((now) => (now[0]?.id === key.id ? [] : [character]))
-      return
-    }
     if (takes === 1) {
       setPrinted([character])
       setEditing(false)
@@ -297,7 +299,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
     setPrinted((now) => now.some((c) => c.id === key.id) ? now.filter((c) => c.id !== key.id)
       : now.length < takes ? [...now, character] : now)
   }
-  const current: WrittenNote = { words: written.trim(), ...(printed[0] ? { character: printed[0] } : {}) }
+  const current: WrittenNote = { words: written.trim(), characters: printed }
   const filled = note ? current.words !== '' || printed.length > 0 : printed.length > 0
   const show = () => {
     if (!filled) return
@@ -309,7 +311,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   // here: what the star keeps then always reads back.
   const write = (preset: WrittenNote) => {
     setWritten(preset.words.slice(0, noteLength))
-    setPrinted(preset.character ? [preset.character] : [])
+    setPrinted(preset.characters)
   }
 
   const horizontal = phone ? gutter.phone : gutter.tablet
@@ -319,7 +321,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   const count = field ? fieldCount(written.length, noteLength) : 'hidden'
   const bar = !editing ? null : note ? (
     <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
-      <Keyboards letters={letters} labels={labels} onLetters={setLetters} />
+      <Keyboards up={up} labels={labels} onUp={setUp} />
       {/* Kept by a press that leaves the caret where it is. */}
       <KeepCaret style={styles.barEnd}>
         <EdgeButton icon="star" label={labels.keep} toggle armed={filled && note.kept(current)} disabled={!filled} onPress={() => note.onKeep(current)} />
@@ -358,7 +360,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
             {field ? (
               <View onLayout={(event) => setWordsHeight(event.nativeEvent.layout.height)} style={{ paddingHorizontal: horizontal }}>
                 {/* A tap on the words, or a Tab onto them, is for typing: the letters come up. */}
-                <NoteField inputRef={input} value={written} onChange={setWritten} onFocus={() => setLetters(true)} style={wordsStyle} label={labels.message} placeholder={labels.placeholder} />
+                <NoteField inputRef={input} value={written} onChange={setWritten} onFocus={() => setUp('letters')} style={wordsStyle} label={labels.message} placeholder={labels.placeholder} />
                 {/* Plain text, not a live region, as a field's count is everywhere. */}
                 {count !== 'hidden' ? (
                   <Text style={[type.text.small, tabular, styles.count, { color: count === 'full' ? p.danger : p.muted }]}>{`${written.length}/${noteLength}`}</Text>
@@ -373,7 +375,7 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
               {text}
             </Animated.Text> : null}
             {field && written === '' && printed.length === 0 ? (
-              <Presets quick={[[labels.yes, labels.no], digits]} presets={note.presets} onPick={write} />
+              <Presets phrases={note.phrases} presets={note.presets} onPick={write} />
             ) : null}
             {!wordsOnly ? <Animated.View style={[styles.stage, { opacity: rise, transform: [{ scale }] }, hasWords ? { marginTop: card.wordsGap } : {}]}>
               {slots > 0 ? (
@@ -383,10 +385,10 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
                     <View key={`${c.id}-${i}`} style={[styles.cell, { width: cell }]}>
                       <Token character={c.id} name={c.name} size={size} printName={!captioned} markers={false} {...(spec.tint ? { alignment: spec.tint } : {})}
                         {...(editing && !note ? { accessibilityLabel: labels.takeOff(c.name), onPress: () => setPrinted((now) => now.filter((_, at) => at !== i)) } : {})} />
-                      {/* A note's one token comes off by its own small cross, since the words above it are typed. */}
+                      {/* On the blank card a token comes off by its own small cross, since the words above it are typed. */}
                       {field ? (
                         <View style={styles.tokenCross}>
-                          <IconButton icon="close" label={labels.takeOff(c.name)} onPress={() => setPrinted([])} style={{ backgroundColor: p.feltRaised, borderRadius: touch / 2 }} />
+                          <IconButton icon="close" label={labels.takeOff(c.name)} onPress={() => setPrinted((now) => now.filter((_, at) => at !== i))} style={{ backgroundColor: p.feltRaised, borderRadius: touch / 2 }} />
                         </View>
                       ) : null}
                       {captioned ? (
@@ -418,7 +420,8 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
           {!editing && (note || (takes > 0 && printed.length > 0)) ? (
             <View style={[styles.corner, { top: corner, right: space.md }]}>
               <Button variant="text" label={labels.change} onPress={() => {
-                setLetters(true)
+                // Tokens alone go back to their keys, words to their caret.
+                setUp(note && written === '' ? 'tokens' : 'letters')
                 setEditing(true)
               }} />
             </View>
@@ -446,16 +449,6 @@ export const Card = ({ spec, editing: opensEditing, takes, keys, note, onDismiss
   )
 }
 
-// The layer a node is drawn in: its ancestor right under the body, as a Modal's portal is.
-const layerOf = (node: Element | null): Element | null => {
-  let layer = node
-  while (layer?.parentElement && layer.parentElement !== document.body) layer = layer.parentElement
-  return layer
-}
-
-// The digits a note offers, for the many abilities that tell a number.
-const digits = ['0', '1', '2', '3', '4', '5']
-
 // A press on the bar or a preset would take the focus, and the device's keyboard with it, from
 // the note being typed. Keyboard focus still moves as usual.
 const KeepCaret = ({ style, children }: { readonly style?: object; readonly children: ReactNode }) => (
@@ -464,14 +457,14 @@ const KeepCaret = ({ style, children }: { readonly style?: object; readonly chil
 
 // The two keyboards a note is typed from, one up at a time: native radios drawn as a switch of
 // two, so the pair is one tab stop and the arrows move between them.
-const Keyboards = ({ letters, labels, onLetters }: { readonly letters: boolean; readonly labels: CardLabels; readonly onLetters: (letters: boolean) => void }) => {
+const Keyboards = ({ up, labels, onUp }: { readonly up: Up; readonly labels: CardLabels; readonly onUp: (up: Up) => void }) => {
   const name = useId()
   const focusVisible = useFocusVisible()
-  const [focused, setFocused] = useState<boolean>()
+  const [focused, setFocused] = useState<Up>()
   return (
     <div role="radiogroup" aria-label={labels.keyboard} style={{ display: 'flex', borderRadius: radius.control, backgroundColor: palette.feltRaised }}>
-      {([[true, 'letters', labels.letters], [false, 'token', labels.tokens]] as const).map(([on, icon, label]) => {
-        const checked = letters === on
+      {([['letters', 'letters', labels.letters], ['tokens', 'token', labels.tokens]] as const).map(([on, icon, label]) => {
+        const checked = up === on
         return (
           <label key={icon} title={label} style={{
             position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: touch, height: touch,
@@ -479,7 +472,7 @@ const Keyboards = ({ letters, labels, onLetters }: { readonly letters: boolean; 
             borderColor: checked ? palette.accent : 'transparent',
             ...(focused === on && focusVisible ? { outline: `${focusRing.width}px solid ${palette.accent}`, outlineOffset: focusRing.offset } : {}),
           }}>
-            <input type="radio" name={name} checked={checked} aria-label={label} onChange={() => onLetters(on)}
+            <input type="radio" name={name} checked={checked} aria-label={label} onChange={() => onUp(on)}
               onFocus={() => setFocused(on)} onBlur={() => setFocused(undefined)} style={hiddenRadio} />
             <Icon name={icon} color={checked ? palette.accent : palette.text} />
           </label>
@@ -513,26 +506,24 @@ const NoteField = ({ inputRef, value, onChange, onFocus, style, label, placehold
   )
 }
 
-// What an empty note offers to write: Yes, No and the digits, then the kept notes and the
-// script's own cards, one line each.
-const Presets = ({ quick, presets, onPick }: { readonly quick: readonly (readonly string[])[]; readonly presets: readonly WrittenNote[]; readonly onPick: (note: WrittenNote) => void }) => (
+// What the empty blank card offers, one line each: the official phrases, which each bring up
+// their own card, then the kept cards and the script's own, which are written onto this one.
+const Presets = ({ phrases, presets, onPick }: { readonly phrases: readonly CardPhrase[]; readonly presets: readonly WrittenNote[]; readonly onPick: (note: WrittenNote) => void }) => (
   <KeepCaret style={{ flexDirection: 'column', alignItems: 'center', marginTop: card.wordsGap, gap: space.sm, paddingLeft: space.md, paddingRight: space.md }}>
-    {/* The answers on one row and the digits on the next: wrapped as one row, a narrow phone left a chip alone. */}
-    {quick.map((row) => (
-      <View key={row.join()} style={styles.quick}>
-        {row.map((words) => (
-          <Preset key={words} label={words} onPress={() => onPick({ words })}>
-            <Text style={[type.text.strong, { color: palette.text }]}>{words}</Text>
-          </Preset>
-        ))}
-      </View>
-    ))}
-    {presets.map((preset) => (
-      <Preset key={`${preset.words}/${preset.character?.id ?? ''}`} wide label={[preset.words, preset.character?.name].filter(Boolean).join(', ')} onPress={() => onPick(preset)}>
-        {preset.character ? <Token character={preset.character.id} size={tokenSize.corner} /> : null}
-        <Text numberOfLines={1} style={[type.text.body, styles.presetWords, { color: palette.text }]}>{preset.words || preset.character?.name}</Text>
+    {phrases.map((phrase) => (
+      <Preset key={phrase.key} wide label={phrase.label} onPress={phrase.onPick}>
+        <Text numberOfLines={1} style={[type.text.strong, styles.presetWords, { color: palette.text }]}>{phrase.label}</Text>
       </Preset>
     ))}
+    {presets.map((preset) => {
+      const names = preset.characters.map((c) => c.name).join(', ')
+      return (
+        <Preset key={`${preset.words}/${preset.characters.map((c) => c.id).join()}`} wide label={[preset.words, names].filter(Boolean).join(', ')} onPress={() => onPick(preset)}>
+          {preset.characters.map((c, i) => <Token key={`${c.id}-${i}`} character={c.id} size={tokenSize.corner} />)}
+          <Text numberOfLines={1} style={[type.text.body, styles.presetWords, { color: palette.text }]}>{preset.words || names}</Text>
+        </Preset>
+      )
+    })}
   </KeepCaret>
 )
 
@@ -664,8 +655,6 @@ const styles = StyleSheet.create({
   input: { paddingTop: 0, paddingBottom: 0, borderWidth: 0, outlineStyle: 'none', overflow: 'hidden', resize: 'none', borderRadius: radius.control } as object,
   count: { textAlign: 'center', marginTop: space.xs },
   tokenCross: { position: 'absolute', top: 0, right: 0 },
-  // Close enough for the six digits to share a row on the narrowest phone.
-  quick: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.xs },
   preset: { minHeight: touch, minWidth: touch, paddingHorizontal: space.md, borderRadius: radius.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   presetWide: { justifyContent: 'flex-start', width: '100%', maxWidth: card.presetWidth },
   presetWords: { flexShrink: 1 },

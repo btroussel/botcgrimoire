@@ -78,11 +78,11 @@ describe('kept notes', () => {
 
   it('drops what is malformed and keeps the rest in order', () => {
     const notes = [
-      { words: 'Yes', character: 'imp' }, null, 'Wake', { words: 7 }, { words: '   ' }, { words: '', character: 'chef' },
-      { words: 'x'.repeat(noteLength + 1) }, { words: ' Sleep ', character: '' }, { words: 'Yes', character: 'imp' },
+      { words: 'Yes', characters: ['imp'] }, null, 'Wake', { words: 7 }, { words: '   ' }, { words: '', characters: ['chef'] },
+      { words: 'x'.repeat(noteLength + 1) }, { words: ' Sleep ', characters: [] }, { words: 'Yes', characters: ['imp'] },
     ]
     expect(withDefaults({ notes } as unknown as Partial<{ notes: readonly KeptNote[] }>).notes).toEqual([
-      { words: 'Yes', character: 'imp' }, { words: '', character: 'chef' }, { words: 'Sleep' },
+      { words: 'Yes', characters: ['imp'] }, { words: '', characters: ['chef'] }, { words: 'Sleep' },
     ])
     expect(withDefaults({ notes: 'many' } as unknown as Partial<{ notes: readonly KeptNote[] }>).notes).toEqual([])
   })
@@ -92,9 +92,9 @@ describe('kept notes', () => {
     const kept = keepNote(many, { words: 'Note 3' })
     expect(kept[0]).toEqual({ words: 'Note 3' })
     expect(kept).toHaveLength(keptLimit)
-    const more = keepNote(kept, { words: 'New', character: 'imp' })
+    const more = keepNote(kept, { words: 'New', characters: ['imp'] })
     expect(more).toHaveLength(keptLimit)
-    expect(more[0]).toEqual({ words: 'New', character: 'imp' })
+    expect(more[0]).toEqual({ words: 'New', characters: ['imp'] })
     expect(more).not.toContainEqual({ words: `Note ${keptLimit - 1}` })
   })
 
@@ -104,8 +104,8 @@ describe('kept notes', () => {
   })
 
   it('tells a note by its words and its token together', () => {
-    const notes = keepNote(keepNote([], { words: 'Yes' }), { words: 'Yes', character: 'imp' })
+    const notes = keepNote(keepNote([], { words: 'Yes' }), { words: 'Yes', characters: ['imp'] })
     expect(notes).toHaveLength(2)
-    expect(forgetNote(notes, { words: 'Yes' })).toEqual([{ words: 'Yes', character: 'imp' }])
+    expect(forgetNote(notes, { words: 'Yes' })).toEqual([{ words: 'Yes', characters: ['imp'] }])
   })
 })

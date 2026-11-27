@@ -20,7 +20,6 @@ export type CardKind =
   | 'notInPlay'
   | 'selectedYou'
   | 'thisPlayerIs'
-  | 'tokenOnly'
   | 'custom'
 
 // A character on a card: its id for the art and its name in the locale for the arc or the

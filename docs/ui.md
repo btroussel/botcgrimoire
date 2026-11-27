@@ -64,8 +64,9 @@ outside dismiss one. There are two exceptions, both where what is being filled m
 The tokens on a card are typed from keys docked at the foot of an upright window, where a device's
 keyboard lives, or in a panel down the right of a wide one, which has no height to give. The card
 being filled stays in view above or beside them as its own preview, so the Storyteller sees exactly
-what the player will, and its bar stays under the card either way. A note's words are typed on the card in the card's own type, so the field is the
-preview too; its token keys and the device's keyboard take the same place in turn, and the card
+what the player will, and its bar stays under the card either way. The blank card's words are typed
+on the card in the card's own type, so the field is the preview too. It opens with neither keyboard
+up; its token keys and the device's keyboard then take the same place in turn, and the card
 follows the visible viewport so its bar stays above the keyboard.
 
 The board's three token sheets, a seat's character, a reminder and the bluffs, are a drawer of the
@@ -76,7 +77,7 @@ of that seat while it can still list a few rows of keys. A seat lower than that 
 the drawer is up, and the title names it: keys that came down from the top edge instead read as a
 keyboard upside down, out of the thumb's reach. Reminders are keys too, under the
 same rule labels as the characters. Everything read rather than scanned keeps the centred window:
-the list of cards, Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks
+Fabled and Loric, the bag, notes, language and history. The bluffs drawer docks
 its wells and Save at its foot, and Shuffle sits in its top row, away from Save.
 
 ## Motion

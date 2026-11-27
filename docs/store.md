@@ -114,7 +114,7 @@ the app was closed. Play time counts from creation, setup included, to the endin
 ## Custom scripts and settings
 
 Settings hold the language, the board colour and the kept notes, apart from any game. A kept note
-is the words and token of a card the Storyteller wants to show again; keeping one records nothing
+is the words and tokens of a card the Storyteller wants to show again; keeping one records nothing
 in a game. The list holds the thirty kept last, latest first, and a note as long as the card's
 field takes. Settings saved before the list read as none kept, and an entry of the wrong shape is
 dropped on read rather than refusing the settings. The first render uses

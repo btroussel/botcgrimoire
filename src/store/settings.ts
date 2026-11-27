@@ -2,10 +2,10 @@
 import type { BoardColour, Locale } from '../content'
 import { boardColours, locales } from '../content'
 
-// A note the Storyteller kept to show again: its words, and the character token under them.
+// A card the Storyteller kept to show again: its words, and the character tokens under them.
 export interface KeptNote {
   readonly words: string
-  readonly character?: string
+  readonly characters?: readonly string[]
 }
 
 export interface Settings {
@@ -34,7 +34,8 @@ const matchLocale = (tag: string): Locale | undefined => {
 // The browser's language when it is one we have, English otherwise.
 const browserLocale = (): Locale => matchLocale(typeof navigator !== 'undefined' ? navigator.language : 'en') ?? 'en'
 
-export const sameNote = (a: KeptNote, b: KeptNote): boolean => a.words === b.words && a.character === b.character
+export const sameNote = (a: KeptNote, b: KeptNote): boolean =>
+  a.words === b.words && (a.characters ?? []).join() === (b.characters ?? []).join()
 
 // Kept first, once, and the list cut to its bound. A note longer than the field is refused, since
 // the next launch would drop it from the list.
@@ -50,11 +51,11 @@ const readNotes = (raw: unknown): readonly KeptNote[] => {
   if (!Array.isArray(raw)) return []
   const notes = raw.flatMap((n: unknown): KeptNote[] => {
     if (typeof n !== 'object' || n === null) return []
-    const { words, character } = n as Record<string, unknown>
+    const { words, characters } = n as Record<string, unknown>
     if (typeof words !== 'string' || words.length > noteLength) return []
-    const token = typeof character === 'string' && character !== '' ? character : undefined
-    if (words.trim() === '' && token === undefined) return []
-    return [{ words: words.trim(), ...(token !== undefined ? { character: token } : {}) }]
+    const tokens = Array.isArray(characters) ? characters.filter((c): c is string => typeof c === 'string' && c !== '') : []
+    if (words.trim() === '' && tokens.length === 0) return []
+    return [{ words: words.trim(), ...(tokens.length > 0 ? { characters: tokens } : {}) }]
   })
   return notes.filter((n, i) => notes.findIndex((m) => sameNote(m, n)) === i).slice(0, keptLimit)
 }
