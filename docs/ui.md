@@ -226,11 +226,17 @@ under its name and a second tap folds it: one ability is read without the paper 
 board, and only a drag opens the drawer full. Nothing dims behind a drawer, the ring never jumps
 during a drag, and wider than a phone a fully open drawer leaves some board in reach.
 
+A drawer's tabs are cut from its paper, like the index tabs of a ledger. The open tab is the
+sheet's own vellum and joins it with no line between them. The others lie under an ink wash, a
+shade darker, and tuck under the sheet's edge while it is out. There is no drag handle: a paper
+tab is already the thing to pull. The resize separator is for the keyboard, and draws only while
+focused. Each sheet opens on its title in Grenze, the script's name or the night's, on one line.
+
 The three sheets share one row: the art, the name with its players under it, the text beside, and
 a line under the row that starts at the name. A night's rows hang on a rail from dusk to dawn, which
 the lines never cut, and the step being read wears the brass ring: a tap on a step moves the ring
-there, at either width. The filter between what is in play and the whole script heads every sheet
-and stays while the rows scroll.
+there, at either width. Under the title, the filter between what is in play and the whole script
+is on every sheet and stays at the top while the title and the rows scroll.
 
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
