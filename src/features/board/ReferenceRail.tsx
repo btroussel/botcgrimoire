@@ -17,7 +17,7 @@ import { PaperTexture } from '../../ui/PaperTexture'
 import { nightMarkerArt } from '../../ui/scriptSheet/Reference'
 import { RuleList } from '../../ui/scriptSheet/Rules'
 import { Segment } from './Segment'
-import { font, palette, space, touch, type } from '../../ui/theme'
+import { font, indexTab, palette, space, touch, type } from '../../ui/theme'
 import { nightEntries, seatCharacters } from './nightReference'
 
 export type ReferenceTab = 'characters' | 'first' | 'other'
@@ -42,6 +42,10 @@ const markerKeys = {
   dusk: 'board.markerDusk', dawn: 'board.markerDawn', minionInfo: 'board.markerMinionInfo', demonInfo: 'board.markerDemonInfo',
 } as const
 const identityWidth = 168
+// How far a tab that is not open slides under the edge of the sheet.
+const tabTuck = 6
+// The sheet and its tabs round their outer corners alike.
+const paperRadius = 7
 const phoneRoleName = { fontSize: 14, lineHeight: 20 }
 // Descriptions begin beyond the compact opening, so the paper's edge reveals them naturally.
 const ReferenceDescription = ({ expansion, width, children }: {
@@ -218,46 +222,56 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
     <View style={[styles.tabs, compactTabs ? styles.compactTabs : { paddingBottom: bottomClearance }]}>
       {/* A tab's label reads bottom to top. Vertical text keeps Han, kana and Hangul upright, so
           every script is laid on its side, as Latin letters already are. */}
-      {(Object.keys(tabKeys) as ReferenceTab[]).map(value => <Pressable key={value}
-        nativeID={`${tabId}-${value}`}
-        hitSlop={{ left: 2, right: 2 }}
-        accessibilityRole="button" accessibilityLabel={t(tabKeys[value])} aria-expanded={tab === value}
-        onPress={() => onTabChange(tab === value ? null : value)}
-        style={state => [styles.tab, compactTabs && styles.compactTab, tab === value && styles.activeTab,
-          (isHovered(state) || state.pressed) && styles.hoveredTab,
-          focusStyle(palette, focusVisible && isFocused(state))]}>
-        {compactTabs ? <span title={t(tabKeys[value])} aria-hidden="true"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: 32, height: 32 }}>
-          <Icon name={value === 'characters' ? 'script' : 'order'} size={22} color={tab === value ? palette.parchment : palette.text} />
-          {value !== 'characters' ? <span style={{ position: 'absolute', right: 0, bottom: 0, fontFamily: font.body.bold,
-            fontSize: 11, lineHeight: '12px', color: tab === value ? palette.parchment : palette.text }}>{value === 'first' ? '1' : '2+'}</span> : null}
-        </span> : <span style={{ writingMode: 'vertical-rl', textOrientation: 'sideways', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13,
-          letterSpacing: 1, textTransform: 'uppercase', color: tab === value ? palette.parchment : palette.text }}>
-          {t(tabKeys[value])}
-        </span>}
-      </Pressable>)}
+      {(Object.keys(tabKeys) as ReferenceTab[]).map(value => {
+        // The sheet is still out while it slides shut, so its tab stays joined until the paper is gone.
+        const joined = width > 0 && shownTab === value
+        return <Pressable key={value}
+          nativeID={`${tabId}-${value}`}
+          hitSlop={{ left: 2, right: 2 }}
+          accessibilityRole="button" accessibilityLabel={t(tabKeys[value])} aria-expanded={tab === value}
+          onPress={() => onTabChange(tab === value ? null : value)}
+          style={state => [styles.tab, compactTabs && styles.compactTab, focusStyle(palette, focusVisible && isFocused(state))]}>
+          {state => <View style={[styles.tabFace, joined ? styles.joinedFace : { left: Math.min(tabTuck, width) }]}>
+            <View style={styles.tabPaper}>
+              <PaperTexture />
+              {joined ? null : <View style={[StyleSheet.absoluteFill,
+                { backgroundColor: isHovered(state) || state.pressed ? indexTab.hover : indexTab.wash }]} />}
+            </View>
+            {compactTabs ? <span title={t(tabKeys[value])} aria-hidden="true"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: 32, height: 32 }}>
+              <Icon name={value === 'characters' ? 'script' : 'order'} size={22} color={palette.ink} />
+              {value !== 'characters' ? <span style={{ position: 'absolute', right: 0, bottom: 0, fontFamily: font.body.bold,
+                fontSize: 11, lineHeight: '12px', color: palette.ink }}>{value === 'first' ? '1' : '2+'}</span> : null}
+            </span> : <span style={{ writingMode: 'vertical-rl', textOrientation: 'sideways', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13,
+              letterSpacing: 1, textTransform: 'uppercase', color: palette.ink }}>
+              {t(tabKeys[value])}
+            </span>}
+          </View>}
+        </Pressable>
+      })}
     </View>
     </div>
-    {/* A closed drawer opens and drags from its tabs, and its grip would only sit over their
-        edge and take their taps, so it shows and takes the pointer only while the drawer is open.
-        The keyboard still reaches it, and it shows while focused. */}
+    {/* A pointer drags the drawer by its tabs or its paper, which look like things to pull, so
+        the separator is for the keyboard alone: it takes no pointer and draws its bar only
+        while focused. */}
     <div role="separator" tabIndex={0} aria-orientation="vertical" aria-label={t('board.referenceResize')}
       onFocus={() => setGripFocused(true)} onBlur={() => setGripFocused(false)}
       aria-valuemin={0} aria-valuemax={Math.round(maximumWidth)} aria-valuenow={Math.round(width)}
-      {...dragHandlers} onKeyDown={onResizeKey}
+      onKeyDown={onResizeKey}
       style={{ position: 'absolute', left: referenceTabWidth - 6, top: '50%', transform: 'translateY(-50%)', width: 12, height: 68, zIndex: 3,
-        touchAction: 'none', userSelect: 'none', cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8,
-        pointerEvents: width > 0 ? 'auto' : 'none' }}>
-      <div style={{ width: 4, height: 52, borderRadius: 4, background: palette.accent,
-        boxShadow: '0 0 0 3px #2c211b80', opacity: width === 0 && !gripFocused ? 0 : dragging ? 1 : 0.8, pointerEvents: 'none' }} />
+        display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, pointerEvents: 'none' }}>
+      {gripFocused ? <div style={{ width: 4, height: 52, borderRadius: 4, background: palette.accent, boxShadow: '0 0 0 3px #2c211b80' }} /> : null}
     </div>
     <div role="region" aria-label={shownTab === 'characters' ? scriptName(script) : t(tabKeys[shownTab])}
       inert={!tab} aria-hidden={!tab} {...dragHandlers}
       style={{ width, display: 'flex', overflow: 'hidden', minHeight: 0, touchAction: 'pan-y', userSelect: 'none' }}>
     <View style={[styles.paper, { width: maximumWidth }]}>
       <PaperTexture />
-      <View style={styles.binding} pointerEvents="none" />
       <ScrollView key={shownTab} style={styles.scroll} contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]} showsVerticalScrollIndicator={false}>
+        {/* One line at every width: the sheet's typesetting never reflows as the paper is pulled. */}
+        <Text accessibilityRole="header" numberOfLines={1} style={[type.display.title, styles.ink, styles.title, { width: headingWidth }]}>
+          {shownTab === 'characters' ? scriptName(script) : t(tabKeys[shownTab])}
+        </Text>
         {/* The filter reads as the sheet's heading, so its state is visible in words, not decoded from an icon. */}
         {shownTab !== 'characters' ? <View style={[styles.filter, { width: headingWidth }]}>
           <View style={styles.rule} />
@@ -303,16 +317,23 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
 
 const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, flexDirection: 'row' },
-  tabs: { width: referenceTabWidth, alignSelf: 'stretch', justifyContent: 'center', gap: space.xs },
-  compactTabs: { justifyContent: 'flex-start' },
-  tab: { width: referenceTabWidth, minHeight: 124, maxHeight: 158, flex: 1, flexGrow: 0, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#100917c9', borderColor: '#ae8a4e80', borderWidth: 1, borderTopLeftRadius: 7, borderBottomLeftRadius: 7 },
+  // Above the sheet, so the open tab can cover the sheet's border where the two join.
+  tabs: { width: referenceTabWidth, alignSelf: 'stretch', justifyContent: 'center', gap: space.xs, zIndex: 1 },
+  // The icon tabs start below the sheet's rounded corner, so the top one joins a straight edge.
+  compactTabs: { justifyContent: 'flex-start', paddingTop: paperRadius },
+  tab: { width: referenceTabWidth, minHeight: 124, maxHeight: 158, flex: 1, flexGrow: 0 },
   compactTab: { width: touch, marginLeft: referenceTabWidth - touch, minHeight: touch, maxHeight: touch },
-  activeTab: { backgroundColor: palette.ink, borderColor: palette.accent, borderRightWidth: 0 },
-  hoveredTab: { backgroundColor: palette.feltRaised },
+  // The tab keeps its whole touch area. The face is the paper it draws, which tucks under the
+  // sheet's edge while another tab is open.
+  tabFace: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: palette.parchment, borderColor: palette.ink, borderWidth: 1, borderRightWidth: 0,
+    borderTopLeftRadius: paperRadius, borderBottomLeftRadius: paperRadius, boxShadow: indexTab.shadow },
+  // One point over the sheet's own border, so no line runs between the open tab and its paper.
+  joinedFace: { right: -1 },
+  tabPaper: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderTopLeftRadius: paperRadius - 1, borderBottomLeftRadius: paperRadius - 1, overflow: 'hidden' },
   paper: { minHeight: 0, flexShrink: 0, backgroundColor: palette.parchment, borderColor: palette.ink, borderWidth: 1,
-    borderTopLeftRadius: 7, borderBottomLeftRadius: 7, overflow: 'hidden', boxShadow: '-4px 2px 16px #0006' },
-  binding: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 5, backgroundColor: palette.accent, opacity: 0.72 },
+    borderTopLeftRadius: paperRadius, borderBottomLeftRadius: paperRadius, overflow: 'hidden', boxShadow: '-4px 2px 16px #0006' },
+  title: { paddingTop: space.sm },
   filter: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.xs },
   scroll: { flex: 1, minHeight: 0 },
   content: { paddingLeft: space.md, paddingRight: space.md, width: '100%', maxWidth: 760, alignSelf: 'center' },
