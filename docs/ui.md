@@ -230,13 +230,13 @@ A drawer's tabs are cut from its paper, like the index tabs of a ledger. The ope
 sheet's own vellum and joins it with no line between them. The others lie under an ink wash, a
 shade darker, and tuck under the sheet's edge while it is out. There is no drag handle: a paper
 tab is already the thing to pull. The resize separator is for the keyboard, and draws only while
-focused. Each sheet opens on its title in Grenze, the script's name or the night's, on one line.
+focused. A sheet carries no title: its open tab names it.
 
 The three sheets share one row: the art, the name with its players under it, the text beside, and
-a line under the row that starts at the name. A night's rows hang on a rail from dusk to dawn, which
-the lines never cut, and the step being read wears the brass ring: a tap on a step moves the ring
-there, at either width. Under the title, the filter between what is in play and the whole script
-is on every sheet and stays at the top while the title and the rows scroll.
+a line under the row that starts at the name. A night's rows are the characters' rows, in the
+night's order, and the step being read wears the brass ring round its art: a tap on a step moves
+the ring there, at either width. The filter between what is in play and the whole script heads
+every sheet and stays while the rows scroll. A team's name is the word alone, in its colour.
 
 The board gives its spare width to the drawer down to a minimum, and past that the paper covers the
 board without moving the seats. An upright window keeps a board 520 points wide, so from 752 points
