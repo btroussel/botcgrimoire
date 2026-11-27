@@ -6,6 +6,23 @@ test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true
 
 const button = (page, name) => page.getByRole('button', { name, exact: true })
 const faceDown = page => page.getByRole('button', { name: /^Take face-down token \d+$/ })
+// The heap overlaps, and a tap takes the highest token under the finger. A player taps a token they
+// can see on top, so this finds one whose middle no other token covers. Its middle can be off screen
+// while the turn slides in, hence the poll.
+const topToken = async page => {
+  let top
+  await expect.poll(async () => {
+    for (const token of await faceDown(page).all()) {
+      const shown = await token.evaluate(el => {
+        const box = el.getBoundingClientRect()
+        return el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
+      })
+      if (shown) { top = token; return true }
+    }
+    return false
+  }).toBe(true)
+  return top
+}
 
 test('each player takes a token from the open bag, and the Storyteller deals what they drew', async ({ page }) => {
   await open(page, '/new')
@@ -28,8 +45,7 @@ test('each player takes a token from the open bag, and the Storyteller deals wha
     // The turn says how to take a token, until one is taken.
     const hint = page.getByText('Tap a token to take it.', { exact: true })
     await expect(hint).toBeVisible()
-    // The heap overlaps, so a tap takes the highest token under the finger.
-    await faceDown(page).first().click({ force: true })
+    await (await topToken(page)).click()
     await expect(faceDown(page)).toHaveCount(0)
     await expect(hint).toBeHidden()
     await button(page, player < 5 ? 'Hide and pass to next player' : 'Hide and finish').click()
@@ -68,7 +84,7 @@ test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, 
   await button(page, 'Start with Seat 1').click()
   const seen = []
   for (let player = 1; player <= 3; player++) {
-    await faceDown(page).first().click({ force: true })
+    await (await topToken(page)).click()
     await expect(button(page, player < 3 ? 'Hide and pass to next player' : 'Hide and finish')).toBeEnabled()
     seen.push((await page.getByRole('img', { name: /^(Monk|Imp|Chef|Drunk)\./ }).getAttribute('aria-label')).split('.')[0])
     await button(page, player < 3 ? 'Hide and pass to next player' : 'Hide and finish').click()
