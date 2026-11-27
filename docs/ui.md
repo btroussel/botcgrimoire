@@ -69,19 +69,20 @@ on the card in the card's own type, so the field is the preview too. It opens wi
 up; its token keys and the device's keyboard then take the same place in turn, and the card
 follows the visible viewport so its bar stays above the keyboard.
 
-The token sheets, a seat's character, a reminder, the bluffs, the bag and what a Drunk or Lunatic
-sees, are a drawer of the same keys that comes up from the foot, since a centred window would cover
-the seats it changes. It
-is full width up to a readable maximum, never so tall that the board is gone, over a light scrim
-that leaves the board readable. A seat it changes keeps the brass ring, and the drawer stops short
-of that seat while it can still list a few rows of keys. A seat lower than that is covered while
-the drawer is up, and the title names it: keys that came down from the top edge instead read as a
-keyboard upside down, out of the thumb's reach. Reminders are keys too, under the
-same rule labels as the characters. Everything read rather than scanned keeps the centred window:
-Fabled and Loric, notes, language and history. The bluffs drawer docks
-its wells and Save at its foot, and Shuffle sits in its top row, away from Save. The bag's drawer
-docks the bag, a slot for each seat it fills: a key puts in one more copy, so a character can go in
-twice, and a token in the bag comes back out.
+The token sheets, a seat's character, a reminder, the bluffs, the Fabled and Loric, the bag and what
+a Drunk or Lunatic sees, are a drawer of the same keys that comes up from the foot, since a centred
+window would cover the seats it changes. It is full width up to a readable maximum, never so tall
+that the board is gone, over a light scrim that leaves the board readable. A seat it changes keeps
+the brass ring, and the drawer stops short of that seat while it can still list a few rows of keys.
+A seat lower than that is covered while the drawer is up, and the title names it: keys that came
+down from the top edge instead read as a keyboard upside down, out of the thumb's reach. Reminders
+are keys too, under the same rule labels as the characters. Everything read rather than scanned
+keeps the centred window: notes, language and history.
+
+A drawer that picks one key closes on it. One that picks a set records nothing until Save at its
+foot, and a tap outside discards. The bluffs drawer docks its wells beside Save, and Shuffle sits in
+its top row, away from Save. The bag's drawer docks the bag, a slot for each seat it fills: a key
+puts in one more copy, so a character can go in twice, and a token in the bag comes back out.
 
 ## Motion
 

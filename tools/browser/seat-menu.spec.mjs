@@ -123,3 +123,33 @@ test('arranging the seats adds a seat and turns the ring in one pass, and surviv
   await expect(seats).toHaveCount(6)
   await expect.poll(names).toEqual(added)
 })
+
+test.describe('the Fabled and Loric on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' })
+
+  test('come up as token keys that toggle, Save puts them on the board, and a tap outside discards', async ({ page }) => {
+    await openBoard(page, 5)
+    await page.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('button', { name: 'Fabled and Loric', exact: true }).click()
+    const drawer = page.getByRole('dialog', { name: 'Fabled and Loric' })
+    const key = name => drawer.getByRole('button', { name, exact: true })
+    for (const name of ['Djinn', 'Spirit of Ivory', 'Spirit of Ivory']) await key(name).click()
+    await expect(key('Djinn')).toHaveAttribute('aria-pressed', 'true')
+    await expect(key('Spirit of Ivory')).not.toHaveAttribute('aria-pressed', 'true')
+    await drawer.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(drawer).toBeHidden()
+    const inPlay = name => page.getByRole('button', { name: `${name}, in play`, exact: true })
+    await expect(inPlay('Djinn')).toBeVisible()
+    await expect(inPlay('Spirit of Ivory')).toHaveCount(0)
+
+    // A loose token on the board opens the drawer on what is saved; a tap above it keeps that.
+    await inPlay('Djinn').click()
+    await expect(key('Djinn')).toHaveAttribute('aria-pressed', 'true')
+    await key('Djinn').click()
+    await key('Spirit of Ivory').click()
+    await page.mouse.click(195, 20)
+    await expect(drawer).toBeHidden()
+    await expect(inPlay('Djinn')).toBeVisible()
+    await expect(inPlay('Spirit of Ivory')).toHaveCount(0)
+  })
+})
