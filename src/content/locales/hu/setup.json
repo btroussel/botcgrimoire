@@ -3,10 +3,6 @@
   "assignedCount": "{have} / {of} karakter kiosztva",
   "createError": "A játékot nem sikerült menteni. Próbáld újra.",
   "fillBag": "Zsák megtöltése",
-  "fillBagSave": {
-    "one": "{count} karakter a zsákba",
-    "other": "{count} karakter a zsákba"
-  },
   "defaultSeat": "{n}. hely",
   "discovery": "Karakterek felfedése",
   "discoveryBack": "Vissza az előkészítéshez",

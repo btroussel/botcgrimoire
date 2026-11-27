@@ -3,9 +3,6 @@
   "assignedCount": "캐릭터 {of}개 중 {have}개 배정",
   "createError": "게임을 저장하지 못했습니다. 다시 시도해 주세요.",
   "fillBag": "가방 채우기",
-  "fillBagSave": {
-    "other": "가방에 캐릭터 {count}개 넣기"
-  },
   "defaultSeat": "{n}번 자리",
   "discovery": "캐릭터 확인",
   "discoveryBack": "세팅으로 돌아가기",

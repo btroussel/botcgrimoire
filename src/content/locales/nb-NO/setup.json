@@ -3,10 +3,6 @@
   "assignedCount": "{have} av {of} roller tildelt",
   "createError": "Spillet kunne ikke lagres. Prøv igjen.",
   "fillBag": "Fyll posen",
-  "fillBagSave": {
-    "one": "Legg {count} rolle i posen",
-    "other": "Legg {count} roller i posen"
-  },
   "defaultSeat": "Sete {n}",
   "discovery": "Avslør rollene",
   "discoveryBack": "Tilbake til oppsettet",

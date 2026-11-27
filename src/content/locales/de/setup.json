@@ -3,10 +3,6 @@
   "assignedCount": "{have} von {of} Charakteren zugewiesen",
   "createError": "Das Spiel konnte nicht gespeichert werden. Versuche es erneut.",
   "fillBag": "Beutel füllen",
-  "fillBagSave": {
-    "one": "{count} Charakter in den Beutel",
-    "other": "{count} Charaktere in den Beutel"
-  },
   "defaultSeat": "Sitz {n}",
   "discovery": "Charaktere ansehen",
   "discoveryBack": "Zurück zum Aufbau",

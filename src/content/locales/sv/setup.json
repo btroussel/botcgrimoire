@@ -3,10 +3,6 @@
   "assignedCount": "{have} av {of} roller tilldelade",
   "createError": "Spelet kunde inte sparas. Försök igen.",
   "fillBag": "Fyll påsen",
-  "fillBagSave": {
-    "one": "Lägg {count} roll i påsen",
-    "other": "Lägg {count} roller i påsen"
-  },
   "defaultSeat": "Plats {n}",
   "discovery": "Rollvisning",
   "discoveryBack": "Tillbaka till förberedelsen",

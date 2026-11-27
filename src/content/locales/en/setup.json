@@ -3,10 +3,6 @@
   "assignedCount": "{have} of {of} characters assigned",
   "createError": "The game could not be saved. Try again.",
   "fillBag": "Fill the bag",
-  "fillBagSave": {
-    "one": "Put {count} character in the bag",
-    "other": "Put {count} characters in the bag"
-  },
   "defaultSeat": "Seat {n}",
   "discovery": "Discover characters",
   "discoveryBack": "Back to setup",

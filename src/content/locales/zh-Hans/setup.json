@@ -3,9 +3,6 @@
   "assignedCount": "已分配 {have}/{of} 个角色",
   "createError": "无法保存游戏。请重试。",
   "fillBag": "放入袋中",
-  "fillBagSave": {
-    "other": "将 {count} 个角色放入袋中"
-  },
   "defaultSeat": "{n} 号座位",
   "discovery": "查看角色",
   "discoveryBack": "返回准备阶段",

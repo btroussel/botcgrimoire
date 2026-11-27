@@ -32,6 +32,8 @@ export interface TokenKeysProps<K extends TokenKey> {
 
 const { size, gap, across, check, checkGlyph, labelTracking } = tokenKeys
 const span = (count: number) => count * size + Math.max(0, count - 1) * gap
+// The widest the keys run, so a dock under them can line up with their columns.
+export const tokenKeysWidth = span(across)
 
 export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, render }: TokenKeysProps<K>) => {
   const p = palette

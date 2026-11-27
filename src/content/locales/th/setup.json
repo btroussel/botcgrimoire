@@ -3,9 +3,6 @@
   "assignedCount": "กำหนดตัวละครแล้ว {have} จาก {of}",
   "createError": "บันทึกเกมไม่ได้ ลองอีกครั้ง",
   "fillBag": "ใส่ตัวละครลงถุง",
-  "fillBagSave": {
-    "other": "ใส่ตัวละคร {count} ตัวลงถุง"
-  },
   "defaultSeat": "ที่นั่ง {n}",
   "discovery": "ให้ผู้เล่นดูตัวละคร",
   "discoveryBack": "กลับไปที่เซตอัป",

@@ -3,9 +3,6 @@
   "assignedCount": "キャラクター割り当て済み：{have} / {of}",
   "createError": "ゲームを保存できませんでした。もう一度お試しください。",
   "fillBag": "袋を準備",
-  "fillBagSave": {
-    "other": "キャラクター{count}件を袋に入れる"
-  },
   "defaultSeat": "座席{n}",
   "discovery": "キャラクターの確認",
   "discoveryBack": "準備に戻る",
