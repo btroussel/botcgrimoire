@@ -24,21 +24,36 @@ const holdToClose = card => card.click({ delay: 700 })
 // The Imp's seat: the deal may seat the Drunk anywhere, and a disguised seat starts empty.
 const impSeat = page => page.locator('[data-seat-context-target]').getByRole('button', { name: /, Imp$/ }).first()
 
-test('a card about a player comes up shown with their character, and the sheet stays closed', async ({ page }) => {
+// A card about a player starts from that player's seat, and the eye lists only the others.
+const seatCard = async (page, seat, words) => {
+  const [player] = (await seat.getAttribute('aria-label')).split(', ')
+  await seat.click()
+  const menu = page.getByRole('group', { name: player, exact: true })
+  await menu.getByRole('button', { name: 'Show a card', exact: true }).click()
+  await menu.getByRole('button', { name: words, exact: true }).click()
+  return player
+}
+
+test('This player is comes up from the seat\'s menu, shown with the character and the player\'s name', async ({ page }) => {
   await openBoard(page)
   const seat = impSeat(page)
-  const [player] = (await seat.getAttribute('aria-label')).split(', ')
-
-  await chooseCard(page, 'This player is')
-  await expect(page.getByRole('dialog', { name: 'Show a card' })).toBeHidden()
-  await seat.click()
+  const player = await seatCard(page, seat, 'This player is')
   const card = page.getByRole('dialog', { name: 'This player is' })
   await expect(card.getByText('IMP', { exact: true })).toBeVisible()
   await expect(card.getByText(player, { exact: true })).toBeVisible()
   await expect(card.getByRole('button', { name: 'Show', exact: true })).toHaveCount(0)
   await holdToClose(card)
   await expect(card).toBeHidden()
-  await expect(page.getByRole('dialog', { name: 'Show a card' })).toBeHidden()
+})
+
+test('the eye lists the cards about no seat, and leaves the two about a player to the seats', async ({ page }) => {
+  await openBoard(page)
+  await page.getByRole('button', { name: 'Show a card', exact: true }).click()
+  const list = page.getByRole('dialog', { name: 'Show a card' })
+  for (const name of ['Token only', 'This character selected you', 'This is the Demon', 'These are your Minions', 'These characters are not in play', 'Custom note']) {
+    await expect(list.getByRole('button', { name, exact: true })).toBeVisible()
+  }
+  for (const name of ['You are', 'This player is']) await expect(list.getByRole('button', { name, exact: true })).toHaveCount(0)
 })
 
 test('a seat menu shows You are for its player in three taps', async ({ page }) => {
@@ -64,41 +79,9 @@ test('a seat menu shows You are for its player in three taps', async ({ page }) 
   await expect(card.getByRole('button', { name: 'Change', exact: true })).toBeVisible()
 })
 
-test('a card waiting for its player is named in the toolbar, and its cross cancels the pick', async ({ page }) => {
-  await openBoard(page)
-  const undo = page.getByRole('button', { name: 'Undo', exact: true })
-  const eye = page.getByRole('button', { name: 'Show a card', exact: true })
-  await expect(undo).toBeEnabled()
-  await chooseCard(page, 'This player is')
-
-  const hint = page.getByText('Tap a player', { exact: true })
-  await expect(hint).toBeVisible()
-  // The list may still be leaving, so the name is found beside the line.
-  await expect(hint.locator('..')).toContainText('This player is')
-  // A screen reader hears it through a live region that was already there.
-  await expect(page.locator('[aria-live="polite"]', { hasText: 'This player is. Tap a player' })).toHaveCount(1)
-  await expect(eye).toHaveAttribute('aria-pressed', 'true')
-  // What takes no tap during the pick is dimmed and out of reach.
-  await expect(undo).toBeDisabled()
-
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click()
-  await expect(hint).toHaveCount(0)
-  await expect(eye).not.toHaveAttribute('aria-pressed', 'true')
-  // The cross goes with the pick, so the focus moves on to the eye beside it.
-  await expect(eye).toBeFocused()
-  await expect(undo).toBeEnabled()
-  // The ring is back to its menus: a seat's tap brings up no card.
-  const seat = impSeat(page)
-  const [player] = (await seat.getAttribute('aria-label')).split(', ')
-  await seat.click()
-  await expect(page.getByRole('group', { name: player, exact: true })).toBeVisible()
-  await expect(page.getByRole('dialog', { name: 'This player is' })).toHaveCount(0)
-})
-
 test('Change on a shown You are types another character, and one key shows it again', async ({ page }) => {
   await openBoard(page)
-  await chooseCard(page, 'You are')
-  await impSeat(page).click()
+  await seatCard(page, impSeat(page), 'You are')
   const card = page.getByRole('dialog', { name: 'You are' })
   await expect(card.getByText('IMP', { exact: true })).toBeVisible()
 

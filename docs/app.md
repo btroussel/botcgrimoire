@@ -153,12 +153,12 @@ in the device's settings and never in a game ([Store](store.md#custom-scripts-an
 forgets it when tapped again. A kept token this script lacks still shows when the app knows the
 character, and is left off when it does not.
 
-You are and This player is also start from a seat's menu, under Show a card, which brings the card
-up for that seat as the list does after its pick. The other cards have nothing to do with a seat
-and stay in the list.
+You are and This player is start from a seat's menu, under Show a card, and from nowhere else: each
+is about one player, and the seat is that player. The eye lists the cards about no seat, so
+showing a card never puts the ring in a pick.
 
-A card whose content is already known comes up shown: You are and This player is once their player's
-seat is tapped, the not-in-play card with the saved bluffs, and the two cards of words. One whose
+A card whose content is already known comes up shown: You are and This player is from their
+player's seat, the not-in-play card with the saved bluffs, and the two cards of words. One whose
 content is not known comes up empty for the Storyteller to fill: This character selected you, the
 tokens alone, This player is on a disguised seat, and the note. A shown card that carries tokens has
 Change, which takes it back to editing with what it shows, and so does a written note, words only or

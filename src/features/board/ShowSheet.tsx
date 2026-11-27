@@ -10,7 +10,7 @@ import type { InfoTokenItem } from './InfoTokenList'
 import { InfoTokenList } from './InfoTokenList'
 import { Sheet } from '../../ui/Sheet'
 import type { ShowChoice, ShowKind } from './show'
-import { believed, notePresets, opening, seatStart, showTokens } from './show'
+import { notePresets, opening, seatStart, showTokens } from './show'
 import { useEdits } from './useEdits'
 
 export interface ShowSheetProps {
@@ -31,8 +31,8 @@ const labelKey: Readonly<Record<ShowKind, string>> = {
   notInPlay: 'board.notInPlayWords',
 }
 
-// Brings a card up as opening() decides, shown or ready to fill. The list and a seat's menu
-// share it, so a card about a player comes up the same from either.
+// Brings a card up as opening() decides, shown or ready to fill: from the list, or from a seat's
+// menu for the two cards about its player.
 export const useOpenCard = () => {
   const e = useEdits()
   const interaction = useBoardInteraction()
@@ -68,11 +68,11 @@ export const useCardNote = (): CardNote | undefined => {
 export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
   const e = useEdits()
   const interaction = useBoardInteraction()
-  const { open, openSeat } = useOpenCard()
+  const { open } = useOpenCard()
   const t = e.t
   const board = e.board
 
-  // Always the same eight: a homebrew character's own card is offered on the note instead.
+  // Always the same six: a homebrew character's own card is offered on the note instead.
   const savedBluffs = board ? bluffsOf(board, e.log) : []
   const items: readonly InfoTokenItem[] = [...showTokens.map((x) => ({
     kind: x.kind,
@@ -90,15 +90,7 @@ export const ShowSheet = ({ visible, onClose, onBluffs }: ShowSheetProps) => {
     const token = showTokens.find((x) => x.kind === item.kind)
     if (!token || !board) return
     onClose()
-    if (token.about === 'seat') {
-      // A seat without a token has nothing to start from, so it takes no tap. The seat's tap
-      // brings the card up; the list has done its job. The toolbar names the card meanwhile.
-      interaction.requestSeats({
-        allowed: board.seats.filter(s => believed(board, s.id) !== undefined).map(s => s.id),
-        title: t(labelKey[token.kind]),
-        onDone: (seat) => openSeat(token.kind, seat as SeatId),
-      })
-    } else if (token.about === 'bluffs') {
+    if (token.about === 'bluffs') {
       // One picker for one job: with none saved, the tray's picker chooses them and saves what
       // it shows, so the grimoire never forgets what a Demon saw.
       if (savedBluffs.length === 0) onBluffs()

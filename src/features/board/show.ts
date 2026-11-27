@@ -14,18 +14,18 @@ import { bluffChoices, byTeam, characterGroups, goodInPlay } from './seat'
 
 export type ShowKind = Exclude<CardKind, 'custom'>
 
-export type ShowAbout = 'seat' | 'characters' | 'bluffs'
+export type ShowAbout = 'characters' | 'bluffs'
 
 export interface ShowToken {
   readonly kind: ShowKind
   readonly about?: ShowAbout // omitted for fixed-text cards that open immediately
 }
 
-// The six info tokens the night sheet names, and the character tokens alone, which it asks for
-// more often than any of them. The list shows them two by two, in this order.
+// The cards the eye lists: the character tokens alone, which the night sheet asks for most, and
+// the info tokens it names that are about no seat. You are and This player is are about one
+// player, so they start from that player's seat and nowhere else. The list shows them two by two,
+// in this order.
 export const showTokens: readonly ShowToken[] = [
-  { kind: 'youAre', about: 'seat' },
-  { kind: 'thisPlayerIs', about: 'seat' },
   { kind: 'tokenOnly', about: 'characters' },
   { kind: 'selectedYou', about: 'characters' },
   { kind: 'thisIsTheDemon' },
