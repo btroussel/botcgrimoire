@@ -74,6 +74,9 @@ test('a seat\'s character and reminders come up in a drawer that leaves the seat
     await expect(characters).toBeHidden()
     await expect(token).toHaveAccessibleName(/, Chef$/)
 
+    // The deal may already have put a reminder here, such as the Drunk's.
+    const chips = seats.nth(index).locator('[data-chip] [role="button"]')
+    const before = await chips.count()
     await token.click()
     await page.getByRole('group', { name: `Seat ${index + 1}`, exact: true }).getByRole('button', { name: 'Add a reminder', exact: true }).click()
     const reminders = page.getByRole('dialog', { name: `Reminder for Seat ${index + 1}` })
@@ -82,7 +85,7 @@ test('a seat\'s character and reminders come up in a drawer that leaves the seat
     expect(overlap(await drawerBox(reminders), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
     await reminders.getByRole('button', { name: /, / }).first().click()
     await expect(reminders).toBeHidden()
-    await expect(seats.nth(index).locator('[data-chip] [role="button"]')).toHaveCount(1)
+    await expect(chips).toHaveCount(before + 1)
   }
 })
 
