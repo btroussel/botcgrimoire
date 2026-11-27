@@ -6,10 +6,11 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
 import type { CustomScript, Homebrew, Locale, NightMarker, ScriptId } from '../../content'
 import { editions, gameText } from '../../content'
-import { editionArt } from '../../content/generated/art'
 import type { SavedCharacter, SavedScript, SavedScriptId } from '../../store'
 import { mintScriptId, serializeScript, useStore } from '../../store'
 import { minuteClock, relativeTime } from './relativeTime'
+import type { ArtSource } from '../../ui/Art'
+import { listedLogo } from '../../ui/ScriptListRow'
 import type { ScriptSheetLabels } from '../../ui/ScriptSheet'
 import { teamWords } from './character'
 import type { Draft } from './compose'
@@ -22,7 +23,7 @@ export interface EditionRow {
   readonly id: ScriptId
   readonly name: string
   readonly count: number // characters on the sheet, Travellers included
-  readonly logo?: number
+  readonly logo?: ArtSource
 }
 
 export interface CustomRow {
@@ -30,7 +31,7 @@ export interface CustomRow {
   readonly name: string
   readonly count: number
   readonly edited: string // the edited time in the locale's words
-  readonly logo?: number
+  readonly logo?: ArtSource
 }
 
 export interface CharacterRow {
@@ -54,8 +55,8 @@ export interface Scripts {
   readonly removeCharacter: (id: string) => Promise<void>
 }
 
-const editionLogo = (id: string): { readonly logo?: number } => {
-  const logo = editionArt[id]
+const logoOf = (script: ScriptId | CustomScript): { readonly logo?: ArtSource } => {
+  const logo = listedLogo(script)
   return logo === undefined ? {} : { logo }
 }
 
@@ -71,7 +72,7 @@ export const useScripts = (): Scripts => {
           id: e.id as ScriptId,
           name: gameText(locale).edition(e.id).name,
           count: listed(e.id as ScriptId, locale).length,
-          ...editionLogo(e.id),
+          ...logoOf(e.id as ScriptId),
         }),
       ),
     [locale],
@@ -87,7 +88,7 @@ export const useScripts = (): Scripts => {
         name: saved.script.name,
         count: listed(saved.script, locale).length,
         edited: editedWords(relativeTime(saved.updatedAt, now, t, locale)),
-        ...editionLogo('custom'),
+        ...logoOf(saved.script),
       }),
     )
   }, [store.scripts, locale, t, now])

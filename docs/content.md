@@ -28,9 +28,12 @@ A script is a bundled edition id or an embedded custom script in the official sc
   [homebrew characters](#homebrew-characters).
 - An id the bundled data doesn't know is kept, since it's usually a newer character. The sheet names
   it on a line of its own until an update bundles it.
-- `_meta` keeps the name, author, logo link and the Bootlegger's rules, printed under the
-  Bootlegger. The almanac link, background link and `hideTitle` are for other apps, kept so a file
-  round-trips and never shown. Any other field, the night order arrays included, is dropped.
+- `_meta` keeps the name, author, logo and the Bootlegger's rules, printed under the Bootlegger.
+  The almanac link, background link and `hideTitle` are for other apps, kept so a file round-trips
+  and never shown. Any other field, the night order arrays included, is dropped.
+- The logo is an image the Storyteller picked, embedded as a `data:` URL so no screen fetches it,
+  or the web address another tool wrote. An embedded one is far longer than the 250 characters the
+  schema allows `logo`, so a tool that checks files against the schema may refuse the export.
 
 A composed script lists each team's official characters in the official order, then that team's
 homebrew by name, and an id the app doesn't know after every team. An imported script keeps its own

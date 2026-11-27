@@ -3,7 +3,7 @@ import { deflateRawSync, gzipSync } from 'node:zlib'
 import type { CustomScript, Homebrew } from '../content'
 import { parseScript } from '../content'
 import { serializeScript } from './customScripts'
-import { hasEmbeddedArt, linkedScriptText, linkKey, scriptFragment } from './scriptLink'
+import { hasEmbeddedArt, hasEmbeddedLogo, linkedScriptText, linkKey, scriptFragment } from './scriptLink'
 
 const official: CustomScript = {
   kind: 'custom',
@@ -54,6 +54,19 @@ describe('a script in a link', () => {
     expect(file.at(-1)).toEqual(brewerFile)
     expect(parseScript(file)).toEqual(withHomebrew())
     expect(hasEmbeddedArt(withHomebrew([art, art]))).toBe(true)
+  })
+
+  test('a script travels without the logo embedded in it, and keeps a linked one', async () => {
+    const [meta, ...characters] = official.items
+    const logo = 'data:image/webp;base64,' + 'A'.repeat(40000)
+    const script: CustomScript = { ...official, items: [{ ...(meta as object), logo } as CustomScript['items'][number], ...characters] }
+    expect(hasEmbeddedLogo(script)).toBe(true)
+    expect(hasEmbeddedArt(script)).toBe(false)
+    const fragment = await scriptFragment(script)
+    expect(fragment.length).toBeLessThan(400)
+    expect((await readBack(fragment))[0]).toEqual({ id: '_meta', name: 'Sample Script', author: 'Élodie' })
+    expect(hasEmbeddedLogo(official)).toBe(false)
+    expect((await readBack(await scriptFragment(official)))[0]).toEqual(meta)
   })
 
   test('a web address for art is short and stays', async () => {
