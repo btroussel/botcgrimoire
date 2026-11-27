@@ -540,7 +540,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         {interaction.card ? (
           <Modal visible animationType="none" onRequestClose={interaction.closeCard}
             aria-label={interaction.card.words || interaction.card.characters?.map((c) => c.name).join(', ')}>
-            <Card spec={interaction.card} onDismiss={interaction.closeCard} closeLabel={t('common.close')} />
+            <Card spec={interaction.card} onDismiss={interaction.closeCard} closeLabel={t('common.close')} holdHint={t('board.cardHoldToClose')} />
           </Modal>
         ) : null}
       </View>

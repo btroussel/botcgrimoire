@@ -126,8 +126,10 @@ const style = (fontFamily: string, fontSize: number, lineHeight: number, rest: T
 
 export const type = {
   display: {
-    // The card's words, uppercase there.
+    // The card's words, uppercase there, and the same words once the window is large both ways
+    // (`card.largeWordsFrom`), where 40 would sit small over a token of 360.
     hero: style(font.display.semibold, 40, 44, { letterSpacing: 0.5 }),
+    heroLarge: style(font.display.semibold, 56, 60, { letterSpacing: 0.5 }),
     // Screen titles, sheet titles, the phase counter in the clock corner.
     title: style(font.display.semibold, 24, 28),
     // Team bands on the script sheet and phase bands in the log: one rule device wherever it appears.
@@ -279,6 +281,27 @@ export const tokenShadow = (size: number): string => {
 // can be added, and a dealt token as it leaves the centre.
 export const tokenSize = { board: 104, sheet: 96, chip: 48, show: 200, corner: 36 } as const
 
+// The card a player reads: its words and tokens are one block, sized to the window and centred.
+export const card = {
+  // Above and below the block: the room a 44 point control takes in a corner, Change at the top
+  // and the hold hint at the foot, so neither ever sits on a token.
+  margin: touch + space.md,
+  wordsGap: space.xl, // between the words and the tokens
+  captionGap: space.lg, // between the tokens and the seat's name under them
+  tokenShare: 0.72, // a token or a column of them takes at most this share of the width
+  tokenMaximum: 360,
+  // Under this the name on the arc is too small to read across a table, so it goes in a caption
+  // of at most `captionLines` under the token.
+  arcFrom: 144,
+  captionLines: 2,
+  tokenMinimum: tokenSize.chip, // past this the block scrolls rather than shrink
+  largeWordsFrom: 600, // the words grow to heroLarge once the window is this large both ways
+  // The ring that fills round the thumb while the card is held to close, and how far the thumb
+  // may drift before the press counts as a scroll.
+  holdRing: { size: 104, width: 4 },
+  holdSlop: 10,
+} as const
+
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half
 // a token, the player's name and a gap; reminder chips face inward.
@@ -342,6 +365,10 @@ export const motion = {
     mark: 160, // a chip placed, a mark set, gap markers armed: scale 0.8 to 1 with opacity
     markStagger: 100, // a second mark that follows the first, the ghost vote after the token greys
     tint: 220, // a token's art crossfades to its other side
+    hold: 500, // a card held this long closes; its ring fills over the same time
+    holdRelease: 160, // a ring let go early empties
+    holdHint: 1500, // how long a tap on a card shows how to close it
+    cardClose: 150, // the card fades out once the hold completes
     fade: 120, // what every fade becomes under reduced motion
   },
   pressedOpacity: 0.7, // a button press is opacity; a token presses by scale instead

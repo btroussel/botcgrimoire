@@ -252,8 +252,20 @@ its menu, so reaching past the paper costs no extra tap. A tap that would record
 on a reminder, a gap or a seat during a vote, only closes the drawer: a tap meant to put the paper
 away must not change the game.
 
-A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
-board itself, with no banner, so the ring does not shift. Any pick on the ring, a card's player or a
+A card fills the screen and hides the grimoire. Its words and tokens are one block centred in the
+window, laid out from the words' measured height, since they wrap differently in every language. A
+lone token takes as much as fits up to 72 percent of the width; several stand in a row or a
+column, whichever draws them larger. A name too small to read on the arc moves to a caption under
+its token. The corners stay clear for the card's own controls, and a block that cannot fit scrolls.
+
+A shown card closes on a press held for half a second, while a brass ring fills round the thumb,
+and never on a tap. It is held screen out toward a player, so one stray thumb would show them every
+role. A tap says how to close it instead. The card leaves only once the thumb lifts, so the release
+never lands on a seat. Keyboard and screen reader users close it with a Close button that stays out
+of sight until it takes focus, or with Escape.
+
+A card that needs a player lets you pick on the board itself, with no banner, so the ring does not
+shift. Any pick on the ring, a card's player or a
 nominee, ends on a tap off the seats or Escape, since a phone has no Escape key.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
