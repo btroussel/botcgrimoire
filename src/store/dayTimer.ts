@@ -8,7 +8,24 @@ export interface DayTimer {
   readonly nominationPaused: boolean
 }
 
-export type DayTimerAction = 'add' | 'remove' | 'start' | 'pause' | 'reset' | 'addThirtySeconds' | 'subtractThirtySeconds'
+export type DayTimerAction = 'start' | 'pause' | 'reset' | 'addTime' | 'subtractTime'
+
+const shortest = 15_000
+const longest = 3_600_000
+
+// Every day has a timer before anyone touches it: 30 seconds for each living player. It is saved
+// only once the Storyteller starts or adjusts it, so until then it follows the count of the living.
+export const defaultDayTimer = (alive: number): DayTimer => {
+  const durationMs = Math.max(shortest, Math.min(longest, alive * 30_000))
+  return { durationMs, remainingMs: durationMs, pauseOnNomination: true, nominationPaused: false }
+}
+
+export const dayTimerBounds = { shortest, longest } as const
+
+// A discussion is set by the half minute. Under a minute the steps are 15 seconds, for a last
+// call: the step follows the time left, so the next tap from 1:00 goes to 0:45 or to 1:30.
+export const dayTimerStep = (remainingMs: number, direction: 'add' | 'subtract'): number =>
+  (direction === 'add' ? remainingMs < 60_000 : remainingMs <= 60_000) ? 15_000 : 30_000
 
 export const remainingDayTime = (timer: DayTimer, now: number): number =>
   timer.deadline === undefined ? timer.remainingMs : Math.max(0, Math.min(timer.remainingMs, timer.deadline - now))
@@ -18,10 +35,7 @@ const pauseDayTimer = (timer: DayTimer, now: number, nominationPaused = false): 
   return { ...rest, remainingMs: remainingDayTime(timer, now), nominationPaused }
 }
 
-export const changeDayTimer = (timer: DayTimer | undefined, action: DayTimerAction, now: number): DayTimer | undefined => {
-  if (action === 'remove') return undefined
-  if (action === 'add') return timer ?? { durationMs: 300_000, remainingMs: 300_000, pauseOnNomination: true, nominationPaused: false }
-  if (!timer) return timer
+export const changeDayTimer = (timer: DayTimer, action: DayTimerAction, now: number): DayTimer => {
   switch (action) {
     case 'start': {
       const remainingMs = remainingDayTime(timer, now)
@@ -29,11 +43,12 @@ export const changeDayTimer = (timer: DayTimer | undefined, action: DayTimerActi
     }
     case 'pause': return pauseDayTimer(timer, now)
     case 'reset': return { ...pauseDayTimer(timer, now), remainingMs: timer.durationMs }
-    case 'addThirtySeconds':
-    case 'subtractThirtySeconds': {
-      const delta = action === 'addThirtySeconds' ? 30_000 : -30_000
-      const durationMs = Math.max(60_000, Math.min(3_600_000, timer.durationMs + delta))
-      const remainingMs = Math.max(0, Math.min(3_600_000, remainingDayTime(timer, now) + durationMs - timer.durationMs))
+    case 'addTime':
+    case 'subtractTime': {
+      const left = remainingDayTime(timer, now)
+      const delta = action === 'addTime' ? dayTimerStep(left, 'add') : -dayTimerStep(left, 'subtract')
+      const durationMs = Math.max(shortest, Math.min(longest, timer.durationMs + delta))
+      const remainingMs = Math.max(0, Math.min(longest, left + durationMs - timer.durationMs))
       return { ...timer, durationMs, remainingMs, ...(timer.deadline === undefined ? {} : { deadline: now + remainingMs }) }
     }
   }
@@ -52,8 +67,8 @@ export const dayTimerAfterEvents = (timer: DayTimer | undefined, events: readonl
 export const isDayTimer = (value: unknown): value is DayTimer => {
   if (!value || typeof value !== 'object') return false
   const timer = value as Record<string, unknown>
-  return typeof timer.durationMs === 'number' && Number.isFinite(timer.durationMs) && timer.durationMs >= 60_000 && timer.durationMs <= 3_600_000 &&
-    typeof timer.remainingMs === 'number' && Number.isFinite(timer.remainingMs) && timer.remainingMs >= 0 && timer.remainingMs <= 3_600_000 &&
+  return typeof timer.durationMs === 'number' && Number.isFinite(timer.durationMs) && timer.durationMs >= shortest && timer.durationMs <= longest &&
+    typeof timer.remainingMs === 'number' && Number.isFinite(timer.remainingMs) && timer.remainingMs >= 0 && timer.remainingMs <= longest &&
     (timer.deadline === undefined || (typeof timer.deadline === 'number' && Number.isFinite(timer.deadline) && timer.deadline >= 0)) &&
     typeof timer.pauseOnNomination === 'boolean' && typeof timer.nominationPaused === 'boolean'
 }

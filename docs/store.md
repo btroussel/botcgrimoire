@@ -14,7 +14,8 @@ is saved, not the board, not the redo stack. New appends accept only the edits
 [Engine](engine.md#events) lists.
 
 Two optional pieces sit beside the log, because neither is a board edit. The discussion timer
-saves a deadline while it runs, so it keeps counting while the app is closed. The bag holds the
+is saved once the Storyteller starts or adjusts it, with a deadline while it runs, so it keeps
+counting while the app is closed. The bag holds the
 tokens between Open grimoire and the deal; taking one appends nothing, and
 [the deal](#the-cursor) removes the bag.
 
@@ -94,8 +95,10 @@ you look back, and every screen reads that one board from the React context in `
 - `lookAt` and `returnToPresent` move the cursor and append nothing. Looking back pauses the
   discussion timer, and while you look back nothing can be appended, undone or redone.
 
-The discussion timer is not an action. A phase change removes it, and undoing that change does
-not bring it back. [App](app.md#saved-games-and-replay) owns where the controls are.
+The discussion timer is not an action. Every day has one with nothing to add: until it is
+started or adjusted it is not saved, and reads 30 seconds for each living player. It is set by
+the half minute, and by 15 seconds while under a minute is left, for a last call, from 15 seconds
+to an hour. A phase change removes a saved one, and undoing that change does not bring it back. [App](app.md#saved-games-and-replay) owns where the controls are.
 
 ## Recorded time
 
