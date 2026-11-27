@@ -100,7 +100,6 @@
   "thisScript": "Dieses Skript",
   "experimental": "Experimentell",
   "clearFilters": "Filter zurücksetzen",
-  "pickerCount": "{shown} angezeigt · {selected} im Skript",
   "nameNeeded": "Gib dem Skript einen Titel",
   "tooFew": "Mindestens fünf Charaktere",
   "nothingMatches": "Keine Treffer",

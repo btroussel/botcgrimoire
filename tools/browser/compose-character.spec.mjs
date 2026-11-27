@@ -51,6 +51,21 @@ test('a homebrew character opens from the script being composed, and its new wor
   await expect(page.getByRole('button', { name: 'Edit Lamplighter', exact: true })).toHaveCount(1)
 })
 
+test('an empty draft shows every team without scrolling, and a search that finds nothing writes the character it named', async ({ page }) => {
+  await open(page, '/scripts')
+  await page.getByRole('button', { name: 'Compose a script', exact: true }).click()
+  for (const team of ['Townsfolk', 'Outsiders', 'Minions', 'Demons', 'Travellers', 'Fabled', 'Loric']) {
+    await expect(page.getByRole('button', { name: `Add ${team}`, exact: true })).toBeInViewport({ ratio: 1 })
+  }
+
+  // A band's add control opens the catalogue on its team, whose chip says what the script has of it.
+  await page.getByRole('button', { name: 'Add Minions', exact: true }).click()
+  await expect(page.getByRole('radio', { name: 'Minions, 0 of 4', exact: true })).toBeChecked()
+  await page.getByRole('textbox', { name: 'Search characters', exact: true }).fill('Lamplighter')
+  await page.getByRole('button', { name: 'Create a character', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Lamplighter')
+})
+
 test('a homebrew character placed at the start of other nights stays there after a reload', async ({ page }) => {
   await open(page, '/scripts')
   await page.getByRole('button', { name: 'Create a character', exact: true }).first().click()

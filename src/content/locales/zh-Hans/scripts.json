@@ -98,7 +98,6 @@
   "thisScript": "本剧本",
   "experimental": "实验性角色",
   "clearFilters": "清除筛选",
-  "pickerCount": "显示 {shown} 个 · 剧本中已有 {selected} 个",
   "nameNeeded": "请为剧本命名",
   "tooFew": "至少需要五个角色",
   "nothingMatches": "没有匹配项",

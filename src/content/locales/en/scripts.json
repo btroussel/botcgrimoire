@@ -100,7 +100,6 @@
   "thisScript": "This script",
   "experimental": "Experimental",
   "clearFilters": "Clear filters",
-  "pickerCount": "{shown} shown · {selected} on your script",
   "nameNeeded": "Give the script a name",
   "tooFew": "Five characters at least",
   "nothingMatches": "Nothing matches",

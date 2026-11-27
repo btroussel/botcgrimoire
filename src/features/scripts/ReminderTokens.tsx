@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   badge: { width: badge, height: badge, borderRadius: badge / 2, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   input: {
-    alignSelf: 'stretch', minWidth: 0, minHeight: touch, paddingHorizontal: space.xs, color: palette.ink, textAlign: 'center', outlineWidth: 0,
+    alignSelf: 'stretch', minWidth: 0, minHeight: touch, paddingHorizontal: space.xs, color: palette.ink, textAlign: 'center', outlineStyle: 'solid', outlineWidth: 0,
     borderRadius: radius.control, borderWidth: 1, backgroundColor: palette.paperInset,
   },
 })

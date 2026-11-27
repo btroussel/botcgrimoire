@@ -100,7 +100,6 @@
   "thisScript": "Ce script",
   "experimental": "Expérimentaux",
   "clearFilters": "Effacer les filtres",
-  "pickerCount": "{shown} affichés · {selected} sur votre script",
   "nameNeeded": "Donnez un nom au script",
   "tooFew": "Cinq rôles au moins",
   "nothingMatches": "Aucun résultat",

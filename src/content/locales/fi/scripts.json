@@ -100,7 +100,6 @@
   "thisScript": "Tämä kässäri",
   "experimental": "Kokeelliset",
   "clearFilters": "Tyhjennä suodattimet",
-  "pickerCount": "{shown} näkyvissä · {selected} kässärissä",
   "nameNeeded": "Anna kässärille nimi",
   "tooFew": "Vähintään viisi hahmoa",
   "nothingMatches": "Ei osumia",

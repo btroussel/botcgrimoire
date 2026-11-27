@@ -98,7 +98,6 @@
   "thisScript": "이 스크립트",
   "experimental": "실험적",
   "clearFilters": "필터 해제",
-  "pickerCount": "{shown}개 표시 · 스크립트에 {selected}개",
   "nameNeeded": "스크립트 이름을 입력하세요",
   "tooFew": "캐릭터가 5개 이상 필요합니다",
   "nothingMatches": "일치하는 항목이 없습니다",
