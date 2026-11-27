@@ -27,7 +27,6 @@ export const styles = StyleSheet.create({
   // The brass pencil on the logo's corner, as on the character editor's token: it says the art is chosen here.
   logoBadge: { position: 'absolute', right: -space.xs, bottom: -space.xs, width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
     boxShadow: shadows.card },
-  logoControls: { alignSelf: 'stretch', alignItems: 'flex-start', gap: space.xs },
   // react-native-web draws its own focus outline on the input; the faint rule under it says the
   // text is editable and turns brass on focus instead.
   nameField: { alignSelf: 'stretch', minWidth: 0, minHeight: touch, padding: 0, borderBottomWidth: border, outlineWidth: 0 },

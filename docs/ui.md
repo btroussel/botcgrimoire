@@ -332,9 +332,10 @@ The share QR code is black on white with the standard quiet zone, whatever the v
 camera reads contrast.
 
 A custom script shows the bundled custom logo until it has its own. In compose the logo is a
-button, with the brass pencil the character editor's token has: a tap picks an image, and Remove
-the logo sits under it while the script has one. The image is cropped to its visible pixels and
-keeps its shape, since a logo is often wide lettering. A logo given as a web address, as other
+button, with the brass pencil the character editor's token has. A tap picks an image; once the
+script has one, the tap opens a menu to choose another or remove it, so the head of the sheet
+never grows a control. The image is cropped to its visible pixels and keeps its shape, since a
+logo is often wide lettering. A logo given as a web address, as other
 tools write it, shows on the sheet only, and only when the network reaches it; otherwise the
 bundled art stands in, so the sheet works offline. A list draws a logo the script carries and
 never a linked one, which would ask every script's host each time the list opens.

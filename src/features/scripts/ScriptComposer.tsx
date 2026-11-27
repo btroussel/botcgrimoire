@@ -153,8 +153,8 @@ export const ScriptComposer = ({ initial, resume, resumeCharacter, onBack, onSav
           {...(draft.logo ? { logo: { uri: draft.logo } } : editionArt.custom !== undefined ? { logo: editionArt.custom } : {})}
           logoField={{
             label: t(draft.logo ? 'scripts.changeLogo' : 'scripts.chooseLogo'),
-            onPress: () => void chooseLogo(),
-            ...(draft.logo ? { remove: { label: t('scripts.removeLogo'), onPress: removeLogo } } : {}),
+            onPick: () => void chooseLogo(),
+            ...(draft.logo ? { own: { pick: t('scripts.chooseImage'), remove: t('scripts.removeLogo'), onRemove: removeLogo } } : {}),
             ...(logoError ? { error: t('scripts.imageUnreadable') } : {}),
           }}
           bottomInset={touch + space.lg * 2 + insets.bottom}

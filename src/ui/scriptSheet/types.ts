@@ -72,11 +72,12 @@ export interface ScriptSheetNameField {
   readonly maxLength?: number // caps typing only, so a longer value already given stays whole
 }
 
-// Compose: the logo is a button that picks an image for the script.
+// Compose: the logo is a button that picks an image for the script. Once the script has a logo
+// of its own, the button opens a menu instead: pick another image, or remove this one.
 export interface ScriptSheetLogoField {
-  readonly label: string // what the tap does: choose a logo, or change the one it has
-  readonly onPress: () => void
-  readonly remove?: { readonly label: string; readonly onPress: () => void } // while the script has a logo of its own
+  readonly label: string // the button's name: choose a logo, or change the one it has
+  readonly onPick: () => void
+  readonly own?: { readonly pick: string; readonly remove: string; readonly onRemove: () => void }
   readonly error?: string // the picked file could not be read
 }
 

@@ -41,7 +41,11 @@ test('a custom script takes a picked image as its logo, shows it where it is lis
   await open(page, '/scripts')
   await page.getByRole('button', { name: 'Open Trouble Brewing (copy)', exact: true }).click()
   await page.getByRole('button', { name: 'Edit', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Change the logo', exact: true })).toBeVisible()
+  // With a logo of its own, the logo opens a menu: another image, or none.
+  await page.getByRole('button', { name: 'Change the logo', exact: true }).click()
+  await choose(page, 'Choose an image')
+  await expect(sheetLogo(page)).toHaveAttribute('src', /^data:image\//)
+  await page.getByRole('button', { name: 'Change the logo', exact: true }).click()
   await page.getByRole('button', { name: 'Remove the logo', exact: true }).click()
   await expect(sheetLogo(page)).toHaveAttribute('src', bundled)
   await page.getByRole('button', { name: 'Save script', exact: true }).click()
