@@ -137,15 +137,15 @@ const sameRow = <P extends { readonly layout: RowLayout; readonly players: reado
 
 // One row on every sheet: the art and the name, and the text beside them once the paper is out.
 // Spacing alone sets the rows apart: a line under each was a stub while the paper showed names
-// and made a table of the open sheet. While the paper shows names only, a tap unfolds the text
-// under its name: one ability is read without the paper covering the board.
-const Row = ({ layout, identity, text, open, onPress, current }: {
+// and made a table of the open sheet. The row last tapped lies under the wash, and while the paper
+// shows names only its text unfolds under its name: one ability is read without the paper
+// covering the board.
+const Row = ({ layout, identity, text, picked, onPress }: {
   readonly layout: RowLayout
   readonly identity: ReactNode
   readonly text: ((style: TextStyle) => ReactNode) | undefined
-  readonly open: boolean
-  readonly onPress: (() => void) | undefined
-  readonly current?: boolean
+  readonly picked: boolean
+  readonly onPress: () => void
 }) => {
   const compact = layout.expansion === 0
   const line = <>
@@ -153,12 +153,11 @@ const Row = ({ layout, identity, text, open, onPress, current }: {
     {text ? <ReferenceDescription expansion={layout.expansion} width={layout.descriptionWidth}>{text(type.text.body)}</ReferenceDescription> : null}
   </>
   return <View>
-    {current ? <View pointerEvents="none" style={styles.here} /> : null}
-    {onPress ? <Pressable accessibilityRole="button" onPress={onPress}
-      aria-expanded={compact && text ? open : undefined} aria-current={current ? 'step' : undefined}
+    {picked ? <View pointerEvents="none" style={styles.here} /> : null}
+    <Pressable accessibilityRole="button" onPress={onPress}
+      aria-expanded={compact && text ? picked : undefined} aria-current={picked ? 'true' : undefined}
       style={state => [styles.rowLine, focusStyle(palette, layout.focusVisible && isFocused(state), 'paper')]}>{line}</Pressable>
-      : <View style={styles.rowLine}>{line}</View>}
-    {compact && open && text ? <View style={[styles.fold, { width: layout.foldWidth }]}>{text(type.text.small)}</View> : null}
+    {compact && picked && text ? <View style={[styles.fold, { width: layout.foldWidth }]}>{text(type.text.small)}</View> : null}
   </View>
 }
 
@@ -187,12 +186,12 @@ interface CharacterRowProps {
   readonly rulesLabel?: string | undefined
   readonly players: readonly Player[] // the seats holding, shown or granted this character
   readonly deadLabel: string
-  readonly open: boolean
-  readonly onToggle: (id: string) => void
+  readonly picked: boolean
+  readonly onPick: (id: string) => void
 }
 
-const CharacterRow = memo(function CharacterRow({ layout, id, team, name, ability, rules, rulesLabel, players, deadLabel, open, onToggle }: CharacterRowProps) {
-  return <Row layout={layout} open={open} onPress={layout.expansion === 0 ? () => onToggle(id) : undefined}
+const CharacterRow = memo(function CharacterRow({ layout, id, team, name, ability, rules, rulesLabel, players, deadLabel, picked, onPick }: CharacterRowProps) {
+  return <Row layout={layout} picked={picked} onPress={() => onPick(id)}
     identity={<>
       <View style={[styles.art, { width: layout.artSize }]}>
         <CharacterIcon id={id} team={team} size={layout.artSize} />
@@ -214,16 +213,15 @@ interface NightRowProps {
   readonly instruction: string
   readonly players: readonly Player[]
   readonly deadLabel: string
-  readonly current: boolean // the step being read, which lies under the wash
-  readonly open: boolean
-  readonly onStep: (id: string) => void
+  readonly picked: boolean
+  readonly onPick: (id: string) => void
 }
 
-const NightRow = memo(function NightRow({ layout, id: entry, label, character: id, marker, instruction, players, deadLabel, current, open, onStep }: NightRowProps) {
+const NightRow = memo(function NightRow({ layout, id: entry, label, character: id, marker, instruction, players, deadLabel, picked, onPick }: NightRowProps) {
   const parts = nightInstruction(instruction).filter(part => part.kind !== 'reminder')
   const art = marker !== undefined ? nightMarkerArt[marker] : undefined
   const { artSize } = layout
-  return <Row layout={layout} open={open} onPress={() => onStep(entry)} current={current}
+  return <Row layout={layout} picked={picked} onPress={() => onPick(entry)}
     identity={<>
       <View style={[styles.art, { width: artSize }]}>
         {id ? <CharacterIcon id={id} size={artSize} /> : art !== undefined ?
@@ -252,15 +250,11 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   // A night lists who wakes, so it opens on what is in play; the characters are looked up by
   // name, a bluff as often as a seat, so they open on the whole script.
   const [filters, setFilters] = useState<{ readonly characters: Filter; readonly night: Filter }>({ characters: 'all', night: 'inPlay' })
-  const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(() => new Set())
-  const toggle = useCallback((id: string) => setUnfolded(previous => {
-    const next = new Set(previous)
-    if (!next.delete(id)) next.add(id)
-    return next
-  }), [])
-  // Where the Storyteller is reading in a night. A display choice like the filter: nothing is
-  // ticked or recorded, and a new phase starts from the first row again.
-  const [step, setStep] = useState<{ readonly moment: string; readonly night: 'first' | 'other'; readonly id: string; readonly open: boolean }>()
+  // The row being read on each sheet: a character or a jinx looked up, or the Storyteller's place
+  // in a night. A display choice like the filter: nothing is ticked or recorded. Each sheet keeps
+  // its own, and a second tap on the row takes it away.
+  const [picked, setPicked] = useState<{ readonly [sheet in ReferenceTab]?: string | undefined }>({})
+  const [pickedIn, setPickedIn] = useState('')
   const [gripFocused, setGripFocused] = useState(false)
   const focusVisible = useFocusVisible()
   const tabElements = useRef<HTMLDivElement>(null)
@@ -297,14 +291,14 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
   const orders = useMemo(() => script ? nightOrders(script, list, locale, marker => t(markerKeys[marker])) : { first: [], other: [] }, [script, list, locale, t])
   const night = shownTab === 'other' ? 'other' : 'first'
   const entries = useMemo(() => board ? nightEntries(board, night, orders, text, filters.night) : [], [board, night, orders, text, filters.night])
-  const compact = width <= compactWidth
+  const pick = useCallback((id: string) =>
+    setPicked(previous => ({ ...previous, [shownTab]: previous[shownTab] === id ? undefined : id })), [shownTab])
+  // A place in one night says nothing about the next, so a new phase clears the nights' rows.
   const moment = board ? `${board.clock.night}:${board.clock.phase}` : ''
-  // A tap moves the wash and, on a compact drawer, opens the step's text; a second tap there
-  // folds the text and leaves the wash.
-  const readStep = useCallback((id: string) => setStep(previous => {
-    const same = previous?.moment === moment && previous.night === night && previous.id === id
-    return { moment, night, id, open: !(compact && same && previous.open) }
-  }), [moment, night, compact])
+  if (moment !== pickedIn) {
+    setPickedIn(moment)
+    setPicked(previous => ({ characters: previous.characters }))
+  }
   if (!board || !script) return null
 
   // Pull out a fixed sheet: only its visible portion changes, never its typesetting.
@@ -315,8 +309,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
     descriptionWidth: Math.max(0, maximumWidth - 2 * space.md - nameColumnWidth - space.sm - 2),
     foldWidth: Math.max(0, Math.min(compactWidth, maximumWidth) - space.md - space.sm - 1),
   }
-  const reading = step && step.moment === moment && step.night === night && entries.some(entry => entry.id === step.id) ? step : undefined
-  const currentStep = reading?.id ?? entries[0]?.id
+  const pickedRow = picked[shownTab]
   const sheet = shownTab === 'characters' ? 'characters' : 'night'
   const headingWidth = Math.max(0, Math.min(maximumWidth, Math.max(compactWidth, width)) - 2 * space.md - 2)
   const playersOf = (id: string): readonly Player[] => board.seats
@@ -392,7 +385,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
               {/* The word alone: its colour and the gap above it already set the team apart. */}
               <Text accessibilityRole="header" style={[type.text.label, styles.teamHeading, { color: palette.teamOnPaper[team], width: headingWidth }]}>{teams[team]}</Text>
               {rows.map(entry => <CharacterRow key={entry.id} layout={row} id={entry.id} team={entry.team} name={entry.name} ability={entry.ability}
-                players={playersOf(entry.id)} deadLabel={t('board.dead')} open={unfolded.has(entry.id)} onToggle={toggle}
+                players={playersOf(entry.id)} deadLabel={t('board.dead')} picked={pickedRow === entry.id} onPick={pick}
                 {...(entry.id === 'bootlegger' ? { rules, rulesLabel: t('scripts.rules') } : {})} />)}
             </View>
           })}
@@ -400,7 +393,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
             <Text accessibilityRole="header" style={[type.display.title, styles.ink, styles.jinxes]}>{t('scripts.jinxes')}</Text>
             {jinxes.map(jinx => {
               const key = `${jinx.a}:${jinx.b}`
-              return <Row key={key} layout={row} open={unfolded.has(key)} onPress={compact ? () => toggle(key) : undefined}
+              return <Row key={key} layout={row} picked={pickedRow === key} onPress={() => pick(key)}
                 identity={<View style={styles.jinxArt} accessibilityLabel={`${text.role(asCharacterId(jinx.a)).name}, ${text.role(asCharacterId(jinx.b)).name}`}>
                   <CharacterIcon id={jinx.a} size={32} /><CharacterIcon id={jinx.b} size={32} />
                 </View>}
@@ -409,7 +402,7 @@ export const ReferenceRail = ({ tab, onTabChange, width, height, maximumWidth, d
           </View> : null}
         </> : entries.map(entry => <NightRow key={entry.id} layout={row} id={entry.id} label={entry.label} character={entry.character} marker={entry.marker}
           instruction={entry.instruction} players={entry.character ? playersOf(entry.character) : []} deadLabel={t('board.dead')}
-          current={entry.id === currentStep} open={entry.id === currentStep && (reading?.open ?? false)} onStep={readStep} />)}
+          picked={pickedRow === entry.id} onPick={pick} />)}
       </ScrollView>
     </View>
     </div>
@@ -442,7 +435,7 @@ const styles = StyleSheet.create({
   teamHeading: { paddingTop: space.md, paddingBottom: space.xxs },
   rowLine: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.sm },
   fold: { paddingBottom: space.sm },
-  // The step being read. The wash covers the whole row, so the text being read is marked with its
+  // The row being read. The wash covers the whole row, so the text being read is marked with its
   // name, and reaches into the sheet's margin, where the brass edge has room.
   here: { position: 'absolute', top: space.xxs, bottom: space.xxs, left: -space.sm, right: -space.sm, borderRadius: 6,
     backgroundColor: palette.paperPressed, borderLeftColor: palette.accent, borderLeftWidth: 4 },

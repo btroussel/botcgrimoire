@@ -97,17 +97,36 @@ test.describe('with reduced motion', () => {
     await expect(page.getByRole('radio', { name: 'All', exact: true })).toBeChecked()
     expect(await width()).toBe(168)
 
-    // The text opens under the name and the paper stays where it is. A second tap folds the
-    // text and leaves the ring on the step.
+    // No row is marked until a tap. The text then opens under the name, the row lies under the
+    // wash and the paper stays where it is.
     const dusk = paper.getByRole('button', { name: 'Dusk', exact: true })
     const instruction = paper.getByText('Start the Night Phase.', { exact: true })
     await expect(instruction).toHaveCount(1)
+    await expect(paper.locator('[aria-current]')).toHaveCount(0)
     await paper.getByText('Dusk', { exact: true }).tap()
     await expect(dusk).toHaveAttribute('aria-expanded', 'true')
+    await expect(dusk).toHaveAttribute('aria-current', 'true')
     await expect(instruction).toHaveCount(2)
+    expect(await width()).toBe(168)
+
+    // The characters keep a row of their own, one at a time, and the night keeps its place.
+    await page.getByRole('button', { name: 'Characters', exact: true }).tap()
+    const characters = page.getByRole('region', { name: 'Trouble Brewing', exact: true })
+    const washerwoman = characters.getByRole('button', { name: 'Washerwoman', exact: true })
+    const librarian = characters.getByRole('button', { name: 'Librarian', exact: true })
+    await expect(characters.locator('[aria-current]')).toHaveCount(0)
+    await washerwoman.tap()
+    await expect(washerwoman).toHaveAttribute('aria-current', 'true')
+    await librarian.tap()
+    await expect(librarian).toHaveAttribute('aria-expanded', 'true')
+    await expect(characters.locator('[aria-current]')).toHaveCount(1)
+    await tab.tap()
+    await expect(dusk).toHaveAttribute('aria-current', 'true')
+
+    // A second tap folds the text and takes the wash away.
     await dusk.tap()
     await expect(dusk).toHaveAttribute('aria-expanded', 'false')
-    await expect(dusk).toHaveAttribute('aria-current', 'step')
+    await expect(paper.locator('[aria-current]')).toHaveCount(0)
     await expect(instruction).toHaveCount(1)
     expect(await width()).toBe(168)
 

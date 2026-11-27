@@ -165,9 +165,9 @@ play, counted as the nights count it. Each character names the players who hold 
 The night references follow the bundled night order and show what is in play by default, dead
 seats, loose characters and recorded characters off the script included, or the whole script.
 Below seven players, Travellers not counted, the Minion and Demon info rows drop out; an empty
-seat counts as a player. There is no checklist: reading a row records nothing. The ring on the
-step being read is a display choice like the filter, never saved, and each phase starts it on the
-first row again.
+seat counts as a player. There is no checklist: reading a row records nothing. The wash on the
+row being read is a display choice like the filter, never saved. Each sheet keeps its own, and a
+new phase clears the nights' rows, since a place in one night says nothing about the next.
 
 Start the day is the second tap on the plaque, under the night's deaths: every player alive when
 the night began and dead now, so the Storyteller reads them out before confirming. It reads the
