@@ -37,14 +37,13 @@ export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, on
   const p = palette
   const [width, setWidth] = useState(0)
   const columns = Math.max(1, Math.min(across, Math.floor((width + gap) / (size + gap))))
-  // Each group is as wide as its keys, so a short team shares a row with the next when both
-  // fit; the shared gap keeps every key on the same columns. A lone Demon still takes two
-  // columns, room for its label in every language.
+  // Each team has its own rows, so the keys stand in the same places whatever the script: a
+  // script with one Demon and one with four differ only in how far that row runs.
   return (
     <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={styles.measure}>
-      {width > 0 ? <View style={[styles.groups, { width: span(columns), columnGap: gap }]}>
+      {width > 0 ? <View style={[styles.groups, { width: span(columns) }]}>
         {groups.filter((g) => g.keys.length > 0).map((g) => (
-          <View key={g.key} style={[styles.group, { width: span(Math.min(columns, Math.max(2, g.keys.length))) }]}>
+          <View key={g.key} style={styles.group}>
             <View style={styles.heading}>
               <Text accessibilityRole="header" numberOfLines={1} style={[type.text.label, styles.label, { color: g.color }]}>{g.label}</Text>
               <View style={[styles.rule, { backgroundColor: p.parchmentShade }]} />
@@ -75,7 +74,7 @@ export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, on
 
 const styles = StyleSheet.create({
   measure: { alignSelf: 'stretch', alignItems: 'center' },
-  groups: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.md },
+  groups: { gap: space.md },
   group: { gap: space.xs },
   heading: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   label: { textTransform: 'uppercase', letterSpacing: labelTracking, flexShrink: 1 },
