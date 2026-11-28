@@ -183,3 +183,21 @@ test.describe(`${homeLocale} Home`, () => {
     }
   })
 })
+
+// Chrome on Android would draw a covering page under the gesture bar and misreport the view above
+// its keyboard, so only the other platforms ask to cover the screen.
+const viewportMeta = page => page.locator('meta[name="viewport"]').getAttribute('content')
+
+test('the page asks to cover the whole screen', async ({ page }) => {
+  await open(page, '/')
+  expect(await viewportMeta(page)).toContain('viewport-fit=cover')
+})
+
+test.describe('on Android', () => {
+  test.use({ userAgent: 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36' })
+
+  test('the page does not ask to cover the screen, and keeps the rest of its viewport', async ({ page }) => {
+    await open(page, '/')
+    expect(await viewportMeta(page)).toBe('width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-visual')
+  })
+})

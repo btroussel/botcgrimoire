@@ -30,6 +30,15 @@ const popoverCss = `
 [popover]:not(:popover-open) { opacity: 0; pointer-events: none; }
 `
 
+// Chrome on Android draws a page that asks for cover under the gesture bar, and with its keyboard
+// up it then reports the visible view too tall by that bar's height, so whatever stands on the
+// keyboard is cut off behind it. A browser tab there has no notch to cover, so the page takes the
+// request back before its first layout. iOS keeps it for the status bar and the home indicator.
+const androidViewport = `if (/Android/.test(navigator.userAgent)) {
+  var meta = document.querySelector('meta[name="viewport"]')
+  meta.content = meta.content.replace(', viewport-fit=cover', '')
+}`
+
 // The exported page, before the store loads: a Home reads in its own language and every other
 // route in English. Every bundled language reads left to right. The page tags carry the mark Head
 // puts on its own, so the navigator's Head takes them over after load instead of adding a second
@@ -44,6 +53,7 @@ export const Document = ({ children, pathname = '' }: PropsWithChildren<{ readon
         <meta charSet="utf-8" />
         {/* The keyboard shrinks only the visible view, so the page and the seating ring keep their size. */}
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover, interactive-widget=resizes-visual" />
+        <script dangerouslySetInnerHTML={{ __html: androidViewport }} />
         <meta name="theme-color" content="#121614" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
