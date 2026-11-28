@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import type { ScrollViewInstance } from 'react-native'
+import { useState } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
 import type { CharacterId, Script, Translate } from '../../content'
 import { isLoose } from '../../content'
@@ -9,8 +8,7 @@ import type { Listed } from '../../store/scriptSheet'
 import { listed, sheetGroups, teamLabels } from '../../store/scriptSheet'
 import { Button } from '../../ui/Button'
 import { Drawer, useOnOpen } from '../../ui/Drawer'
-import { palette, space, tabular, tokenKeys, type } from '../../ui/theme'
-import { Token } from '../../ui/Token'
+import { palette, space, tabular, type } from '../../ui/theme'
 import { TokenKeys } from '../../ui/TokenKeys'
 
 // The same team rows of token keys as the seat's character drawer, so a bag is picked by art.
@@ -18,8 +16,10 @@ const keyGroups = (roles: readonly Listed[], t: Translate) =>
   sheetGroups(roles, teamLabels(t)).map(group => ({ key: group.team, label: group.label, color: palette.teamOnPaper[group.team],
     keys: group.rows.map(row => ({ id: row.id, name: row.name })) }))
 
-// A key puts one more copy in the bag, so a character can go in twice, and a token in the bag
-// comes back out. The bag holds as many tokens as there are seats for it.
+// The keys pick the bag as the bluffs drawer picks bluffs: a tap puts a character in or takes it
+// back out, the ticked keys are the bag and the count stands for what is scrolled away. A long
+// press puts in one more copy, as on the new game sheet, and the key's badge counts them. The bag
+// holds as many tokens as there are seats for it.
 export const BagPicker = ({ script, count, selected, visible, onClose, onFill }: {
   readonly script: Script; readonly count: number; readonly selected: readonly CharacterId[]
   readonly visible: boolean; readonly onClose: () => void; readonly onFill: (bag: readonly CharacterId[]) => void
@@ -28,34 +28,17 @@ export const BagPicker = ({ script, count, selected, visible, onClose, onFill }:
   const roles = listed(script, settings.locale).filter(role => !isLoose(role.id))
   const [bag, setBag] = useState<readonly CharacterId[]>(() => selected.slice(0, count))
   useOnOpen(visible, () => setBag(selected.slice(0, count)))
-  // The slots run in one row that scrolls, so twenty of them never take the keys' height, and it
-  // follows the bag as it fills: the last tokens in, then the slots still empty.
-  const slots = useRef<ScrollViewInstance>(null)
-  useEffect(() => {
-    slots.current?.scrollTo({ x: Math.max(0, bag.length - 2) * (tokenKeys.size + tokenKeys.gap), animated: true })
-  }, [bag.length])
   const full = bag.length >= count
-  const name = (id: CharacterId) => roles.find(role => role.id === id)?.name ?? id
+  const toggle = (id: CharacterId) => setBag(bag.includes(id) ? bag.filter(have => have !== id) : full ? bag : [...bag, id])
+  const addCopy = (id: CharacterId) => { if (!full) setBag([...bag, id]) }
   return <Drawer visible={visible} title={t('setup.fillBag')} onClose={onClose} closeLabel={t('common.close')}
-    dock={<View style={styles.dock}>
-      {/* A slot for every seat the bag fills, so the bag shows where it ends. */}
-      <ScrollView ref={slots} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bag}>
-        {Array.from({ length: count }, (_, index) => {
-          const id = bag[index]
-          return id ? <Token key={index} size={tokenKeys.size} character={id} name={name(id)} toggle={false} surface="paper"
-            accessibilityLabel={t('setup.removeCopy', { name: name(id) })}
-            onPress={() => setBag(bag.filter((_, at) => at !== index))} />
-            : <View key={index} aria-hidden><Token size={tokenKeys.size} /></View>
-        })}
-      </ScrollView>
-      <View style={styles.actions}>
-        <Text accessibilityLiveRegion="polite" style={[type.text.strong, tabular, { color: palette.ink }]}>{t('setup.ofCount', { have: bag.length, of: count })}</Text>
-        <Button label={t('common.save')} onPress={() => onFill(bag)} variant="primary" surface="paper" disabled={bag.length === 0} style={styles.save} />
-      </View>
+    dock={<View style={styles.actions}>
+      <Text accessibilityLiveRegion="polite" style={[type.text.strong, tabular, { color: palette.ink }]}>{t('setup.ofCount', { have: bag.length, of: count })}</Text>
+      <Button label={t('common.save')} onPress={() => onFill(bag)} variant="primary" surface="paper" disabled={bag.length === 0} style={styles.save} />
     </View>}>
     {roles.length === 0 ? <Text style={[type.text.body, styles.empty, { color: palette.inkMuted }]}>{t('setup.manualEmptyBag')}</Text> : null}
-    <TokenKeys groups={keyGroups(roles, t)} chosen={bag} full={full} copies
-      onPress={k => { if (!full) setBag([...bag, k.id as CharacterId]) }} />
+    <TokenKeys groups={keyGroups(roles, t)} chosen={bag} full={full}
+      onPress={k => toggle(k.id as CharacterId)} onLongPress={k => addCopy(k.id as CharacterId)} />
   </Drawer>
 }
 
@@ -75,8 +58,6 @@ export const ShownPicker = ({ name, choices, chosen, visible, onClose, onChoose 
 }
 
 const styles = StyleSheet.create({
-  dock: { gap: space.md },
-  bag: { flexDirection: 'row', gap: tokenKeys.gap },
   clear: { alignItems: 'flex-start' },
   // The count keeps its place and Save fills the rest of the row, as the bluffs drawer's buttons do.
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.md },

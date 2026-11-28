@@ -94,11 +94,10 @@ A drawer that picks one key closes on it. One that picks a set records nothing u
 foot, and a tap outside discards. The header holds the title and the cross, and at most one action
 that changes nothing by itself: clearing a seat's character, or what a disguise shows, records on
 one tap, so it sits at the foot, apart from the cross. The bluffs drawer docks its count beside
-Show and Save, and Shuffle sits in its top row, away from Save. The bag's drawer docks the bag, a
-slot for each seat it fills, in one row that scrolls and follows the bag as it fills, so twenty
-slots never take the keys' height. A key puts in one more copy, so a character can go in twice,
-and a token in the bag comes back out. Once the bag is full every key dims, the ticked ones too,
-since none can take a tap.
+Show and Save, and Shuffle sits in its top row, away from Save. The bag's drawer works as the bluffs
+drawer does: the ticked keys are the bag, with its count beside Save, and a tap puts a character in
+or takes it out. A long press puts in one more copy, as on the new game sheet, and the key's badge
+shows the number in place of the tick. Once the bag is full the keys not ticked dim.
 
 ## Motion
 

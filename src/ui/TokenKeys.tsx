@@ -9,7 +9,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { Icon } from './icons'
 import { Token } from './Token'
 import { tokenKeysLayout } from './tokenKeysLayout'
-import { hairline, palette, ring, space, tokenKeys, type } from './theme'
+import { hairline, palette, ring, space, tabular, tokenKeys, type } from './theme'
 
 export interface TokenKey {
   readonly id: string
@@ -25,10 +25,10 @@ export interface TokenKeyGroup<K extends TokenKey = TokenKey> {
 
 export interface TokenKeysProps<K extends TokenKey> {
   readonly groups: readonly TokenKeyGroup<K>[]
-  readonly chosen: readonly string[]
+  readonly chosen: readonly string[] // a key listed twice is chosen twice, and its badge counts the copies
   readonly full?: boolean // nothing more can be taken: every key not chosen dims and takes no tap
-  readonly copies?: boolean // a chosen key takes one more copy rather than coming back off, so it too is blocked when full
   readonly onPress: (key: K) => void
+  readonly onLongPress?: (key: K) => void
   readonly render?: (key: K, size: number, press: () => void) => ReactNode // a key drawn by the feature, in place of a character token
 }
 
@@ -37,7 +37,7 @@ const { gap, check, checkGlyph, labelTracking } = tokenKeys
 // neighbours never run their rings together.
 const ringRoom = ring.width + ring.gap
 
-export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, copies = false, onPress, render }: TokenKeysProps<K>) => {
+export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, onLongPress, render }: TokenKeysProps<K>) => {
   const p = palette
   const [width, setWidth] = useState(0)
   const { size, width: across } = tokenKeysLayout(width)
@@ -54,17 +54,20 @@ export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, co
             </View>
             <View style={[styles.keys, { gap }]}>
               {g.keys.map((k) => {
-                const on = chosen.includes(k.id)
-                const blocked = full && (copies || !on)
+                const count = chosen.filter((id) => id === k.id).length
+                const on = count > 0
+                const blocked = full && !on
                 if (render) return <View key={k.id} style={[styles.drawn, { width: size, height: size }]}>{render(k, size, () => onPress(k))}</View>
                 return (
                   <View key={k.id} style={[styles.drawn, { width: size, height: size }]}>
                     {/* The wake and setup leaves are for the board: on a key they only cover the name. */}
                     <Token size={on ? size - 2 * ringRoom : size} character={k.id} name={k.name} printName markers={false} accessibilityLabel={k.name}
-                      selected={on} dim={blocked} disabled={blocked} surface="paper" onPress={() => onPress(k)} />
+                      selected={on} dim={blocked} disabled={blocked} surface="paper" onPress={() => onPress(k)}
+                      {...(onLongPress ? { onLongPress: () => onLongPress(k) } : {})} />
                     {/* Selection never relies on colour alone. */}
                     {on ? <View pointerEvents="none" aria-hidden style={[styles.check, { backgroundColor: p.ink, borderColor: p.accent }]}>
-                      <Icon name="check" color={p.parchment} size={checkGlyph} />
+                      {count > 1 ? <Text style={[type.text.label, tabular, { color: p.parchment }]}>{count}</Text>
+                        : <Icon name="check" color={p.parchment} size={checkGlyph} />}
                     </View> : null}
                   </View>
                 )
