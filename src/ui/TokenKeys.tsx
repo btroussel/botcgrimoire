@@ -2,10 +2,12 @@
 // order the feature gives. It knows nothing about what a token means: the feature passes the keys,
 // which are chosen, whether more can be taken, and what a tap does. A feature whose keys are not
 // characters, such as reminders, draws each key itself and keeps the same groups and columns.
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import type { ViewInstance } from 'react-native'
 
+import { domElement } from './focus'
 import { Icon } from './icons'
 import { Token } from './Token'
 import { tokenKeysLayout } from './tokenKeysLayout'
@@ -40,11 +42,18 @@ const ringRoom = ring.width + ring.gap
 export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, onLongPress, render }: TokenKeysProps<K>) => {
   const p = palette
   const [width, setWidth] = useState(0)
+  // Measured before the first paint too, as onLayout does after it: the keys would otherwise first
+  // draw as an empty strip, and whatever stands beside them would jump as they fill it.
+  const measure = useRef<ViewInstance>(null)
+  useLayoutEffect(() => {
+    const node = domElement(measure.current)
+    if (node) setWidth(node.offsetWidth)
+  }, [])
   const { size, width: across } = tokenKeysLayout(width)
   // Each team has its own rows, so the keys stand in the same places whatever the script: a
   // script with one Demon and one with four differ only in how far that row runs.
   return (
-    <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={styles.measure}>
+    <View ref={measure} onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={styles.measure}>
       {width > 0 ? <View style={[styles.groups, { width: across }]}>
         {groups.filter((g) => g.keys.length > 0).map((g) => (
           <View key={g.key} style={styles.group}>
