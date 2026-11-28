@@ -65,17 +65,20 @@ const isCharacterDraft = (value: unknown): value is CharacterDraft =>
 const scriptOf = (value: unknown): KeptScript | undefined =>
   isObject(value) && isDraft(value.draft) && isDraft(value.initial) ? { draft: value.draft, initial: value.initial } : undefined
 
-const characterOf = (value: unknown): KeptCharacter | undefined =>
-  isObject(value) && isCharacterDraft(value.draft) && isOptional(value.initial, isHomebrew)
-    ? {
-      // An older version kept no jinx.
-      draft: {
-        ...value.draft, firstNight: draftWake('first', value.draft.firstNight), otherNight: draftWake('other', value.draft.otherNight),
-        jinxWith: value.draft.jinxWith, jinxReason: value.draft.jinxReason ?? '',
-      },
-      ...(value.initial ? { initial: value.initial as Homebrew } : {}),
-    }
-    : undefined
+const characterOf = (value: unknown): KeptCharacter | undefined => {
+  if (!isObject(value) || !isCharacterDraft(value.draft) || !isOptional(value.initial, isHomebrew)) return undefined
+  const initial = value.initial as Homebrew | undefined
+  // An older version kept no jinx fields, and a draft with no jinx saves its record without the
+  // first one. So its draft opens on that jinx; a newer draft always has a reason, cleared or not.
+  const first = value.draft.jinxReason === undefined ? initial?.jinxes?.[0] : undefined
+  return {
+    draft: {
+      ...value.draft, firstNight: draftWake('first', value.draft.firstNight), otherNight: draftWake('other', value.draft.otherNight),
+      jinxWith: first?.id ?? value.draft.jinxWith, jinxReason: first?.reason ?? value.draft.jinxReason ?? '',
+    },
+    ...(initial ? { initial } : {}),
+  }
+}
 
 // Storage that cannot be read, as in some private windows, has nothing to give back.
 export const readKept = async (): Promise<Kept> => {

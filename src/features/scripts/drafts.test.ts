@@ -3,7 +3,7 @@ import { IDBFactory } from 'fake-indexeddb'
 
 import { asCharacterId } from '../../content'
 import { closeDb, getDraft, putDraft } from '../../store/db'
-import { draftOfCharacter } from './character'
+import { characterOf, draftOfCharacter } from './character'
 import type { Draft } from './compose'
 import { emptyDraft } from './compose'
 import { readKept } from './drafts'
@@ -47,10 +47,21 @@ describe('kept drafts', () => {
     expect((await readKept()).character).toEqual({ draft: { ...character, otherNight: undefined } })
   })
 
-  test('a character draft kept before jinxes could be written opens with none', async () => {
+  test('a character draft kept before jinxes could be written opens on the jinx its record has', async () => {
     const { jinxWith: _with, jinxReason: _reason, ...older } = character
     await putDraft('character', { draft: older })
     expect((await readKept()).character).toEqual({ draft: { ...character, jinxReason: '' } })
+    // A draft with no jinx saves its record without the first one, so an older draft opens on it.
+    const initial = { id: 'bakerab12', name: 'Baker', team: 'townsfolk', ability: 'You bake.', jinxes: [{ id: 'spy', reason: 'Seen.' }, { id: 'imp', reason: 'Fed.' }] }
+    await putDraft('character', { draft: older, initial })
+    const reopened = (await readKept()).character!
+    expect(reopened.draft).toMatchObject({ jinxWith: 'spy', jinxReason: 'Seen.' })
+    expect(characterOf(reopened.draft, initial.id, reopened.initial).jinxes).toEqual(initial.jinxes)
+    // A newer draft holds what its form did, a cleared jinx included.
+    await putDraft('character', { draft: character, initial })
+    const cleared = (await readKept()).character!
+    expect(cleared.draft.jinxWith).toBeUndefined()
+    expect(characterOf(cleared.draft, initial.id, cleared.initial).jinxes).toEqual([{ id: 'imp', reason: 'Fed.' }])
     await putDraft('character', { draft: { ...character, jinxWith: 'spy', jinxReason: 'Seen.' } })
     expect((await readKept()).character?.draft).toMatchObject({ jinxWith: 'spy', jinxReason: 'Seen.' })
   })

@@ -5,6 +5,7 @@ import { phaseAt, phaseMarks } from '../../store/replay'
 import type { PhaseMark } from '../../store/replay'
 import { HistorySlider } from './HistorySlider'
 import { palette, space, type } from '../../ui/theme'
+import { marksOnSteps } from './replay'
 import type { ReplayStep } from './replay'
 
 // The slider's one row and the caption under it.
@@ -30,8 +31,8 @@ export const ReplayBar = ({ steps, at, bottom }: { readonly steps: readonly Repl
   const p = palette
   return <View style={[styles.bar, { height: replayBarHeight + bottom, paddingBottom: bottom, backgroundColor: p.felt, borderTopColor: p.line }]}>
     <HistorySlider value={at} min={0} max={steps.length - 1}
-      ticks={marks.map(mark => ({ cursor: steps.findIndex(s => s.cursor === mark.cursor), icon: phaseIcon[mark.phase], label: label(mark),
-        ...mark.phase === 'night' || mark.phase === 'day' ? { number: mark.night } : {} })).filter(mark => mark.cursor >= 0)}
+      ticks={marksOnSteps(marks, steps).map(({ at, mark }) => ({ cursor: at, icon: phaseIcon[mark.phase], label: label(mark),
+        ...mark.phase === 'night' || mark.phase === 'day' ? { number: mark.night } : {} }))}
       onChange={index => lookAt(steps[index]?.cursor ?? cursor)} label={t('history.slider')}
       valueText={t('history.step', { phase, n: at + 1, total: steps.length })}
       onPrevious={previous ? () => lookAt(previous.cursor) : undefined}

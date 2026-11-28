@@ -3,6 +3,7 @@ import { character, gameText } from '../../content'
 import type { Event, SeatId } from '../../engine'
 import { apply, emptyGrimoire } from '../../engine'
 import { setupStart } from '../../store/replay'
+import type { PhaseMark } from '../../store/replay'
 import type { BoardView, SeatView } from './board'
 import { boardView } from './board'
 
@@ -52,7 +53,7 @@ const seatChanges = (was: DrawnSeat | undefined, now: DrawnSeat | undefined): Re
   const name = now.name
   const changes: ReplayChange[] = []
   if (was.name !== now.name) changes.push({ key: 'history.renamed', values: { was: was.name, name } })
-  if (was.character !== now.character && now.character) changes.push({ key: 'history.setCharacter', values: { name, character: now.characterName } })
+  if (was.character !== now.character) changes.push(now.character ? { key: 'history.setCharacter', values: { name, character: now.characterName } } : { key: 'history.characterCleared', values: { name } })
   if (was.alignment !== now.alignment) changes.push({ key: now.alignment === 'good' ? 'history.setAlignmentGood' : 'history.setAlignmentEvil', values: { name } })
   if (was.dead !== now.dead) changes.push({ key: now.dead ? 'history.dies' : 'history.revive', values: { name } })
   else if (was.ghostVote !== now.ghostVote) changes.push({ key: now.ghostVote ? 'history.ghostVoteBack' : 'history.ghostVoteUsed', values: { name } })
@@ -101,8 +102,8 @@ const changesBetween = (was: ReturnType<typeof drawn>, now: ReturnType<typeof dr
   const by = nominees.length === 1 && nominators.length === 1 ? nominators[0] : undefined
   for (const seat of [...nominators, ...nominees]) if (!seats.includes(seat.id)) seats.push(seat.id)
   for (const of of nominees) changes.push(by ? { key: 'day.nominationArrow', values: { by: by.name, of: of.name } } : { key: 'history.nominated', values: { name: of.name } })
-  if (JSON.stringify(was.bluffs) !== JSON.stringify(now.bluffs) && now.bluffs.length > 0)
-    changes.push({ key: 'history.bluffsSet', values: { characters: named(now.bluffs).join(', ') } })
+  if (JSON.stringify(was.bluffs) !== JSON.stringify(now.bluffs))
+    changes.push(now.bluffs.length > 0 ? { key: 'history.bluffsSet', values: { characters: named(now.bluffs).join(', ') } } : { key: 'history.bluffsCleared', values: {} })
   for (const id of without(now.loose, was.loose)) changes.push({ key: 'history.looseIn', values: { character: text.role(id).name } })
   for (const id of without(was.loose, now.loose)) changes.push({ key: 'history.looseOut', values: { character: text.role(id).name } })
   const grants = (list: typeof was.grants) => list.map(grant => grant.character as CharacterId)
@@ -142,6 +143,18 @@ export const replaySteps = (log: readonly Event[], script: Script, locale: Local
     last = now
   }
   return [{ cursor: start, seats: [], changes: [] }, ...steps]
+}
+
+// The step each phase's mark sits on. Two phases can open on one step, as setup and the first
+// night do when Start first night also deals the drawn tokens: that step shows the later phase,
+// so it keeps the later mark alone.
+export const marksOnSteps = (marks: readonly PhaseMark[], steps: readonly ReplayStep[]): readonly { readonly at: number; readonly mark: PhaseMark }[] => {
+  const last = new Map<number, PhaseMark>()
+  for (const mark of marks) {
+    const at = steps.findIndex(step => step.cursor === mark.cursor)
+    if (at >= 0) last.set(at, mark)
+  }
+  return [...last].map(([at, mark]) => ({ at, mark }))
 }
 
 // The step a cursor shows: the last one at or before it.

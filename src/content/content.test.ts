@@ -5,12 +5,14 @@ import { rawRoles, rawJinxes, rawTranslations, type RawTranslation } from './ups
 
 // Spacing and case aside, a localized information step keeps the upstream text after its opening
 // clause. Only that clause loses the player count, which Swedish puts at its end, not its start.
-// Chinese and Japanese end the clause with a full-width colon or full stop, and Thai, which has
-// no sentence punctuation, keeps upstream's text after it word for word.
+// Chinese and Japanese end the clause with a full-width colon or full stop. Thai has no sentence
+// punctuation to end it on, so there, and only there, the text is the end of upstream's, word for
+// word: anywhere else that would pass an instruction cut short at any point.
 const plain = (text: string) => text.replace(/\s+/g, '').toLowerCase()
 const afterOpening = (text: string) => plain(text).replace(/^[^.:。：]*[.:。：]/, '')
-const keepsUpstream = (instruction: string, original: string) =>
-  afterOpening(instruction) === afterOpening(original) || plain(original).endsWith(plain(instruction))
+const unpunctuated: ReadonlySet<string> = new Set(['th'])
+const keepsUpstream = (locale: string, instruction: string, original: string) =>
+  afterOpening(instruction) === afterOpening(original) || (unpunctuated.has(locale) && plain(original).endsWith(plain(instruction)))
 
 test.each(locales)('%s night markers retain upstream instructions without the information steps’ player-count lead-in', locale => {
   const source = locale === 'en' ? (enJson as RawTranslation) : rawTranslations[locale]
@@ -21,7 +23,7 @@ test.each(locales)('%s night markers retain upstream instructions without the in
       expect(instruction).not.toBe('')
       const original = source?.roles[key]?.[phase] ?? (enJson as RawTranslation).roles[key]?.[phase] ?? ''
       if (phase === 'first' && (key === 'minioninfo' || key === 'demoninfo')) {
-        expect(keepsUpstream(instruction, original), `${locale} ${key}: ${instruction}`).toBe(true)
+        expect(keepsUpstream(locale, instruction, original), `${locale} ${key}: ${instruction}`).toBe(true)
         expect(plain(instruction).length).toBeLessThan(plain(original).length)
       } else expect(instruction).toBe(original)
     }
