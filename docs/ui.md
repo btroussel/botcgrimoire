@@ -124,6 +124,10 @@ same layout.
 - The on-screen keyboard resizes only the visible viewport, never the page, so layout choices such
   as orientation do not flip while you type. With the keyboard open, the focused field stays
   reachable and the actions stay above the keyboard.
+- The page asks to cover the whole screen, under the notch and the home indicator, everywhere but
+  Android. Chrome there draws such a page under the gesture bar, and with its keyboard up reports
+  the visible viewport too tall by that bar's height, so a control standing on the keyboard was cut
+  off behind it. Without the request the page ends above the bar and the viewport is right.
 - Scrollbars are hidden, and text outside text fields cannot be selected.
 
 The exported page paints before its script runs, and a tap before React has hydrated it is lost:
