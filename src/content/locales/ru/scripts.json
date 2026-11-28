@@ -104,7 +104,6 @@
   "thisScript": "Этот сценарий",
   "experimental": "Экспериментальные",
   "clearFilters": "Сбросить фильтры",
-  "pickerCount": "Показано: {shown} · в сценарии: {selected}",
   "nameNeeded": "Дайте сценарию название",
   "tooFew": "Не меньше пяти ролей",
   "nothingMatches": "Ничего не найдено",

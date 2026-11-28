@@ -100,7 +100,6 @@
   "thisScript": "Este escenario",
   "experimental": "Experimentales",
   "clearFilters": "Borrar filtros",
-  "pickerCount": "{shown} mostrados · {selected} en tu escenario",
   "nameNeeded": "Ponle un nombre al escenario",
   "tooFew": "Al menos cinco roles",
   "nothingMatches": "Sin resultados",

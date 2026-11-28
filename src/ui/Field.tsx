@@ -47,7 +47,9 @@ const styles = StyleSheet.create({
   label: { flex: 1, minWidth: 0 },
   field: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: touch, paddingHorizontal: space.md, borderRadius: radius.control, backgroundColor: palette.paperInset, borderWidth: 1, borderColor: palette.parchmentShade },
   tall: { alignItems: 'flex-start', paddingVertical: space.sm },
-  input: { flex: 1, minWidth: 0, minHeight: touch, paddingVertical: 0, outlineWidth: 0, color: palette.ink },
+  // The browser's own ring on a focused input has style auto, which ignores a zero width, so the
+  // style is set too and only the field's ring shows.
+  input: { flex: 1, minWidth: 0, minHeight: touch, paddingVertical: 0, outlineStyle: 'solid', outlineWidth: 0, color: palette.ink },
   inputTall: { minHeight: touch * 2 },
   // Sized to the text by the browser where it can; elsewhere the starting height scrolls.
   inputSized: { minHeight: 0, fieldSizing: 'content' } as object,

@@ -56,6 +56,9 @@ export interface PlayerStory {
 export interface Chronicle {
   readonly chapters: readonly Chapter[] // the nights and days with something recorded, in order
   readonly players: ReadonlyMap<SeatId, PlayerStory>
+  // The reminders and notes placed before the first night, by the edit that placed them: Is The
+  // Drunk, a Red Herring. They describe the deal, where a later one belongs to its night or day.
+  readonly setup: ReadonlySet<EventId>
 }
 
 // A day's nominations and its block are settled when the day ends, so a cancelled nomination
@@ -82,6 +85,7 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
     for (const seat of g.seats) if (!first.has(seat.id) && !isEmptySeat(seat.character)) first.set(seat.id, seat)
   }
   const died = new Map<SeatId, Moment>()
+  const setup = new Set<EventId>()
 
   const settleDay = (g: Grimoire) => {
     if (chapter?.phase !== 'day') return
@@ -162,9 +166,15 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
       }
       for (const seat of before.seats) if (!seatById(after, seat.id)) record({ kind: 'leaves', player: playerOf(seat) })
       if (playing) meet(after)
-      if (chapter) {
+      if (chapter || !playing) {
         const had = new Set(before.seats.flatMap(seat => seat.tokens.map(token => token.placedBy)))
-        for (const seat of after.seats) for (const token of seat.tokens) if (!had.has(token.placedBy)) chapter.placed.push(token.placedBy)
+        for (const seat of after.seats) {
+          for (const token of seat.tokens) {
+            if (had.has(token.placedBy)) continue
+            if (chapter) chapter.placed.push(token.placedBy)
+            else setup.add(token.placedBy)
+          }
+        }
       }
     }
     switch (event.kind) {
@@ -214,5 +224,6 @@ export const chronicleOf = (log: readonly Event[], script: Script): Chronicle =>
       return facts.length || reminders.length ? [{ phase, night, facts, reminders }] : []
     }),
     players,
+    setup,
   }
 }

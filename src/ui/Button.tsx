@@ -26,6 +26,7 @@ export interface ButtonProps {
   readonly disabled?: boolean
   readonly explanation?: string // the line under a disabled control that says why
   readonly hintOnPress?: string // a brief floating reason when a blocked action is attempted
+  readonly hintBelow?: boolean // the reason opens under a control at the top of its surface, where above would be cut off
   readonly icon?: IconName // a leading glyph, coloured like the label
   readonly accessibilityLabel?: string
   readonly style?: StyleProp<ViewStyle>
@@ -88,6 +89,7 @@ export const Button = ({
   disabled,
   explanation,
   hintOnPress,
+  hintBelow,
   icon,
   accessibilityLabel,
   style,
@@ -135,7 +137,7 @@ export const Button = ({
         </Text>
       </Pressable>
       {hintAttempt > 0 && disabled && hintOnPress ? (
-        <View pointerEvents="none" style={{ position: 'absolute', bottom: '100%', right: 0, minWidth: 200, maxWidth: 280, padding: space.sm, marginBottom: space.sm, borderRadius: radius.control, backgroundColor: p.ink, zIndex: 10 }}>
+        <View pointerEvents="none" style={[styles.hint, hintBelow ? styles.hintBelow : styles.hintAbove, { backgroundColor: p.ink }]}>
           <Text accessibilityRole="alert" style={[type.text.small, { color: p.parchment }]}>{hintOnPress}</Text>
         </View>
       ) : null}
@@ -152,6 +154,7 @@ export interface IconButtonProps {
   readonly onPress: () => void
 
   readonly surface?: Surface
+  readonly quiet?: boolean // muted ink on paper, for a control repeated down every row of a list
   readonly disabled?: boolean
   readonly style?: StyleProp<ViewStyle>
 }
@@ -159,10 +162,10 @@ export interface IconButtonProps {
 // A 44 square with a 24 glyph, for the board's edge, the corners and every sheet header. The
 // label is also the mouse's tooltip. react-native-web drops `title` from a Pressable, so it sits
 // on a wrapper that takes no box.
-export const IconButton = ({ icon, label, onPress, surface = 'felt', disabled, style }: IconButtonProps) => {
+export const IconButton = ({ icon, label, onPress, surface = 'felt', quiet, disabled, style }: IconButtonProps) => {
   const p = palette
   const focusVisible = useFocusVisible()
-  const color = surface === 'paper' ? p.ink : p.text
+  const color = surface === 'paper' ? (quiet ? p.inkMuted : p.ink) : p.text
   return (
     <div title={label} style={{ display: 'contents' }}>
       <Pressable
@@ -203,6 +206,9 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   explanation: { marginTop: space.xs, textAlign: 'center' },
+  hint: { position: 'absolute', right: 0, minWidth: 200, maxWidth: 280, padding: space.sm, borderRadius: radius.control, zIndex: 10 },
+  hintAbove: { bottom: '100%', marginBottom: space.sm },
+  hintBelow: { top: '100%', marginTop: space.sm },
   icon: {
     width: touch,
     height: touch,

@@ -51,10 +51,11 @@ is read from the brackets.
 - Icon buttons carry a translated name, for hover and for screen readers.
 - Selection never relies on colour alone: a selected token gets a check as well as an outline.
 - A choice among a few options is a set of native radios under a group label, one tab stop.
-- A field keeps a visible label. The one exception is a note's field, which is the card's own words:
-  the card is the player's preview, so it carries only a placeholder on screen and a name for screen
-  readers. A field with a length limit shows its count, such as `231/250`, once the text is in the
-  last fifth of the limit, in the danger colour at the limit, and never announces it as you type.
+- A field keeps a visible label, which the heading right above it can be. The one exception is a
+  note's field, which is the card's own words: the card is the player's preview, so it carries
+  only a placeholder on screen and a name for screen readers. A field with a length limit shows
+  its count, such as `231/250`, once the text is in the last fifth of the limit, in the danger
+  colour at the limit, and never announces it as you type.
 - Delete sits apart from the actions you use often.
 
 Editing windows float in the centre with a margin on every side, phones included. They never stick
@@ -174,9 +175,11 @@ links under it, so it stands no taller than the groups a Storyteller comes here 
 ## Setup
 
 Each team's band fills toward the usual count for the chosen number of players. The counts are
-advisory. A chosen character comes to full strength and carries a brass check on its icon, as in
-the pickers, since a faded row alone is easy to misread in a dim room. Shuffle and Open grimoire
-float at the bottom of the sheet, under the thumb wherever you have scrolled.
+advisory. A chosen character has its art at full strength, its name in bold and its ability in
+black. An unchosen one has faint art, a regular name and muted ink. The weight of the name carries
+the choice, since a faded row alone is easy to misread in a dim room, and no badge sits on the art.
+Shuffle and Open grimoire float at the bottom of the sheet, under the thumb wherever you have
+scrolled.
 
 Discovery hands the phone from player to player, so it must never leak a role. The neutral back is
 the same for everyone. Hiding removes the face at once, with no closing animation that could leave
@@ -349,6 +352,21 @@ portrait one always keeps it.
 
 ## History
 
+The list is for finding a game and a game's page for reading one, so a row never unfolds: a list
+that grows a page inside it loses its place, and the game its name. A row is a link and, beside
+it, one button, Resume while the game runs and Replay once it is over. It names who played, which
+is what tells two nights of one script apart. The games still running come first, then the
+finished ones under the month they were played.
+
+A game's page is paper, with the script's name in the bar. It reads in one scroll and hides
+nothing behind a tab: how the game stands or ended, the players, then the days and nights. A
+player is one row with the same things in the same places: the token, the name, the character,
+and at the end of the name's line when they died, a skull and the phase in ink. The living carry
+no label, so life is never told by green against red. On a phone the rows are one column, read
+top to bottom. A row keeps the reminders dealt during setup, beside the character, where they
+cannot be read as the next player's. One placed in play belongs to its night or day. Nothing on
+the page is set under 14 pixels: it is the screen turned round to the table after a game.
+
 Days and nights shows each player as they were at the time, and reads in order at any width.
 [App](app.md#saved-games-and-replay) owns the facts shown. It is a timeline: a rail runs down
 each phase from its sun or moon, and every line hangs off it by a dot, so a phase needs no box to
@@ -357,7 +375,8 @@ so a busy night stays as short as a quiet one. A vote is one line, as in the day
 nominated whom, as many of the voters' tokens as the line holds, tinted by side, and the tally. A tap opens the voters'
 names under it in columns, three on a phone, greyed under a skull for a hand raised while dead.
 A name too long for its column is cut short on one line: the vote's own line gives names in
-full. The board's History window lists the
+full. An execution and the death recorded right after it are one line. A finished game's rail
+ends on a flag and the result, so the story says who won where it stops. The board's History window lists the
 same lines in one column under the newest phase, which is the one a Storyteller asks about
 mid-game, so it opens on the answer with no scrolling.
 
@@ -401,10 +420,23 @@ sits in the toolbar and never floats at the foot, where the bag it opens has Ope
 second tap landing there would open a board nobody dealt.
 
 The toolbar is glyphs, named by their tooltips, so the paper stays the heaviest thing on the page.
-Only Save on a received script keeps its word, as the one thing that page asks. The pencil edits a
+Only Save keeps its word: on a received script it is the one thing that page asks, and in compose
+it is the only action there. The pencil edits a
 saved script and, on an edition, edits a copy, its only way to edit. A phone has no hover to name a
 glyph, so there a saved script's copy and Print go in a More menu that writes them out; New game,
 the pencil and Share stay in the bar.
+
+In compose the sheet lists only what the script holds, so every row is drawn as chosen, and a
+band says its count against the usual number in words: only the deal's band fills. Every band
+carries its team's add control. Travellers, Fabled and Loric have no usual count, so while they are empty they
+share one line of add controls under the teams and the empty sheet fits a phone. A homebrew row's
+words open its record, marked by a pencil after the name, so the row keeps one control at its end
+and stands no taller than the others. Save sits in the toolbar, and the one control floating at
+the foot opens the catalogue: it is opened for every character, where Save is pressed once.
+
+The catalogue filters teams with a row of chips that carry each team's count, since on a phone it
+covers the sheet that shows them. Writing a new character waits at the end of the list and where a
+search found nothing, which opens the editor on the name searched for.
 
 A script is listed the same way wherever it is listed, its author then its character count, so
 the list to play from and the library read as one list.
@@ -413,7 +445,8 @@ The share QR code is black on white with the standard quiet zone, whatever the v
 camera reads contrast.
 
 A custom script shows the bundled custom logo until it has its own. In compose the logo is a
-button, with the brass pencil the character editor's token has. A tap picks an image; once the
+button, marked by a pencil on a parchment disc at its corner: quieter than the brass one on the
+character editor's token, since a logo is chosen rarely. A tap picks an image; once the
 script has one, the tap opens a menu to choose another or remove it, so the head of the sheet
 never grows a control. The image is cropped to its visible pixels and keeps its shape, since a
 logo is often wide lettering. A logo given as a web address, as other

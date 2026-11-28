@@ -18,7 +18,7 @@ export interface ScriptSheetRow {
 export interface ScriptSheetTeam {
   readonly team: Team
   readonly label: string // the band's word
-  readonly count?: { readonly have: number; readonly of: number; readonly label: string } // compose and deal: the fill and its words
+  readonly count?: { readonly have: number; readonly of: number; readonly label: string } // compose and deal: its words, and in the deal the band's fill
   readonly rows: readonly ScriptSheetRow[]
   readonly add?: { readonly label: string; readonly onPress: () => void }
 }
