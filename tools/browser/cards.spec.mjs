@@ -467,6 +467,50 @@ test('typed words take tokens under them, and the bar stays above the device key
   await expect(printed(card)).toHaveText(['IMP', 'CHEF'])
 })
 
+// A touch screen's keyboard rises after the tap that asks for it. The bar is read on every frame
+// as the fake keyboard rises and falls in steps, all in one evaluation, before the keys fold.
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true })
+
+  test('the token keys and the device keyboard swap without the bar dropping to the foot', async ({ page }) => {
+    await openBoard(page)
+    const card = await openTokens(page)
+    await expect(card.getByRole('button', { name: 'Imp', exact: true })).toBeVisible()
+    const swap = (radio, heights) => page.evaluate(async ({ radio, heights }) => {
+      const bar = document.querySelector('[role="radiogroup"][aria-label="Keyboard"]')
+      const frame = () => new Promise(requestAnimationFrame)
+      const tops = []
+      const read = () => tops.push(Math.round(bar.getBoundingClientRect().top))
+      await frame()
+      read()
+      bar.querySelector(`input[aria-label="${radio}"]`).click()
+      for (const height of heights) {
+        await frame()
+        read()
+        Object.defineProperty(visualViewport, 'height', { configurable: true, value: height })
+        visualViewport.dispatchEvent(new Event('resize'))
+        await frame()
+        read()
+      }
+      return tops
+    }, { radio, heights })
+
+    // Going to the letters, the keys hold the bar up until the device keyboard reaches it, and
+    // past them the bar rides on the keyboard.
+    const up = await swap('Letters', [844, 760, 640, 520, 400])
+    await expect(field(card)).toBeFocused()
+    expect(Math.max(...up)).toBe(up[0])
+    const bottom = async () => { const box = await keyboard(card).boundingBox(); return box.y + box.height }
+    expect(await bottom()).toBeLessThanOrEqual(400)
+
+    // Going back, the keys lie at the foot of the page while the device keyboard goes down, so
+    // the bar goes straight to its place above them and stays there.
+    const down = await swap('Tokens', [400, 520, 640, 760, 844])
+    expect(new Set(down.slice(1)).size).toBe(1)
+    await expect(card.getByRole('button', { name: 'Imp', exact: true })).toBeVisible()
+  })
+})
+
 // The keys are laid out from whatever the script holds, so a team may have one character, none
 // or dozens. Two scripts at the ends: five characters with no Outsider or Traveller, and every
 // character the app bundles.

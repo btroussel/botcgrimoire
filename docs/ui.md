@@ -68,7 +68,11 @@ stays in view above or beside them as its own preview, so the Storyteller sees e
 player will, and its bar stays under the card either way. The card's words are typed on the card in
 the card's own type, so the field is the preview too. The token keys and the device's keyboard take
 the same place in turn, and the card follows the visible viewport so its bar stays above the
-keyboard. The card's keys take up to half an upright window, and scroll past that.
+keyboard. The swap never drops the card to the foot between the two: going to the letters, the
+keys stay under the rising keyboard and give up only the height it covers, then fold away what
+still shows once it settles; going to the keys, they lie at the foot of the page, uncovered as the
+keyboard goes down. The card's keys take up to half an upright window, sized from the page and not
+the view above the keyboard, and scroll past that.
 
 Token keys are laid out for reading wherever they appear: as many across as keep each key large
 enough for the name on its arc, four or five on a phone and seven on a tablet, grown to fill the

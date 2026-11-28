@@ -22,7 +22,7 @@ import { Icon } from '../../ui/icons'
 import { Token } from '../../ui/Token'
 import type { TokenKey, TokenKeyGroup } from '../../ui/TokenKeys'
 import { TokenKeys } from '../../ui/TokenKeys'
-import { useViewport } from '../../ui/Viewport'
+import { useLayoutViewport, useViewport } from '../../ui/Viewport'
 import { captionExtra, cardTokens } from './cardLayout'
 import { wholeWords } from './textWidth'
 
@@ -71,8 +71,12 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
   const p = palette
   const insets = useSafeAreaInsets()
   const phone = usePhone()
-  const window = useWindowDimensions()
   const viewport = useViewport()
+  // The page, not the view above the device's keyboard, which React Native Web's window follows:
+  // the keys and the words keep their size and place while that keyboard comes and goes.
+  const layout = useLayoutViewport()
+  const dims = useWindowDimensions()
+  const page = layout.width > 0 ? layout : dims
   const reduced = useReducedMotion()
 
   // The tokens and the words live here while the card is up: showing records nothing, and the
@@ -83,6 +87,14 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
   // that comes up with words still waiting for their token starts with the keys.
   const [up, setUp] = useState<Up>(spec.words !== '' && spec.characters.length === 0 ? 'tokens' : 'none')
   const dock = up === 'tokens'
+  // Going from the keys to the letters, the keys stay where they are, inert, while the device's
+  // keyboard rises over them, and give up only the height it has covered so far: the card and its
+  // bar stand still instead of dropping to the foot and climbing back. Once that keyboard has
+  // settled, or where none comes, what still shows of the keys folds away.
+  const keysSize = useRef<Size>({ width: 0, height: 0 })
+  const [held, setHeld] = useState<{ readonly size: number; readonly folding: boolean }>()
+  const holding = held !== undefined && up === 'letters'
+  const keysUp = dock || holding
   // An empty card at rest offers its phrases. They go as soon as a keyboard is up, so the card
   // is already the preview of what is about to be typed.
   const offered = written === '' && printed.length === 0 && up === 'none'
@@ -95,12 +107,12 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
   const slots = empty ? 1 : printed.length
   const wordsOnly = slots === 0 && !spec.caption
   const numberOnly = wordsOnly && /^\d+$/.test(written.trim())
-  const large = Math.min(window.width, window.height) >= card.largeWordsFrom
+  const large = Math.min(page.width, page.height) >= card.largeWordsFrom
   const wordsStyle = numberOnly ? styles.number : written.length > 100 ? type.display.title : large ? type.display.heroLarge : type.display.hero
 
   // The words wrap differently in every locale, so the block is laid out from their measured
   // height, starting from one line until the first measure arrives under the token's rise.
-  const [box, setBox] = useState<Size>({ width: window.width, height: window.height - insets.top - insets.bottom })
+  const [box, setBox] = useState<Size>({ width: page.width, height: page.height - insets.top - insets.bottom })
   const [wordsHeight, setWordsHeight] = useState<number>(wordsStyle.lineHeight ?? 0)
   const [belowHeight, setBelowHeight] = useState(0)
   const tokens = cardTokens({
@@ -186,12 +198,32 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
 
   const horizontal = phone ? gutter.phone : gutter.tablet
   // A window wider than tall has no height to give the keys, so they stand on the right.
-  const side = dock && window.width > window.height
+  const side = keysUp && page.width > page.height
+  // The device's keyboard over the page, as far as it has risen.
+  const inset = viewport.width > 0 ? Math.max(0, page.height - viewport.height) : 0
+  const raise = (next: Up) => {
+    const size = side ? keysSize.current.width : keysSize.current.height
+    setHeld(dock && next === 'letters' && size > 0 ? { size, folding: false } : undefined)
+    setUp(next)
+  }
+  // A touch screen's keyboard takes a moment to start rising and reports in steps, so the fold
+  // waits until it has been still a moment. A pointer brings no keyboard up, so the fold starts.
+  const fold = durationFor(motion.duration.sheetIn, reduced)
+  useEffect(() => {
+    if (!holding || !held) return
+    const wait = held.folding ? fold : !matchMedia('(pointer: coarse)').matches ? 0 : inset > 0 ? 150 : 600
+    const timer = setTimeout(() => setHeld(held.folding ? undefined : { ...held, folding: true }), wait)
+    return () => clearTimeout(timer)
+  }, [holding, held, inset, fold])
+  const room = held && !held.folding ? Math.max(0, held.size - (side ? 0 : inset)) : 0
+  const along = side ? 'width' : 'height'
   const count = fieldCount(written.length, noteLength)
   // The card follows the visible viewport, so with the device's keyboard up the note and its bar
-  // stay above it, as a sheet's fields do.
+  // stay above it, as a sheet's fields do. The token keys lie at the foot of the page instead, so
+  // the device's keyboard going down uncovers them and the card above is laid out once.
   const frame = viewport.width > 0
-    ? { position: 'absolute', top: viewport.top, left: viewport.left, width: viewport.width, height: viewport.height } as const
+    ? { position: 'absolute', top: viewport.top, left: viewport.left, width: viewport.width,
+        height: dock ? Math.max(viewport.height, page.height - viewport.top) : viewport.height } as const
     : { position: 'relative', flex: 1 } as const
   return (
     // The felt reaches behind the device's keyboard, under the card that stays above it.
@@ -199,7 +231,7 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
       {/* A long press on a phone would start a drag of the art. */}
       <div ref={root} onPointerDown={(event) => { pressed.current = event.target instanceof Element ? event.target : null }} onClick={tapFelt} onDragStart={(event: DragEvent<HTMLDivElement>) => event.preventDefault()}
         style={{ ...frame, display: 'flex', flexDirection: side ? 'row' : 'column', minHeight: 0, backgroundColor: p.felt }}>
-        <View style={[styles.root, { paddingTop: insets.top, paddingBottom: dock && !side ? 0 : insets.bottom }]}>
+        <View style={[styles.root, { paddingTop: insets.top, paddingBottom: keysUp && !side ? 0 : insets.bottom }]}>
           {/* Leaves the card; a tap is enough, since nothing on it is kept. First in the card, so
               the focus lands here as it comes up. */}
           <View style={[styles.corner, { top: insets.top + space.md, left: space.md }]}>
@@ -215,7 +247,7 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
           >
             <View onLayout={(event) => setWordsHeight(event.nativeEvent.layout.height)} style={{ paddingHorizontal: horizontal }}>
               {/* A tap on the words, or a Tab onto them, is for typing: the letters come up. */}
-              <NoteField inputRef={input} value={written} onChange={setWritten} onFocus={() => setUp('letters')} onBlur={lettersLeft} style={wordsStyle} label={labels.message} placeholder={placeholder} />
+              <NoteField inputRef={input} value={written} onChange={setWritten} onFocus={() => { if (up !== 'letters') raise('letters') }} onBlur={lettersLeft} style={wordsStyle} label={labels.message} placeholder={placeholder} />
               {/* Plain text, not a live region, as a field's count is everywhere. Only while the
                   words are being typed: the player never reads it. */}
               {up === 'letters' && count !== 'hidden' ? (
@@ -257,12 +289,16 @@ export const Card = ({ spec, keys, answers, presets, onDismiss, labels }: CardPr
               so the switch keeps the focus as the keys come and go. */}
           <div data-card-bar style={{ display: 'contents' }}>
             <View style={[styles.bar, { paddingHorizontal: horizontal }]}>
-              <Keyboards up={up} labels={labels} onUp={setUp} />
+              <Keyboards up={up} labels={labels} onUp={raise} />
             </View>
           </div>
         </View>
-        {dock ? <div data-card-keys style={{ display: 'contents' }}><KeysDock side={side} reduced={reduced}>
-          <View style={[styles.paper, side ? styles.paperSide : { maxHeight: window.height * card.keys.heightShare },
+        {keysUp ? <div data-card-keys inert={holding} style={holding
+          ? { display: 'flex', flexDirection: side ? 'row' : 'column', flexShrink: 0, overflow: 'hidden', [along]: room,
+              transition: held?.folding ? `${along} ${fold}ms ${motion.css.ease}` : 'none' }
+          : { display: 'contents' }}>
+          <KeysDock side={side} reduced={reduced} onLayout={(size) => { keysSize.current = size }}>
+          <View style={[styles.paper, side ? styles.paperSide : { maxHeight: page.height * card.keys.heightShare },
             { backgroundColor: p.parchment, borderColor: p.accent }]}>
             <PaperTexture />
             <ScrollView contentContainerStyle={[styles.keys, side ? styles.keysSide : null,
@@ -377,7 +413,9 @@ const Preset = ({ label, short = false, onPress, children }: { readonly label: s
 }
 
 // The keys come up from the foot, or in from the side, as a device's keyboard does.
-const KeysDock = ({ side, reduced, children }: { readonly side: boolean; readonly reduced: boolean; readonly children: ReactNode }) => {
+const KeysDock = ({ side, reduced, onLayout, children }: {
+  readonly side: boolean; readonly reduced: boolean; readonly onLayout: (size: Size) => void; readonly children: ReactNode
+}) => {
   const window = useWindowDimensions()
   const [shown] = useState(() => new Animated.Value(0))
   useEffect(() => {
@@ -388,7 +426,7 @@ const KeysDock = ({ side, reduced, children }: { readonly side: boolean; readonl
   const travel = reduced ? 0 : space.xxxl
   const offset = shown.interpolate({ inputRange: [0, 1], outputRange: [travel, 0] })
   return (
-    <Animated.View style={[side ? { width: Math.min(card.keys.sideMaximum, window.width * card.keys.sideShare) } : styles.dockFoot,
+    <Animated.View onLayout={(event) => onLayout(event.nativeEvent.layout)} style={[side ? { width: Math.min(card.keys.sideMaximum, window.width * card.keys.sideShare) } : styles.dockFoot,
       { opacity: shown, transform: [side ? { translateX: offset } : { translateY: offset }] }]}>
       {children}
     </Animated.View>
