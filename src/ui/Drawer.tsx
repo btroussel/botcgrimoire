@@ -1,6 +1,7 @@
 // The drawer a board sheet that chooses a token comes up in: paper from the foot, so the seats it
 // fills stay in view above it, where a centred window would cover them. The feature owns its
 // contents and dismissal; the drawer owns its edge, its arrival and its scrolling.
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -8,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { IconButton } from './Button'
 import { usePresence, useReducedMotion } from './motion'
 import { PaperTexture } from './PaperTexture'
+import { tokenKeysWidth } from './tokenKeysLayout'
 import { useViewport } from './Viewport'
 import { drawer, hairline, headerSurface, palette, radius, scrim, shadows, space, type } from './theme'
 
@@ -23,6 +25,16 @@ export interface DrawerProps {
   // leaves a height that still lists a few keys; lower than that it is covered, since keys that
   // came down from the top edge read as a keyboard upside down, away from the thumb.
   readonly avoid?: { readonly top: number; readonly bottom: number; readonly left: number; readonly right: number }
+}
+
+// A drawer's picks start over each time it opens. The edge is read during render, so the same
+// open state passing again changes nothing and no frame draws the last opening's picks.
+export const useOnOpen = (visible: boolean, onOpen: () => void) => {
+  const [was, setWas] = useState(visible)
+  if (visible !== was) {
+    setWas(visible)
+    if (visible) onOpen()
+  }
 }
 
 export const Drawer = ({ visible, title, onClose, closeLabel, children, right, dock, avoid }: DrawerProps) => {
@@ -56,7 +68,7 @@ export const Drawer = ({ visible, title, onClose, closeLabel, children, right, d
             <IconButton icon="close" label={closeLabel} onPress={onClose} surface="felt" />
           </View>
           <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>{children}</ScrollView>
-          {dock ? <View style={[styles.dock, { borderTopColor: palette.parchmentShade }]}>{dock}</View> : null}
+          {dock ? <View style={[styles.dock, { borderTopColor: palette.parchmentShade }]}><View style={styles.docked}>{dock}</View></View> : null}
         </Animated.View>
       </View>
     </Modal>
@@ -73,6 +85,9 @@ const styles = StyleSheet.create({
   title: { flex: 1, minWidth: 0 },
   right: { flexDirection: 'row', alignItems: 'center', gap: space.xs, flexShrink: 1, minWidth: 0 },
   scroll: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
-  body: { paddingHorizontal: space.sm, paddingVertical: space.md },
+  // The keys run the same width as the title above them and the dock below.
+  body: { paddingHorizontal: space.lg, paddingVertical: space.md },
   dock: { flexShrink: 0, borderTopWidth: hairline, paddingHorizontal: space.lg, paddingVertical: space.md },
+  // No wider than the keys above it, so its buttons stand under their columns.
+  docked: { width: '100%', maxWidth: tokenKeysWidth, alignSelf: 'center' },
 })

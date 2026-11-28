@@ -63,11 +63,16 @@ outside dismiss one. There are two exceptions, both where what is being filled m
 
 The tokens on a card are typed from keys docked at the foot of an upright window, where a device's
 keyboard lives, or in a panel down the right of a wide one, which has no height to give. The card
-being filled stays in view above or beside them as its own preview, so the Storyteller sees exactly
-what the player will, and its bar stays under the card either way. The blank card's words are typed
-on the card in the card's own type, so the field is the preview too. It opens with neither keyboard
-up; its token keys and the device's keyboard then take the same place in turn, and the card
-follows the visible viewport so its bar stays above the keyboard.
+stays in view above or beside them as its own preview, so the Storyteller sees exactly what the
+player will, and its bar stays under the card either way. The card's words are typed on the card in
+the card's own type, so the field is the preview too. The token keys and the device's keyboard take
+the same place in turn, and the card follows the visible viewport so its bar stays above the
+keyboard. The card's keys take up to half an upright window, and scroll past that.
+
+Token keys are laid out for reading wherever they appear: as many across as keep each key large
+enough for the name on its arc, four or five on a phone and seven on a tablet, grown to fill the
+row. Seven small keys across showed a whole script at once but no name could be read, and a
+Storyteller who does not know the art by heart needs the name. The keys scroll instead.
 
 The token sheets, a seat's character, a reminder, the bluffs, the Fabled and Loric, the bag and what
 a Drunk or Lunatic sees, are a drawer of the same keys that comes up from the foot, since a centred
@@ -79,10 +84,20 @@ down from the top edge instead read as a keyboard upside down, out of the thumb'
 are keys too, under the same rule labels as the characters. Everything read rather than scanned
 keeps the centred window: notes, language and history.
 
+A drawer's keys fill their row, and its dock is never wider than the keys, so its buttons stand
+under their columns. A chosen key draws a little smaller inside its brass ring, so two chosen
+neighbours never run their rings together. Keys carry no wake or setup marks: on a key they only
+cover the name.
+
 A drawer that picks one key closes on it. One that picks a set records nothing until Save at its
-foot, and a tap outside discards. The bluffs drawer docks its wells beside Save, and Shuffle sits in
-its top row, away from Save. The bag's drawer docks the bag, a slot for each seat it fills: a key
-puts in one more copy, so a character can go in twice, and a token in the bag comes back out.
+foot, and a tap outside discards. The header holds the title and the cross, and at most one action
+that changes nothing by itself: clearing a seat's character, or what a disguise shows, records on
+one tap, so it sits at the foot, apart from the cross. The bluffs drawer docks its count beside
+Show and Save, and Shuffle sits in its top row, away from Save. The bag's drawer docks the bag, a
+slot for each seat it fills, in one row that scrolls and follows the bag as it fills, so twenty
+slots never take the keys' height. A key puts in one more copy, so a character can go in twice,
+and a token in the bag comes back out. Once the bag is full every key dims, the ticked ones too,
+since none can take a tap.
 
 ## Motion
 
@@ -261,7 +276,7 @@ focused. A sheet carries no title: its open tab names it.
 The three sheets share one row: the art, the name with its players under it, and the text beside.
 No line runs between rows, since spacing sets them apart and lines made a table of the open sheet.
 A night's rows are the characters' rows, in the night's order. On every sheet the row being read
-lies under an ink wash with a brass edge, across the whole row so its text is marked with its
+lies under an ink wash, across the whole row so its text is marked with its
 name. A tap lays the wash at either width, a tap on another row moves it and a second tap on the
 same row takes it away. At the compact width the row's text unfolds with the wash, so one row is
 open at a time. Each sheet keeps its own row, and no row is washed until one is tapped. The filter
@@ -282,21 +297,17 @@ A card fills the screen and hides the grimoire. Its words and tokens are one blo
 window, laid out from the words' measured height, since they wrap differently in every language. A
 lone token takes as much as fits with a margin either side; several stand in a row or a column,
 whichever draws them larger, and never run off the side: past the smallest size they wrap and scroll
-down. A name too small to read on the arc moves to a caption under its token. The corners stay clear
-for the card's own controls, and a block that cannot fit scrolls.
+down. Three under long words stand two and one, where a column has no height and a row no width. A
+name too small to read on the arc moves to a caption under its token. The top corner stays clear
+for the cross, and a block that cannot fit scrolls. On a card about a player, the player's name
+under the token is set as large as the words: who it is about is half of what the card says. The
+count of a note's length shows only while the letters are up, never on the card a player reads.
 
-A shown card closes on a press held for half a second, while a brass ring fills round the thumb, and
-never on a tap. It is held screen out toward a player, so one stray thumb would show them every
-role. A tap says how to close it instead. The card leaves only once the thumb has lifted and the
-lift's own click has passed, so the release never lands on a seat or on Undo. Keyboard and screen
-reader users close it with a Close button that stays out of sight until it takes focus, or with
-Escape.
-
-A card being filled is the Storyteller's, not yet the player's, so it leaves on its cross or Escape
-and never on a hold. The keys are printed tokens grouped under their team's label, a chosen one
-ringed and checked and one that cannot be taken dimmed, never silently refused. Every shown
-card keeps a quiet Change in its top corner, since the Storyteller may fix any of them; it is a
-control, so a press on it never starts a hold.
+The card has no second state for showing: the Storyteller puts the keyboards away with a tap on
+the felt and turns the device round. Its only controls are then the cross in the top corner and
+the keyboard switch at the foot, and neither says anything about the game. The cross closes on a
+tap, as Escape does. The keys are printed tokens grouped under their team's label, a chosen one
+ringed and checked.
 
 A card about a player starts from that player's seat. The first row of the seat's menu turns in
 place to the two such cards, so showing one needs no pick mode on the ring, no banner and no dimmed

@@ -42,7 +42,7 @@ import { gapMarkerSize } from './ringLayout'
 import type { BoardControlBounds, RingGeometry } from './ringLayout'
 import { SeatContextMenu } from './SeatContextMenu'
 import { believed } from './show'
-import { useOpenCard } from './useCards'
+import { useOpenSeatCard } from './useCards'
 import { placeSeatMenu } from './seatMenu'
 import { SeatActionDialog } from './SeatActionDialog'
 import type { SeatDialogAction } from './SeatActionDialog'
@@ -124,7 +124,7 @@ export const SeatRing = memo(function SeatRing({ seats, band: viewport, geometry
   readOnly = false, lit = noSeats, panelDocked = false, panelAt, deal = false, showCards = false }: SeatRingProps) {
   const interaction = useBoardInteraction()
   const e = useEdits()
-  const { openSeat } = useOpenCard()
+  const openSeat = useOpenSeatCard()
   const [expandedSeat, setExpandedSeat] = useState<string | undefined>(undefined)
   const [contextSeat, setContextSeat] = useState<string | undefined>(undefined)
   // The last seat dialog stays mounted after it closes, so it can leave like every other window.

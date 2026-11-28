@@ -1,18 +1,16 @@
-// What brings a card up. Manual cards ask only for content they display, and opening one never
-// writes to the game log.
+// What brings a card up, and what the blank card offers. Manual cards ask only for content they
+// display, and opening one never writes to the game log.
+import { asCharacterId, scriptCards } from '../../content'
+import type { CharacterId } from '../../content'
 import type { SeatId } from '../../engine'
-import { useStore } from '../../store'
-import { bluffsOf } from '../../store/bluffs'
-import type { KeptNote } from '../../store/settings'
-import { forgetNote, keepNote, sameNote } from '../../store/settings'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
-import type { CardNote, WrittenNote } from './Card'
-import type { ShowChoice, ShowKind } from './show'
-import { notePresets, opening, seatStart, showTokens } from './show'
+import type { CardPreset } from './Card'
+import type { Phrase, SeatCard } from './show'
+import { phrases, seatCard } from './show'
 import { useEdits } from './useEdits'
 
-// Each card's name, sentence case, which is also its words: the card writes them in capitals.
-export const cardNameKey: Readonly<Record<ShowKind, string>> = {
+// Each official card's name, sentence case, which is also its words.
+const cardNameKey: Readonly<Record<SeatCard | Phrase, string>> = {
   youAre: 'board.youAre',
   thisPlayerIs: 'board.cardThisPlayerIs',
   selectedYou: 'board.cardSelectedYou',
@@ -21,56 +19,56 @@ export const cardNameKey: Readonly<Record<ShowKind, string>> = {
   notInPlay: 'board.notInPlayWords',
 }
 
-// Brings a card up as opening() decides, shown or ready to fill: from a phrase on the blank card,
-// or from a seat's menu for the two cards about its player.
-export const useOpenCard = () => {
+// An official card's words, in capitals as the printed info tokens are, so the Storyteller reads
+// on the card what the player will.
+export const useCardWords = () => {
   const e = useEdits()
-  const store = useStore()
-  const interaction = useBoardInteraction()
-  const open = (kind: ShowKind, choice: ShowChoice) => {
-    if (!e.board) return
-    // Written in capitals, as the printed info tokens are, so the editor shows what the player reads.
-    const words = e.t(cardNameKey[kind]).toLocaleUpperCase(store.settings.locale)
-    const card = opening(e.board, kind, choice, words, e.name)
-    if (card) interaction.showCard(card.spec, card.editing)
-  }
-  const openSeat = (kind: ShowKind, seat: SeatId) => {
-    if (e.board) open(kind, { seat, characters: seatStart(e.board, kind, seat) })
-  }
-  return { open, openSeat }
+  return (card: SeatCard | Phrase) => e.t(cardNameKey[card]).toLocaleUpperCase(e.locale)
 }
 
-// What the blank card offers while it is empty, and its star. The official phrases each bring up
-// their own card. Kept cards live on this device beside the language, never in a game, so showing
-// one still records nothing.
-export const useCardNote = (onBluffs: () => void): CardNote | undefined => {
-  const store = useStore()
+// Brings up one of the two cards about a player, from that player's seat.
+export const useOpenSeatCard = () => {
   const e = useEdits()
   const interaction = useBoardInteraction()
-  const { open } = useOpenCard()
-  const notes = store.settings.notes
-  const board = e.board
-  if (!board) return undefined
-  const stored = (n: WrittenNote): KeptNote => ({ words: n.words, ...(n.characters.length > 0 ? { characters: n.characters.map((c) => c.id) } : {}) })
-  const kept = (n: WrittenNote) => notes.some((k) => sameNote(k, stored(n)))
-  const savedBluffs = bluffsOf(board, e.log)
-  return {
-    phrases: showTokens.map((token) => ({
-      key: token.kind,
-      label: e.t(cardNameKey[token.kind]),
-      onPick: () => {
-        // One picker for one job: with no bluffs saved, the tray's drawer chooses them and saves
-        // what it shows, so the grimoire never forgets what a Demon saw.
-        if (token.about === 'bluffs' && savedBluffs.length === 0) {
-          interaction.closeCard()
-          onBluffs()
-        } else open(token.kind, token.about === 'bluffs' ? { characters: savedBluffs } : {})
-      },
-    })),
-    presets: notePresets(notes, board.script).map((n) => ({
-      words: n.words, characters: (n.characters ?? []).map((id) => ({ id, name: e.name(id) })),
-    })),
-    kept,
-    onKeep: (n) => store.setSettings({ notes: kept(n) ? forgetNote(notes, stored(n)) : keepNote(notes, stored(n)) }),
+  const words = useCardWords()
+  return (kind: SeatCard, seat: SeatId) => {
+    const card = e.board ? seatCard(e.board, kind, seat, words(kind), e.name) : undefined
+    if (card) interaction.showCard(card)
   }
+}
+
+// The answers a night asks for most, after tokens: a yes or a no, and a small count. A larger
+// number is typed.
+const counts = ['0', '1', '2', '3', '4', '5']
+
+// What the blank card offers while it is empty: the one-tap answers in their rows, then the
+// official phrases and the script's own character cards, one line each. Each is only written
+// onto the card, where it can still be changed.
+export const useCardOffers = (savedBluffs: readonly CharacterId[], onBluffs: () => void): { readonly answers: readonly (readonly CardPreset[])[]; readonly presets: readonly CardPreset[] } => {
+  const e = useEdits()
+  const interaction = useBoardInteraction()
+  const words = useCardWords()
+  const board = e.board
+  if (!board) return { answers: [], presets: [] }
+  const printed = (ids: readonly CharacterId[]) => ids.map((id) => ({ id, name: e.name(id) }))
+  const answer = (label: string, written = label): CardPreset => ({ label, official: true, note: { words: written, characters: [] } })
+  const answers = [
+    ['board.cardYes', 'board.cardNo'].map((key) => answer(e.t(key), e.t(key).toLocaleUpperCase(e.locale))),
+    counts.map((count) => answer(count)),
+  ]
+  const presets = [
+    ...phrases.map((phrase): CardPreset => ({
+      label: e.t(cardNameKey[phrase]),
+      official: true,
+      note: { words: words(phrase), characters: phrase === 'notInPlay' ? printed(savedBluffs) : [] },
+      ...(phrase === 'selectedYou' ? { wantsToken: true } : {}),
+      // One picker for one job: with no bluffs saved, the tray's drawer chooses them and saves
+      // what it shows, so the grimoire never forgets what a Demon saw.
+      ...(phrase === 'notInPlay' && savedBluffs.length === 0 ? { instead: () => { interaction.closeCard(); onBluffs() } } : {}),
+    })),
+    ...scriptCards(board.script).map((c): CardPreset => ({
+      label: c.text, official: false, note: { words: c.text, characters: printed([asCharacterId(c.character)]) },
+    })),
+  ]
+  return { answers, presets }
 }

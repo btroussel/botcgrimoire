@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import type { ScrollViewInstance } from 'react-native'
 
 import type { CharacterId, Script, Translate } from '../../content'
 import { isLoose } from '../../content'
@@ -7,11 +8,10 @@ import { useStore } from '../../store'
 import type { Listed } from '../../store/scriptSheet'
 import { listed, sheetGroups, teamLabels } from '../../store/scriptSheet'
 import { Button } from '../../ui/Button'
-import { Drawer } from '../../ui/Drawer'
-import { EdgeButton } from '../../ui/EdgeButton'
+import { Drawer, useOnOpen } from '../../ui/Drawer'
 import { palette, space, tabular, tokenKeys, type } from '../../ui/theme'
 import { Token } from '../../ui/Token'
-import { TokenKeys, tokenKeysWidth } from '../../ui/TokenKeys'
+import { TokenKeys } from '../../ui/TokenKeys'
 
 // The same team rows of token keys as the seat's character drawer, so a bag is picked by art.
 const keyGroups = (roles: readonly Listed[], t: Translate) =>
@@ -27,20 +27,19 @@ export const BagPicker = ({ script, count, selected, visible, onClose, onFill }:
   const { t, settings } = useStore()
   const roles = listed(script, settings.locale).filter(role => !isLoose(role.id))
   const [bag, setBag] = useState<readonly CharacterId[]>(() => selected.slice(0, count))
-  // The bag starts over each time the drawer opens; the edge is read during render so the same
-  // open state passing again changes nothing.
-  const [wasVisible, setWasVisible] = useState(visible)
-  if (visible !== wasVisible) {
-    setWasVisible(visible)
-    if (visible) setBag(selected.slice(0, count))
-  }
+  useOnOpen(visible, () => setBag(selected.slice(0, count)))
+  // The slots run in one row that scrolls, so twenty of them never take the keys' height, and it
+  // follows the bag as it fills: the last tokens in, then the slots still empty.
+  const slots = useRef<ScrollViewInstance>(null)
+  useEffect(() => {
+    slots.current?.scrollTo({ x: Math.max(0, bag.length - 2) * (tokenKeys.size + tokenKeys.gap), animated: true })
+  }, [bag.length])
   const full = bag.length >= count
   const name = (id: CharacterId) => roles.find(role => role.id === id)?.name ?? id
   return <Drawer visible={visible} title={t('setup.fillBag')} onClose={onClose} closeLabel={t('common.close')}
     dock={<View style={styles.dock}>
-      {/* A slot for every seat the bag fills, in the keys' columns, so the bag shows where it ends and
-          keeps its height as it fills. */}
-      <View style={styles.bag}>
+      {/* A slot for every seat the bag fills, so the bag shows where it ends. */}
+      <ScrollView ref={slots} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bag}>
         {Array.from({ length: count }, (_, index) => {
           const id = bag[index]
           return id ? <Token key={index} size={tokenKeys.size} character={id} name={name(id)} toggle={false} surface="paper"
@@ -48,14 +47,14 @@ export const BagPicker = ({ script, count, selected, visible, onClose, onFill }:
             onPress={() => setBag(bag.filter((_, at) => at !== index))} />
             : <View key={index} aria-hidden><Token size={tokenKeys.size} /></View>
         })}
-      </View>
+      </ScrollView>
       <View style={styles.actions}>
         <Text accessibilityLiveRegion="polite" style={[type.text.strong, tabular, { color: palette.ink }]}>{t('setup.ofCount', { have: bag.length, of: count })}</Text>
         <Button label={t('common.save')} onPress={() => onFill(bag)} variant="primary" surface="paper" disabled={bag.length === 0} style={styles.save} />
       </View>
     </View>}>
     {roles.length === 0 ? <Text style={[type.text.body, styles.empty, { color: palette.inkMuted }]}>{t('setup.manualEmptyBag')}</Text> : null}
-    <TokenKeys groups={keyGroups(roles, t)} chosen={bag} full={full}
+    <TokenKeys groups={keyGroups(roles, t)} chosen={bag} full={full} copies
       onPress={k => { if (!full) setBag([...bag, k.id as CharacterId]) }} />
   </Drawer>
 }
@@ -68,15 +67,17 @@ export const ShownPicker = ({ name, choices, chosen, visible, onClose, onChoose 
 }) => {
   const { t } = useStore()
   return <Drawer visible={visible} title={t('setup.disguiseTitle', { name })} onClose={onClose} closeLabel={t('common.close')}
-    {...(chosen ? { right: <EdgeButton label={t('setup.disguiseClear')} onPress={() => onChoose(undefined)} /> } : {})}>
+    // At the foot, apart from the cross, as a seat's Clear character is.
+    {...(chosen ? { dock: <View style={styles.clear}><Button variant="text" surface="paper" label={t('setup.disguiseClear')} onPress={() => onChoose(undefined)} /></View> } : {})}>
     {choices.length === 0 ? <Text style={[type.text.body, styles.empty, { color: palette.inkMuted }]}>{t('board.nothingMatches')}</Text> : null}
     <TokenKeys groups={keyGroups(choices, t)} chosen={chosen ? [chosen] : []} onPress={k => onChoose(k.id as CharacterId)} />
   </Drawer>
 }
 
 const styles = StyleSheet.create({
-  dock: { gap: space.md, width: '100%', maxWidth: tokenKeysWidth, alignSelf: 'center' },
-  bag: { flexDirection: 'row', flexWrap: 'wrap', gap: tokenKeys.gap },
+  dock: { gap: space.md },
+  bag: { flexDirection: 'row', gap: tokenKeys.gap },
+  clear: { alignItems: 'flex-start' },
   // The count keeps its place and Save fills the rest of the row, as the bluffs drawer's buttons do.
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   save: { flex: 1 },

@@ -4,40 +4,35 @@ import type { CharacterId } from '../../content'
 import type { Grimoire } from '../../engine'
 import { useBoardInteraction } from '../../ui/BoardInteraction'
 import { Button, IconButton } from '../../ui/Button'
-import { Drawer } from '../../ui/Drawer'
+import { Drawer, useOnOpen } from '../../ui/Drawer'
 import { Token } from '../../ui/Token'
 import { TokenKeys } from '../../ui/TokenKeys'
-import { boardBlock, boardWell, drawer, font, palette, space, touch, type } from '../../ui/theme'
-import { bluffCount, openWells, shuffleWells, tapKey, tapWell } from './bluffWells'
-import type { Wells } from './bluffWells'
+import { boardBlock, boardWell, palette, space, tabular, touch, type } from '../../ui/theme'
+import { bluffCount, openPicks, shufflePicks, tapPick } from './bluffPicks'
 import { bluffChoices, byTeam, edits } from './seat'
-import { wholeWords } from './textWidth'
+import { useCardWords } from './useCards'
 import { useEdits } from './useEdits'
 
-// The not-in-play card the tray and its drawer show: the bluffs, in the good side's colours.
+// The not-in-play card the tray and its drawer show: the phrase over the bluffs.
 const useShowBluffs = () => {
   const e = useEdits()
   const interaction = useBoardInteraction()
+  const words = useCardWords()
   return (ids: readonly CharacterId[]) => {
     if (ids.length === 0) return
-    interaction.showCard({
-      kind: 'notInPlay',
-      words: e.t('board.notInPlayWords'),
-      characters: ids.map((c) => ({ id: c, name: e.name(c) })),
-      tint: 'good',
-    })
+    interaction.showCard({ words: words('notInPlay'), characters: ids.map((c) => ({ id: c, name: e.name(c) })) })
   }
 }
 
 // The tray's wells open the drawer the board owns, since a not-in-play card with no bluffs saved
-// opens the same drawer, and a small game shows no tray. A well opens it with that well ringed.
+// opens the same drawer, and a small game shows no tray.
 export const BoardBluffs = ({ bluffs, boardWidth, clockWidth, canEdit, titled, onOpen }: {
   readonly bluffs: readonly CharacterId[]
   readonly boardWidth: number // the plaque shares the bottom edge from the far corner
   readonly clockWidth: number
   readonly canEdit: boolean
   readonly titled: boolean // the title over the wells; a short landscape board keeps its height for the ring
-  readonly onOpen: (well: number) => void
+  readonly onOpen: () => void
 }) => {
   const e = useEdits()
   const t = e.t
@@ -56,7 +51,7 @@ export const BoardBluffs = ({ bluffs, boardWidth, clockWidth, canEdit, titled, o
                   {...(c ? { character: c, printName: true, name: e.name(c) } : {})}
                   alignment="good"
                   accessibilityLabel={c ? t('board.bluff', { name: e.name(c) }) : t('board.setBluffs')}
-                  {...(canEdit ? { onPress: () => onOpen(index), ...(c ? { onLongPress: () => showBluffs(bluffs) } : {}) } : {})}
+                  {...(canEdit ? { onPress: onOpen, ...(c ? { onLongPress: () => showBluffs(bluffs) } : {}) } : {})}
                 />
               })}
             </View>
@@ -67,12 +62,13 @@ export const BoardBluffs = ({ bluffs, boardWidth, clockWidth, canEdit, titled, o
 // Selecting bluffs stays separate from showing them, but the drawer also shows them: the
 // Storyteller often chooses at the Demon's wake and shows at once, and once chosen they are shown
 // far more often than changed. It opens with what is saved, never a random draw, since taking
-// random picks back off cost a hand pick two or three taps.
-export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: {
+// random picks back off cost a hand pick two or three taps. The ticked keys are the picks: at a
+// size that reads, a second row of the same three tokens under them said nothing new.
+export const BluffPicker = ({ board, bluffs, canEdit, showFirst, visible, onClose }: {
   readonly board: Grimoire
   readonly bluffs: readonly CharacterId[]
   readonly canEdit: boolean
-  readonly well: number | undefined // the well to ring first; the first empty one when omitted
+  readonly showFirst: boolean // opened on the way to the not-in-play card, so Show is the button that leads
   readonly visible: boolean
   readonly onClose: () => void
 }) => {
@@ -81,81 +77,48 @@ export const BluffPicker = ({ board, bluffs, canEdit, well, visible, onClose }: 
   const p = palette
   const showBluffs = useShowBluffs()
   const choices = bluffChoices(board)
-  const [state, setState] = useState<Wells>(() => openWells(bluffs, choices, well))
-  // The wells start over each time the drawer opens; the edge is read during render so the same
-  // open state passing again changes nothing.
-  const [wasVisible, setWasVisible] = useState(visible)
-  if (visible !== wasVisible) {
-    setWasVisible(visible)
-    if (visible) setState(openWells(bluffs, choices, well))
-  }
-  const chosen = state.wells.filter((w): w is CharacterId => w !== undefined)
+  const [picks, setPicks] = useState(() => openPicks(bluffs))
+  useOnOpen(visible, () => setPicks(openPicks(bluffs)))
 
   const save = () => {
-    if (canEdit) e.append(edits.setBluffs(chosen))
+    if (canEdit) e.append(edits.setBluffs(picks))
     onClose()
   }
   // Showing from the drawer saves the set first, so the tray and the log hold what the Demon saw.
   const saveAndShow = () => {
-    const same = chosen.length === bluffs.length && chosen.every((id, i) => id === bluffs[i])
-    if (canEdit && !same) e.append(edits.setBluffs(chosen))
-    onClose()
-    showBluffs(chosen)
+    save()
+    showBluffs(picks)
   }
 
-  const wellLabel = (label: string, ringed: boolean) => (ringed ? t('board.bluffNext', { label }) : label)
-  const wellNames = wholeWords(chosen.map((id) => e.name(id)), wellWidth, font.body.bold, type.text.label)
-  const groups = byTeam(choices).map((g) => ({
-    key: g.team, label: e.teamLabel(g.team), color: p.teamOnPaper[g.team],
-    keys: g.ids.map((id) => ({ id, name: e.name(id) })),
-  }))
+  // A saved bluff that has since come into play keeps its key, ticked: what the Demon was shown
+  // is not undone by a later character change. Only new picks and Shuffle keep to the choices.
+  const groups = e.keyGroups(byTeam([...choices, ...bluffs.filter((id) => !choices.includes(id))]))
   return (
     <Drawer visible={visible} title={t('board.bluffsTitle')} onClose={onClose} closeLabel={t('common.close')}
       // Away from Save, so a shuffle is never a tap meant to keep the set.
-      right={<IconButton icon="shuffle" label={t('board.shuffleBluffs')} onPress={() => setState(shuffleWells(state, choices))}
+      right={<IconButton icon="shuffle" label={t('board.shuffleBluffs')} onPress={() => setPicks(shufflePicks(picks, choices))}
         disabled={choices.length === 0} />}
       dock={<View style={styles.dock}>
-        <View style={styles.wells}>
-          {state.wells.map((id, index) => (
-            <View key={index} style={styles.well}>
-              {/* The ring says where the next key goes, not a choice, so it is named rather than pressed. */}
-              <Token size={drawer.well} alignment="good" selected={state.ring === index} toggle={false} surface="paper"
-                {...(id ? { character: id, name: e.name(id) } : {})}
-                accessibilityLabel={wellLabel(id ? t('board.bluff', { name: e.name(id) }) : t('board.bluffEmpty', { n: index + 1 }), state.ring === index)}
-                onPress={() => setState(tapWell(state, index))} />
-              <Text aria-hidden numberOfLines={2} style={[type.text.label, styles.wellName, wellNames, { color: p.ink }]}>{id ? e.name(id) : ''}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.actions}>
-          <Button label={t('board.showBluffsNow')} onPress={saveAndShow} surface="paper" disabled={chosen.length === 0} style={styles.action} />
-          {/* Short, so Show fits beside it; the drawer's title already says what is saved. */}
-          <Button label={t('common.save')} onPress={save} variant="primary" surface="paper" style={styles.action} />
-        </View>
+        {/* The count stands for a pick scrolled out of view on a long script. */}
+        <Text accessibilityLiveRegion="polite" style={[type.text.strong, tabular, { color: p.ink }]}>{t('setup.ofCount', { have: picks.length, of: bluffCount })}</Text>
+        <Button label={t('board.showBluffsNow')} onPress={saveAndShow} surface="paper" disabled={picks.length === 0} style={styles.action}
+          {...(showFirst ? { variant: 'primary' as const } : {})} />
+        {/* Short, so Show fits beside it; the drawer's title already says what is saved. */}
+        <Button label={t('common.save')} onPress={save} surface="paper" style={styles.action} {...(showFirst ? {} : { variant: 'primary' as const })} />
       </View>}>
       {choices.length === 0 ? <Text style={[type.text.body, styles.empty, { color: p.inkMuted }]}>{t('board.nothingMatches')}</Text> : null}
-      <TokenKeys groups={groups} chosen={chosen} onPress={(k) => setState(tapKey(state, k.id as CharacterId))} />
+      <TokenKeys groups={groups} chosen={picks} full={picks.length >= bluffCount} onPress={(k) => setPicks(tapPick(picks, k.id as CharacterId))} />
     </Drawer>
   )
 }
-
-// A well and the room beside it for its name: three still fit the narrowest phone, and the
-// longest names of one word keep their size.
-const wellWidth = drawer.well + space.xxl
 
 const styles = StyleSheet.create({
   bluffs: { flexShrink: 0, alignItems: 'center' },
   title: { color: palette.muted, maxWidth: '100%', textShadowColor: palette.felt, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   bluffTokens: { flexDirection: 'row', alignSelf: 'flex-start', gap: space.xs, borderRadius: 999 },
-  dock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
-  wells: { flexDirection: 'row', gap: space.sm },
-  // Room under each well for a name of one line, so the wells stay put as they fill; the rare
-  // name of two long words takes a second.
-  well: { width: wellWidth, alignItems: 'center', gap: space.xs },
-  wellName: { textAlign: 'center', minHeight: type.text.label.lineHeight ?? 0 },
-  // The two buttons share whatever the wells leave: the rest of the row in a wide drawer, and a
-  // row of their own on a phone, where they fill it rather than leave half of it empty.
-  actions: { flexDirection: 'row', gap: space.sm, flexGrow: 1, flexBasis: drawer.actions },
-  action: { flex: 1 },
+  // The count keeps its place and the two buttons share the rest of the row. Where a long word
+  // such as Enregistrer has no room beside the other, on the narrowest phone, it takes the next row.
+  dock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.md },
+  action: { flexGrow: 1 },
   empty: { paddingVertical: space.lg, textAlign: 'center' },
 })

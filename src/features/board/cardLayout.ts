@@ -9,7 +9,6 @@ export interface CardRoom {
   readonly below: number // the seat's name under the tokens, measured, 0 without one
   readonly count: number
   readonly roomy: boolean // tablet width and up: the wider gutter and gap
-  readonly foot?: number // the room under the block, the hint's on a shown card
 }
 
 export interface CardTokens {
@@ -26,11 +25,11 @@ const eighth = (value: number) => Math.floor(value / 8) * 8
 const captionBand = card.captionLines * (type.display.title.lineHeight ?? 28) + space.md
 export const captionExtra = space.sm
 
-export const cardTokens = ({ width, height, words, below, count, roomy, foot = card.margin }: CardRoom): CardTokens => {
+export const cardTokens = ({ width, height, words, below, count, roomy }: CardRoom): CardTokens => {
   const gap = roomy ? space.xl : space.lg
   if (count <= 0) return { size: 0, columns: 0, gap, captioned: false }
   const wide = width - 2 * (roomy ? gutter.tablet : gutter.phone)
-  const tall = height - card.margin - foot - (words > 0 ? words + card.wordsGap : 0) - (below > 0 ? below + card.captionGap : 0)
+  const tall = height - card.margin - card.foot - (words > 0 ? words + card.wordsGap : 0) - (below > 0 ? below + card.captionGap : 0)
 
   const fit = (columns: number, captioned: boolean): number => {
     const rows = Math.ceil(count / columns)
@@ -42,13 +41,15 @@ export const cardTokens = ({ width, height, words, below, count, roomy, foot = c
     return Math.max(card.tokenMinimum, eighth(Math.min(across - extra, down, card.tokenMaximum)))
   }
 
-  // A row or a column, whichever draws larger, and two columns once there are more than three.
-  // At the floor a row may not fit across, so the most columns that do fit is also tried, and the
-  // block scrolls down rather than run off the side. A tie goes to the wider, which reads left to
-  // right.
+  // A row or a column, whichever draws larger, and two columns once there are more than two:
+  // under long words three have no height for a column and no width for a row. At the floor a
+  // row may not fit across, so the most columns that do fit is also tried, and the block scrolls
+  // down rather than run off the side. A tie goes to a layout whose last row is full, then to
+  // the wider, which reads left to right.
   const atFloor = Math.floor((wide + gap) / (card.tokenMinimum + captionExtra + gap))
-  const options = [...new Set([count, Math.max(1, Math.min(count, atFloor)), ...(count > 3 ? [2] : []), 1])]
-    .sort((a, b) => b - a)
+  const ragged = (columns: number) => (count % columns === 0 ? 0 : 1)
+  const options = [...new Set([count, Math.max(1, Math.min(count, atFloor)), ...(count > 2 ? [2] : []), 1])]
+    .sort((a, b) => ragged(a) - ragged(b) || b - a)
   let best: CardTokens | undefined
   for (const columns of options) {
     const named = fit(columns, false)

@@ -8,7 +8,8 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import { Icon } from './icons'
 import { Token } from './Token'
-import { hairline, palette, space, tokenKeys, type } from './theme'
+import { tokenKeysLayout } from './tokenKeysLayout'
+import { hairline, palette, ring, space, tokenKeys, type } from './theme'
 
 export interface TokenKey {
   readonly id: string
@@ -26,24 +27,25 @@ export interface TokenKeysProps<K extends TokenKey> {
   readonly groups: readonly TokenKeyGroup<K>[]
   readonly chosen: readonly string[]
   readonly full?: boolean // nothing more can be taken: every key not chosen dims and takes no tap
+  readonly copies?: boolean // a chosen key takes one more copy rather than coming back off, so it too is blocked when full
   readonly onPress: (key: K) => void
   readonly render?: (key: K, size: number, press: () => void) => ReactNode // a key drawn by the feature, in place of a character token
 }
 
-const { size, gap, across, check, checkGlyph, labelTracking } = tokenKeys
-const span = (count: number) => count * size + Math.max(0, count - 1) * gap
-// The widest the keys run, so a dock under them can line up with their columns.
-export const tokenKeysWidth = span(across)
+const { gap, check, checkGlyph, labelTracking } = tokenKeys
+// A chosen key draws this much smaller, so its ring stays inside its own place and two chosen
+// neighbours never run their rings together.
+const ringRoom = ring.width + ring.gap
 
-export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, onPress, render }: TokenKeysProps<K>) => {
+export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, copies = false, onPress, render }: TokenKeysProps<K>) => {
   const p = palette
   const [width, setWidth] = useState(0)
-  const columns = Math.max(1, Math.min(across, Math.floor((width + gap) / (size + gap))))
+  const { size, width: across } = tokenKeysLayout(width)
   // Each team has its own rows, so the keys stand in the same places whatever the script: a
   // script with one Demon and one with four differ only in how far that row runs.
   return (
     <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={styles.measure}>
-      {width > 0 ? <View style={[styles.groups, { width: span(columns) }]}>
+      {width > 0 ? <View style={[styles.groups, { width: across }]}>
         {groups.filter((g) => g.keys.length > 0).map((g) => (
           <View key={g.key} style={styles.group}>
             <View style={styles.heading}>
@@ -53,11 +55,12 @@ export const TokenKeys = <K extends TokenKey>({ groups, chosen, full = false, on
             <View style={[styles.keys, { gap }]}>
               {g.keys.map((k) => {
                 const on = chosen.includes(k.id)
-                const blocked = full && !on
+                const blocked = full && (copies || !on)
                 if (render) return <View key={k.id} style={[styles.drawn, { width: size, height: size }]}>{render(k, size, () => onPress(k))}</View>
                 return (
-                  <View key={k.id} style={{ width: size, height: size }}>
-                    <Token size={size} character={k.id} name={k.name} printName accessibilityLabel={k.name}
+                  <View key={k.id} style={[styles.drawn, { width: size, height: size }]}>
+                    {/* The wake and setup leaves are for the board: on a key they only cover the name. */}
+                    <Token size={on ? size - 2 * ringRoom : size} character={k.id} name={k.name} printName markers={false} accessibilityLabel={k.name}
                       selected={on} dim={blocked} disabled={blocked} surface="paper" onPress={() => onPress(k)} />
                     {/* Selection never relies on colour alone. */}
                     {on ? <View pointerEvents="none" aria-hidden style={[styles.check, { backgroundColor: p.ink, borderColor: p.accent }]}>
@@ -83,6 +86,6 @@ const styles = StyleSheet.create({
   rule: { flex: 1, height: hairline },
   keys: { flexDirection: 'row', flexWrap: 'wrap' },
   drawn: { alignItems: 'center', justifyContent: 'center' },
-  check: { position: 'absolute', top: -space.xs, right: -space.xs, width: check, height: check, borderRadius: check / 2,
+  check: { position: 'absolute', top: 0, right: 0, width: check, height: check, borderRadius: check / 2,
     borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 })

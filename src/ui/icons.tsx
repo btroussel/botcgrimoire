@@ -51,7 +51,6 @@ export type IconName =
   | 'flag'
   | 'letters'
   | 'token'
-  | 'star'
 
 // Each glyph is one or more path strings in a 24 x 24 box; `circle` marks a lens or a disc.
 const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonly circle?: readonly [number, number, number] }>> = {
@@ -110,11 +109,10 @@ const glyphs: Readonly<Record<IconName, { readonly d: readonly string[]; readonl
   mail: { d: ['M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z', 'M3 7l9 6 9-6'] },
   // A pennant on its pole: the end of a game on the replay's timeline.
   flag: { d: ['M6 21V4', 'M6 4h12l-3 4.5 3 4.5H6'] },
-  // A keyboard's delete key: takes the last token off a card.
-  // A capital and a small letter, for typing words; a token with its name's arc, for the keys.
+  // A capital and a small letter, for typing words; four round keys, for the keyboard of tokens.
   letters: { d: ['M2.5 19 8 5l5.5 14', 'M4.5 14h7', 'M21 12.5V19', 'M21 16a2.75 2.75 0 1 1-5.5 0a2.75 2.75 0 1 1 5.5 0'] },
-  token: { circle: [12, 12, 9], d: ['M12 6.5l3 4-3 4-3-4z', 'M8.5 17.5h7'] },
-  star: { d: ['M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z'] },
+  token: { d: ['M4.25 7.5a3.25 3.25 0 1 0 6.5 0a3.25 3.25 0 1 0-6.5 0', 'M13.25 7.5a3.25 3.25 0 1 0 6.5 0a3.25 3.25 0 1 0-6.5 0',
+    'M4.25 16.5a3.25 3.25 0 1 0 6.5 0a3.25 3.25 0 1 0-6.5 0', 'M13.25 16.5a3.25 3.25 0 1 0 6.5 0a3.25 3.25 0 1 0-6.5 0'] },
 }
 
 export interface IconProps {

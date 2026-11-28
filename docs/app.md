@@ -133,56 +133,56 @@ Any seat, an empty one too, takes any reminder from the script or its loose char
 characters first, with no ability source to pick. A note needs text, and this game's notes come back
 in the reminder drawer. Bluffs are up to three Townsfolk or Outsiders not in play, hidden below
 seven players unless saved, since the Demon gets none there. Their drawer opens with the saved
-bluffs in its three wells, or empty, never a random draw that a hand pick would first have to undo.
-A ringed well says where the next key goes, so no tap is ever refused and a swap is a well, a key
-and Save. A well on the tray opens the drawer with that well ringed. Shuffle never replaces a hand
-pick. The drawer also shows them: Show saves the set on screen and opens the not-in-play card with
-it, so what the Demon saw is what the tray and the log hold. The not-in-play card opens that same
-drawer while no bluffs are saved, so there is one surface for the job and no way to show a Demon
-bluffs the grimoire forgets.
+bluffs ticked on its keys, or none, never a random draw that a hand pick would first have to undo.
+A saved bluff that has since come into play keeps its key, still ticked, so showing the bluffs
+again never quietly drops what the Demon was shown; only new picks and Shuffle keep to the
+characters not in play.
+The ticked keys are the picks, with a count beside Save for a pick scrolled out of view. With three
+ticked the other keys dim, so a fourth is never taken in place of one unasked, and a swap is two
+keys and Save. Shuffle fills what is missing and never replaces a hand pick, until three are ticked,
+when it draws all three afresh. The drawer also shows them: Show saves the set on screen and opens the not-in-play card with
+it, so the tray and the log hold the set the card came up with. The not-in-play phrase opens that
+same drawer while no bluffs are saved, so there is one surface for the job, and there Show is the
+drawer's leading button, since the Demon is awake and waiting for the card.
 
-Show a card opens one blank card, and every card about no seat is made from it. The card is words,
-tokens or both, written where the player will read them: a tap on its words raises the device's
-keyboard, and its switch raises the token keys. It takes any number of tokens, so the tokens
-alone, which the night sheet asks for more often than any info token, are the blank card with no
-words. It opens with neither keyboard up, so everything it offers is in view.
+There is one card, and it is always its own editor: what the Storyteller sees on it is what the
+player will read, so nothing separates filling a card from showing it. The card is words, tokens or
+both. A tap on its words raises the device's keyboard, and its switch or a tap on a token raises
+the token keys, where a second tap on a key takes its token back off. It takes any number of
+tokens, so the tokens alone, which the night sheet asks for more often than any info token, are the
+card with no words. A tap on the felt, or on the keyboard that is up, puts the keyboards away
+before the device is turned to the player. The cross closes the card on a tap.
 
-While it is empty the card offers, one line each, the official phrases in the order a first night
-uses them, This is the Demon, These are your Minions, These characters are not in play and This
-character selected you, then the cards kept on this device, latest first, then the script's own
-character cards ([Content](content.md#homebrew-characters)). A phrase brings up its own card, written
-in capitals as the printed info tokens are. A kept card or a script's card only writes the blank one: nothing reaches a
-player before Show, and it can still be edited. A number or a yes is typed, since that is as fast
-as a shortcut. The star keeps the card, words and tokens, in the device's settings and never in a
-game ([Store](store.md#custom-scripts-and-settings)), and forgets it when tapped again. A kept
-token this script lacks still shows when the app knows the character, and is left off when it
-does not.
+Show a card opens the card blank, with neither keyboard up, so everything it offers is in view.
+While it is empty and at rest it offers first the answers a night asks for most after tokens, each
+one tap: Yes and No, then the counts 0 to 5. A larger number is typed. Under them it offers, one
+line each, the official phrases in the order a first night uses them, This is the Demon, These are
+your Minions, These characters are not in play and This character selected you, then the script's
+own character cards ([Content](content.md#homebrew-characters)). Picking one only writes the card,
+in capitals for a word or an official phrase as the printed info tokens are, and it can still be
+changed. The not-in-play phrase writes the saved bluffs under its words, and This character
+selected you brings up the token keys, since it is about a character. Nothing is kept from one
+card to the next. The prompt to write shows only on the empty card at rest and while the letters
+are up, so a card of tokens alone never shows it to the player.
 
 You are and This player is start from a seat's menu, under Show a card, and from nowhere else: each
 is about one player, and the seat is that player. So showing a card never puts the ring in a pick.
-
-A card whose content is already known comes up shown: You are and This player is from their
-player's seat, the not-in-play card with the saved bluffs, and the two cards of words. One whose
-content is not known comes up empty for the Storyteller to fill: This character selected you, This
-player is on a disguised seat, and the blank card. Every shown card has Change, which
-opens the one editor all cards share with what the card shows: its words can be rewritten, its
-tokens replaced or added to, and the result kept with the star. A card from a seat keeps what makes
-it safe there, the side You are tells and the name under This player is. Change says
-nothing about the game, since the player can see it.
+They open the same card with their words and their token written, and what makes each safe there,
+the side You are tells and the name under This player is.
 
 Only You are tells a side, as the official app sends one with a thumb. It starts from the
 character its player believes and shows the side they believe, read from the board, so a side
 change is recorded before the card goes out. Every other card keeps each token in its team's
 colours, as the printed token is, so no card tells one player another's side. This player is
-starts from the seat's character, or from nothing on a disguised seat: the Demon must learn a real
-Marionette or Lunatic, but a Drunk's real token must never go out on a hasty tap.
+starts from the seat's character, or from nothing on a disguised seat, where the token keys come
+up for the Storyteller to type it: the Demon must learn a real Marionette or Lunatic, but a Drunk's
+real token must never go out on a hasty tap.
 
-The Storyteller can change any card's characters, since a poisoned player may be shown something
-false. A card about one character takes one, and the key that types it shows the card. The blank
-card takes as many as are typed, and waits for Show. The not-in-play card takes up to three, and changing it changes
-only what this card shows, never the saved bluffs. It offers the good characters in play last,
-since a Lunatic may be shown any good characters. A card's tokens leave out the night and reminder
-marks, as the setup reveal does. Showing a card records nothing.
+The Storyteller can change any card's words and characters, since a poisoned player may be shown
+something false. The keys are the whole script, since a Lunatic may be shown any good characters.
+Changing the not-in-play card changes only what this card shows, never the saved bluffs. A card's
+tokens leave out the night and reminder marks, as the setup reveal does. Showing a card records
+nothing.
 
 The character and night references open from the board's edge. Whether they are open is a
 display choice, never a game event ([UI](ui.md#the-board)). The character reference opens on the

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import type { SeatId } from '../../engine'
-import { Drawer } from '../../ui/Drawer'
+import { Drawer, useOnOpen } from '../../ui/Drawer'
 import { AddSlot, ReminderChip } from '../../ui/ReminderChip'
 import { palette } from '../../ui/theme'
 import { TokenKeys } from '../../ui/TokenKeys'
@@ -31,11 +31,10 @@ export const ReminderPicker = ({ target, onClose, onWriteNote }: ReminderPickerP
   // The drawer slides out after the target is cleared, so it keeps the last one it had, and where
   // that seat stood as it opened.
   const [kept, setKept] = useState(target)
+  if (target && target !== kept) setKept(target)
+  // Read on every opening, the same seat's included: the ring may have been laid out again since.
   const [span, setSpan] = useState<ReturnType<typeof seatSpan>>()
-  if (target && target !== kept) {
-    setKept(target)
-    setSpan(seatSpan(target))
-  }
+  useOnOpen(target !== undefined, () => setSpan(target ? seatSpan(target) : undefined))
 
   const board = e.board
   const seat = board?.seats.find((s) => s.id === kept)

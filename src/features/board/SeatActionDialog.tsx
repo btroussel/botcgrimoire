@@ -2,10 +2,11 @@ import { useState } from 'react'
 
 import type { CharacterId } from '../../content'
 import { emptySeat, isEmptySeat } from '../../content'
+import { StyleSheet, View } from 'react-native'
+
+import { Button } from '../../ui/Button'
 import { Confirm } from '../../ui/Confirm'
-import { Drawer } from '../../ui/Drawer'
-import { EdgeButton } from '../../ui/EdgeButton'
-import { palette } from '../../ui/theme'
+import { Drawer, useOnOpen } from '../../ui/Drawer'
 import { TokenKeys } from '../../ui/TokenKeys'
 import { characterGroups, edits, seatSpan } from './seat'
 import { useEdits } from './useEdits'
@@ -28,11 +29,7 @@ export const SeatActionDialog = ({ action, visible, onClose }: {
   const [kept, setKept] = useState(found)
   if (found && found !== kept) setKept(found)
   const [span, setSpan] = useState(() => seatSpan(action.seatId))
-  const [opened, setOpened] = useState(visible)
-  if (visible !== opened) {
-    setOpened(visible)
-    if (visible) setSpan(seatSpan(action.seatId))
-  }
+  useOnOpen(visible, () => setSpan(seatSpan(action.seatId)))
   const seat = found ?? kept
   if (!seat || !e.board || e.lookingBack) return null
   if (action.kind === 'remove') return <Confirm visible={visible}
@@ -42,11 +39,15 @@ export const SeatActionDialog = ({ action, visible, onClose }: {
 
   const choose = (to: string) => { e.append(edits.setCharacter(seat.id, to as CharacterId)); onClose() }
   const empty = isEmptySeat(seat.character)
-  const groups = characterGroups(e.board.script).map(g => ({ key: g.team, label: e.teamLabel(g.team), color: palette.teamOnPaper[g.team],
-    keys: g.ids.map(id => ({ id, name: e.name(id) })) }))
   return <Drawer visible={visible} title={e.t('board.characterFor', { name: seat.name })} onClose={onClose} closeLabel={e.t('common.close')}
     {...(span ? { avoid: span } : {})}
-    {...(!empty ? { right: <EdgeButton label={e.t('board.clearCharacter')} onPress={() => choose(emptySeat)} /> } : {})}>
-    <TokenKeys groups={groups} chosen={empty ? [] : [seat.character]} onPress={k => choose(k.id)} />
+    // At the foot, apart from the cross: it records an edit on one tap, and beside the cross a
+    // tap meant to close the drawer emptied the seat.
+    {...(!empty ? { dock: <View style={styles.clear}><Button variant="text" surface="paper" label={e.t('board.clearCharacter')} onPress={() => choose(emptySeat)} /></View> } : {})}>
+    <TokenKeys groups={e.keyGroups(characterGroups(e.board.script))} chosen={empty ? [] : [seat.character]} onPress={k => choose(k.id)} />
   </Drawer>
 }
+
+const styles = StyleSheet.create({
+  clear: { alignItems: 'flex-start' },
+})

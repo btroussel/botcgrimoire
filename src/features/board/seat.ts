@@ -85,30 +85,23 @@ export const writtenNotes = (log: readonly Event[]): readonly string[] => {
   return [...new Set([...latest.values()].reverse())]
 }
 
-// The script's Townsfolk and Outsiders, split by whether a character is recorded, dead seats and
+// The bluff catalogue: the script's Townsfolk and Outsiders that no seat records, dead seats and
 // ability annotations included.
-const goodByPlay = (g: Grimoire, recorded: boolean): readonly CharacterId[] => {
+export const bluffChoices = (g: Grimoire): readonly CharacterId[] => {
   const playing = new Set(inPlay(g))
   const customTeams = new Map(isCustom(g.script) ? g.script.items.flatMap(item =>
     typeof item !== 'string' && 'team' in item ? [[item.id, item.team] as const] : []) : [])
   return roster(g.script).filter(id => {
     const team = customTeams.get(id) ?? character(id).team
-    return (team === 'townsfolk' || team === 'outsider') && playing.has(id) === recorded
+    return (team === 'townsfolk' || team === 'outsider') && !playing.has(id)
   })
 }
-
-// The bluff catalogue excludes recorded characters.
-export const bluffChoices = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, false)
 
 // Where a seat's token stands in the window, so a drawer that changes the seat can leave it in view.
 export const seatSpan = (seat: string): { readonly top: number; readonly bottom: number; readonly left: number; readonly right: number } | undefined => {
   const token = document.querySelector(`[data-seat-context-target="${seat}"] [role="button"]`)?.getBoundingClientRect()
   return token ? { top: token.top, bottom: token.bottom, left: token.left, right: token.right } : undefined
 }
-
-// The night sheet shows the Lunatic "3 good character tokens", not the Demon's not-in-play ones, so
-// the card offers these too.
-export const goodInPlay = (g: Grimoire): readonly CharacterId[] => goodByPlay(g, true)
 
 const placeNote = (text: string, seat: SeatId): Payload => ({ kind: 'placeToken', token: noteToken, note: text, seat })
 

@@ -12,7 +12,7 @@ import type { Size } from '../../ui/theme'
 import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuClass, menuFrame, menuStyles } from '../../ui/popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
-import type { ShowKind } from './show'
+import type { SeatCard } from './show'
 
 export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onShowCard, onReminder, onCharacter, onAlignment, onNominate, onCallExile, onRemove, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
@@ -25,7 +25,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly width: number
   readonly t: Translate
   readonly onClose: () => void
-  readonly onShowCard?: (kind: ShowKind) => void // set on a seat with a token, which a card about its player starts from
+  readonly onShowCard?: (kind: SeatCard) => void // set on a seat with a token, which a card about its player starts from
   readonly onReminder?: () => void
   readonly onCharacter: () => void
   readonly onAlignment: () => void

@@ -127,8 +127,8 @@ const style = (fontFamily: string, fontSize: number, lineHeight: number, rest: T
 
 export const type = {
   display: {
-    // The card's words, uppercase there, and the same words once the window is large both ways
-    // (`card.largeWordsFrom`), where 40 would sit small over a token of 360.
+    // The card's words, and the same words once the window is large both ways
+    // (`card.largeWordsFrom`), where 40 would sit small over a token of 448.
     hero: style(font.display.semibold, 40, 44, { letterSpacing: 0.5 }),
     heroLarge: style(font.display.semibold, 56, 60, { letterSpacing: 0.5 }),
     // Screen titles, sheet titles, the phase counter in the clock corner.
@@ -154,7 +154,7 @@ export const type = {
   },
 } as const
 
-// The name on the arc of a token at `show` size and above: 22 px on a 200 token. The one Grenze
+// The name on the arc of a token at `named` size and above: 22 px on a 200 token. The one Grenze
 // use under 24, allowed because it is the token's own print, not text set in the interface.
 // A small seat on a phone keeps a floor, a larger share of its disc, so a short name such as
 // IMP or SPY still reads; a long one is fitted to the arc either way.
@@ -235,12 +235,12 @@ export const ring = { width: 3, gap: 2 } as const
 export interface Shadows {
   readonly ticket: string // the cut lower edge of paper controls and script cards
   readonly ticketPressed: string
-  readonly card: string // a small paper card in the information picker
+  readonly card: string // a paper card lying on a page: a script sheet's blocks
   readonly lifted: string // a piece without a cardboard edge raised off the board: the ghost vote skull, a popover
   readonly sheet: string // a floating window
 }
 
-// Paper tickets have a cut lower edge; information cards use a softer shadow.
+// Paper tickets have a cut lower edge; a paper card uses a softer shadow.
 // Values are CSS box shadows.
 export const shadows: Shadows = {
   ticket: '0 3px 0 rgba(0,0,0,0.25)',
@@ -281,43 +281,44 @@ export const tokenShadow = (size: number): string => {
 // from `named` up, whose arc is large enough to read it.
 // `corner` is the board's small disc: a granted ability in the corner strip, a gap where a seat
 // can be added, and a dealt token as it leaves the centre.
-export const tokenSize = { board: 104, sheet: 96, chip: 48, named: 200, corner: 36 } as const
+export const tokenSize = { board: 104, chip: 48, named: 200, corner: 36 } as const
 
 // The card a player reads: its words and tokens are one block, sized to the window and centred.
 export const card = {
-  // Above and below the block: the room a 44 point control takes in a corner, Change at the top
-  // and the hold hint at the foot, so neither ever sits on a token.
+  // Above the block: the room the cross, a 44 point control, takes in its corner, so it never
+  // sits on a token.
   margin: touch + space.md,
+  foot: space.md, // under the block, where the card's bar begins
   wordsGap: space.xl, // between the words and the tokens
   captionGap: space.lg, // between the tokens and the seat's name under them
   tokenShare: 0.72, // a token or a column of them takes at most this share of the width
-  tokenMaximum: 360,
-  // Under this the name on the arc is too small to read across a table, so it goes in a caption
-  // of at most `captionLines` under the token.
-  arcFrom: 144,
+  // The art is drawn from a source about 256 pixels wide, so past this a token on a tablet only
+  // gets softer.
+  tokenMaximum: 448,
+  // The arc prints the name at about a ninth of the token, so under this it falls below 12
+  // points and goes in a caption of at most `captionLines` under the token. A caption costs each
+  // row its height, so the bar is set no higher than reading needs.
+  arcFrom: 112,
   captionLines: 2,
   tokenMinimum: tokenSize.chip, // past this the block scrolls rather than shrink
   largeWordsFrom: 600, // the words grow to heroLarge once the window is this large both ways
-  // The ring that fills round the thumb while the card is held to close, and how far the thumb
-  // may drift before the press counts as a scroll.
-  holdRing: { size: 104, width: 4, trackOpacity: 0.35 }, // the track under the fill stays faint
-  holdSlop: 10,
-  // An editing card's keys: docked at the foot of an upright window, at most this share of its
+  // The card's keys: docked at the foot of an upright window, at most this share of its
   // height, or a column on the right of a wide one, which has no height to give.
-  keys: { heightShare: 0.45, sideShare: 0.5, sideMaximum: 420 },
+  keys: { heightShare: 0.5, sideShare: 0.5, sideMaximum: 628 },
   presetWidth: 440, // a written note's presets, one line each, read down a short column
 } as const
 
-// The token keyboard: printed tokens as keys, one point over the touch target so a key never
-// falls under it, seven across where the width allows. A team's label is tracked out a little,
-// as small capitals read better spaced.
-export const tokenKeys = { size: touch + 1, gap: 6, across: 7, check: 20, checkGlyph: 14, labelTracking: 0.8 } as const
+// The token keyboard: printed tokens as keys, laid out for reading (tokenKeysLayout). As many
+// stand across as stay at least `comfortable`, where the name on the arc reads, seven at most,
+// and they grow to fill a row no wider than seven of `largest`, which is about a drawer's width.
+// `size` is a token in a drawer's dock, one point over the touch target so it never falls under
+// it. A team's label is tracked out a little, as small capitals read better spaced.
+export const tokenKeys = { size: touch + 1, comfortable: 64, largest: 80, gap: 6, across: 7, check: 20, checkGlyph: 14, labelTracking: 0.8 } as const
 
-// The drawer the board's token sheets come up in: full width up to the pickers' old width, and
-// never so tall that the board above it is gone. Beside the seat it changes it may stop as short
-// as `leastShare`, which still lists a few rows of keys. `well` is a bluff well in its dock, and
-// with less than `actions` beside the wells its buttons take the next row.
-export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.4, well: 56, actions: 240 } as const
+// The drawer the board's token sheets come up in: full width up to seven keys and their margins,
+// and never so tall that the board above it is gone. Beside the seat it changes it may stop as
+// short as `leastShare`, which still lists two or three rows of keys.
+export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.5 } as const
 
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half
@@ -365,7 +366,7 @@ export const motion = {
   easeIn: Easing.bezier(0.4, 0, 1, 1),
   css: { ease: 'cubic-bezier(0.2, 0.8, 0.2, 1)', easeIn: 'cubic-bezier(0.4, 0, 1, 1)' },
   duration: {
-    reveal: 420, // the token rises on the card; its words fade in over 200 ms from 240 ms in
+    reveal: 420, // the token rises on the card
     flipOut: 120, // the neutral back turns to its edge before the character mounts
     flipIn: 180,
     lift: 380, // a drawn token rises from the face-down bag to full size before it turns
@@ -382,11 +383,6 @@ export const motion = {
     mark: 160, // a chip placed, a mark set, gap markers armed: scale 0.8 to 1 with opacity
     markStagger: 100, // a second mark that follows the first, the ghost vote after the token greys
     tint: 220, // a token's art crossfades to its other side
-    hold: 500, // a card held this long closes; its ring fills over the same time
-    holdRelease: 160, // a ring let go early empties
-    holdHint: 1500, // how long a tap on a card shows how to close it
-    cardClose: 150, // the card fades out once the hold completes
-    liftGuard: 400, // the faded card waits this long at most for a touch's lift to send its click
     fade: 120, // what every fade becomes under reduced motion
   },
   pressedOpacity: 0.7, // a button press is opacity; a token presses by scale instead

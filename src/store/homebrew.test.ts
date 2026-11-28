@@ -77,7 +77,7 @@ describe('registryOf', () => {
 
 describe('characters in the database', () => {
   test('come back newest edit first, replace by id, delete by id, beside the settings and scripts', async () => {
-    const settings = { locale: 'fr', boardColour: 'burgundy', notes: [] } as const
+    const settings = { locale: 'fr', boardColour: 'burgundy' } as const
     await putSettings(settings)
     const saved: SavedScript = { id: 's1' as SavedScriptId, script: script('Home', 'imp'), updatedAt: 1 }
     await putScript(saved)

@@ -3,7 +3,7 @@
 import { useKeepAwake } from 'expo-keep-awake'
 import type { ComponentType, ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Modal, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -14,7 +14,7 @@ import { BoardInteractionProvider, useBoardInteraction } from '../../ui/BoardInt
 import { boardLayoutFor, referenceTabWidth } from './boardLayout'
 import { Button } from '../../ui/Button'
 import { EdgeButton } from '../../ui/EdgeButton'
-import { Card } from './Card'
+import { BoardCard } from './BoardCard'
 import { Confirm } from '../../ui/Confirm'
 import { Empty } from '../../ui/Empty'
 import { domElement, layerAbove } from '../../ui/focus'
@@ -48,8 +48,6 @@ import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
-import { cardNameKey, useCardNote } from './useCards'
-import { cardKeys, takes } from './show'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
 import { useEdits } from './useEdits'
@@ -109,9 +107,9 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const p = palette
   const t = b.t
   const [bluffsOpen, setBluffsOpen] = useState(false)
-  const [bluffsWell, setBluffsWell] = useState<number>()
-  const openBluffs = useCallback((well?: number) => { setBluffsWell(well); setBluffsOpen(true) }, [])
-  const cardNote = useCardNote(openBluffs)
+  // Opened from the not-in-play phrase, the drawer is on the way to a card, so its Show leads.
+  const [bluffsToShow, setBluffsToShow] = useState(false)
+  const openBluffs = useCallback((toShow: boolean) => { setBluffsToShow(toShow); setBluffsOpen(true) }, [])
   const [looseOpen, setLooseOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
@@ -274,7 +272,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   // The eye opens the blank card: its phrases are the cards about no seat, and anything else is
   // written or typed in tokens on it.
   const { showCard } = interaction
-  const openShow = useCallback(() => showCard({ kind: 'custom', words: '' }, true), [showCard])
+  const openShow = useCallback(() => showCard({ words: '', characters: [] }), [showCard])
   const openLoose = useCallback(() => setLooseOpen(true), [])
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
@@ -433,7 +431,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }} {...(actionsDocked ? aside : {})} style={actionsDocked ? styles.aside : null}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
-              ? <BoardBluffs bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} onOpen={openBluffs} />
+              ? <BoardBluffs bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} onOpen={() => openBluffs(false)} />
               : null}
           </View>
         </View>
@@ -520,7 +518,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <ReminderPicker target={reminderTarget} onClose={() => setReminderTarget(undefined)}
           onWriteNote={seat => { setReminderTarget(undefined); setNoteTarget({ kind: 'new', seat }) }} />
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
-        <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} well={bluffsWell} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
+        <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} showFirst={bluffsToShow} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
         <EndGame visible={endOpen} t={t} window={window}
@@ -545,29 +543,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}
           onCancel={() => setConfirmHome(false)}
         />
-        {interaction.card && cardNote ? (
-          // A card's words and tokens change as they are typed, so the dialog takes the card's name.
-          <Modal visible animationType="none" onRequestClose={interaction.closeCard}
-            aria-label={t(interaction.card.spec.kind === 'custom' ? 'board.customNote' : cardNameKey[interaction.card.spec.kind])}>
-            {/* Keyed, so a phrase picked on the blank card brings its own card up fresh. */}
-            <Card key={interaction.card.spec.kind} spec={interaction.card.spec} editing={interaction.card.editing} takes={takes(interaction.card.spec.kind)}
-              keys={cardKeys(board, interaction.card.spec.kind).map((g) => ({
-                key: g.key,
-                label: g.key === 'inPlay' ? t('board.inPlayGroup') : e.teamLabel(g.key),
-                color: g.key === 'inPlay' ? p.ink : p.teamOnPaper[g.key],
-                keys: g.ids.map((id) => ({ id, name: e.name(id) })),
-              }))}
-              note={cardNote}
-              onDismiss={interaction.closeCard}
-              labels={{
-                close: t('common.close'), holdHint: t('board.cardHoldToClose'), change: t('board.cardChange'),
-                show: t('board.showBluffsNow'),
-                takeOff: (name) => t('board.removeChip', { label: name }),
-                placeholder: t('board.notePlaceholder'), message: t('board.noteMessage'), keyboard: t('board.noteKeyboard'), letters: t('board.noteLetters'),
-                tokens: t('board.noteTokens'), keep: t('board.noteKeep'),
-              }} />
-          </Modal>
-        ) : null}
+        {interaction.card ? <BoardCard spec={interaction.card} bluffs={view.bluffs} onBluffs={() => openBluffs(true)} /> : null}
       </View>
     </PageEnter>
   )

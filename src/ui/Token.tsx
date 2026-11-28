@@ -27,8 +27,8 @@ export interface TokenProps {
   readonly size: number // one of tokenSize, or the board's computed size
   readonly character?: string // the character id; an empty seat when omitted
   readonly alignment?: Alignment // the tint; the team's own side when omitted
-  readonly name?: string // printed at show size and above; the content's name when omitted
-  readonly printName?: boolean // print the name even below show size
+  readonly name?: string // printed at `named` size and above; the content's name when omitted
+  readonly printName?: boolean // print the name even below that size
   readonly ability?: string // full text inside a large reference token
   readonly markers?: boolean // printed setup, wake and reminder counts; omitted on a player reveal
   readonly selected?: boolean // the brass ring

@@ -436,9 +436,9 @@ const styles = StyleSheet.create({
   rowLine: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingVertical: space.sm },
   fold: { paddingBottom: space.sm },
   // The row being read. The wash covers the whole row, so the text being read is marked with its
-  // name, and reaches into the sheet's margin, where the brass edge has room.
+  // name, and reaches into the sheet's margin, so the art and text keep their column.
   here: { position: 'absolute', top: space.xxs, bottom: space.xxs, left: -space.sm, right: -space.sm, borderRadius: 6,
-    backgroundColor: palette.paperPressed, borderLeftColor: palette.accent, borderLeftWidth: 4 },
+    backgroundColor: palette.paperPressed },
   identity: { flexShrink: 0, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   art: { minHeight: 36, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   names: { flex: 1, minWidth: 0 },
