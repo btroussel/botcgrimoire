@@ -57,7 +57,7 @@ test('each player takes a token from the open bag, and the Storyteller deals wha
   await expect(page.getByText('5 of 5 characters assigned', { exact: true })).toBeVisible()
 })
 
-test('the bag is filled from the token keys, a character twice, and a tap outside keeps what was saved', async ({ page }) => {
+test('the bag is filled from the token keys, a long press puts a character in twice, and a tap outside keeps what was saved', async ({ page }) => {
   await open(page, '/new')
   await button(page, 'Trouble Brewing').click()
   const count = page.getByText(/^\d+ players?$/).first()
@@ -72,31 +72,31 @@ test('the bag is filled from the token keys, a character twice, and a tap outsid
   await expect(drawer.getByText('0 of 5', { exact: true })).toBeVisible()
   await expect(button(drawer, 'Save')).toBeDisabled()
 
-  // A key puts one more copy in, so the Imp goes in twice, and a token in the bag comes back out.
-  for (const name of ['Imp', 'Imp', 'Chef']) await button(drawer, name).click()
+  // A key goes in on a tap and comes back out on another, and a long press puts in one more copy.
+  for (const name of ['Imp', 'Chef', 'Monk']) await button(drawer, name).click()
   await expect(drawer.getByText('3 of 5', { exact: true })).toBeVisible()
-  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(2)
-  await button(drawer, 'Remove a Imp token').first().click()
-  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(1)
+  await button(drawer, 'Monk').click()
+  await expect(button(drawer, 'Monk')).toHaveAttribute('aria-pressed', 'false')
+  await button(drawer, 'Imp').click({ delay: 800 })
+  await expect(drawer.getByText('3 of 5', { exact: true })).toBeVisible()
   await expect(button(drawer, 'Imp')).toHaveAttribute('aria-pressed', 'true')
-  // A full bag takes no more keys.
-  for (const name of ['Imp', 'Monk', 'Baron']) await button(drawer, name).click()
+  // A full bag takes no more keys, and a ticked one still comes out.
+  for (const name of ['Monk', 'Baron']) await button(drawer, name).click()
   await expect(drawer.getByText('5 of 5', { exact: true })).toBeVisible()
   await expect(button(drawer, 'Poisoner')).toBeDisabled()
-  await button(drawer, 'Remove a Baron token').click()
+  await button(drawer, 'Baron').click()
   await button(drawer, 'Save').click()
   await expect(drawer).toBeHidden()
 
   // It opens again on the bag saved, and a tap outside it discards.
   await button(page, 'Fill the bag').click()
   await expect(drawer.getByText('4 of 5', { exact: true })).toBeVisible()
-  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(2)
   await button(drawer, 'Poisoner').click()
   await page.mouse.click(195, 20)
   await expect(drawer).toBeHidden()
   await button(page, 'Fill the bag').click()
   await expect(drawer.getByText('4 of 5', { exact: true })).toBeVisible()
-  await expect(button(drawer, 'Remove a Poisoner token')).toHaveCount(0)
+  await expect(button(drawer, 'Poisoner')).toHaveAttribute('aria-pressed', 'false')
 })
 
 test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, and its player draws it', async ({ page }) => {
