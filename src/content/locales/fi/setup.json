@@ -3,10 +3,6 @@
   "assignedCount": "{have} / {of} hahmoa jaettu",
   "createError": "Pelin tallennus epäonnistui. Yritä uudelleen.",
   "fillBag": "Täytä pussi",
-  "fillBagSave": {
-    "one": "Laita {count} hahmo pussiin",
-    "other": "Laita {count} hahmoa pussiin"
-  },
   "defaultSeat": "Paikka {n}",
   "discovery": "Hahmojen paljastus",
   "discoveryBack": "Takaisin valmisteluun",

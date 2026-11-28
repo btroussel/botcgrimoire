@@ -172,6 +172,18 @@ test('a script with too few Minions repeats them, so Lil\' Monsta gets its two W
   expect(new Set(large.filter(id => character(id).team === 'minion'))).toEqual(new Set(['witch', 'poisoner']))
 })
 
+test('a script short of Minions never repeats the Marionette, which takes no seat', () => {
+  const pool = roles(...townsfolk, ...outsiders, 'poisoner', 'marionette', 'imp')
+  for (let seed = 0; seed < 30; seed++) {
+    const bag = randomBag(pool, 13, rng(seed))!
+    expect(seatedCharacters(bag)).toHaveLength(13)
+    expect(bag.filter(id => id === 'marionette')).toHaveLength(1)
+    expect(bag.filter(id => id === 'poisoner')).toHaveLength(2)
+  }
+  // With no other Minion to repeat, no bag fills the table.
+  expect(randomBag(roles(...townsfolk, ...outsiders, 'marionette', 'imp'), 10, () => 0)).toBeUndefined()
+})
+
 test('Kazali starts with good players until the Demon chooses its Minions', () => {
   const bag = randomBag(roles(...townsfolk, ...outsiders, 'kazali', 'baron'), 7, () => 0)!
   expect(bag).toHaveLength(7)

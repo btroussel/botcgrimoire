@@ -88,7 +88,8 @@ export const palette: Palette = {
 
 // The scrims behind a sheet and behind the one dialog. `table` puts the board almost out behind
 // the two tokens that end a game: they stand wider than the ring's middle, over the seats.
-export const scrim = { sheet: 'rgba(0,0,0,0.35)', dialog: 'rgba(0,0,0,0.5)', table: 'rgba(10,5,7,0.86)' } as const
+// `drawer` is light, since the seats a drawer fills stay readable behind it.
+export const scrim = { sheet: 'rgba(0,0,0,0.35)', drawer: 'rgba(0,0,0,0.18)', dialog: 'rgba(0,0,0,0.5)', table: 'rgba(10,5,7,0.86)' } as const
 
 // ---------------------------------------------------------------------------------------------
 // Type. Two bundled faces. Grenze for display only: a serif with blackletter bones, the game's
@@ -126,8 +127,10 @@ const style = (fontFamily: string, fontSize: number, lineHeight: number, rest: T
 
 export const type = {
   display: {
-    // The card's words, uppercase there.
+    // The card's words, and the same words once the window is large both ways
+    // (`card.largeWordsFrom`), where 40 would sit small over a token of 448.
     hero: style(font.display.semibold, 40, 44, { letterSpacing: 0.5 }),
+    heroLarge: style(font.display.semibold, 56, 60, { letterSpacing: 0.5 }),
     // Screen titles, sheet titles, the phase counter in the clock corner.
     title: style(font.display.semibold, 24, 28),
     // Team bands on the script sheet and phase bands in the log: one rule device wherever it appears.
@@ -151,7 +154,7 @@ export const type = {
   },
 } as const
 
-// The name on the arc of a token at `show` size and above: 22 px on a 200 token. The one Grenze
+// The name on the arc of a token at `named` size and above: 22 px on a 200 token. The one Grenze
 // use under 24, allowed because it is the token's own print, not text set in the interface.
 // A small seat on a phone keeps a floor, a larger share of its disc, so a short name such as
 // IMP or SPY still reads; a long one is fitted to the arc either way.
@@ -232,12 +235,12 @@ export const ring = { width: 3, gap: 2 } as const
 export interface Shadows {
   readonly ticket: string // the cut lower edge of paper controls and script cards
   readonly ticketPressed: string
-  readonly card: string // a small paper card in the information picker
+  readonly card: string // a paper card lying on a page: a script sheet's blocks
   readonly lifted: string // a piece without a cardboard edge raised off the board: the ghost vote skull, a popover
   readonly sheet: string // a floating window
 }
 
-// Paper tickets have a cut lower edge; information cards use a softer shadow.
+// Paper tickets have a cut lower edge; a paper card uses a softer shadow.
 // Values are CSS box shadows.
 export const shadows: Shadows = {
   ticket: '0 3px 0 rgba(0,0,0,0.25)',
@@ -274,10 +277,48 @@ export const tokenShadow = (size: number): string => {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Token sizes, named for where they are drawn. Large tokens and board seats print the name.
+// Token sizes, named for where they are drawn. Board seats print the name, and so does any token
+// from `named` up, whose arc is large enough to read it.
 // `corner` is the board's small disc: a granted ability in the corner strip, a gap where a seat
 // can be added, and a dealt token as it leaves the centre.
-export const tokenSize = { board: 104, sheet: 96, chip: 48, show: 200, corner: 36 } as const
+export const tokenSize = { board: 104, chip: 48, named: 200, corner: 36 } as const
+
+// The card a player reads: its words and tokens are one block, sized to the window and centred.
+export const card = {
+  // Above the block: the room the cross, a 44 point control, takes in its corner, so it never
+  // sits on a token.
+  margin: touch + space.md,
+  foot: space.md, // under the block, where the card's bar begins
+  wordsGap: space.xl, // between the words and the tokens
+  captionGap: space.lg, // between the tokens and the seat's name under them
+  tokenShare: 0.72, // a token or a column of them takes at most this share of the width
+  // The art is drawn from a source about 256 pixels wide, so past this a token on a tablet only
+  // gets softer.
+  tokenMaximum: 448,
+  // The arc prints the name at about a ninth of the token, so under this it falls below 12
+  // points and goes in a caption of at most `captionLines` under the token. A caption costs each
+  // row its height, so the bar is set no higher than reading needs.
+  arcFrom: 112,
+  captionLines: 2,
+  tokenMinimum: tokenSize.chip, // past this the block scrolls rather than shrink
+  largeWordsFrom: 600, // the words grow to heroLarge once the window is this large both ways
+  // The card's keys: docked at the foot of an upright window, at most this share of its
+  // height, or a column on the right of a wide one, which has no height to give.
+  keys: { heightShare: 0.5, sideShare: 0.5, sideMaximum: 628 },
+  presetWidth: 440, // a written note's presets, one line each, read down a short column
+} as const
+
+// The token keyboard: printed tokens as keys, laid out for reading (tokenKeysLayout). As many
+// stand across as stay at least `comfortable`, where the name on the arc reads, seven at most,
+// and they grow to fill a row no wider than seven of `largest`, which is about a drawer's width.
+// `size` is a token in a drawer's dock, one point over the touch target so it never falls under
+// it. A team's label is tracked out a little, as small capitals read better spaced.
+export const tokenKeys = { size: touch + 1, comfortable: 64, largest: 80, gap: 6, across: 7, check: 20, checkGlyph: 14, labelTracking: 0.8 } as const
+
+// The drawer the board's token sheets come up in: full width up to seven keys and their margins,
+// and never so tall that the board above it is gone. Beside the seat it changes it may stop as
+// short as `leastShare`, which still lists two or three rows of keys.
+export const drawer = { maximum: 640, heightShare: 0.8, leastShare: 0.5 } as const
 
 // The board's fixed measures. The board area is the screen minus the safe insets; the status
 // band holds its foot and the ring fits around the corner controls. The outer margin holds half
@@ -325,7 +366,7 @@ export const motion = {
   easeIn: Easing.bezier(0.4, 0, 1, 1),
   css: { ease: 'cubic-bezier(0.2, 0.8, 0.2, 1)', easeIn: 'cubic-bezier(0.4, 0, 1, 1)' },
   duration: {
-    reveal: 420, // the token rises on the card; its words fade in over 200 ms from 240 ms in
+    reveal: 420, // the token rises on the card
     flipOut: 120, // the neutral back turns to its edge before the character mounts
     flipIn: 180,
     lift: 380, // a drawn token rises from the face-down bag to full size before it turns

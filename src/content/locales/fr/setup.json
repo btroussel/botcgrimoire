@@ -3,10 +3,6 @@
   "assignedCount": "{have} rôles attribués sur {of}",
   "createError": "La partie n’a pas pu être enregistrée. Réessayez.",
   "fillBag": "Remplir le sac",
-  "fillBagSave": {
-    "one": "Mettre {count} rôle dans le sac",
-    "other": "Mettre {count} rôles dans le sac"
-  },
   "defaultSeat": "Place {n}",
   "discovery": "Découverte",
   "discoveryBack": "Retour à la préparation",

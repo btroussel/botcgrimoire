@@ -85,8 +85,8 @@ const Languages = ({ t, options, onChange }: {
         <span lang={current?.locale} style={{ flex: 1, minWidth: 0, display: 'block', textAlign: 'start' }}><Text style={[type.text.strong, styles.languageName]}>{current?.name}</Text></span>
         <Icon name="chevronRight" color={palette.ink} size={22} />
       </Pressable>
-      <Picker visible={open} title={t('common.language')} onClose={() => setOpen(false)} closeLabel={t('common.close')} emptyLabel=""
-        groups={[{ key: 'languages', rows: options.map((o) => ({ id: o.locale, name: withCode(o.name, o.locale, options), lang: o.locale })) }]}
+      <Picker visible={open} title={t('common.language')} onClose={() => setOpen(false)} closeLabel={t('common.close')}
+        rows={options.map((o) => ({ id: o.locale, name: withCode(o.name, o.locale, options), lang: o.locale }))}
         selected={current ? [current.locale] : []}
         onPick={(id) => {
           setOpen(false)

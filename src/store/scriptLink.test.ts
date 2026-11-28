@@ -66,6 +66,8 @@ describe('a script in a link', () => {
     expect(fragment.length).toBeLessThan(400)
     expect((await readBack(fragment))[0]).toEqual({ id: '_meta', name: 'Sample Script', author: 'Élodie' })
     expect(hasEmbeddedLogo(official)).toBe(false)
+    // Only an image counts as a logo the script carries, as where the logo is drawn.
+    expect(hasEmbeddedLogo({ ...official, items: [{ ...(meta as object), logo: 'data:text/plain,logo' } as CustomScript['items'][number], ...characters] })).toBe(false)
     expect((await readBack(await scriptFragment(official)))[0]).toEqual(meta)
   })
 

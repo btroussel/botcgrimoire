@@ -3,10 +3,6 @@
   "assignedCount": "{have} de {of} personajes asignados",
   "createError": "No se ha podido guardar la partida. Vuelve a intentarlo.",
   "fillBag": "Llenar la bolsa",
-  "fillBagSave": {
-    "one": "Meter {count} personaje en la bolsa",
-    "other": "Meter {count} personajes en la bolsa"
-  },
   "defaultSeat": "Asiento {n}",
   "discovery": "Descubrir personajes",
   "discoveryBack": "Volver a la preparación",

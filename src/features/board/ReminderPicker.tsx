@@ -1,40 +1,40 @@
 // Characters in play come first, then the notes already written this game, then the rest of
 // the script. The notes row's plus hands the seat to the note window. A tap places and closes.
 import { useMemo, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
 
 import type { SeatId } from '../../engine'
+import { Drawer, useOnOpen } from '../../ui/Drawer'
 import { AddSlot, ReminderChip } from '../../ui/ReminderChip'
-import { font, palette, space } from '../../ui/theme'
-import { Sheet } from '../../ui/Sheet'
+import { palette } from '../../ui/theme'
+import { TokenKeys } from '../../ui/TokenKeys'
+import type { TokenKeyGroup } from '../../ui/TokenKeys'
 import type { ReminderEntry } from './seat'
-import { edits, reminderGroups, writtenNotes } from './seat'
+import { edits, reminderGroups, seatSpan, writtenNotes } from './seat'
 import { useEdits } from './useEdits'
 
 export interface ReminderPickerProps {
-  readonly target: SeatId | undefined // none closes the sheet
+  readonly target: SeatId | undefined // none closes the drawer
   readonly onClose: () => void
   readonly onWriteNote: (seat: SeatId) => void // the plus: a new note in its own window
 }
 
 interface Shown {
-  readonly key: string
-  readonly label: string
+  readonly id: string
+  readonly name: string // what a screen reader says
+  readonly label: string // printed on the disc; empty for the plus
   readonly character?: string // none for a note
-  readonly a11y: string
   readonly onPress: () => void
 }
 
 export const ReminderPicker = ({ target, onClose, onWriteNote }: ReminderPickerProps) => {
   const e = useEdits()
-  const p = palette
-  // The sheet slides out after the target is cleared, so it keeps the last one it had.
+  // The drawer slides out after the target is cleared, so it keeps the last one it had, and where
+  // that seat stood as it opened.
   const [kept, setKept] = useState(target)
   if (target && target !== kept) setKept(target)
-  const [gridWidth, setGridWidth] = useState(0)
-  const columns = Math.max(1, Math.min(7, Math.floor((gridWidth + space.xs) / (48 + 3 * space.xs))))
-  const tokenSize = gridWidth > 0 ? Math.max(44, Math.min(72, Math.floor((gridWidth - (columns - 1) * space.xs) / columns) - 2 * space.xs)) : 64
-  const open = target !== undefined
+  // Read on every opening, the same seat's included: the ring may have been laid out again since.
+  const [span, setSpan] = useState<ReturnType<typeof seatSpan>>()
+  useOnOpen(target !== undefined, () => setSpan(target ? seatSpan(target) : undefined))
 
   const board = e.board
   const seat = board?.seats.find((s) => s.id === kept)
@@ -55,51 +55,25 @@ export const ReminderPicker = ({ target, onClose, onWriteNote }: ReminderPickerP
   const notes = useMemo(() => writtenNotes(e.log), [e.log])
 
   const reminderChips = (key: string): readonly Shown[] => (groups.find(g => g.key === key)?.entries ?? []).map(entry => ({
-    key: entry.key, label: entry.label, character: entry.character,
-    a11y: `${entry.label}, ${entry.characterName}`, onPress: () => place(entry),
+    id: entry.key, label: entry.label, character: entry.character,
+    name: `${entry.label}, ${entry.characterName}`, onPress: () => place(entry),
   }))
-  const shown = [
-    { key: 'inPlay', heading: e.t('board.inPlayGroup'), chips: reminderChips('inPlay') },
-    { key: 'notes', heading: e.t('board.notesGroup'), chips: notes.map((text): Shown => ({
-      key: `note/${text}`, label: text, a11y: e.t('board.placeWrittenNote', { note: text }), onPress: () => placeNote(text) })) },
-    { key: 'notInPlay', heading: e.t('board.notInPlayGroup'), chips: reminderChips('notInPlay') },
-  ].filter(group => group.key === 'notes' || group.chips.length > 0)
+  const add: Shown = { id: 'add', name: e.t('board.writeNote'), label: '', onPress: () => { if (seatId !== undefined) onWriteNote(seatId) } }
+  // The notes row always shows, since its plus is the way to a new note.
+  const shown: readonly TokenKeyGroup<Shown>[] = [
+    { key: 'inPlay', label: e.t('board.inPlayGroup'), color: palette.ink, keys: reminderChips('inPlay') },
+    { key: 'notes', label: e.t('board.notesGroup'), color: palette.ink, keys: [add, ...notes.map((text): Shown => ({
+      id: `note/${text}`, label: text, name: e.t('board.placeWrittenNote', { note: text }), onPress: () => placeNote(text) }))] },
+    { key: 'notInPlay', label: e.t('board.notInPlayGroup'), color: palette.ink, keys: reminderChips('notInPlay') },
+  ]
 
   return (
-    <Sheet
-      visible={open}
-      title={e.t('board.reminderFor', { name: seat?.name ?? '' })}
-      onClose={onClose}
-      closeLabel={e.t('common.close')}
-      width={640}
-      contentPaddingHorizontal={space.md}
-    >
-      {shown.map(group => <View key={group.key} style={styles.group}>
-        <View style={styles.groupHeading}>
-          <span role="heading" aria-level={2} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap', fontFamily: font.body.bold, fontSize: 13, lineHeight: '18px', color: p.inkMuted }}>
-            {group.heading}
-          </span>
-        </View>
-        <View style={styles.tokens} onLayout={event => setGridWidth(event.nativeEvent.layout.width)}>
-        {group.key === 'notes' ? <AddSlot size={tokenSize} label={e.t('board.writeNote')} onPress={() => { if (seatId !== undefined) onWriteNote(seatId) }} /> : null}
-        {group.chips.map(chip => (
-          <ReminderChip
-            key={chip.key}
-            size={tokenSize}
-            label={chip.label}
-            {...(chip.character !== undefined ? { character: chip.character } : {})}
-            accessibilityLabel={chip.a11y}
-            onPress={chip.onPress}
-          />
-        ))}
-        </View>
-      </View>)}
-    </Sheet>
+    <Drawer visible={target !== undefined} title={e.t('board.reminderFor', { name: seat?.name ?? '' })}
+      onClose={onClose} closeLabel={e.t('common.close')} {...(span ? { avoid: span } : {})}>
+      <TokenKeys groups={shown} chosen={[]} onPress={(chip) => chip.onPress()} render={(chip, size, press) => chip.id === add.id
+        ? <AddSlot size={size} label={chip.name} onPress={press} />
+        : <ReminderChip size={size} discHitArea label={chip.label} {...(chip.character !== undefined ? { character: chip.character } : {})}
+          accessibilityLabel={chip.name} onPress={press} />} />
+    </Drawer>
   )
 }
-
-const styles = StyleSheet.create({
-  group: { flexDirection: 'row', gap: space.xs },
-  groupHeading: { width: 28, minHeight: 80, alignItems: 'center', justifyContent: 'center', paddingVertical: space.xs, borderRightWidth: 1, borderRightColor: palette.parchmentShade },
-  tokens: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.xs },
-})

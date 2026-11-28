@@ -24,10 +24,14 @@ function* combinations<T>(items: readonly T[], count: number, from = 0): Generat
 }
 
 // A script listing fewer Minions than the setup needs repeats them, as one whose Minions are all
-// Witches asks; otherwise each Minion is distinct.
-const minionSets = <T,>(minions: readonly T[], count: number): Iterable<readonly T[]> =>
-  minions.length >= count ? combinations(minions, count)
-    : minions.length > 0 ? [Array.from({ length: count }, (_, i) => minions[i % minions.length]!)] : []
+// Witches asks; otherwise each Minion is distinct. A loose Minion takes no seat and brings one
+// Townsfolk, so a second copy would leave a seat without a token: only the others repeat, and
+// with none of them no set fits.
+const minionSets = (minions: readonly BagRole[], count: number): Iterable<readonly BagRole[]> => {
+  if (minions.length >= count) return combinations(minions, count)
+  const seated = minions.filter(role => !isLoose(role.id))
+  return seated.length > 0 ? [[...minions, ...Array.from({ length: count - minions.length }, (_, i) => seated[i % seated.length]!)]] : []
+}
 
 const goodModifiers = new Set(['balloonist', 'huntsman', 'choirboy', 'hermit', 'villageidiot'])
 const primaryTeams = new Set<Team>(['townsfolk', 'outsider', 'minion', 'demon'])

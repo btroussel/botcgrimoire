@@ -57,6 +57,48 @@ test('each player takes a token from the open bag, and the Storyteller deals wha
   await expect(page.getByText('5 of 5 characters assigned', { exact: true })).toBeVisible()
 })
 
+test('the bag is filled from the token keys, a character twice, and a tap outside keeps what was saved', async ({ page }) => {
+  await open(page, '/new')
+  await button(page, 'Trouble Brewing').click()
+  const count = page.getByText(/^\d+ players?$/).first()
+  for (let now; (now = Number((await count.textContent()).match(/\d+/)[0])) !== 5;) {
+    await button(page, now < 5 ? 'More players' : 'Fewer players').click()
+  }
+  // No characters chosen opens the grimoire with an empty bag, and the setup window fills it.
+  await button(page, 'Open grimoire').click()
+  await button(page, 'Setup').click()
+  await button(page, 'Fill the bag').click()
+  const drawer = page.getByRole('dialog', { name: 'Fill the bag' })
+  await expect(drawer.getByText('0 of 5', { exact: true })).toBeVisible()
+  await expect(button(drawer, 'Save')).toBeDisabled()
+
+  // A key puts one more copy in, so the Imp goes in twice, and a token in the bag comes back out.
+  for (const name of ['Imp', 'Imp', 'Chef']) await button(drawer, name).click()
+  await expect(drawer.getByText('3 of 5', { exact: true })).toBeVisible()
+  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(2)
+  await button(drawer, 'Remove a Imp token').first().click()
+  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(1)
+  await expect(button(drawer, 'Imp')).toHaveAttribute('aria-pressed', 'true')
+  // A full bag takes no more keys.
+  for (const name of ['Imp', 'Monk', 'Baron']) await button(drawer, name).click()
+  await expect(drawer.getByText('5 of 5', { exact: true })).toBeVisible()
+  await expect(button(drawer, 'Poisoner')).toBeDisabled()
+  await button(drawer, 'Remove a Baron token').click()
+  await button(drawer, 'Save').click()
+  await expect(drawer).toBeHidden()
+
+  // It opens again on the bag saved, and a tap outside it discards.
+  await button(page, 'Fill the bag').click()
+  await expect(drawer.getByText('4 of 5', { exact: true })).toBeVisible()
+  await expect(button(drawer, 'Remove a Imp token')).toHaveCount(2)
+  await button(drawer, 'Poisoner').click()
+  await page.mouse.click(195, 20)
+  await expect(drawer).toBeHidden()
+  await button(page, 'Fill the bag').click()
+  await expect(drawer.getByText('4 of 5', { exact: true })).toBeVisible()
+  await expect(button(drawer, 'Remove a Poisoner token')).toHaveCount(0)
+})
+
 test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, and its player draws it', async ({ page }) => {
   await open(page, '/new')
   await button(page, 'Trouble Brewing').click()
@@ -72,9 +114,17 @@ test('the Storyteller chooses the Townsfolk the Drunk sees with the characters, 
   const picker = page.getByRole('dialog', { name: 'What the Drunk sees' })
   await expect(button(picker, 'Chef')).toHaveCount(0)
   await expect(button(picker, 'Clear choice')).toHaveCount(0)
+  // One key chooses and closes; Clear choice, once there is one, hands it back to the bag.
   await button(picker, 'Monk').click()
+  await expect(picker).toBeHidden()
   await button(page, 'Drunk sees: Monk').click()
   await expect(button(picker, 'Monk')).toHaveAttribute('aria-pressed', 'true')
+  await button(picker, 'Clear choice').click()
+  await expect(picker).toBeHidden()
+  await button(page, 'Choose what the Drunk sees').click()
+  await expect(button(picker, 'Monk')).not.toHaveAttribute('aria-pressed', 'true')
+  await button(picker, 'Monk').click()
+  await button(page, 'Drunk sees: Monk').click()
   await button(picker, 'Close').click()
   await button(page, 'Open grimoire').click()
   // The setup window only deals the bag.

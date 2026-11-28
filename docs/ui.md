@@ -51,14 +51,54 @@ is read from the brackets.
 - Icon buttons carry a translated name, for hover and for screen readers.
 - Selection never relies on colour alone: a selected token gets a check as well as an outline.
 - A choice among a few options is a set of native radios under a group label, one tab stop.
-- A field keeps a visible label, which the heading right above it can be. A field with a length limit shows its count, such as `231/250`,
-  once the text is in the last fifth of the limit, in the danger colour at the limit, and never
-  announces it as you type.
+- A field keeps a visible label, which the heading right above it can be. The one exception is a
+  note's field, which is the card's own words: the card is the player's preview, so it carries
+  only a placeholder on screen and a name for screen readers. A field with a length limit shows
+  its count, such as `231/250`, once the text is in the last fifth of the limit, in the danger
+  colour at the limit, and never announces it as you type.
 - Delete sits apart from the actions you use often.
 
 Editing windows float in the centre with a margin on every side, phones included. They never stick
 to an edge. Their content scrolls and their actions stay inside the window. Close, Escape and a tap
-outside dismiss one.
+outside dismiss one. There are two exceptions, both where what is being filled must stay in view.
+
+The tokens on a card are typed from keys docked at the foot of an upright window, where a device's
+keyboard lives, or in a panel down the right of a wide one, which has no height to give. The card
+stays in view above or beside them as its own preview, so the Storyteller sees exactly what the
+player will, and its bar stays under the card either way. The card's words are typed on the card in
+the card's own type, so the field is the preview too. The token keys and the device's keyboard take
+the same place in turn, and the card follows the visible viewport so its bar stays above the
+keyboard. The card's keys take up to half an upright window, and scroll past that.
+
+Token keys are laid out for reading wherever they appear: as many across as keep each key large
+enough for the name on its arc, four or five on a phone and seven on a tablet, grown to fill the
+row. Seven small keys across showed a whole script at once but no name could be read, and a
+Storyteller who does not know the art by heart needs the name. The keys scroll instead.
+
+The token sheets, a seat's character, a reminder, the bluffs, the Fabled and Loric, the bag and what
+a Drunk or Lunatic sees, are a drawer of the same keys that comes up from the foot, since a centred
+window would cover the seats it changes. It is full width up to a readable maximum, never so tall
+that the board is gone, over a light scrim that leaves the board readable. A seat it changes keeps
+the brass ring, and the drawer stops short of that seat while it can still list a few rows of keys.
+A seat lower than that is covered while the drawer is up, and the title names it: keys that came
+down from the top edge instead read as a keyboard upside down, out of the thumb's reach. Reminders
+are keys too, under the same rule labels as the characters. Everything read rather than scanned
+keeps the centred window: notes, language and history.
+
+A drawer's keys fill their row, and its dock is never wider than the keys, so its buttons stand
+under their columns. A chosen key draws a little smaller inside its brass ring, so two chosen
+neighbours never run their rings together. Keys carry no wake or setup marks: on a key they only
+cover the name.
+
+A drawer that picks one key closes on it. One that picks a set records nothing until Save at its
+foot, and a tap outside discards. The header holds the title and the cross, and at most one action
+that changes nothing by itself: clearing a seat's character, or what a disguise shows, records on
+one tap, so it sits at the foot, apart from the cross. The bluffs drawer docks its count beside
+Show and Save, and Shuffle sits in its top row, away from Save. The bag's drawer docks the bag, a
+slot for each seat it fills, in one row that scrolls and follows the bag as it fills, so twenty
+slots never take the keys' height. A key puts in one more copy, so a character can go in twice,
+and a token in the bag comes back out. Once the bag is full every key dims, the ticked ones too,
+since none can take a tap.
 
 ## Motion
 
@@ -164,10 +204,12 @@ name in every language. A small token keeps the label size, so a crowded or shor
 token size and no default name loses its number.
 
 The seat menu opens beside its token, wherever it covers the fewest other seats, so a neighbour
-stays tappable to move the menu there. It has no backdrop. Add a reminder comes first, since on a
-touch screen it is the only way to the reminder picker, then by day Nominate a player. While the
-nominee is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits)
-owns the actions.
+stays tappable to move the menu there. It has no backdrop. On a seat with a token, Show a card
+comes first and turns the menu in place to the two cards about a player, so You are, shown to every
+player on the first night, is three taps from the board. Add a reminder follows, since on a touch
+screen it is the only way to the reminder drawer, then by day Nominate a player. While the nominee
+is picked the nominator stays marked, as a seat being moved does. [App](app.md#board-edits) owns
+the actions.
 
 A reminder grows with its seat's token, so its words read on a tablet as on a phone, and never
 outgrows that token on a crowded board. Its dark disc has a pale rim, so it stands off every velvet.
@@ -179,7 +221,7 @@ Stacked reminders always show each one's rim and name, or for a note under anoth
 letters, and spread out on hover or tap. With a mouse or keyboard, a plus for adding a reminder
 appears on the seat you point at. Touch screens never show it.
 
-A note's text stays within its disc's slot, three lines at most, on the board and in the picker, so
+A note's text stays within its disc's slot, three lines at most, on the board and in the drawer, so
 a long note never runs over a neighbour or a name. A tap opens the whole text in its window.
 
 A placed reminder drags to another seat. Touch lifts it after a long press, so a tap still takes it
@@ -237,7 +279,7 @@ focused. A sheet carries no title: its open tab names it.
 The three sheets share one row: the art, the name with its players under it, and the text beside.
 No line runs between rows, since spacing sets them apart and lines made a table of the open sheet.
 A night's rows are the characters' rows, in the night's order. On every sheet the row being read
-lies under an ink wash with a brass edge, across the whole row so its text is marked with its
+lies under an ink wash, across the whole row so its text is marked with its
 name. A tap lays the wash at either width, a tap on another row moves it and a second tap on the
 same row takes it away. At the compact width the row's text unfolds with the wash, so one row is
 open at a time. Each sheet keeps its own row, and no row is washed until one is tapped. The filter
@@ -254,9 +296,26 @@ its menu, so reaching past the paper costs no extra tap. A tap that would record
 on a reminder, a gap or a seat during a vote, only closes the drawer: a tap meant to put the paper
 away must not change the game.
 
-A card fills the screen and hides the grimoire. A card that needs a player lets you pick on the
-board itself, with no banner, so the ring does not shift. Any pick on the ring, a card's player or a
-nominee, ends on a tap off the seats or Escape, since a phone has no Escape key.
+A card fills the screen and hides the grimoire. Its words and tokens are one block centred in the
+window, laid out from the words' measured height, since they wrap differently in every language. A
+lone token takes as much as fits with a margin either side; several stand in a row or a column,
+whichever draws them larger, and never run off the side: past the smallest size they wrap and scroll
+down. Three under long words stand two and one, where a column has no height and a row no width. A
+name too small to read on the arc moves to a caption under its token. The top corner stays clear
+for the cross, and a block that cannot fit scrolls. On a card about a player, the player's name
+under the token is set as large as the words: who it is about is half of what the card says. The
+count of a note's length shows only while the letters are up, never on the card a player reads.
+
+The card has no second state for showing: the Storyteller puts the keyboards away with a tap on
+the felt and turns the device round. Its only controls are then the cross in the top corner and
+the keyboard switch at the foot, and neither says anything about the game. The cross closes on a
+tap, as Escape does. The keys are printed tokens grouped under their team's label, a chosen one
+ringed and checked.
+
+A card about a player starts from that player's seat. The first row of the seat's menu turns in
+place to the two such cards, so showing one needs no pick mode on the ring, no banner and no dimmed
+control, and the ring does not shift. A nomination still picks its nominee on the ring and keeps
+its own marks; that pick ends on a tap off the seats or Escape, since a phone has no Escape key.
 
 During a vote the controls sit inside the ring, or dock at the foot when the gap is too small, so no
 voter is covered. They name the nomination as the day's list does, nominator then nominee, with a

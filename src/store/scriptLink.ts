@@ -2,7 +2,7 @@
 // file rides in the address fragment, which a browser never sends to the host, so sharing needs
 // no server and opening the link works offline once the app is installed.
 import type { CustomScript, CustomScriptItem } from '../content'
-import { scriptFile } from '../content'
+import { embeddedLogo, scriptFile } from '../content'
 
 export const linkKey = '#script='
 
@@ -29,7 +29,7 @@ const withoutArt = (item: CustomScriptItem): CustomScriptItem => {
 // script without the logo chosen for it, for the bundled one. A web address is short and stays.
 export const hasEmbeddedArt = (script: CustomScript): boolean => script.items.some((item) => typeof item !== 'string' && 'image' in item && isEmbedded(item.image))
 
-export const hasEmbeddedLogo = (script: CustomScript): boolean => script.items.some((item) => typeof item !== 'string' && 'logo' in item && isEmbedded(item.logo))
+export const hasEmbeddedLogo = (script: CustomScript): boolean => embeddedLogo(script) !== undefined
 
 const deflate = async (bytes: Uint8Array): Promise<Uint8Array> =>
   new Uint8Array(await new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())

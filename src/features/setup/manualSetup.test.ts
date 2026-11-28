@@ -2,7 +2,7 @@ import { asCharacterId, character } from '../../content'
 import { asEventId, baseCounts, inPlay, reduce } from '../../engine'
 import type { Payload } from '../../engine'
 import { listed } from '../../store/scriptSheet'
-import { dealDraw, fillBag } from './draw'
+import { bagContents, dealDraw, fillBag, refillBag } from './draw'
 import { randomBag, shuffled } from './randomBag'
 import { dealTarget, looseEvents, openingEvents, scriptLoose, seatedCharacters, showsCopies, tableNames, trimBag } from './setup'
 
@@ -96,6 +96,23 @@ test('a selected Marionette starts off the ring, no player draws it, and an extr
     expect(seatedCharacters(shuffledBag)).toHaveLength(5)
   }
   expect(randomBag(roles, 4, () => 0)).not.toContain('marionette')
+})
+
+test('a Marionette token left face down by an older version leaves the bag on a refill and starts off the ring', () => {
+  const opening = openingEvents(['A', 'B', 'C'])
+  const board = reduced(opening)
+  const older = { tokens: [{ character: asCharacterId('marionette'), shown: asCharacterId('chef') }, { character: asCharacterId('imp') }, { character: asCharacterId('monk') }] }
+  // Refilled with what it holds, the bag loses that token and nothing says the Marionette is in the game.
+  expect(refillBag(board, older, older.tokens.map(token => token.character), [], () => 0)!.tokens).toHaveLength(2)
+  // So the setup window offers only the tokens that take a seat, and adds the Marionette off the ring.
+  const inBag = bagContents(board, older).faceDown.map(token => token.character)
+  expect(seatedCharacters(inBag)).toEqual(['imp', 'monk'])
+  const loose = looseEvents(inBag)
+  expect(loose).toEqual([{ kind: 'addLoose', character: 'marionette' }])
+  const refilled = refillBag(board, older, [...seatedCharacters(inBag), asCharacterId('chef')], [], () => 0)!
+  const dealt = reduced([...opening, ...loose, ...dealDraw(reduced([...opening, ...loose]), refilled, () => 0)])
+  expect(dealt.seats.map(seat => seat.character).sort()).toEqual(['chef', 'imp', 'monk'])
+  expect(dealt.loose).toEqual(['marionette'])
 })
 
 test('a script\'s Fabled and Loric start selected for the board and never take a seat', () => {

@@ -3,12 +3,6 @@
   "assignedCount": "Przydzielone postacie: {have} z {of}",
   "createError": "Nie udało się zapisać gry. Spróbuj ponownie.",
   "fillBag": "Napełnij worek",
-  "fillBagSave": {
-    "one": "Włóż {count} postać do worka",
-    "few": "Włóż {count} postacie do worka",
-    "many": "Włóż {count} postaci do worka",
-    "other": "Włóż {count} postaci do worka"
-  },
   "defaultSeat": "Miejsce {n}",
   "discovery": "Odkrywanie postaci",
   "discoveryBack": "Wróć do przygotowania",

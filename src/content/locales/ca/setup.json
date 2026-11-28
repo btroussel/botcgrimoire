@@ -3,10 +3,6 @@
   "assignedCount": "{have} de {of} personatges assignats",
   "createError": "No s’ha pogut desar la partida. Torneu-ho a provar.",
   "fillBag": "Omple la bossa",
-  "fillBagSave": {
-    "one": "Posa {count} personatge a la bossa",
-    "other": "Posa {count} personatges a la bossa"
-  },
   "defaultSeat": "Seient {n}",
   "discovery": "Descobriment dels personatges",
   "discoveryBack": "Torna a la preparació",

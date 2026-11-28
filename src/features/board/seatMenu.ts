@@ -5,7 +5,8 @@
 // chosen token as it can, nothing unless the board is cramped, so the Storyteller always sees
 // the seat being edited. Among those places the first covering the fewest other seats' centres
 // wins: a side that covers none keeps the menu beside its token, and a neighbour's centre
-// stays tappable to move the menu there.
+// stays tappable to move the menu there. Before that count, a place clear of the corner controls
+// wins: they are drawn over the band, so a row under the bluffs or the plaque takes no tap.
 import { seatMetrics, space } from '../../ui/theme'
 import type { Size } from '../../ui/theme'
 import { nameHeightAt } from './ringLayout'
@@ -29,12 +30,13 @@ export interface SeatMenuRoom {
   readonly bottom: number
 }
 
-export const placeSeatMenu = ({ at, size, centre, room, others, menu }: {
+export const placeSeatMenu = ({ at, size, centre, room, others, controls = [], menu }: {
   readonly at: Point // the chosen token's centre on the band
   readonly size: number // the tokens' diameter
   readonly centre: Point // the ring's centre on the band
   readonly room: SeatMenuRoom
   readonly others: readonly Point[] // every other token's centre
+  readonly controls?: readonly (Size & { readonly left: number; readonly top: number })[] // the corner controls that reach into the band
   readonly menu: Size // as measured, since translated rows wrap
 }): SeatMenuPlace => {
   const gap = space.sm
@@ -56,8 +58,12 @@ export const placeSeatMenu = ({ at, size, centre, room, others, menu }: {
     * Math.max(0, Math.min(place.top + menu.height, point.y + half) - Math.max(place.top, point.y - half))
   const own = (place: SeatMenuPlace) => hidden(place, at, size / 2 + space.xs) // with its brass ring
   const centres = (place: SeatMenuPlace) => others.filter(point => hidden(place, point, 1) > 0).length
+  const under = (place: SeatMenuPlace) => controls.reduce((area, control) => area
+    + Math.max(0, Math.min(place.left + menu.width, control.left + control.width) - Math.max(place.left, control.left))
+    * Math.max(0, Math.min(place.top + menu.height, control.top + control.height) - Math.max(place.top, control.top)), 0)
   return places.reduce((best, place) => {
     const cover = own(place) - own(best)
-    return cover < 0 || (cover === 0 && centres(place) < centres(best)) ? place : best
+    const covered = under(place) - under(best)
+    return cover < 0 || (cover === 0 && (covered < 0 || (covered === 0 && centres(place) < centres(best)))) ? place : best
   })
 }

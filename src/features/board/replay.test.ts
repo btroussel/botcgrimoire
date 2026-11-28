@@ -1,8 +1,9 @@
 import { asCharacterId, t } from '../../content'
 import { game, info, kill, nominate, setCharacter, token, vote, wake } from '../../engine/testing/board'
+import { phaseMarks } from '../../store/replay'
 import { newGame } from '../../store/saved'
 import { appendAll, openSession } from '../../store/session'
-import { replaySteps, stepAt } from './replay'
+import { marksOnSteps, replaySteps, stepAt } from './replay'
 import { edits } from './seat'
 
 const replayStops = (...args: Parameters<typeof replaySteps>) => replaySteps(...args).map(step => step.cursor)
@@ -53,6 +54,24 @@ describe('visible replay steps', () => {
   })
 })
 
+describe('where the phases are marked on the replay', () => {
+  test('a first night started with the deal shares its step with setup, and the step is marked once, as the night', () => {
+    const table = game().seat('Ann', '_empty').seat('Bob', '_empty').build()
+    const started = appendAll(openSession({ ...newGame('tb', 1000), log: table.log }), [
+      { kind: 'setCharacter', seat: table.id('Ann'), to: asCharacterId('imp'), alignment: 'evil' },
+      { kind: 'setCharacter', seat: table.id('Bob'), to: asCharacterId('monk'), alignment: 'good' },
+      { kind: 'phase', to: 'night', night: 1 },
+    ], 1001)
+    const log = appendAll(started, [{ kind: 'phase', to: 'day' }], 1002).game.log
+    const marks = phaseMarks(log)
+    expect(marks.map(mark => [mark.phase, mark.cursor])).toEqual([['setup', 5], ['night', 5], ['day', 6]])
+    expect(marksOnSteps(marks, replaySteps(log, 'tb', 'en'))).toEqual([
+      { at: 0, mark: { cursor: 5, phase: 'night', night: 1 } },
+      { at: 1, mark: { cursor: 6, phase: 'day', night: 1 } },
+    ])
+  })
+})
+
 describe('what a replay step says it changed', () => {
   const captions = (steps: ReturnType<typeof replaySteps>) => steps.map(step => step.changes.map(change => t('en', change.key, change.values)))
 
@@ -73,6 +92,15 @@ describe('what a replay step says it changed', () => {
     const session = openSession({ ...newGame('tb', 1000), log: table.log })
     const moved = appendAll(session, edits.moveToken(table.g, table.g.seats[1]!.tokens[0]!.placedBy, table.id('Ann')), 1001)
     expect(captions(replaySteps(moved.game.log, 'tb', 'en')).slice(-3)).toEqual([['Poisoned on Bob'], ['Bob dies'], ['Poisoned on Ann', 'Poisoned removed from Bob']])
+  })
+
+  test('a seat cleared of its character and bluffs cleared each say so, and the cleared seat is lit', () => {
+    const bluffs = (...ids: readonly string[]) => () => ({ kind: 'setBluffs' as const, characters: ids.map(asCharacterId) })
+    const { log, id } = game().seat('Ann', 'imp').seat('Bob', 'monk')
+      .night(1, [bluffs('chef', 'mayor', 'saint'), setCharacter('Bob', '_empty'), bluffs()]).build()
+    const steps = replaySteps(log, 'tb', 'en').slice(-2)
+    expect(captions(steps)).toEqual([['Bob no longer has a character'], ['Bluffs cleared']])
+    expect(steps.map(step => step.seats)).toEqual([[id('Bob')], []])
   })
 
   test('a phase alone says nothing and lights no seat, even as the day marks go', () => {

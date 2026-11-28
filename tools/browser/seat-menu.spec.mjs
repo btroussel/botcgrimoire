@@ -49,6 +49,49 @@ test.describe('seat menu on touch screens', () => {
   }
 })
 
+// The paper a drawer holds, from its title to its lowest control.
+const drawerBox = async drawer => {
+  const boxes = [await drawer.getByRole('heading').first().boundingBox(), ...await drawer.getByRole('button').evaluateAll(buttons => buttons.map(b => b.getBoundingClientRect().toJSON()))]
+  const top = Math.min(...boxes.map(b => b.y))
+  const bottom = Math.max(...boxes.map(b => b.y + b.height))
+  return { x: 0, width: 10000, y: top, height: bottom - top }
+}
+
+test('a seat\'s character and reminders come up in a drawer from the foot, which leaves a high seat in view and ringed', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openBoard(page, 7)
+  const seats = page.locator('[data-seat-context-target]')
+  // The top seat stays in view above the drawer. Two near the foot are covered, since the keys
+  // always come up from the foot, and the title says whose they are.
+  for (const index of [0, 3, 4]) {
+    const token = seats.nth(index).getByRole('button').first()
+    await token.click()
+    await page.getByRole('group', { name: `Seat ${index + 1}`, exact: true }).getByRole('button', { name: 'Change character', exact: true }).click()
+    const characters = page.getByRole('dialog', { name: `Character for Seat ${index + 1}` })
+    await expect(characters.getByRole('button', { name: 'Chef', exact: true })).toBeVisible()
+    await expect(token).toHaveAttribute('aria-pressed', 'true')
+    if (index === 0) expect(overlap(await drawerBox(characters), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    expect((await drawerBox(characters)).y, `seat ${index + 1}`).toBeGreaterThan(844 * 0.15)
+    await characters.getByRole('button', { name: 'Chef', exact: true }).click()
+    await expect(characters).toBeHidden()
+    await expect(token).toHaveAccessibleName(/, Chef$/)
+
+    // The deal may already have put a reminder here, such as the Drunk's.
+    const chips = seats.nth(index).locator('[data-chip] [role="button"]')
+    const before = await chips.count()
+    await token.click()
+    await page.getByRole('group', { name: `Seat ${index + 1}`, exact: true }).getByRole('button', { name: 'Add a reminder', exact: true }).click()
+    const reminders = page.getByRole('dialog', { name: `Reminder for Seat ${index + 1}` })
+    await expect(reminders.getByRole('button', { name: 'Write a note', exact: true })).toBeVisible()
+    await expect(token).toHaveAttribute('aria-pressed', 'true')
+    if (index === 0) expect(overlap(await drawerBox(reminders), await token.boundingBox()), `seat ${index + 1}`).toBe(false)
+    expect((await drawerBox(reminders)).y, `seat ${index + 1}`).toBeGreaterThan(844 * 0.15)
+    await reminders.getByRole('button', { name: /, / }).first().click()
+    await expect(reminders).toBeHidden()
+    await expect(chips).toHaveCount(before + 1)
+  }
+})
+
 test('arranging the seats adds a seat and turns the ring in one pass, and survives a reload', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openBoard(page, 5)
@@ -79,4 +122,34 @@ test('arranging the seats adds a seat and turns the ring in one pass, and surviv
   await reload(page)
   await expect(seats).toHaveCount(6)
   await expect.poll(names).toEqual(added)
+})
+
+test.describe('the Fabled and Loric on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' })
+
+  test('come up as token keys that toggle, Save puts them on the board, and a tap outside discards', async ({ page }) => {
+    await openBoard(page, 5)
+    await page.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('button', { name: 'Fabled and Loric', exact: true }).click()
+    const drawer = page.getByRole('dialog', { name: 'Fabled and Loric' })
+    const key = name => drawer.getByRole('button', { name, exact: true })
+    for (const name of ['Djinn', 'Spirit of Ivory', 'Spirit of Ivory']) await key(name).click()
+    await expect(key('Djinn')).toHaveAttribute('aria-pressed', 'true')
+    await expect(key('Spirit of Ivory')).not.toHaveAttribute('aria-pressed', 'true')
+    await drawer.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(drawer).toBeHidden()
+    const inPlay = name => page.getByRole('button', { name: `${name}, in play`, exact: true })
+    await expect(inPlay('Djinn')).toBeVisible()
+    await expect(inPlay('Spirit of Ivory')).toHaveCount(0)
+
+    // A loose token on the board opens the drawer on what is saved; a tap above it keeps that.
+    await inPlay('Djinn').click()
+    await expect(key('Djinn')).toHaveAttribute('aria-pressed', 'true')
+    await key('Djinn').click()
+    await key('Spirit of Ivory').click()
+    await page.mouse.click(195, 20)
+    await expect(drawer).toBeHidden()
+    await expect(inPlay('Djinn')).toBeVisible()
+    await expect(inPlay('Spirit of Ivory')).toHaveCount(0)
+  })
 })

@@ -8,6 +8,9 @@ import { asCharacterId, gameText } from '../../content'
 import type { Event, Grimoire, Payload } from '../../engine'
 import { useStore } from '../../store'
 import { teamLabels } from '../../store/scriptSheet'
+import { palette } from '../../ui/theme'
+import type { TokenKeyGroup } from '../../ui/TokenKeys'
+import type { CharacterGroup } from './seat'
 
 export interface Edits {
 
@@ -19,6 +22,7 @@ export interface Edits {
   readonly name: (id: string) => string // a character's name in the locale
   readonly ability: (id: string) => string
   readonly teamLabel: (team: Team) => string
+  readonly keyGroups: (groups: readonly CharacterGroup[]) => readonly TokenKeyGroup[] // token keys, each team under its label and colour
   readonly append: (payload: Payload) => void
   readonly appendAll: (payloads: readonly Payload[]) => void
 }
@@ -32,6 +36,9 @@ export const useEdits = (): Edits => {
   const ability = useCallback((id: string) => text.role(asCharacterId(id)).ability, [text])
   const teams = useMemo(() => teamLabels(t), [t])
   const teamLabel = useCallback((team: Team) => teams[team], [teams])
+  const keyGroups = useCallback((groups: readonly CharacterGroup[]) => groups.map((g) => ({
+    key: g.team, label: teams[g.team], color: palette.teamOnPaper[g.team], keys: g.ids.map((id) => ({ id, name: name(id) })),
+  })), [teams, name])
   const board = store.board
   const log = store.session?.game.log
   const lookingBack = store.session?.lookingAt !== undefined
@@ -49,9 +56,10 @@ export const useEdits = (): Edits => {
       name,
       ability,
       teamLabel,
+      keyGroups,
       append,
       appendAll,
     }),
-    [locale, t, board, log, lookingBack, name, ability, teamLabel, append, appendAll],
+    [locale, t, board, log, lookingBack, name, ability, teamLabel, keyGroups, append, appendAll],
   )
 }

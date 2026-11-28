@@ -3,7 +3,7 @@
 import { useKeepAwake } from 'expo-keep-awake'
 import type { ComponentType, ReactNode, RefObject } from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Modal, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { ViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -14,7 +14,7 @@ import { BoardInteractionProvider, useBoardInteraction } from '../../ui/BoardInt
 import { boardLayoutFor, referenceTabWidth } from './boardLayout'
 import { Button } from '../../ui/Button'
 import { EdgeButton } from '../../ui/EdgeButton'
-import { Card } from './Card'
+import { BoardCard } from './BoardCard'
 import { Confirm } from '../../ui/Confirm'
 import { Empty } from '../../ui/Empty'
 import { domElement, layerAbove } from '../../ui/focus'
@@ -28,7 +28,7 @@ import { Token } from '../../ui/Token'
 import { Velvet } from '../../ui/Velvet'
 import { useLayoutViewport } from '../../ui/Viewport'
 import { looseChoices } from './board'
-import { BoardBluffs } from './BoardBluffs'
+import { BluffPicker, BoardBluffs } from './BoardBluffs'
 import { evilLearnsTeam } from './nightReference'
 import { BoardToolbar } from './BoardToolbar'
 import { LooseCharacters } from './LooseCharacters'
@@ -48,7 +48,6 @@ import { centreBoxes } from './ringLayout'
 import type { RingGeometry } from './ringLayout'
 import { edits } from './seat'
 import { SeatRing } from './SeatRing'
-import { ShowSheet } from './ShowSheet'
 import { TokenStrip } from './TokenStrip'
 import { useBoard } from './useBoard'
 import { useEdits } from './useEdits'
@@ -107,7 +106,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   const phone = usePhone()
   const p = palette
   const t = b.t
-  const [showOpen, setShowOpen] = useState(false)
+  const [bluffsOpen, setBluffsOpen] = useState(false)
+  // Opened from the not-in-play phrase, the drawer is on the way to a card, so its Show leads.
+  const [bluffsToShow, setBluffsToShow] = useState(false)
+  const openBluffs = useCallback((toShow: boolean) => { setBluffsToShow(toShow); setBluffsOpen(true) }, [])
   const [looseOpen, setLooseOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [referenceTab, setReferenceTab] = useState<ReferenceTab | null>(null)
@@ -267,7 +269,10 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
   }, [edited, appendAll])
   const editNote = useCallback((placedBy: EventId) => setNoteTarget({ kind: 'placed', placedBy }), [])
   // The toolbar keeps the same handlers from render to render, so an edit leaves it alone.
-  const openShow = useCallback(() => setShowOpen(true), [])
+  // The eye opens the blank card: its phrases are the cards about no seat, and anything else is
+  // written or typed in tokens on it.
+  const { showCard } = interaction
+  const openShow = useCallback(() => showCard({ words: '', characters: [] }), [showCard])
   const openLoose = useCallback(() => setLooseOpen(true), [])
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const openEnd = useCallback(() => setEndOpen(true), [])
@@ -405,8 +410,9 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
             <SeatRing seats={view.seats} band={geometry.band} geometry={ring} free={free} obstacles={geometry.obstacles} t={t} readOnly={b.lookingBack}
               {...(b.replay ? { lit: b.replay.steps[b.replay.at]!.seats } : {})}
               {...(turnAt ? { turnAt } : {})} turnDocked={turnDocked} onTurnSize={updateTurnSize}
-              panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal}
+              panelDocked={panelDocked} {...(panelAt ? { panelAt } : {})} deal={deal} showCards={live && !over}
               {...(live ? { onAddReminder: addReminder, onRemoveReminder: removeReminder, onEditNote: editNote } : {})}
+              {...(reminderTarget !== undefined ? { ringed: reminderTarget } : {})}
               {...(live && !arranging ? { onMoveReminder: moveReminder } : {})} {...(arranging && live && seatCount < maxSeats ? { onGap: addSeat } : {})}
               {...(arranging && live && !hasCenterPanel ? { onArrangeDone: stopArranging, ...(free ? { onBackToCircle: backToCircle } : {}),
                 ...(seatCount > 1 ? { onTurn: turnSeats, onMoveSeat: moveSeat, onPlaceSeat: placeSeat,
@@ -425,7 +431,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }} {...(actionsDocked ? aside : {})} style={actionsDocked ? styles.aside : null}>
             {/* A small game deals no bluffs, but ones already saved stay where they can be seen. */}
             {evilLearnsTeam(board) || view.bluffs.length > 0
-              ? <BoardBluffs board={board} bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} />
+              ? <BoardBluffs bluffs={view.bluffs} boardWidth={availableWidth} clockWidth={clockWidth} canEdit={live} titled={!landscape || availableHeight >= tallBoard} onOpen={() => openBluffs(false)} />
               : null}
           </View>
         </View>
@@ -512,7 +518,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
         <ReminderPicker target={reminderTarget} onClose={() => setReminderTarget(undefined)}
           onWriteNote={seat => { setReminderTarget(undefined); setNoteTarget({ kind: 'new', seat }) }} />
         <NoteEditor target={noteTarget} onClose={() => setNoteTarget(undefined)} />
-        <ShowSheet visible={showOpen} onClose={() => setShowOpen(false)} onReopen={openShow} />
+        <BluffPicker board={board} bluffs={view.bluffs} canEdit={live} showFirst={bluffsToShow} visible={bluffsOpen} onClose={() => setBluffsOpen(false)} />
         <LooseCharacters board={board} disabled={b.lookingBack} visible={looseOpen} onClose={() => setLooseOpen(false)} />
         <History visible={historyOpen && live} chapters={b.chapters} onClose={() => setHistoryOpen(false)} />
         <EndGame visible={endOpen} t={t} window={window}
@@ -537,12 +543,7 @@ const Board = ({ id, replay = false, openSetup = false, deal = false, panels, ti
           }}
           onCancel={() => setConfirmHome(false)}
         />
-        {interaction.card ? (
-          <Modal visible animationType="none" onRequestClose={interaction.closeCard}
-            aria-label={interaction.card.words || interaction.card.characters?.map((c) => c.name).join(', ')}>
-            <Card spec={interaction.card} onDismiss={interaction.closeCard} closeLabel={t('common.close')} />
-          </Modal>
-        ) : null}
+        {interaction.card ? <BoardCard spec={interaction.card} bluffs={view.bluffs} onBluffs={() => openBluffs(true)} /> : null}
       </View>
     </PageEnter>
   )

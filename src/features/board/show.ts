@@ -1,39 +1,20 @@
 // Manual cards only need the choices that affect their display. They produce no game events.
-// Only You are speaks about a side: the side its player believes, read from the board. Every other
-// card leaves each token in its team's colours, as the printed token is, so no card tells one
-// player another's side. The Storyteller may change any card's characters, since a poisoned
-// player can be shown a false one.
+// Every card is the one blank card with something written on it. Only You are speaks about a
+// side: the side its player believes, read from the board. Every other card leaves each token in
+// its team's colours, as the printed token is, so no card tells one player another's side. The
+// Storyteller may change any card's characters, since a poisoned player can be shown a false one.
 import type { CharacterId } from '../../content'
 import type { Grimoire, SeatId } from '../../engine'
 import { markedCharacters, playerIdentity, seatById } from '../../engine'
-import type { CardKind, CardSpec } from '../../ui/BoardInteraction'
+import type { CardSpec } from '../../ui/BoardInteraction'
 
-export type ShowKind = Exclude<CardKind, 'custom'>
+// The two cards about one player, which start from that player's seat.
+export type SeatCard = 'youAre' | 'thisPlayerIs'
 
-export type ShowAbout = 'seat' | 'characters' | 'bluffs'
-
-export interface ShowToken {
-  readonly kind: ShowKind
-  readonly about?: ShowAbout // omitted for fixed-text cards that open immediately
-}
-
-// The six info tokens the night sheet names, and the character tokens alone, which it asks for
-// more often than any of them. The list shows them two by two, in this order.
-export const showTokens: readonly ShowToken[] = [
-  { kind: 'youAre', about: 'seat' },
-  { kind: 'thisPlayerIs', about: 'seat' },
-  { kind: 'tokenOnly', about: 'characters' },
-  { kind: 'selectedYou', about: 'characters' },
-  { kind: 'thisIsTheDemon' },
-  { kind: 'theseAreYourMinions' },
-  { kind: 'notInPlay', about: 'bluffs' },
-]
-
-// What the Storyteller picked: the seat a seat card is about, then the characters to print.
-export interface ShowChoice {
-  readonly seat?: SeatId | undefined
-  readonly characters?: readonly string[]
-}
+// The info tokens the night sheet names that are about no seat, offered as phrases on the blank
+// card in the order a first night uses them.
+export const phrases = ['thisIsTheDemon', 'theseAreYourMinions', 'notInPlay', 'selectedYou'] as const
+export type Phrase = typeof phrases[number]
 
 // What a seat's player believes they are; none for a seat without a token, which takes no tap.
 export const believed = (g: Grimoire, seat: SeatId): CharacterId | undefined => playerIdentity(g, seat)?.character
@@ -42,7 +23,7 @@ export const believed = (g: Grimoire, seat: SeatId): CharacterId | undefined => 
 // the true token. This player is tells someone else, and on a disguised seat neither token is a
 // safe start: the Demon learns the real Marionette or Lunatic, but a Drunk's real token must never
 // go out on a hasty tap. So it starts from nothing there.
-export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly CharacterId[] => {
+export const seatStart = (g: Grimoire, kind: SeatCard, seat: SeatId): readonly CharacterId[] => {
   const shown = believed(g, seat)
   const record = seatById(g, seat)
   if (shown === undefined || !record) return []
@@ -50,41 +31,15 @@ export const seatStart = (g: Grimoire, kind: ShowKind, seat: SeatId): readonly C
   return kind === 'thisPlayerIs' && real !== shown ? [] : [shown]
 }
 
-// Nothing comes back when a required seat or character is missing.
-export const showing = (
-  g: Grimoire,
-  kind: ShowKind,
-  choice: ShowChoice,
-  words: string,
-  name: (id: CharacterId) => string,
-): CardSpec | undefined => {
-  const ids = (choice.characters ?? []) as readonly CharacterId[]
-  const characters = ids.map((id) => ({ id, name: name(id) }))
-  switch (kind) {
-    case 'youAre': {
-      const identity = choice.seat !== undefined ? playerIdentity(g, choice.seat) : undefined
-      if (!identity || ids.length === 0) return undefined
-      return { kind, words, characters, tint: identity.alignment }
-    }
-    case 'thisPlayerIs': {
-      // The ability tells a character, never a side: an evil Nightwatchman shown in red would
-      // give their alignment away to the player they woke.
-      const seat = choice.seat !== undefined ? seatById(g, choice.seat) : undefined
-      if (!seat || !playerIdentity(g, seat.id) || ids.length === 0) return undefined
-      return { kind, words, characters, caption: seat.name }
-    }
-    case 'thisIsTheDemon':
-    case 'theseAreYourMinions':
-      return { kind, words }
-    case 'tokenOnly':
-      // The tokens alone, as the night sheet shows a Washerwoman or an Undertaker their character.
-      if (ids.length === 0) return undefined
-      return { kind, words: '', characters }
-    case 'selectedYou':
-      if (ids.length === 0) return undefined
-      return { kind, words, characters }
-    case 'notInPlay':
-      if (ids.length === 0) return undefined
-      return { kind, words, characters, tint: 'good' }
-  }
+// A seat's card as it comes up: the words, the token it starts from, and what keeps it safe
+// there, the side You are tells or the name under This player is. Nothing comes back for a seat
+// without a token.
+export const seatCard = (g: Grimoire, kind: SeatCard, seat: SeatId, words: string, name: (id: CharacterId) => string): CardSpec | undefined => {
+  const identity = playerIdentity(g, seat)
+  const record = seatById(g, seat)
+  if (!identity || !record) return undefined
+  const characters = seatStart(g, kind, seat).map((id) => ({ id, name: name(id) }))
+  // This player is tells a character, never a side: an evil Nightwatchman shown in red would
+  // give their alignment away to the player they woke.
+  return kind === 'youAre' ? { words, characters, tint: identity.alignment } : { words, characters, caption: record.name }
 }

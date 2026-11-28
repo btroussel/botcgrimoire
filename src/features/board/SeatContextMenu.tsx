@@ -12,8 +12,9 @@ import type { Size } from '../../ui/theme'
 import { useViewport } from '../../ui/Viewport'
 import { MenuItem, menuClass, menuFrame, menuStyles } from '../../ui/popover'
 import type { Point, SeatMenuPlace, SeatMenuRoom } from './seatMenu'
+import type { SeatCard } from './show'
 
-export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onReminder, onCharacter, onAlignment, onNominate, onCallExile, onRemove, onRename, onLife, onGhostVote }: {
+export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anchor, place, width, t, onClose, onShowCard, onReminder, onCharacter, onAlignment, onNominate, onCallExile, onRemove, onRename, onLife, onGhostVote }: {
   readonly seatId: string // the seat whose token takes focus back when the menu closes
   readonly name: string
   readonly alignment: Alignment
@@ -24,6 +25,7 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   readonly width: number
   readonly t: Translate
   readonly onClose: () => void
+  readonly onShowCard?: (kind: SeatCard) => void // set on a seat with a token, which a card about its player starts from
   readonly onReminder?: () => void
   readonly onCharacter: () => void
   readonly onAlignment: () => void
@@ -39,6 +41,11 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   const [renaming, setRenaming] = useState(false)
   const [draft, setDraft] = useState(name)
   const editing = useRef(false)
+  // Show a card turns the menu in place to the cards about this player, and focus follows.
+  const [cards, setCards] = useState(false)
+  const turned = useRef(false)
+  const showLabel = useRef('')
+  useLayoutEffect(() => { showLabel.current = t('board.show') })
   const saveName = () => {
     if (!editing.current) return
     editing.current = false
@@ -48,10 +55,18 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   }
   const focusVisible = useFocusVisible()
   const reduced = useReducedMotion()
+  useLayoutEffect(() => {
+    if (!turned.current) { turned.current = true; return }
+    // Turned, the focus goes to Back; turned back, to Show a card, where the user came from.
+    const show = cards ? undefined : menu.current?.querySelector<HTMLElement>(`[role="button"][aria-label="${CSS.escape(showLabel.current)}"]`)
+    ;(show ?? menu.current?.querySelector<HTMLElement>('[role="button"]'))?.focus({ preventScroll: true })
+  }, [cards])
   // Placed from its measured size on every render, since renaming, a death or a wrapped
   // translation changes it, within the part of the band the screen shows, which a scrolled
-  // ring or a software keyboard cuts short.
+  // ring or a software keyboard cuts short. The cards turn it in place: shorter, it still fits
+  // where it was, so it does not jump away from the thumb.
   useLayoutEffect(() => {
+    if (cards) return
     const element = menu.current
     const parent = element?.offsetParent
     if (!element || !(parent instanceof HTMLElement)) return
@@ -102,7 +117,9 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
     }
   }, [onClose])
   const actions: readonly { label: string; icon: IconName; run: () => void }[] = [
-    // First, as the action a Storyteller repeats most, and the only way to it on touch.
+    // First: You are, the card shown to every player on the first night, is then three taps.
+    ...(onShowCard ? [{ label: t('board.show'), icon: 'show' as const, run: () => setCards(true) }] : []),
+    // The action a Storyteller repeats most, and the only way to it on touch.
     ...(onReminder ? [{ label: t('board.addReminder'), icon: 'add' as const, run: onReminder }] : []),
     // By day the next most repeated, and the only way to a nomination.
     ...(onNominate ? [{ label: t('board.nominate'), icon: 'nominate' as const, run: onNominate }] : []),
@@ -114,31 +131,38 @@ export const SeatContextMenu = ({ seatId, name, alignment, dead, ghostVote, anch
   ]
   const row = (item: { label: string; icon: IconName; run: () => void }) =>
     <MenuItem key={item.label} icon={item.icon} label={item.label} onPress={item.run} />
+
   return <div ref={menu} role="group" aria-label={name} data-layer className={menuClass} style={{ ...menuFrame, position: 'absolute', width,
     maxHeight: Math.max(0, viewport.height - space.sm * 2), overflowY: 'auto', zIndex: 30 }}>
-    {renaming ? <TextInput autoFocus selectTextOnFocus value={draft} onChangeText={setDraft}
-      maxLength={80} accessibilityLabel={t('board.playerName')} returnKeyType="done"
-      onBlur={saveName} onSubmitEditing={saveName}
-      onKeyPress={event => {
-        if (event.nativeEvent.key === 'Escape') {
-          event.preventDefault()
-          event.stopPropagation()
-          editing.current = false
-          setRenaming(false)
-        }
-      }}
-      style={[type.text.strong, styles.nameInput]} />
-      : <Pressable accessibilityRole="button" accessibilityLabel={t('board.renamePlayer')}
-        onPress={() => { setDraft(name); editing.current = true; setRenaming(true) }}
-        style={state => [menuStyles.row, isHovered(state) ? { backgroundColor: hoverWash.felt } : null,
-          focusStyle(palette, isFocused(state) && focusVisible)]}>
-        <Text numberOfLines={1} style={[type.text.strong, styles.heading]}>{name}</Text>
-        <Icon name="edit" size={16} color={palette.parchmentShade} />
-      </Pressable>}
-    {actions.map(item => row(item))}
-    {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
-    <View style={menuStyles.rule} />
-    {row({ label: t('board.removeSeat'), icon: 'trash', run: onRemove })}
+    {cards && onShowCard ? <>
+      {row({ label: t('common.back'), icon: 'back', run: () => setCards(false) })}
+      {row({ label: t('board.youAre'), icon: 'show', run: () => onShowCard('youAre') })}
+      {row({ label: t('board.cardThisPlayerIs'), icon: 'show', run: () => onShowCard('thisPlayerIs') })}
+    </> : <>
+      {renaming ? <TextInput autoFocus selectTextOnFocus value={draft} onChangeText={setDraft}
+        maxLength={80} accessibilityLabel={t('board.playerName')} returnKeyType="done"
+        onBlur={saveName} onSubmitEditing={saveName}
+        onKeyPress={event => {
+          if (event.nativeEvent.key === 'Escape') {
+            event.preventDefault()
+            event.stopPropagation()
+            editing.current = false
+            setRenaming(false)
+          }
+        }}
+        style={[type.text.strong, styles.nameInput]} />
+        : <Pressable accessibilityRole="button" accessibilityLabel={t('board.renamePlayer')}
+          onPress={() => { setDraft(name); editing.current = true; setRenaming(true) }}
+          style={state => [menuStyles.row, isHovered(state) ? { backgroundColor: hoverWash.felt } : null,
+            focusStyle(palette, isFocused(state) && focusVisible)]}>
+          <Text numberOfLines={1} style={[type.text.strong, styles.heading]}>{name}</Text>
+          <Icon name="edit" size={16} color={palette.parchmentShade} />
+        </Pressable>}
+      {actions.map(item => row(item))}
+      {/* Removal sits apart from the toggles above it, since it asks before it acts. */}
+      <View style={menuStyles.rule} />
+      {row({ label: t('board.removeSeat'), icon: 'trash', run: onRemove })}
+    </>}
   </div>
 }
 
